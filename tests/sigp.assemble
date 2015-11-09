@@ -1,0 +1,26 @@
+SIGP     TITLE 'Signal processor test case'                                     
+ punch '* *Testcase sigp'                                                       
+ punch '* sysclear'                                                             
+ punch '* archmode z'                                                           
+sigp start 0                                                                    
+ using sigp,0                                                                   
+ org sigp+x'1a0' Restart                                                        
+ dc x'0000 0001 8000 0000',ad(go)                                               
+ org sigp+x'1d0' Program                                                        
+ dc x'0002 0001 8000 0000',ad(x'deaddead')                                      
+ org sigp+x'200'                                                                
+go equ *                                                                        
+ stap cpu                                                                       
+ lh 2,cpu                                                                       
+ sigp 0,2,5 Stop                                                                
+ lpswe stop                                                                     
+stop dc x'0002 0000',f'0',ad(x'bad')                                            
+cpu ds h                                                                        
+ punch '* restart'                                                              
+ punch '* pause .1'                                                             
+ punch '* psw'                                                                  
+ punch '* restart'                                                              
+ punch '* wait  .1'                                                             
+ punch '* psw'                                                                  
+ punch '* *Done nowait'                                                         
+ end                                                                            

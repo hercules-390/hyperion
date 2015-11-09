@@ -13,6 +13,7 @@ parse arg in opts
 quiet = wordpos('quiet', opts) > 0
 testcase = '<unknown>'
 fails. = 0
+catast = 0
 done = 0
 lineno = 0
 facility.=0                           /* No facilities installed     */
@@ -67,6 +68,13 @@ do while lines(in) > 0
                               lastkey = key
                            End
                   End
+      When left(msg, 8) = 'HHC02332'
+         Then
+            Do
+               catast = catast + 1
+               call test 0, 'Test case timed out in wait.',,
+                  'This is likely an error in Hercules.  Please report'
+            end
       otherwise
    end
 end
@@ -78,6 +86,8 @@ Select
 end
 
 say 'Done' done 'tests. ' msg
+If catast > 0
+   Then say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
 exit fails.1
 
 order:

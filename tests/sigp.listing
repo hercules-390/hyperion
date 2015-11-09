@@ -1,0 +1,127 @@
+1                               High Level Assembler Option Summary                                             Page    1
+-                                                                                           jHLASM 1.0   2015/11/09 21.18
+0  No Overriding ASMAOPT Parameters                                                                                      
+   No Overriding Parameters                                                                                              
+   No Process Statements                                                                                                 
+                                                                                                                         
+                                                                                                                         
+   Options for this Assembly                                                                                             
+0  NOADATA                                                                                                               
+     ALIGN                                                                                                               
+   NOASA                                                                                                                 
+     BATCH                                                                                                               
+     CODEPAGE(047C)                                                                                                      
+   NOCOMPAT                                                                                                              
+   NODBCS                                                                                                                
+   NODECK                                                                                                                
+     DXREF                                                                                                               
+     ESD                                                                                                                 
+   NOEXIT                                                                                                                
+     FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)                                              
+   NOFOLD                                                                                                                
+   NOGOFF                                                                                                                
+   NOINFO                                                                                                                
+     LANGUAGE(EN)                                                                                                        
+   NOLIBMAC                                                                                                              
+     LINECOUNT(60)                                                                                                       
+     LIST(121)                                                                                                           
+     MACHINE(,NOLIST)                                                                                                    
+     MXREF(SOURCE)                                                                                                       
+     OBJECT                                                                                                              
+     OPTABLE(UNI,NOLIST)                                                                                                 
+   NOPCONTROL                                                                                                            
+   NOPESTOP                                                                                                              
+   NOPROFILE                                                                                                             
+   NORA2                                                                                                                 
+   NORENT                                                                                                                
+     RLD                                                                                                                 
+     RXREF                                                                                                               
+     SECTALGN(8)                                                                                                         
+     SIZE(MAX)                                                                                                           
+   NOSUPRWARN                                                                                                            
+     SYSPARM()                                                                                                           
+   NOTERM                                                                                                                
+   NOTEST                                                                                                                
+     THREAD                                                                                                              
+   NOTRANSLATE                                                                                                           
+     TYPECHECK(MAGNITUDE,REGISTER)                                                                                       
+     USING(NOLIMIT,MAP,WARN(15))                                                                                         
+   NOWORKFILE                                                                                                            
+     XREF(SHORT,UNREFS)                                                                                                  
+                                                                                                                         
+   No Overriding DD Names                                                                                                
+1SIGP                                          External Symbol Dictionary                                       Page    2
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/09 21.18
+0SIGP      SD 00000001 00000000 00000222             00                                                                  
+1SIGP     Signal processor test case                                                                            Page    3
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/09 21.18
+0                                               2  punch '* *Testcase sigp'                                              
+                                                3  punch '* sysclear'                                                    
+                                                4  punch '* archmode z'                                                  
+ 00000000                00000000 00000222      5 sigp start 0                                                           
+                     R:0 00000000               6  using sigp,0                                                          
+ 00000000                00000000 000001A0      7  org sigp+x'1a0' Restart                                               
+ 000001A0 0000000180000000                      8  dc x'0000 0001 8000 0000',ad(go)                                      
+ 000001B0                000001B0 000001D0      9  org sigp+x'1d0' Program                                               
+ 000001D0 0002000180000000                     10  dc x'0002 0001 8000 0000',ad(x'deaddead')                             
+ 000001E0                000001E0 00000200     11  org sigp+x'200'                                                       
+                         00000200              12 go equ *                                                               
+ 00000200 B212 0220      00000220              13  stap cpu                                                              
+ 00000204 4820 0220               00000220     14  lh 2,cpu                                                              
+ 00000208 AE02 0005               00000005     15  sigp 0,2,5 Stop                                                       
+ 0000020C B2B2 0210      00000210              16  lpswe stop                                                            
+ 00000210 0002000000000000                     17 stop dc x'0002 0000',f'0',ad(x'bad')                                   
+ 00000220                                      18 cpu ds h                                                               
+                                               19  punch '* restart'                                                     
+                                               20  punch '* pause .1'                                                    
+                                               21  punch '* psw'                                                         
+                                               22  punch '* restart'                                                     
+                                               23  punch '* wait  .1'                                                    
+                                               24  punch '* psw'                                                         
+                                               25  punch '* *Done nowait'                                                
+                                               26  end                                                                   
+1SIGP                                             Relocation Dictionary                                         Page    4
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/11/09 21.18
+0  00000001 00000001 000001A8   A 8     +                                                                                
+1SIGP                           Ordinary Symbol and Literal Cross Reference                                     Page    5
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/09 21.18
+0cpu           2 00000220 00000001     H  H                18   13S   14                                                 
+ go            1 00000200 00000001     U                   12    8                                                       
+ sigp          1 00000000 00000001     J                    5    6U    7     9    11                                     
+ stop          4 00000210 00000001     X  X                17   16                                                       
+1SIGP                                                  Using Map                                                Page    6
+-                                                                                           jHLASM 1.0   2015/11/09 21.18
+   Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
+           Count      Id           Type          Value    Range     Id        Disp    Stmt                               
+0     6  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00220     16 sigp,0                        
+1                                   General Purpose Register Cross Reference                                    Page    7
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/09 21.18
+0    0(0)       6U   15M                                                                                                 
+     1(1)    (no references identified)                                                                                  
+     2(2)      14S   15                                                                                                  
+     3(3)    (no references identified)                                                                                  
+     4(4)    (no references identified)                                                                                  
+     5(5)    (no references identified)                                                                                  
+     6(6)    (no references identified)                                                                                  
+     7(7)    (no references identified)                                                                                  
+     8(8)    (no references identified)                                                                                  
+     9(9)    (no references identified)                                                                                  
+    10(A)    (no references identified)                                                                                  
+    11(B)    (no references identified)                                                                                  
+    12(C)    (no references identified)                                                                                  
+    13(D)    (no references identified)                                                                                  
+    14(E)    (no references identified)                                                                                  
+    15(F)    (no references identified)                                                                                  
+1SIGP                              Diagnostic Cross Reference and Assembler Summary                             Page    8
+-                                                                                           jHLASM 1.0   2015/11/09 21.18
+0     No Statements Flagged in this Assembly                                                                             
+0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
+0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
+0Data Sets Allocated for this Assembly                                                                                   
+  Con DDname   Data Set Name                                Volume  Member                                               
+   P1 SYSIN    sigp.assemble                                                                                             
+0Assembly Start Time: 21.18.21 Stop Time: 21.18.21 Processor Time: 00.00.00.0063.
+ 
+                                     
+ Return Code 000                                                                                                         
