@@ -8,7 +8,7 @@ case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
 esac
 
 cat <<EOF
-Note: if you do not see a 'All processing sucessfully completed.'
+Note: if you do not see a 'All processing successfully completed.'
 message when this script completes, then something went wrong and
 you should examine the output to try and determine what it was that
 went wrong.
@@ -27,7 +27,7 @@ if [ "$R" = 0 ]
 then
       cat <<EOF
 
-All processing sucessfully completed.
+All processing successfully completed.
 
 You may now run ./configure in order to create a custom Makefile
 that is suitable for your platform and environment.
