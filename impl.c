@@ -620,12 +620,6 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.mntlock);
     initialize_lock (&sysblk.scrlock);
     initialize_condition (&sysblk.scrcond);
-#if defined(_MSVC_)
-    /* FORFISH                                                       */
-#else
-    /* Lock to fiddle with stuff used by the RUNTEST script command.  */
-    ASSERT(!sem_init(&sysblk.pscrsem, 0, 1));  /* Allow one through           */
-#endif
     initialize_lock (&sysblk.crwlock);
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);

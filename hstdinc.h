@@ -243,10 +243,4 @@
 /* Defines CAN_IAF2 needed for FEATURE_INTERLOCKED_ACCESS_FACILITY_2 */
 #include "hatomic.h"                  /* Interlocked update          */
 
-#if defined(_MSVC_)
-    /* FORFISH                                                       */
-#else
-   #include <semaphore.h>
-#endif
-
 #endif // _HSTDINC_H

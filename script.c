@@ -1121,7 +1121,11 @@ static int test_abort( SCRCTL *pCtl )
 /*-------------------------------------------------------------------*/
 static int is_test_done()
 {
-    /* If all CPUs have loaded a disabled wait PSW we are done */
+    /* If all CPUs are now in the STOPPED state then we are done.
+       Note that when a CPU loads a disabled wait state PSW it also
+       sets its state to STOPPED afterwards. See process_interrupt
+       in source module cpu.c
+    */
     if (sysblk.scrtest > sysblk.cpus)
         return TRUE;
 

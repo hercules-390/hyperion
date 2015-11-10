@@ -612,6 +612,7 @@
   )
 
   set /a "pct=((totfail*1000)+5)/totruns"
+  if %pct% GTR 1000 set "pct=1000"
   set    "pct=%pct:~0,-1%.%pct:~-1%"
 
   echo *** %totfail% FAILURES in %totruns% runs! ^(%pct%%% FAILURE rate!^) ***
