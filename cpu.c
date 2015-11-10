@@ -1459,6 +1459,42 @@ CPU_Wait (REGS* regs)
         wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
     }
 
+    /* Quick check to test if lock must be obtainied.  This is valid */
+    /* because  the  system  block pointer is set only when all CPUs */
+    /* are stopped.                                                  */
+#if defined(_MSVC_)
+    /* FORFISH                                                       */
+#else
+    if (sysblk.scrsem && !sysblk.started_mask)
+    {
+       sem_t * topost = NULL;
+
+       /* OK,  we need to post the semaphore unless someone beats us */
+       /* to it.                                                     */
+
+       /* The  only  other  reason  sem_wait  can  fail  is that the */
+       /* semaphore is not valid.                                    */
+       while (sem_wait(&sysblk.pscrsem) && EINTR == errno)
+          ;                           /* Try again                   */
+
+       /* Test  if  the  system is stopped while holding this global */
+       /* lock.                                                      */
+
+       topost = sysblk.scrsem;        /* Save locally                */
+       if (topost)
+       {
+          /* The  only way there can be something started when there */
+          /* was  not earlier is a user entering a command to start. */
+          /* Or a bug, of course.                                    */
+          if (sysblk.started_mask) topost = NULL;  /* Someone active? */
+          else sysblk.scrsem = NULL;  /* We shall post shortly       */
+       }
+
+       sem_post(&sysblk.pscrsem);
+
+       if (topost) sem_post(topost);
+    }
+#endif
     /* Wait for interrupt */
     wait_condition (&regs->intcond, &sysblk.intlock);
 

@@ -595,6 +595,18 @@ struct SYSBLK {
         int     mbd;                    /* Device connect time mode  */
         LOCK    scrlock;                /* Script processing lock    */
         COND    scrcond;                /* Test script condition     */
+#if defined(_MSVC_)
+    /* FORFISH                                                       */
+#else
+        /* This   semaphore  pointer  will  be  NULL  during  normal */
+        /* operation.   It  is  active only when a script has issued */
+        /* the  RUNTEST  command  to [re]start the CPU to run a test */
+        /* case  and  wait  for  its completion by loading a diabled */
+        /* wait,  going  into  a  program  interrupt  loop, or being */
+        /* stopped (typically by sigp stop).                         */
+        sem_t  *scrsem;            /* Semaphore for all CPUs stopped */
+        sem_t   pscrsem;    /* Semaphore for accessing above pointer */
+#endif
         int     scrtest;                /* 1 == test mode active     */
         double  scrfactor;              /* Testing timeout factor    */
         TID     cmdtid;                 /* Active command thread     */
