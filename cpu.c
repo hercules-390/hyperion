@@ -1588,10 +1588,6 @@ cpustate_stopping:
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask ^= regs->cpubit;
 
-        /* Let waiting script know about disabled wait. */
-        if (sysblk.scrtest)
-            broadcast_condition( &sysblk.scrcond );
-
         CPU_Wait(regs);
 
         sysblk.started_mask |= regs->cpubit;
