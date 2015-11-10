@@ -1589,12 +1589,8 @@ cpustate_stopping:
         sysblk.started_mask ^= regs->cpubit;
 
         /* Let waiting script know about disabled wait. */
-        obtain_lock( &sysblk.scrlock );
         if (sysblk.scrtest)
-        {
             broadcast_condition( &sysblk.scrcond );
-        }
-        release_lock( &sysblk.scrlock );
 
         CPU_Wait(regs);
 

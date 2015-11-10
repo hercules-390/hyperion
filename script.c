@@ -1121,16 +1121,33 @@ static int test_abort( SCRCTL *pCtl )
 /*-------------------------------------------------------------------*/
 static int is_test_done()
 {
-    /* If all CPUs have loaded a disabled wait PSWs then we are done */
+    int all_stopped;
+
+    /* If all CPUs have loaded a disabled wait PSW we are done */
     if (sysblk.scrtest > sysblk.cpus)
         return TRUE;
 
-    /* Or ... if all CPUs are/have now stopped then we are also done */
-    if (are_all_cpus_stopped())
+    /* To prevent deadlock with cpu thread release our script lock
+       before acquiring intlock. (intlock must be obtained WITHOUT
+       holding script lock beforehand!)
+    */
+    release_lock( &sysblk.scrlock );
+    {
+        OBTAIN_INTLOCK( NULL );
+        all_stopped = are_all_cpus_stopped_intlock_held();
+        RELEASE_INTLOCK( NULL );
+    }
+    obtain_lock( &sysblk.scrlock );
+
+    /* If all CPUs are now in the stopped state then we are done */
+    if (all_stopped)
         return TRUE;
 
-    /* Otherwise we're not */
-    return FALSE;
+    /* Check again since we had to temporarily release the scrlock */
+    if (sysblk.scrtest > sysblk.cpus)
+        return TRUE;
+
+    return FALSE;   /* runtest has not completed yet */
 }
 
 /*-------------------------------------------------------------------*/
