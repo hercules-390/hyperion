@@ -40,6 +40,8 @@ do while lines(in) > 0
             Do
                parse var rest ' code ' havepgm . ' ilc'
             End
+      When msg = 'HHC00803I'          /* Program interrupt loop      */
+         Then havewait = 1
       When msg = 'HHC00809I'
          Then call waitstate
       When msg = 'HHC01417I'

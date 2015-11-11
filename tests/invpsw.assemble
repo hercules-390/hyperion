@@ -1,0 +1,9 @@
+INVPSW   TITLE 'invalid program new PSW'                                        
+ punch ':test invpsw'                                                           
+inv start 0                                                                     
+ org inv+x'1d0' Program new with two errors                                     
+ dc x'0000000100000000',ad(x'deaddead')                                         
+ punch '* runtest .1'                                                           
+ punch '* *Program 1'                                                           
+ punch '* *Done'                                                                
+ END  ,                                                                         
