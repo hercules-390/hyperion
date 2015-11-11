@@ -623,8 +623,14 @@ int     dll_count;                      /* index into array          */
 #if defined(_MSVC_)
     /* FORFISH                                                       */
 #else
-    /* Lock to fiddle with stuff used by the RUNTEST script command.  */
-    ASSERT(!sem_init(&sysblk.pscrsem, 0, 1));  /* Allow one through           */
+    /* Lock  to  serialise  posting  of the script waiting semaphore */
+    /* init to allow one to enter.                                   */
+    {
+       int rv;
+       unsigned char * sp = (unsigned char *) sysblk.pscrsem.__size;
+       rv = sem_init(&sysblk.pscrsem, 0, 1);
+       assert(!rv);
+    }
 #endif
     initialize_lock (&sysblk.crwlock);
     initialize_lock (&sysblk.ioqlock);

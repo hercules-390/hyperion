@@ -27,7 +27,10 @@
 /* Required and optional SYSTEM headers...                           */
 /*-------------------------------------------------------------------*/
 
+#if !defined(_REENTRANT)
+/* Jan should have specified -pthread for linking.  jph              */
 #define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
+#endif
 #define _THREAD_SAFE            /* Some systems use this instead *JJ */
 
 #if defined(HAVE_STRSIGNAL) && defined(__GNUC__) && !defined(_GNU_SOURCE)

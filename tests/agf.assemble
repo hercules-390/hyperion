@@ -37,7 +37,7 @@ TEST8 DC fd'4294967296',F'-1'
 testcount equ (*-test1)/16                                                      
  org agf+x'900'                                                                 
 res1 ds 0d                                                                      
- punch ':etst .1'                                                       01190000
+ punch 'runtest .1'                                                     01190000
  punch '* *Compare'                                                             
  punch '* r 900.9'                                                              
  punch '* *Want 00000000 00000008 20'                                           

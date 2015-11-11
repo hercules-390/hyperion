@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/10/19 13.26
+-                                                                                           jHLASM 1.0   2015/11/11 19.00
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1AGF                                           External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/10/19 13.26
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/11 19.00
 0AGF       SD 00000001 00000000 00000900             00                                                                  
 1AGF      agf test case                                                                                         Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/19 13.26
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 19.00
 0                                               2  punch ':test agf'                                                     
                                                 3  punch ':btst z'                                                       
  00000000                00000000 00000900      4 agf start 0                                                            
@@ -102,7 +102,7 @@
                          00000009              37 testcount equ (*-test1)/16                                             
  000002E0                000002E0 00000900     38  org agf+x'900'                                                        
  00000900                                      39 res1 ds 0d                                                             
-                                               40  punch ':etst .1'                                                       01190000
+                                               40  punch 'runtest .1'                                                     01190000
                                                41  punch '* *Compare'                                                    
                                                42  punch '* r 900.9'                                                     
                                                43  punch '* *Want 00000000 00000008 20'                                  
@@ -113,7 +113,7 @@
                                                48  punch '* r 930.9'                                                     
 1AGF      agf test case                                                                                         Page    4
    Active Usings: AGF,R0                                                                                                 
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/10/19 13.26
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 19.00
 0                                              49  punch '* *Want 80000000 00000001 10'                                  
                                                50  punch '* r 940.9'                                                     
                                                51  punch '* *Want 7FFFFFFF 7FFFFFFF 20'                                  
@@ -128,7 +128,7 @@
                                                60  punch '* *Done'                                                       
                                                61  END  ,                                                                
 1AGF                            Ordinary Symbol and Literal Cross Reference                                     Page    5
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/10/19 13.26
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/11 19.00
 0A             6 00000210 00000001     I                   15   23B                                                      
  agf           1 00000000 00000001     J                    4    5U    6     8    10    38                               
  res1          8 00000900 00000001     D  D                39   13                                                       
@@ -137,7 +137,7 @@
                1 00000009 00000001 A   U                   37   11                                                       
  WAITPSW       8 00000240 00000001     X  X                26   24                                                       
 1AGF                               Unreferenced Symbols Defined in CSECTs                                       Page    6
--  Defn  Symbol                                                                             jHLASM 1.0   2015/10/19 13.26
+-  Defn  Symbol                                                                             jHLASM 1.0   2015/11/11 19.00
 0    28  TEST2                                                                                                           
      29  TEST3                                                                                                           
      30  TEST4                                                                                                           
@@ -146,12 +146,12 @@
      33  TEST7                                                                                                           
      34  TEST8                                                                                                           
 1AGF                                                   Using Map                                                Page    7
--                                                                                           jHLASM 1.0   2015/10/19 13.26
+-                                                                                           jHLASM 1.0   2015/11/11 19.00
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0     5  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00900     24 agf,0                         
 1                                   General Purpose Register Cross Reference                                    Page    8
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/10/19 13.26
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/11 19.00
 0    0(0)       5U   11S   23M                                                                                           
      1(1)      12S   15    16    17    22S   22                                                                          
      2(2)    (no references identified)                                                                                  
@@ -169,14 +169,14 @@
     14(E)    (no references identified)                                                                                  
     15(F)      13S   19    20    21S   21                                                                                
 1AGF                               Diagnostic Cross Reference and Assembler Summary                             Page    9
--                                                                                           jHLASM 1.0   2015/10/19 13.26
+-                                                                                           jHLASM 1.0   2015/11/11 19.00
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
-0System:  Linux release 3.19.0-30-generic on jbox (i686)                                                                 
+0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    agf.assemble                                                                                              
-0Assembly Start Time: 13.26.56 Stop Time: 13.26.56 Processor Time: 00.00.00.0090.
+0Assembly Start Time: 19.00.06 Stop Time: 19.00.06 Processor Time: 00.00.00.0130.
  
                                      
  Return Code 000                                                                                                         

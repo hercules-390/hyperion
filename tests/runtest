@@ -44,7 +44,7 @@ wfn=allTests
 
 dir=${1:-../hyperion/tests}
 if [ "$dir" == "-" ] ; then
-       dir=../hyperion/tests
+        dir=../hyperion/tests
 fi
 
 fns=${2:-*}

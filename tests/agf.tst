@@ -1,4 +1,8 @@
-*Testcase agf processed 19 Oct 2015 13:26:56 by bldhtc.rexx
+# This test file was generated from offline assembler source
+# by bldhtc.rexx 11 Nov 2015 19:00:06
+# Treat as object code.  That is, modifications will be lost.
+# assemble and listing files are provided for information only.
+*Testcase agf processed 11 Nov 2015 19:00:06 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -19,25 +23,3 @@ r    2A8=0000000100000000
 r    2B0=00000001000000000000000100000000
 r    2C0=0000000100000000FFFFFFFF00000000
 r    2D0=000000000000000000000000
-restart
-pause .1
-*Compare
-r 900.9
-*Want 00000000 00000008 20
-r 910.9
-*Want FFFFFFFF FFFFFFF8 10
-r 920.9
-*Want FFFFFFFF FFFFFFFE 10
-r 930.9
-*Want 80000000 00000001 10
-r 940.9
-*Want 7FFFFFFF 7FFFFFFF 20
-r 950.9
-*Want 00000001 00000000 20
-r 960.9
-*Want 00000001 00000001 20
-r 970.9
-*Want 00000000 FFFFFFFF 20
-r 980.9
-*Want 00000000 00000000 00
-*Done

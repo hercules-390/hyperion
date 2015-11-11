@@ -24,8 +24,7 @@ go equ *
  ipm 4                                                                          
  la 3,1(2,2)                                                                    
  lpswe stop                                                                     
- punch '* restart'                                                              
- punch '* pause .1'                                                             
+ punch '* runtest .1'                                                           
  punch '* *Compare'                                                             
  punch '* gpr'                                                                  
  punch '* *Gpr 2 0042'                                                          

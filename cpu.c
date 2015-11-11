@@ -1465,17 +1465,27 @@ CPU_Wait (REGS* regs)
 #if defined(_MSVC_)
     /* FORFISH                                                       */
 #else
+      printf("Semaphore %p Configured " F_CPU_BITMAP "; started " F_CPU_BITMAP "; waiting " F_CPU_BITMAP "\n",
+         sysblk.scrsem, sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask);
+      fflush(stdout);
     if (sysblk.scrsem && !sysblk.started_mask)
     {
        sem_t * topost = NULL;
 
        /* OK,  we need to post the semaphore unless someone beats us */
        /* to it.                                                     */
-
        /* The  only  other  reason  sem_wait  can  fail  is that the */
        /* semaphore is not valid.                                    */
+       int wc;
+       sem_getvalue(&sysblk.pscrsem, &wc);
+       printf("Waiting for pscrsem value %d\n", wc);
+       fflush(stdout);
        while (sem_wait(&sysblk.pscrsem) && EINTR == errno)
+       {
+          printf("eintr\n");
           ;                           /* Try again                   */
+       fflush(stdout);
+       }
 
        /* Test  if  the  system is stopped while holding this global */
        /* lock.                                                      */
@@ -1490,9 +1500,8 @@ CPU_Wait (REGS* regs)
           else sysblk.scrsem = NULL;  /* We shall post shortly       */
        }
 
-       sem_post(&sysblk.pscrsem);
-
-       if (topost) sem_post(topost);
+       sem_post(&sysblk.pscrsem);     /* Release our global lock     */
+       if (topost) sem_post(topost);  /* All CPUs stopped?           */
     }
 #endif
     /* Wait for interrupt */

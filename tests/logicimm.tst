@@ -1,4 +1,8 @@
-*Testcase logicImmediate processed 18 Oct 2015 14:17:36 by bldhtc.rexx
+# This test file was generated from offline assembler source
+# by bldhtc.rexx 11 Nov 2015 19:00:06
+# Treat as object code.  That is, modifications will be lost.
+# assemble and listing files are provided for information only.
+*Testcase logicImmediate processed 11 Nov 2015 19:00:06 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -29,60 +33,3 @@ r    848=FF00FF00FF00FF00
 r    890=0000000000000800
 r   2000=FFFFFFFFFFFFFFFF0000000000000000
 r   2010=FFFFFFFFFFFFFFFF
-restart
-pause .1
-*Compare
-r 00000800.8
-*Want               01020408 10204080
-*Compare
-r 00000808.8
-*Want               01020408 10204080
-*Compare
-r 00000810.8
-*Want               FEFDFBF7 EFDFBF7F
-*Compare
-r 00002000.8
-*Want               01020408 10204080
-*Compare
-r 00002008.8
-*Want               01020408 10204080
-*Compare
-r 00002010.8
-*Want               FEFDFBF7 EFDFBF7F
-*Compare
-r 00000818.8
-*Want               10101010 10101010
-*Compare
-r 00000828.8
-*Want               10101010 10101010
-*Compare
-r 00000838.8
-*Want               10101010 10101010
-*Compare
-r 00000820.8
-*Want               10101010 10101010
-*Compare
-r 00000830.8
-*Want               10101010 10101010
-*Compare
-r 00000840.8
-*Want               10101010 10101010
-*Explain The failure of this test indicates either that
-*Explain your C compiler lacks stdatomic.h and the GCC
-*Explain intrinsic atomic operations, or that the atomic
-*Explain operations are not lock free, or that Interlocked
-*Explain Access Facility 2 has been unconfigured when
-*Explain Hercules was built, or finally that Hercules
-*Explain simply lacks the support for IAF2.
-*Compare
-r 00000880.8
-*Want "Facilities list bit 52" 00000000 00000800
-* First doubleword of facilities list
-r 00000888.8
-*Compare
-r 00000848.8
-*Want               00000000 00000000
-gpr 
-*Gpr 3 00000000
-*Gpr 4 00000000
-*Done
