@@ -16,11 +16,9 @@ go equ *
  lpswe stop                                                                     
 stop dc x'0002 0000',f'0',ad(x'bad')                                            
 cpu ds h                                                                        
- punch '* restart'                                                              
- punch '* pause .1'                                                             
+ punch '* runtest .1'                                                           
  punch '* psw'                                                                  
- punch '* restart'                                                              
- punch '* wait  .1'                                                             
+ punch '* runtest .1'                                                           
  punch '* psw'                                                                  
  punch '* *Done nowait'                                                         
  end                                                                            

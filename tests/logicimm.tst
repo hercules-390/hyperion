@@ -1,4 +1,8 @@
-*Testcase logicImmediate processed 18 Oct 2015 14:17:36 by bldhtc.rexx
+# This test file was generated from offline assembler source
+# by bldhtc.rexx 11 Nov 2015 19:56:04
+# Treat as object code.  That is, modifications will be lost.
+# assemble and listing files are provided for information only.
+*Testcase logicImmediate processed 11 Nov 2015 19:56:04 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200
@@ -29,8 +33,7 @@ r    848=FF00FF00FF00FF00
 r    890=0000000000000800
 r   2000=FFFFFFFFFFFFFFFF0000000000000000
 r   2010=FFFFFFFFFFFFFFFF
-restart
-pause .1
+runtest .1
 *Compare
 r 00000800.8
 *Want               01020408 10204080

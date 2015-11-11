@@ -1,4 +1,8 @@
-*Testcase sske#1 processed 18 Oct 2015 13:18:49 by bldhtc.rexx
+# This test file was generated from offline assembler source
+# by bldhtc.rexx 11 Nov 2015 19:56:04
+# Treat as object code.  That is, modifications will be lost.
+# assemble and listing files are provided for information only.
+*Testcase sske#1 processed 11 Nov 2015 19:56:04 by bldhtc.rexx
 * sske#1:  Test for sske being privileged.
 sysclear
 archmode z
@@ -7,10 +11,9 @@ r    1D0=0002000180000000FFFFFFFFDEADDEAD
 r    200=A7282004A73800F0B22B0032B2B20210
 r    210=00020001800000000000000000000BAD
 *Program 0002
-restart
-pause 1
+runtest .1
 *Done
-*Testcase sske#2 processed 18 Oct 2015 13:18:49 by bldhtc.rexx
+*Testcase sske#2 processed 11 Nov 2015 19:56:04 by bldhtc.rexx
 * sske#2:  Basic set key operation.
 sysclear
 archmode z
@@ -18,8 +21,7 @@ r    1A0=00000001800000000000000000000200
 r    1D0=0002000180000000FFFFFFFFDEADDEAD
 r    200=A7282004413000F0B22B0032B2B20210
 r    210=00020001800000000000000000000000
-restart
-pause 1
+runtest .1
 *Compare
 r 2000.8
 *Key F0
@@ -34,8 +36,7 @@ r   41D0=0002000180000000FFFFFFFFDEADBEAF
 r   2000=0DC0B210C026A7281004413000F0B22B
 r   2010=0032B2B2C01600000002000180000000
 r   2020=000000000000000000004000
-restart
-pause 1
+runtest .1
 *Compare
 abs 1000.8
 *Key 00
@@ -53,8 +54,7 @@ r    1D0=0002000180000000FFFFFFFFDEADDEAD
 r    200=E32002280004A73800F0B22B1032B2B2
 r    210=02180000000000000002000180000000
 r    220=00000000000000000000000000002004
-restart
-pause .1
+runtest .1
 *Compare
 abs  0.8
 *Key 06
@@ -82,8 +82,7 @@ r   2000=0DC0B210C02EE320C0260004A73800F0
 r   2010=B22B1032B2B2C0160002000180000000
 r   2020=00000000000000000000000000001004
 r   2030=00004000
-restart
-pause .1
+runtest .1
 *Compare
 abs  0.8
 *Key 06
@@ -116,8 +115,7 @@ r   2000=0DC0B210C02EE320C0260004A73800F0
 r   2010=B22B1032B2B2C0160002000180000000
 r   2020=0000000000000000FFFFFFFF80001004
 r   2030=00004000
-restart
-pause .1
+runtest .1
 *Compare
 abs  0.8
 *Key 06
@@ -150,8 +148,7 @@ r   2000=0DC0B210C02EE320C0260004A73800F0
 r   2010=B22B1032B2B2C0160002000180000000
 r   2020=0000000000000000FFFFFFFFFF001004
 r   2030=00004000
-restart
-pause .1
+runtest .1
 *Compare
 abs  0.8
 *Key 06

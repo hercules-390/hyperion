@@ -23,10 +23,14 @@ nest=0                                /* If/then/else nesting        */
 do while lines(in) > 0
    lineno = lineno + 1
    l = linein(in)
-   tod = left(l,8)
-   parse var tod hh ':' mm ':' ss .
-   If datatype(hh,'N') & datatype(mm,'N') & datatype(ss,'N')
-      Then parse var l . l
+   /* Another  way  to  handle  a prefix to the response might be to */
+   /* look for HHC.                                                   */
+   p = verify(l, "0123456789: ")      /* Leading timestamp?          */
+   If p = 0                           /* Just a timestamp or nothing */
+      Then iterate
+   If p > 1                           /* Timestamp prefix            */
+      Then l = substr(l, p)
+
    parse var l msg verb rest
    If left(msg, 3) = 'HHC' & right(msg, 1) = 'E'
       Then lasterror = l
@@ -75,18 +79,20 @@ do while lines(in) > 0
       When left(msg, 8) = 'HHC02332'
          Then
             Do
+               done = done + 1
                catast = catast + 1
-               call test 0, "Test case timed out in 'runtest'.",,
+               call test 0, 'Test case timed out in wait.',,
                   'This is likely an error in Hercules.  Please report'
             end
       otherwise
+         /* Quietly ignore                                           */
    end
 end
 Select
-   When fails.1 = 0
+   When fails.1 = 0 & catast = 0
       Then msg = 'All OK.'
    otherwise
-      msg = fails.1 'failed;' fails.0 'OK.'
+      msg = (fails.1 + catast) 'failed;' fails.0 'OK.'
 end
 
 say 'Done' done 'tests. ' msg
@@ -314,6 +320,4 @@ say 'Novalue in' fn ft fm '-- variable' condition('D')
 say right(sigl, 6) '>>>' sourceline(sigl)
 say '  This is often caused by missing or misspelled *Testcase'
 say '  Note that the verbs are case sensitive.  E.g., *testcase is not correct.'
-say '  This can also be caused by a +debug msglevel. Try inserting a'
-say '  msglvl -debug command just before your *Testcase statement.'
 signal value lets_get_a_traceback

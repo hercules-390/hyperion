@@ -1,3 +1,7 @@
+# This test file was generated from offline assembler source
+# by bldhtc.rexx 11 Nov 2015 19:00:06
+# Treat as object code.  That is, modifications will be lost.
+# assemble and listing files are provided for information only.
 *Testcase ilc
 sysclear
 archmode z
@@ -12,8 +16,7 @@ r    230=47700238B2B20150
 r    238=B2B20070000000000000000000000020
 r    248=00000000400000000000000000000218
 r    258=000000000000021B0080
-restart
-pause .1
+runtest .1
 *Compare
 gpr
 *Gpr 2 0042

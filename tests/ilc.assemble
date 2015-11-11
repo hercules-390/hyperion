@@ -68,8 +68,7 @@ cr9 dc f'0',x'40 00 00 00',ad(perstart,perstop-1)
  org *+(x'c00'-*+ilc) Trace table and fail if overflow                          
 trtbl ds d                                                                      
  ds 0d                                                                          
- punch '* restart'                                                              
- punch '* pause .1'                                                             
+ punch '* runtest .1'                                                           
  punch '* *Compare'                                                             
  punch '* gpr'                                                                  
  punch '* *Gpr 2 0042'                                                          

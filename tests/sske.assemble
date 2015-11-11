@@ -55,7 +55,7 @@ psw&sysndx dc 0d,x'0002000180000000',ad(&rc)
  lhi 3,x'f0'                                                            00180000
  sske 3,2,1                                                             00190000
  stop                                                                           
- punch ':etst .1'                                                       00250000
+ punch '* runtest .1'                                                   00250000
  punch '* *Compare'                                                             
  punch '* abs  0.8'                                                             
  punch '* *Key 06'                                                              
@@ -94,7 +94,7 @@ go ds 0h =x'200'
  sske 3,2                                                               00190000
  stop rc=x'bad'                                                         00200000
  punch '* *Program 0002' Expect program check                           00240000
- punch ':etst 1'                                                        00250000
+ punch '* runtest .1'                                                   00250000
  punch '* *Done'                                                        00260000
                                                                                 
 * Test ability to set a key                                                     
@@ -106,7 +106,7 @@ go ds 0h =x'200'
  la  3,x'f0'                                                                    
  SSKE    3,2                                                                    
  stop                                                                           
- punch ':etst 1'                                                        00250000
+ punch '* runtest .1'                                                   00250000
  punch '* *Compare'                                                             
  punch '* r 2000.8'                                                             
  punch '* *Key F0'                                                              
@@ -123,7 +123,7 @@ go ds 0h =x'200'
  la  3,x'f0'                                                                    
  SSKE    3,2                                                                    
  stop                                                                           
- punch ':etst 1'                                                        00250000
+ punch '* runtest .1'                                                   00250000
  punch '* *Compare'                                                             
  punch '* abs 1000.8'                                                           
  punch '* *Key 00'                                                              
