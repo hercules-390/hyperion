@@ -98,6 +98,12 @@ AC_MSG_NOTICE( [Detected GCC equivalent level for ${CC} : ${hc_gcc_level}] )
 #  Fix CFLAGS if needed  #
 #------------------------#
 
+# The following is not productive.  Stuff shoud be compiled with -g
+# so that one can put a debugger on a core dump or a runaway process.
+# The optimisation flag can be overridden by specifying -O3, which by the way
+# generates unreliable code with some levels of GCC, if not always.
+# jph 2015-11-11
+
 # Remove "-g" and "-O2" CFLAGS that "AC_PROG_CC" helpfully(?)
 # added for us that we don't want... (since we handle setting
 # the optimization flags ourselves; refer to near the end of
@@ -122,6 +128,8 @@ if test "$hc_cv_is_nix"        = "yes"; then
 
     hc_cv_build_hercifc=yes
     hc_cv_non_unique_gettimeofday=no
+    CFLAGS="$CFLAGS -pthread"
+    LDFLAGS="$LDFLAGS -pthread"
 
 elif test "$hc_cv_is_windows"  = "yes"; then
 

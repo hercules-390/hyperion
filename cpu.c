@@ -1459,6 +1459,51 @@ CPU_Wait (REGS* regs)
         wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
     }
 
+    /* Quick check to test if lock must be obtainied.  This is valid */
+    /* because  the  system  block pointer is set only when all CPUs */
+    /* are stopped.                                                  */
+#if defined(_MSVC_)
+    /* FORFISH                                                       */
+#else
+      printf("Semaphore %p Configured " F_CPU_BITMAP "; started " F_CPU_BITMAP "; waiting " F_CPU_BITMAP "\n",
+         sysblk.scrsem, sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask);
+      fflush(stdout);
+    if (sysblk.scrsem && !sysblk.started_mask)
+    {
+       sem_t * topost = NULL;
+
+       /* OK,  we need to post the semaphore unless someone beats us */
+       /* to it.                                                     */
+       /* The  only  other  reason  sem_wait  can  fail  is that the */
+       /* semaphore is not valid.                                    */
+       int wc;
+       sem_getvalue(&sysblk.pscrsem, &wc);
+       printf("Waiting for pscrsem value %d\n", wc);
+       fflush(stdout);
+       while (sem_wait(&sysblk.pscrsem) && EINTR == errno)
+       {
+          printf("eintr\n");
+          ;                           /* Try again                   */
+       fflush(stdout);
+       }
+
+       /* Test  if  the  system is stopped while holding this global */
+       /* lock.                                                      */
+
+       topost = sysblk.scrsem;        /* Save locally                */
+       if (topost)
+       {
+          /* The  only way there can be something started when there */
+          /* was  not earlier is a user entering a command to start. */
+          /* Or a bug, of course.                                    */
+          if (sysblk.started_mask) topost = NULL;  /* Someone active? */
+          else sysblk.scrsem = NULL;  /* We shall post shortly       */
+       }
+
+       sem_post(&sysblk.pscrsem);     /* Release our global lock     */
+       if (topost) sem_post(topost);  /* All CPUs stopped?           */
+    }
+#endif
     /* Wait for interrupt */
     wait_condition (&regs->intcond, &sysblk.intlock);
 

@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/11/11 19.00
+-                                                                                           jHLASM 1.0   2015/11/11 20.20
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1ILC                                           External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/11 19.00
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/11 20.20
 0ILC       SD 00000001 00000000 00000C08             00                                                                  
 1ILC      Instruction length code tests.                                                                        Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 19.00
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 20.20
 0                                               3 * This file was put into the public domain 2015-10-22                  
                                                 4 * by John P. Hartmann.  You can use it for anything you like,          
                                                 5 * as long as this notice remains.                                      
@@ -109,7 +109,7 @@
  00000218 A72C 0002               00000002     53  mhi 2,2                                                               
 1ILC      Instruction length code tests.                                                                        Page    4
    Active Usings: ILC,R0                                                                                                 
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 19.00
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 20.20
 0                        0000021C              54 perstop equ *                                                          
  0000021C B2B2 0060      00000060              55  lpswe stop                                                            
                                                56 * Program interrupt handler                                            
@@ -143,13 +143,13 @@
                                                81  punch '* *Done'                                                       
                                                82  end                                                                   
 1ILC                                              Relocation Dictionary                                         Page    5
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/11/11 19.00
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/11/11 20.20
 0  00000001 00000001 000001A8   A 8     +                                                                                
    00000001 00000001 000001D8   A 8     +                                                                                
    00000001 00000001 00000250   A 8     +                                                                                
    00000001 00000001 00000258   A 8     +                                                                                
 1ILC                            Ordinary Symbol and Literal Cross Reference                                     Page    6
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/11 19.00
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/11 20.20
 0abort         4 00000070 00000001     X  X                23   64                                                       
  badpgm        2 00000238 00000001     H  H                63   61B                                                      
  cr1           8 00000240 00000001     A  AD               65   49                                                       
@@ -165,7 +165,7 @@
  trtbl         8 00000C00 00000001     D  D                70   47                                                       
  =x'0080'      2 00000260 00000001     X                   68   60                                                       
 1ILC                               Unreferenced Symbols Defined in CSECTs                                       Page    7
--  Defn  Symbol                                                                             jHLASM 1.0   2015/11/11 19.00
+-  Defn  Symbol                                                                             jHLASM 1.0   2015/11/11 20.20
 0    31  dxc                                                                                                             
      37  oaid                                                                                                            
      34  peraddr                                                                                                         
@@ -173,12 +173,12 @@
      33  percode                                                                                                         
      35  xaid                                                                                                            
 1ILC                                                   Using Map                                                Page    8
--                                                                                           jHLASM 1.0   2015/11/11 19.00
+-                                                                                           jHLASM 1.0   2015/11/11 20.20
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0    20  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00C00     64 ilc,0                         
 1                                   General Purpose Register Cross Reference                                    Page    9
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/11 19.00
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/11 20.20
 0    0(0)      20U                                                                                                       
      1(1)    (no references identified)                                                                                  
      2(2)      48S   53M                                                                                                 
@@ -196,14 +196,14 @@
     14(E)    (no references identified)                                                                                  
     15(F)      47S   58    59S   59                                                                                      
 1ILC                               Diagnostic Cross Reference and Assembler Summary                             Page   10
--                                                                                           jHLASM 1.0   2015/11/11 19.00
+-                                                                                           jHLASM 1.0   2015/11/11 20.20
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
 0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    ilc.assemble                                                                                              
-0Assembly Start Time: 19.00.06 Stop Time: 19.00.06 Processor Time: 00.00.00.0157.
+0Assembly Start Time: 20.20.38 Stop Time: 20.20.38 Processor Time: 00.00.00.0161.
  
                                      
  Return Code 000                                                                                                         

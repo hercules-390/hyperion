@@ -1,8 +1,8 @@
 # This test file was generated from offline assembler source
-# by bldhtc.rexx 11 Nov 2015 19:56:04
+# by bldhtc.rexx 11 Nov 2015 20:20:38
 # Treat as object code.  That is, modifications will be lost.
 # assemble and listing files are provided for information only.
-*Testcase sske#1 processed 11 Nov 2015 19:56:04 by bldhtc.rexx
+*Testcase sske#1 processed 11 Nov 2015 20:20:38 by bldhtc.rexx
 * sske#1:  Test for sske being privileged.
 sysclear
 archmode z
@@ -13,7 +13,7 @@ r    210=00020001800000000000000000000BAD
 *Program 0002
 runtest .1
 *Done
-*Testcase sske#2 processed 11 Nov 2015 19:56:04 by bldhtc.rexx
+*Testcase sske#2 processed 11 Nov 2015 20:20:38 by bldhtc.rexx
 * sske#2:  Basic set key operation.
 sysclear
 archmode z

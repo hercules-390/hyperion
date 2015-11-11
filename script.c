@@ -69,6 +69,7 @@ static int scrid = 0;                   /* Script identification no. */
 
 /* Forward declarations:                                             */
 static int do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p);
+static void proc_runtest(SCRCTL *pCtl, char *args);
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
@@ -918,6 +919,13 @@ int     rc;                             /* (work)                    */
         for (stmtlen = (int)strlen(p); stmtlen && isspace(p[stmtlen-1]); stmtlen--);
         p[stmtlen] = 0;
 
+#if !defined(_MSVC_)
+        if (!strncasecmp(p, "runtest", 7) && !(~' ' & p[7]))
+        {
+            proc_runtest(pCtl, p + 7);
+            continue;
+        }
+#endif
         /* Special handling for 'pause' and other statements */
         if (do_special(NULL, NULL, pCtl, p))
             continue;
@@ -1182,7 +1190,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
         secs *= sysblk.scrfactor;
 
     /* Calculate maximum duration */
-    usecs = (U32) (secs * 1000000.0); 
+    usecs = (U32) (secs * 1000000.0);
 
     if (MLVL( VERBOSE ))
     {
@@ -1340,7 +1348,7 @@ do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p)
         secs *= sysblk.scrfactor;
 
     /* Convert floating point seconds to other subsecond work values */
-    msecs = (U32) (secs * 1000.0); 
+    msecs = (U32) (secs * 1000.0);
     usecs = (msecs * 1000);
 
     if (MLVL( VERBOSE ))
@@ -1394,5 +1402,140 @@ do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p)
 
     return TRUE;
 }
+
+#if !defined(_MSVC_)
+
+/*********************************************************************/
+/* RUNTEST [RESTART|START] <timeout>                                 */
+/*                                                                   */
+/* Perform a test case and wait for all CPUs to stop.  Default is to */
+/* fire  off  the testcase by the restart command, but either can be */
+/* specified.                                                        */
+/*********************************************************************/
+
+static void
+proc_runtest(SCRCTL *pCtl, char *args)
+{
+   char * p2 = NULL;
+   int rv;
+   double secs = DEF_RUNTEST_TIMEOUT; /* 30 secons, perhaps          */
+   int dostart = 0;                /* Assume fire program by restart */
+   sem_t sem;
+   struct timespec ts, target;
+   struct timeval beg, end, dur;
+   int eno = 0;                       /* Sampled errno               */
+
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+   p2 = resolve_symbol_string( args );
+   args = p2;
+#endif
+
+   args += strspn(args, " \t");       /* Strip leading whitespace    */
+   if (isalpha(args[0]))
+   {
+      char kwd[16];
+
+      rv = sscanf(args, "%15s %lf", kwd, &secs);
+      if (!strcasecmp(kwd, "start")) dostart = 1;
+      else if (strcasecmp(kwd, "restart"))
+      {
+         /* Message here                                             */
+         return;                      /* No way to start             */
+      }
+
+   }
+   else if (args[0]) sscanf(args, "%lf", &secs);
+
+   if (p2) free(p2);
+
+   if (secs < MIN_RUNTEST_TIMEOUT || secs > MAX_RUNTEST_TIMEOUT)
+   {
+      // "Script %d: test: invalid timeout; set to def: %s"
+      WRMSG( HHC02335, "W", pCtl->scr_id, args );
+      secs = DEF_RUNTEST_TIMEOUT;
+   }
+
+   ts.tv_sec = secs;
+   ts.tv_nsec = (secs - ts.tv_sec) * 1000000000;
+
+   gettimeofday(&beg, NULL);
+   target.tv_sec = beg.tv_sec + ts.tv_sec;
+   target.tv_nsec = 1000 * beg.tv_usec + ts.tv_nsec;
+
+   while (999999999 < target.tv_nsec)
+   {
+      target.tv_sec++;
+      target.tv_nsec -= 1000000000;
+   }
+
+   /* Initialise the semaphore                                       */
+   if (sem_init(&sem, 0, 0))
+   {
+      /* Needs a message.  This is a catastrophic error.             */
+      printf("Cannot seminit %s\n", strerror(errno));
+      fflush(stdout);
+      return;
+   }
+   sysblk.scrsem = &sem;              /* Announce it                 */
+   printf("Temp semaphore: %p\n", sysblk.scrsem);
+   fflush(stderr);
+
+   if (dostart) rv = start_cmd_cpu( 0, NULL, NULL );
+   else rv = restart_cmd( 0, NULL, NULL );
+
+   if (rv)
+   {
+      // "Script %d: test: restart failed"
+      WRMSG( HHC02330, "E", pCtl->scr_id );
+      sysblk.scrsem = NULL;           /* Didn't go after all         */
+      sem_destroy(&sem);
+      return;
+   }
+
+   if (MLVL( VERBOSE ))
+      // "Script %d: test: running..."
+      WRMSG( HHC02333, "I", pCtl->scr_id );
+
+   do                                 /* Wait for semaphore          */
+   {
+      rv = sem_timedwait(&sem, &target);
+      if (rv) eno = errno;
+   } while (EINTR == eno);            /* Test script cancel here?    */
+
+   sysblk.scrsem = NULL;              /* In case of timeout          */
+   sem_destroy(&sem);
+
+   if (ETIMEDOUT == eno)
+   {
+      extern int quit_cmd(int argc, char *argv[],char *cmdline);
+
+      // HHC02332 "Script %d: test: timeout"
+      WRMSG( HHC02332, "E", pCtl->scr_id );
+      printf("Configured " F_CPU_BITMAP "; started " F_CPU_BITMAP "; waiting " F_CPU_BITMAP "\n",
+         sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask);
+      fflush(stdout);
+      pCtl->scr_flags |= SCR_CANCEL;  /* Stop                        */
+#if 0
+      sysreset_cmd(0, NULL, NULL);
+      return;
+#endif
+      quit_cmd(0, NULL, NULL);
+      return;
+   }
+
+   if (MLVL( VERBOSE ))
+   {
+      // "Script %d: test: test ended"
+      WRMSG( HHC02334, "I", pCtl->scr_id );
+
+      gettimeofday( &end, NULL );
+      timeval_subtract( &beg, &end, &dur );
+
+      // "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"
+      WRMSG( HHC02338, "I", pCtl->scr_id, (int) dur.tv_sec, (int) dur.tv_usec);
+   }
+}
+
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/
