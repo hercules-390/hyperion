@@ -128,8 +128,6 @@ if test "$hc_cv_is_nix"        = "yes"; then
 
     hc_cv_build_hercifc=yes
     hc_cv_non_unique_gettimeofday=no
-    CFLAGS="$CFLAGS -pthread"
-    LDFLAGS="$LDFLAGS -pthread"
 
 elif test "$hc_cv_is_windows"  = "yes"; then
 

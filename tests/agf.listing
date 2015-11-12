@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/11/11 20.20
+-                                                                                           jHLASM 1.0   2015/11/12 13.05
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,132 +51,136 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1AGF                                           External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/11 20.20
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/12 13.05
 0AGF       SD 00000001 00000000 00000900             00                                                                  
 1AGF      agf test case                                                                                         Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 20.20
-0                                               2  punch ':test agf'                                                     
-                                                3  punch ':btst z'                                                       
- 00000000                00000000 00000900      4 agf start 0                                                            
-                     R:0 00000000               5  using agf,0                                                           
- 00000000                00000000 000001A0      6  org agf+x'1a0'                                                        
- 000001A0 0000000180000000                      7  dc x'0000000180000000',ad(x'200')                                     
- 000001B0                000001B0 000001D0      8  org agf+x'1d0' Program new                                            
- 000001D0 0002000180000000                      9  dc x'0002000180000000',ad(x'deaddead')                                
- 000001E0                000001E0 00000200     10  org agf+x'200'                                                        
- 00000200 4100 0009               00000009     11  LA 0,testcount   0=Number of test data                                
- 00000204 4110 0250               00000250     12  LA 1,TEST1       1=>Test data table                                   
- 00000208 41F0 0900               00000900     13  LA 15,rES1       15=>Result table                                     
- 0000020C 5B80 0008               00000008     14  S 8,8          Clear CC register                                      
- 00000210 E340 1000 0004          00000000     15 A LG 4,0(,1)     Load 4=TESTn                                          
- 00000216 5850 1008               00000008     16  L 5,8(,1)       Load 5=TESTn+8                                        
- 0000021A E340 1008 0018          00000008     17  AGF 4,8(,1)     Add fullword at TESTn+8                               
- 00000220 B222 0080                            18  IPM 8            8=Cond code and pgm mask                             
- 00000224 E340 F000 0024          00000000     19  STG 4,0(,15)    Store 4 in result table                               
- 0000022A 5080 F008               00000008     20  ST 8,8(,15)     Store CC in table                                     
- 0000022E 41F0 F010               00000010     21  LA 15,16(,15)   15=>next result table                                 
- 00000232 4110 1010               00000010     22  LA 1,16(,1)     1=>Next TESTn                                         
- 00000236 4600 0210               00000210     23  BCT 0,A          Loop to end of TEST table                            
- 0000023A B2B2 0240      00000240              24  LPSWE WAITPSW     Load enabled wait PSW                               
- 00000240                                      25  ds 0d                                                                 
- 00000240 0002000180000000                     26 WAITPSW dc x'0002000180000000',ad(0) OK wait state PSW                 
- 00000250 0000000000000005                     27 TEST1 DC fd'5',F'3'                                                    
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/12 13.05
+0                                               3 * This file was put into the public domain 2015-11-12                  
+                                                4 * by John P. Hartmann.  You can use it for anything you like,          
+                                                5 * as long as this notice remains.                                      
+0                                               7  punch ':test agf'                                                     
+                                                8  punch ':btst z'                                                       
+ 00000000                00000000 00000900      9 agf start 0                                                            
+                     R:0 00000000              10  using agf,0                                                           
+ 00000000                00000000 000001A0     11  org agf+x'1a0'                                                        
+ 000001A0 0000000180000000                     12  dc x'0000000180000000',ad(x'200')                                     
+ 000001B0                000001B0 000001D0     13  org agf+x'1d0' Program new                                            
+ 000001D0 0002000180000000                     14  dc x'0002000180000000',ad(x'deaddead')                                
+ 000001E0                000001E0 00000200     15  org agf+x'200'                                                        
+ 00000200 4100 0009               00000009     16  LA 0,testcount   0=Number of test data                                
+ 00000204 4110 0250               00000250     17  LA 1,TEST1       1=>Test data table                                   
+ 00000208 41F0 0900               00000900     18  LA 15,rES1       15=>Result table                                     
+ 0000020C 5B80 0008               00000008     19  S 8,8          Clear CC register                                      
+ 00000210 E340 1000 0004          00000000     20 A LG 4,0(,1)     Load 4=TESTn                                          
+ 00000216 5850 1008               00000008     21  L 5,8(,1)       Load 5=TESTn+8                                        
+ 0000021A E340 1008 0018          00000008     22  AGF 4,8(,1)     Add fullword at TESTn+8                               
+ 00000220 B222 0080                            23  IPM 8            8=Cond code and pgm mask                             
+ 00000224 E340 F000 0024          00000000     24  STG 4,0(,15)    Store 4 in result table                               
+ 0000022A 5080 F008               00000008     25  ST 8,8(,15)     Store CC in table                                     
+ 0000022E 41F0 F010               00000010     26  LA 15,16(,15)   15=>next result table                                 
+ 00000232 4110 1010               00000010     27  LA 1,16(,1)     1=>Next TESTn                                         
+ 00000236 4600 0210               00000210     28  BCT 0,A          Loop to end of TEST table                            
+ 0000023A B2B2 0240      00000240              29  LPSWE WAITPSW     Load enabled wait PSW                               
+ 00000240                                      30  ds 0d                                                                 
+ 00000240 0002000180000000                     31 WAITPSW dc x'0002000180000000',ad(0) OK wait state PSW                 
+ 00000250 0000000000000005                     32 TEST1 DC fd'5',F'3'                                                    
  0000025C 00000000                                                                                                       
- 00000260 FFFFFFFFFFFFFFFB                     28 TEST2 DC fd'-5',F'-3'                                                  
+ 00000260 FFFFFFFFFFFFFFFB                     33 TEST2 DC fd'-5',F'-3'                                                  
  0000026C 00000000                                                                                                       
- 00000270 FFFFFFFFFFFFFFFB                     29 TEST3 DC fd'-5',F'3'                                                   
+ 00000270 FFFFFFFFFFFFFFFB                     34 TEST3 DC fd'-5',F'3'                                                   
  0000027C 00000000                                                                                                       
- 00000280 8000000000000000                     30 TEST4 DC fd'-9223372036854775808',F'1'                                 
+ 00000280 8000000000000000                     35 TEST4 DC fd'-9223372036854775808',F'1'                                 
  0000028C 00000000                                                                                                       
- 00000290 7FFFFFFFFFFFFFFF                     31 TEST5 DC fd'9223372036854775807',F'-2147483648'                        
+ 00000290 7FFFFFFFFFFFFFFF                     36 TEST5 DC fd'9223372036854775807',F'-2147483648'                        
  0000029C 00000000                                                                                                       
- 000002A0 00000000FFFFFFFF                     32 TEST6 DC fd'4294967295',F'1'                                           
+ 000002A0 00000000FFFFFFFF                     37 TEST6 DC fd'4294967295',F'1'                                           
  000002AC 00000000                                                                                                       
- 000002B0 0000000100000000                     33 TEST7 DC fd'4294967296',F'1'                                           
+ 000002B0 0000000100000000                     38 TEST7 DC fd'4294967296',F'1'                                           
  000002BC 00000000                                                                                                       
- 000002C0 0000000100000000                     34 TEST8 DC fd'4294967296',F'-1'                                          
+ 000002C0 0000000100000000                     39 TEST8 DC fd'4294967296',F'-1'                                          
  000002CC 00000000                                                                                                       
- 000002D0 0000000000000000                     35  dc fd'0',f'0'                                                         
- 000002E0                                      36  ds 0d Align                                                           
-                         00000009              37 testcount equ (*-test1)/16                                             
- 000002E0                000002E0 00000900     38  org agf+x'900'                                                        
- 00000900                                      39 res1 ds 0d                                                             
-                                               40  punch '* runtest .1'                                                  
-                                               41  punch '* *Compare'                                                    
-                                               42  punch '* r 900.9'                                                     
-                                               43  punch '* *Want 00000000 00000008 20'                                  
-                                               44  punch '* r 910.9'                                                     
-                                               45  punch '* *Want FFFFFFFF FFFFFFF8 10'                                  
-                                               46  punch '* r 920.9'                                                     
-                                               47  punch '* *Want FFFFFFFF FFFFFFFE 10'                                  
-                                               48  punch '* r 930.9'                                                     
+ 000002D0 0000000000000000                     40  dc fd'0',f'0'                                                         
+ 000002E0                                      41  ds 0d Align                                                           
+                         00000009              42 testcount equ (*-test1)/16                                             
+ 000002E0                000002E0 00000900     43  org agf+x'900'                                                        
+ 00000900                                      44 res1 ds 0d                                                             
+ 00000900                                      45  ltorg                                                                 
+                                               46  punch '* runtest .1'                                                  
+                                               47  punch '* *Compare'                                                    
+                                               48  punch '* r 900.9'                                                     
+                                               49  punch '* *Want 00000000 00000008 20'                                  
 1AGF      agf test case                                                                                         Page    4
    Active Usings: AGF,R0                                                                                                 
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 20.20
-0                                              49  punch '* *Want 80000000 00000001 10'                                  
-                                               50  punch '* r 940.9'                                                     
-                                               51  punch '* *Want 7FFFFFFF 7FFFFFFF 20'                                  
-                                               52  punch '* r 950.9'                                                     
-                                               53  punch '* *Want 00000001 00000000 20'                                  
-                                               54  punch '* r 960.9'                                                     
-                                               55  punch '* *Want 00000001 00000001 20'                                  
-                                               56  punch '* r 970.9'                                                     
-                                               57  punch '* *Want 00000000 FFFFFFFF 20'                                  
-                                               58  punch '* r 980.9'                                                     
-                                               59  punch '* *Want 00000000 00000000 00'                                  
-                                               60  punch '* *Done'                                                       
-                                               61  END  ,                                                                
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/12 13.05
+0                                              50  punch '* r 910.9'                                                     
+                                               51  punch '* *Want FFFFFFFF FFFFFFF8 10'                                  
+                                               52  punch '* r 920.9'                                                     
+                                               53  punch '* *Want FFFFFFFF FFFFFFFE 10'                                  
+                                               54  punch '* r 930.9'                                                     
+                                               55  punch '* *Want 80000000 00000001 10'                                  
+                                               56  punch '* r 940.9'                                                     
+                                               57  punch '* *Want 7FFFFFFF 7FFFFFFF 20'                                  
+                                               58  punch '* r 950.9'                                                     
+                                               59  punch '* *Want 00000001 00000000 20'                                  
+                                               60  punch '* r 960.9'                                                     
+                                               61  punch '* *Want 00000001 00000001 20'                                  
+                                               62  punch '* r 970.9'                                                     
+                                               63  punch '* *Want 00000000 FFFFFFFF 20'                                  
+                                               64  punch '* r 980.9'                                                     
+                                               65  punch '* *Want 00000000 00000000 00'                                  
+                                               66  punch '* *Done'                                                       
+                                               67  END  ,                                                                
 1AGF                            Ordinary Symbol and Literal Cross Reference                                     Page    5
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/11 20.20
-0A             6 00000210 00000001     I                   15   23B                                                      
- agf           1 00000000 00000001     J                    4    5U    6     8    10    38                               
- res1          8 00000900 00000001     D  D                39   13                                                       
- TEST1         8 00000250 00000001     F  FD               27   12    37                                                 
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/12 13.05
+0A             6 00000210 00000001     I                   20   28B                                                      
+ agf           1 00000000 00000001     J                    9   10U   11    13    15    43                               
+ res1          8 00000900 00000001     D  D                44   18                                                       
+ TEST1         8 00000250 00000001     F  FD               32   17    42                                                 
  testcount                                                                                                               
-               1 00000009 00000001 A   U                   37   11                                                       
- WAITPSW       8 00000240 00000001     X  X                26   24                                                       
+               1 00000009 00000001 A   U                   42   16                                                       
+ WAITPSW       8 00000240 00000001     X  X                31   29                                                       
 1AGF                               Unreferenced Symbols Defined in CSECTs                                       Page    6
--  Defn  Symbol                                                                             jHLASM 1.0   2015/11/11 20.20
-0    28  TEST2                                                                                                           
-     29  TEST3                                                                                                           
-     30  TEST4                                                                                                           
-     31  TEST5                                                                                                           
-     32  TEST6                                                                                                           
-     33  TEST7                                                                                                           
-     34  TEST8                                                                                                           
+-  Defn  Symbol                                                                             jHLASM 1.0   2015/11/12 13.05
+0    33  TEST2                                                                                                           
+     34  TEST3                                                                                                           
+     35  TEST4                                                                                                           
+     36  TEST5                                                                                                           
+     37  TEST6                                                                                                           
+     38  TEST7                                                                                                           
+     39  TEST8                                                                                                           
 1AGF                                                   Using Map                                                Page    7
--                                                                                           jHLASM 1.0   2015/11/11 20.20
+-                                                                                           jHLASM 1.0   2015/11/12 13.05
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
-0     5  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00900     24 agf,0                         
+0    10  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00900     29 agf,0                         
 1                                   General Purpose Register Cross Reference                                    Page    8
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/11 20.20
-0    0(0)       5U   11S   23M                                                                                           
-     1(1)      12S   15    16    17    22S   22                                                                          
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/12 13.05
+0    0(0)      10U   16S   28M                                                                                           
+     1(1)      17S   20    21    22    27S   27                                                                          
      2(2)    (no references identified)                                                                                  
      3(3)    (no references identified)                                                                                  
-     4(4)      15S   17M   19                                                                                            
-     5(5)      16S                                                                                                       
+     4(4)      20S   22M   24                                                                                            
+     5(5)      21S                                                                                                       
      6(6)    (no references identified)                                                                                  
      7(7)    (no references identified)                                                                                  
-     8(8)      14M   18M   20                                                                                            
+     8(8)      19M   23M   25                                                                                            
      9(9)    (no references identified)                                                                                  
     10(A)    (no references identified)                                                                                  
     11(B)    (no references identified)                                                                                  
     12(C)    (no references identified)                                                                                  
     13(D)    (no references identified)                                                                                  
     14(E)    (no references identified)                                                                                  
-    15(F)      13S   19    20    21S   21                                                                                
+    15(F)      18S   24    25    26S   26                                                                                
 1AGF                               Diagnostic Cross Reference and Assembler Summary                             Page    9
--                                                                                           jHLASM 1.0   2015/11/11 20.20
+-                                                                                           jHLASM 1.0   2015/11/12 13.05
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
 0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    agf.assemble                                                                                              
-0Assembly Start Time: 20.20.38 Stop Time: 20.20.38 Processor Time: 00.00.00.0135.
+0Assembly Start Time: 13.05.03 Stop Time: 13.05.03 Processor Time: 00.00.00.0129.
  
                                      
  Return Code 000                                                                                                         

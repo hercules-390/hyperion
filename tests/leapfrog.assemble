@@ -1,0 +1,69 @@
+LFROG    TITLE 'Leapfrog test case two CPUs'                                    
+                                                                                
+* This file was put into the public domain 2015-11-12                           
+* by John P. Hartmann.  You can use it for anything you like,                   
+* as long as this notice remains.                                               
+                                                                                
+* This  test lets one CPU go into a disabled wait state only to       *         
+* be restarted by the second one a while later.  The purpose is       *         
+* to  verify  that  this does not fool the runtest command into       *         
+* thinking  everything  is stopped just because one CPU loads a       *         
+* disabled wait PSW.                                                  *         
+ punch ':test leapfrog'                                                         
+ punch ':btst z'                                                                
+ punch '* numcpu 2'                                                             
+lfrog start 0                                                                   
+ using lfrog,0                                                                  
+ org lfrog+x'1a0' Program new                                                   
+rst dc x'0000000180000000',ad(go0)                                              
+ext dc x'0000000180000000',ad(goext)                                            
+ org lfrog+x'1d0' Program new                                                   
+ dc x'0002000180000000',ad(x'deaddead')                                         
+ org lfrog+x'200'                                                               
+go0 equ *                                                                       
+ la 0,go1                                                                       
+ stg 0,rst+8 For cpu1 or second time round                                      
+ sck =d'0' Start the clock                                                      
+ la 2,1                                                                         
+fire equ *                                                                      
+ sigp 0,2,6 Fire up CPU (r2) by restart                                         
+ ipm 3                                                                          
+ srl 3,24                                                                       
+ stc 3,80(2)                                                                    
+ lpswe stop                                                                     
+go1 equ *                                                                       
+ sck =d'0' Start the clock                                                      
+ la 0,go3                                                                       
+ stg 0,rst+8                                                                    
+go3 equ *                                                                       
+ stck clk                                                                       
+ lg 0,clk                                                                       
+ agf 0,=f'10000000' About 1/10 second                                           
+ stg 0,clk                                                                      
+ sckc clk                                                                       
+ stctg 0,0,cr0                                                                  
+ lg 0,cr0                                                                       
+ o 0,=a(x'800')                                                                 
+ stg 0,cr0                                                                      
+ lctlg 0,0,cr0  Enable clock comparator                                         
+ lpswe wait                                                                     
+goext equ *                                                                     
+ mvi ext+1,x'02' Stop on external                                               
+ xc ext+8(8),ext+8                                                              
+ sr 2,2 Now fire cpu 0                                                          
+ b fire                                                                         
+cr0 ds ad                                                                       
+clk ds d                                                                        
+wait  dc x'0102000180000000',ad(1)                                              
+stop  dc x'0002000180000000',ad(0)                                              
+ ltorg                                                                          
+*punch '* t+'                                                                   
+ punch '* runtest 1'                                                            
+ punch '* *Compare'                                                             
+ punch '* r 80.2'                                                               
+ punch '* cpu 0 clocks'                                                         
+ punch '* cpu 1 clocks'                                                         
+ punch '* ipending'                                                             
+ punch '* cr'                                                                   
+ punch '* *Done'                                                                
+ end                                                                            

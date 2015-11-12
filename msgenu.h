@@ -1389,7 +1389,7 @@ Examples:
 #define HHC02327 "%c:"F_RADR"  Storage address is not valid"
 #define HHC02328 "%c:"F_RADR"  Addressing exception"
 #define HHC02329 "%c:"F_VADR"  Translation exception %4.4hX  %s"
-#define HHC02330 "Script %d: test: restart failed"
+#define HHC02330 "Script %d: test: [re]start failed"
 #define HHC02331 "Script %d: test: aborted"
 #define HHC02332 "Script %d: test: timeout"
 #define HHC02333 "Script %d: test: running..."
@@ -1399,8 +1399,9 @@ Examples:
 #define HHC02337 "runtest is only valid as a scripting command"
 #define HHC02338 "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"
 #define HHC02339 "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
+#define HHC02340 "Script %d: test: cannot initalise semaphore: %s"
 
-// range 02340 - 02369 available
+// range 02350 - 02369 available
 
 #define HHC02370 "%1d:%04X CU or LCU %s conflicts with existing CUNUM %04X SSID %04X CU/LCU %s"
 #define HHC02371 "%1d:%04X Adding device exceeds CU and/or LCU device limits"

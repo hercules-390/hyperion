@@ -1,8 +1,8 @@
 # This test file was generated from offline assembler source
-# by bldhtc.rexx 11 Nov 2015 20:20:38
+# by bldhtc.rexx 12 Nov 2015 13:05:03
 # Treat as object code.  That is, modifications will be lost.
 # assemble and listing files are provided for information only.
-*Testcase agf processed 11 Nov 2015 20:20:38 by bldhtc.rexx
+*Testcase agf processed 12 Nov 2015 13:05:03 by bldhtc.rexx
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200

@@ -12,10 +12,10 @@ Signal on novalue
 parse arg in opts
 quiet = wordpos('quiet', opts) > 0
 testcase = '<unknown>'
-fails. = 0
-catast = 0
-done = 0
-lineno = 0
+fails. = 0                            /* .0 is OK .1 is failures     */
+catast = 0                            /* Catastrophic failures       */
+done = 0                              /* Test cases started          */
+lineno = 0                            /* Line number in input file   */
 facility.=0                           /* No facilities installed     */
 active = 1                            /* We do produce output        */
 nest=0                                /* If/then/else nesting        */
@@ -24,12 +24,12 @@ do while lines(in) > 0
    lineno = lineno + 1
    l = linein(in)
    /* Another  way  to  handle  a prefix to the response might be to */
-   /* look for HHC.                                                   */
+   /* look for HHC.                                                  */
    p = verify(l, "0123456789: ")      /* Leading timestamp?          */
    If p = 0                           /* Just a timestamp or nothing */
       Then iterate
    If p > 1                           /* Timestamp prefix            */
-      Then l = substr(l, p)
+      Then l = substr(l, p)           /* Toss it                     */
 
    parse var l msg verb rest
    If left(msg, 3) = 'HHC' & right(msg, 1) = 'E'
@@ -81,9 +81,9 @@ do while lines(in) > 0
       When left(msg, 8) = 'HHC02332'
          Then
             Do
-               done = done + 1
-               catast = catast + 1
-               call test 0, 'Test case timed out in wait.',,
+               If \timeoutOk
+                  Then catast = catast + 1
+               call test timeoutOk, 'Test case timed out in wait.',,
                   'This is likely an error in Hercules.  Please report'
             end
       otherwise
@@ -94,7 +94,7 @@ Select
    When fails.1 = 0 & catast = 0
       Then msg = 'All OK.'
    otherwise
-      msg = (fails.1 + catast) 'failed;' fails.0 'OK.'
+      msg = fails.1 'failed;' fails.0 'OK.'
 end
 
 say 'Done' done 'tests. ' msg
@@ -134,6 +134,8 @@ Select
       Then wantpgm = rest
    When verb = '*Done'
       Then call endtest
+   When verb = '*Timeout'
+      then timeoutOk = 1
    otherwise
       say 'Bad order: ' verb
       rv = 16
@@ -145,6 +147,7 @@ return
 /*********************************************************************/
 
 begtest:
+done = done + 1
 testcase = rest
 comparing = 0
 havewait = 0
@@ -159,6 +162,7 @@ keyaddr = '<unknown>'
 prefix = ''
 lasterror = ''
 expl.0 = 0
+timeoutOk = 0
 return
 
 endtest:
@@ -183,7 +187,6 @@ Select
       msg = rv 'failures.'
 end
 say 'Test' testcase'. ' oks 'OK compares. ' msg
-done = done + 1
 fail = rv \= 0
 fails.fail = fails.fail + 1           /* Ok or fail                  */
 return

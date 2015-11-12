@@ -1,0 +1,188 @@
+1                               High Level Assembler Option Summary                                             Page    1
+-                                                                                           jHLASM 1.0   2015/11/12 13.05
+0  No Overriding ASMAOPT Parameters                                                                                      
+   No Overriding Parameters                                                                                              
+   No Process Statements                                                                                                 
+                                                                                                                         
+                                                                                                                         
+   Options for this Assembly                                                                                             
+0  NOADATA                                                                                                               
+     ALIGN                                                                                                               
+   NOASA                                                                                                                 
+     BATCH                                                                                                               
+     CODEPAGE(047C)                                                                                                      
+   NOCOMPAT                                                                                                              
+   NODBCS                                                                                                                
+   NODECK                                                                                                                
+     DXREF                                                                                                               
+     ESD                                                                                                                 
+   NOEXIT                                                                                                                
+     FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)                                              
+   NOFOLD                                                                                                                
+   NOGOFF                                                                                                                
+   NOINFO                                                                                                                
+     LANGUAGE(EN)                                                                                                        
+   NOLIBMAC                                                                                                              
+     LINECOUNT(60)                                                                                                       
+     LIST(121)                                                                                                           
+     MACHINE(,NOLIST)                                                                                                    
+     MXREF(SOURCE)                                                                                                       
+     OBJECT                                                                                                              
+     OPTABLE(UNI,NOLIST)                                                                                                 
+   NOPCONTROL                                                                                                            
+   NOPESTOP                                                                                                              
+   NOPROFILE                                                                                                             
+   NORA2                                                                                                                 
+   NORENT                                                                                                                
+     RLD                                                                                                                 
+     RXREF                                                                                                               
+     SECTALGN(8)                                                                                                         
+     SIZE(MAX)                                                                                                           
+   NOSUPRWARN                                                                                                            
+     SYSPARM()                                                                                                           
+   NOTERM                                                                                                                
+   NOTEST                                                                                                                
+     THREAD                                                                                                              
+   NOTRANSLATE                                                                                                           
+     TYPECHECK(MAGNITUDE,REGISTER)                                                                                       
+     USING(NOLIMIT,MAP,WARN(15))                                                                                         
+   NOWORKFILE                                                                                                            
+     XREF(SHORT,UNREFS)                                                                                                  
+                                                                                                                         
+   No Overriding DD Names                                                                                                
+1LFROG                                         External Symbol Dictionary                                       Page    2
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/12 13.05
+0LFROG     SD 00000001 00000000 000002C0             00                                                                  
+1LFROG    Leapfrog test case two CPUs                                                                           Page    3
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/12 13.05
+0                                               3 * This file was put into the public domain 2015-11-12                  
+                                                4 * by John P. Hartmann.  You can use it for anything you like,          
+                                                5 * as long as this notice remains.                                      
+0                                               7 * This  test lets one CPU go into a disabled wait state only to       *
+                                                8 * be restarted by the second one a while later.  The purpose is       *
+                                                9 * to  verify  that  this does not fool the runtest command into       *
+                                               10 * thinking  everything  is stopped just because one CPU loads a       *
+                                               11 * disabled wait PSW.                                                  *
+                                               12  punch ':test leapfrog'                                                
+                                               13  punch ':btst z'                                                       
+                                               14  punch '* numcpu 2'                                                    
+ 00000000                00000000 000002C0     15 lfrog start 0                                                          
+                     R:0 00000000              16  using lfrog,0                                                         
+ 00000000                00000000 000001A0     17  org lfrog+x'1a0' Program new                                          
+ 000001A0 0000000180000000                     18 rst dc x'0000000180000000',ad(go0)                                     
+ 000001B0 0000000180000000                     19 ext dc x'0000000180000000',ad(goext)                                   
+ 000001C0                000001C0 000001D0     20  org lfrog+x'1d0' Program new                                          
+ 000001D0 0002000180000000                     21  dc x'0002000180000000',ad(x'deaddead')                                
+ 000001E0                000001E0 00000200     22  org lfrog+x'200'                                                      
+                         00000200              23 go0 equ *                                                              
+ 00000200 4100 0226               00000226     24  la 0,go1                                                              
+ 00000204 E300 01A8 0024          000001A8     25  stg 0,rst+8 For cpu1 or second time round                             
+ 0000020A B204 02B0      000002B0              26  sck =d'0' Start the clock                                             
+ 0000020E 4120 0001               00000001     27  la 2,1                                                                
+                         00000212              28 fire equ *                                                             
+ 00000212 AE02 0006               00000006     29  sigp 0,2,6 Fire up CPU (r2) by restart                                
+ 00000216 B222 0030                            30  ipm 3                                                                 
+ 0000021A 8830 0018               00000018     31  srl 3,24                                                              
+ 0000021E 4232 0050               00000050     32  stc 3,80(2)                                                           
+ 00000222 B2B2 02A0      000002A0              33  lpswe stop                                                            
+                         00000226              34 go1 equ *                                                              
+ 00000226 B204 02B0      000002B0              35  sck =d'0' Start the clock                                             
+ 0000022A 4100 0234               00000234     36  la 0,go3                                                              
+ 0000022E E300 01A8 0024          000001A8     37  stg 0,rst+8                                                           
+                         00000234              38 go3 equ *                                                              
+ 00000234 B205 0288      00000288              39  stck clk                                                              
+ 00000238 E300 0288 0004          00000288     40  lg 0,clk                                                              
+ 0000023E E300 02B8 0018          000002B8     41  agf 0,=f'10000000' About 1/10 second                                  
+ 00000244 E300 0288 0024          00000288     42  stg 0,clk                                                             
+ 0000024A B206 0288      00000288              43  sckc clk                                                              
+ 0000024E EB00 0280 0025          00000280     44  stctg 0,0,cr0                                                         
+ 00000254 E300 0280 0004          00000280     45  lg 0,cr0                                                              
+ 0000025A 5600 02BC               000002BC     46  o 0,=a(x'800')                                                        
+ 0000025E E300 0280 0024          00000280     47  stg 0,cr0                                                             
+ 00000264 EB00 0280 002F          00000280     48  lctlg 0,0,cr0  Enable clock comparator                                
+ 0000026A B2B2 0290      00000290              49  lpswe wait                                                            
+                         0000026E              50 goext equ *                                                            
+ 0000026E 9202 01B1      000001B1              51  mvi ext+1,x'02' Stop on external                                      
+ 00000272 D707 01B8 01B8 000001B8 000001B8     52  xc ext+8(8),ext+8                                                     
+ 00000278 1B22                                 53  sr 2,2 Now fire cpu 0                                                 
+ 0000027A 47F0 0212               00000212     54  b fire                                                                
+ 00000280                                      55 cr0 ds ad                                                              
+ 00000288                                      56 clk ds d                                                               
+ 00000290 0102000180000000                     57 wait  dc x'0102000180000000',ad(1)                                     
+1LFROG    Leapfrog test case two CPUs                                                                           Page    4
+   Active Usings: LFROG,R0                                                                                               
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/12 13.05
+0000002A0 0002000180000000                     58 stop  dc x'0002000180000000',ad(0)                                     
+ 000002B0                                      59  ltorg                                                                 
+ 000002B0 0000000000000000                     60                =d'0'                                                   
+ 000002B8 00000000                             61                =f'10000000'                                            
+ 000002BC 00000800                             62                =a(x'800')                                              
+                                               63 *punch '* t+'                                                          
+                                               64  punch '* runtest 1'                                                   
+                                               65  punch '* *Compare'                                                    
+                                               66  punch '* r 80.2'                                                      
+                                               67  punch '* cpu 0 clocks'                                                
+                                               68  punch '* cpu 1 clocks'                                                
+                                               69  punch '* ipending'                                                    
+                                               70  punch '* cr'                                                          
+                                               71  punch '* *Done'                                                       
+                                               72  end                                                                   
+1LFROG                                            Relocation Dictionary                                         Page    5
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/11/12 13.05
+0  00000001 00000001 000001A8   A 8     +                                                                                
+   00000001 00000001 000001B8   A 8     +                                                                                
+1LFROG                          Ordinary Symbol and Literal Cross Reference                                     Page    6
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/12 13.05
+0clk           8 00000288 00000001     D  D                56   39S   40    42S   43                                     
+ cr0           8 00000280 00000001     A  AD               55   44S   45    47S   48                                     
+ ext           8 000001B0 00000001     X  X                19   51S   52M   52                                           
+ fire          1 00000212 00000001     U                   28   54B                                                      
+ go0           1 00000200 00000001     U                   23   18                                                       
+ go1           1 00000226 00000001     U                   34   24                                                       
+ go3           1 00000234 00000001     U                   38   36                                                       
+ goext         1 0000026E 00000001     U                   50   19                                                       
+ lfrog         1 00000000 00000001     J                   15   16U   17    20    22                                     
+ rst           8 000001A0 00000001     X  X                18   25S   37S                                                
+ stop          8 000002A0 00000001     X  X                58   33                                                       
+ wait          8 00000290 00000001     X  X                57   49                                                       
+ =a(x'800')                                                                                                              
+               4 000002BC 00000001     A                   62   46                                                       
+ =d'0'         8 000002B0 00000001     D                   60   26    35                                                 
+ =f'10000000'                                                                                                            
+               4 000002B8 00000001     F                   61   41                                                       
+1LFROG                                                 Using Map                                                Page    7
+-                                                                                           jHLASM 1.0   2015/11/12 13.05
+   Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
+           Count      Id           Type          Value    Range     Id        Disp    Stmt                               
+0    16  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 002BC     54 lfrog,0                       
+1                                   General Purpose Register Cross Reference                                    Page    8
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/12 13.05
+0    0(0)      16U   24S   25    29M   36S   37    40S   41M   42    45S   46M   47                                      
+     1(1)    (no references identified)                                                                                  
+     2(2)      27S   29    32N   53M   53                                                                                
+     3(3)      30M   31M   32                                                                                            
+     4(4)    (no references identified)                                                                                  
+     5(5)    (no references identified)                                                                                  
+     6(6)    (no references identified)                                                                                  
+     7(7)    (no references identified)                                                                                  
+     8(8)    (no references identified)                                                                                  
+     9(9)    (no references identified)                                                                                  
+    10(A)    (no references identified)                                                                                  
+    11(B)    (no references identified)                                                                                  
+    12(C)    (no references identified)                                                                                  
+    13(D)    (no references identified)                                                                                  
+    14(E)    (no references identified)                                                                                  
+    15(F)    (no references identified)                                                                                  
+1LFROG                             Diagnostic Cross Reference and Assembler Summary                             Page    9
+-                                                                                           jHLASM 1.0   2015/11/12 13.05
+0     No Statements Flagged in this Assembly                                                                             
+0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
+0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
+0Data Sets Allocated for this Assembly                                                                                   
+  Con DDname   Data Set Name                                Volume  Member                                               
+   P1 SYSIN    leapfrog.assemble                                                                                         
+0Assembly Start Time: 13.05.03 Stop Time: 13.05.03 Processor Time: 00.00.00.0189.
+ 
+                                     
+ Return Code 000                                                                                                         

@@ -1,4 +1,9 @@
 AGF      TITLE 'agf test case'                                                  
+                                                                                
+* This file was put into the public domain 2015-11-12                           
+* by John P. Hartmann.  You can use it for anything you like,                   
+* as long as this notice remains.                                               
+                                                                                
  punch ':test agf'                                                              
  punch ':btst z'                                                                
 agf start 0                                                                     
@@ -37,6 +42,7 @@ TEST8 DC fd'4294967296',F'-1'
 testcount equ (*-test1)/16                                                      
  org agf+x'900'                                                                 
 res1 ds 0d                                                                      
+ ltorg                                                                          
  punch '* runtest .1'                                                           
  punch '* *Compare'                                                             
  punch '* r 900.9'                                                              

@@ -1,4 +1,9 @@
 INVPSW   TITLE 'invalid program new PSW'                                        
+                                                                                
+* This file was put into the public domain 2015-11-12                           
+* by John P. Hartmann.  You can use it for anything you like,                   
+* as long as this notice remains.                                               
+                                                                                
  punch ':test invpsw'                                                           
 inv start 0                                                                     
  org inv+x'1d0' Program new with two errors                                     

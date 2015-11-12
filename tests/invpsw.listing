@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/11/11 21.53
+-                                                                                           jHLASM 1.0   2015/11/12 13.05
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,31 +51,34 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1INVPSW                                        External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/11 21.53
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/12 13.05
 0INV       SD 00000001 00000000 000001E0             00                                                                  
 1INVPSW   invalid program new PSW                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 21.53
-0                                               2  punch ':test invpsw'                                                  
- 00000000                00000000 000001E0      3 inv start 0                                                            
- 00000000                00000000 000001D0      4  org inv+x'1d0' Program new with two errors                            
- 000001D0 0000000100000000                      5  dc x'0000000100000000',ad(x'deaddead')                                
-                                                6  punch '* runtest .1'                                                  
-                                                7  punch '* *Program 1'                                                  
-                                                8  punch '* *Done'                                                       
-                                                9  END  ,                                                                
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/12 13.05
+0                                               3 * This file was put into the public domain 2015-11-12                  
+                                                4 * by John P. Hartmann.  You can use it for anything you like,          
+                                                5 * as long as this notice remains.                                      
+0                                               7  punch ':test invpsw'                                                  
+ 00000000                00000000 000001E0      8 inv start 0                                                            
+ 00000000                00000000 000001D0      9  org inv+x'1d0' Program new with two errors                            
+ 000001D0 0000000100000000                     10  dc x'0000000100000000',ad(x'deaddead')                                
+                                               11  punch '* runtest .1'                                                  
+                                               12  punch '* *Program 1'                                                  
+                                               13  punch '* *Done'                                                       
+                                               14  END  ,                                                                
 1INVPSW                         Ordinary Symbol and Literal Cross Reference                                     Page    4
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/11 21.53
-0inv           1 00000000 00000001     J                    3    4                                                       
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/12 13.05
+0inv           1 00000000 00000001     J                    8    9                                                       
 1INVPSW                            Diagnostic Cross Reference and Assembler Summary                             Page    5
--                                                                                           jHLASM 1.0   2015/11/11 21.53
+-                                                                                           jHLASM 1.0   2015/11/12 13.05
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
 0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    invpsw.assemble                                                                                           
-0Assembly Start Time: 21.53.40 Stop Time: 21.53.40 Processor Time: 00.00.00.0048.
+0Assembly Start Time: 13.05.03 Stop Time: 13.05.03 Processor Time: 00.00.00.0048.
  
                                      
  Return Code 000                                                                                                         

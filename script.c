@@ -1471,14 +1471,12 @@ proc_runtest(SCRCTL *pCtl, char *args)
    /* Initialise the semaphore                                       */
    if (sem_init(&sem, 0, 0))
    {
-      /* Needs a message.  This is a catastrophic error.             */
-      printf("Cannot seminit %s\n", strerror(errno));
-      fflush(stdout);
+      /* This is a catastrophic error.                               */
+      /* HHC02340 "Script %d: test: cannot initalise semaphore: %s"  */
+      WRMSG( HHC02340, "E", pCtl->scr_id,  strerror(errno));
       return;
    }
    sysblk.scrsem = &sem;              /* Announce it                 */
-   printf("Temp semaphore: %p\n", sysblk.scrsem);
-   fflush(stderr);
 
    if (dostart) rv = start_cmd_cpu( 0, NULL, NULL );
    else rv = restart_cmd( 0, NULL, NULL );
@@ -1507,19 +1505,17 @@ proc_runtest(SCRCTL *pCtl, char *args)
 
    if (ETIMEDOUT == eno)
    {
-      extern int quit_cmd(int argc, char *argv[],char *cmdline);
-
       // HHC02332 "Script %d: test: timeout"
       WRMSG( HHC02332, "E", pCtl->scr_id );
       printf("Configured " F_CPU_BITMAP "; started " F_CPU_BITMAP "; waiting " F_CPU_BITMAP "\n",
          sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask);
       fflush(stdout);
-      pCtl->scr_flags |= SCR_CANCEL;  /* Stop                        */
+      fflush(stderr);
 #if 0
-      sysreset_cmd(0, NULL, NULL);
-      return;
+      pCtl->scr_flags |= SCR_CANCEL;  /* Stop                        */
+      panel_command("stop all");
 #endif
-      quit_cmd(0, NULL, NULL);
+      panel_command( "sysclear");
       return;
    }
 
