@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/11/12 13.05
+-                                                                                           jHLASM 1.0   2015/11/12 19.38
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1SIGP                                          External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/12 13.05
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/12 19.38
 0SIGP      SD 00000001 00000000 00000228             00                                                                  
 1SIGP     Signal processor test case                                                                            Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/12 13.05
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/12 19.38
 0                                               3 * This file was put into the public domain 2015-11-12                  
                                                 4 * by John P. Hartmann.  You can use it for anything you like,          
                                                 5 * as long as this notice remains.                                      
@@ -74,31 +74,31 @@
  00000204 4820 0220               00000220     19  lh 2,cpu                                                              
  00000208 AE02 0005               00000005     20  sigp 0,2,5 Stop                                                       
  0000020C B2B2 0210      00000210              21  lpswe stop                                                            
- 00000210 0002000000000000                     22 stop dc x'0002 0000',f'0',ad(x'bad')                                   
+ 00000210 0002000000000000                     22 stop dc x'0002 0000',f'0',ad(0)                                        
  00000220                                      23 cpu ds h                                                               
  00000228                                      24  ltorg                                                                 
                                                25  punch '* runtest .1'                                                  
                                                26  punch '* psw'                                                         
-                                               27  punch '* runtest .1'                                                  
+                                               27  punch '* runtest start .1'                                            
                                                28  punch '* psw'                                                         
-                                               29  punch '* *Done nowait'                                                
+                                               29  punch '* *Done'                                                       
                                                30  end                                                                   
 1SIGP                                             Relocation Dictionary                                         Page    4
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/11/12 13.05
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/11/12 19.38
 0  00000001 00000001 000001A8   A 8     +                                                                                
 1SIGP                           Ordinary Symbol and Literal Cross Reference                                     Page    5
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/12 13.05
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/12 19.38
 0cpu           2 00000220 00000001     H  H                23   18S   19                                                 
  go            1 00000200 00000001     U                   17   13                                                       
  sigp          1 00000000 00000001     J                   10   11U   12    14    16                                     
  stop          4 00000210 00000001     X  X                22   21                                                       
 1SIGP                                                  Using Map                                                Page    6
--                                                                                           jHLASM 1.0   2015/11/12 13.05
+-                                                                                           jHLASM 1.0   2015/11/12 19.38
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0    11  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00220     21 sigp,0                        
 1                                   General Purpose Register Cross Reference                                    Page    7
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/12 13.05
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/12 19.38
 0    0(0)      11U   20M                                                                                                 
      1(1)    (no references identified)                                                                                  
      2(2)      19S   20                                                                                                  
@@ -116,14 +116,14 @@
     14(E)    (no references identified)                                                                                  
     15(F)    (no references identified)                                                                                  
 1SIGP                              Diagnostic Cross Reference and Assembler Summary                             Page    8
--                                                                                           jHLASM 1.0   2015/11/12 13.05
+-                                                                                           jHLASM 1.0   2015/11/12 19.38
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
-0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
+0System:  Linux release 3.19.0-33-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    sigp.assemble                                                                                             
-0Assembly Start Time: 13.05.03 Stop Time: 13.05.03 Processor Time: 00.00.00.0124.
+0Assembly Start Time: 19.38.22 Stop Time: 19.38.22 Processor Time: 00.00.00.0097.
  
                                      
  Return Code 000                                                                                                         

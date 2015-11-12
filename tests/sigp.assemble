@@ -19,12 +19,12 @@ go equ *
  lh 2,cpu                                                                       
  sigp 0,2,5 Stop                                                                
  lpswe stop                                                                     
-stop dc x'0002 0000',f'0',ad(x'bad')                                            
+stop dc x'0002 0000',f'0',ad(0)                                                 
 cpu ds h                                                                        
  ltorg                                                                          
  punch '* runtest .1'                                                           
  punch '* psw'                                                                  
- punch '* runtest .1'                                                           
+ punch '* runtest start .1'                                                     
  punch '* psw'                                                                  
- punch '* *Done nowait'                                                         
+ punch '* *Done'                                                                
  end                                                                            

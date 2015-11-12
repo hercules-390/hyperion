@@ -1467,6 +1467,21 @@ CPU_Wait (REGS* regs)
 #else
     if (sysblk.scrsem && !sysblk.started_mask)
     {
+       /* Looks  like we are entering into a state where nothing can */
+       /* run and a runtest command is active.  So we should wake up */
+       /* the waiting runtest script command.                        */
+
+       /* The  lock  pscrsem serialises access to posting the scrsem */
+       /* semaphore  so  that  it  is  posted once only.  pscrsem is */
+       /* superfluous  if it can be shown that there is no race from */
+       /* the  point  where  the cpu is removed from the started bit */
+       /* map  until  we get here.  If this cannot be guaranteed and */
+       /* the  scrsem  semaphore were to be posted twice and further */
+       /* the   kernel   cannot  discover  that  a  semaphore  at  a */
+       /* particular   address   has   been   destroyed   and   then */
+       /* re-initialised,   we  may  be  posting  the  next  runtest */
+       /* prematurely.                                               */
+
        sem_t * topost = NULL;
 
       printf("Semaphore %p Configured " F_CPU_BITMAP "; started " F_CPU_BITMAP "; waiting " F_CPU_BITMAP "\n",

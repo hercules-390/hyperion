@@ -627,7 +627,6 @@ int     dll_count;                      /* index into array          */
     /* init to allow one to enter.                                   */
     {
        int rv;
-       unsigned char * sp = (unsigned char *) sysblk.pscrsem.__size;
        rv = sem_init(&sysblk.pscrsem, 0, 1);
        assert(!rv);
     }

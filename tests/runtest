@@ -61,9 +61,9 @@ cat $dir/$fns.$ftype >$wfn.tst
 
 if [ "$3" != "noexit" ] ; then
         echo exit >>$wfn.tst
-        ./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out 2>&1
+        ./hercules -t -f $dir/tests.conf -r $wfn.tst >$wfn.out 2>&1
 else
-        ./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out
+        ./hercules -t -f $dir/tests.conf -r $wfn.tst >$wfn.out
 fi
 
 # Read entire file to allow redtest.rexx to parse the features list

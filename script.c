@@ -1513,7 +1513,6 @@ proc_runtest(SCRCTL *pCtl, char *args)
       fflush(stderr);
 #if 0
       pCtl->scr_flags |= SCR_CANCEL;  /* Stop                        */
-      panel_command("stop all");
 #endif
       panel_command( "sysclear");
       return;
