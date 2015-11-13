@@ -41,6 +41,8 @@ void log_callback( const char* msg, size_t msglen )
     }
 
     fflush( stdout );
+    fwrite( msg, 1, msglen, stdout );
+    fflush( stdout );
     fflush( stderr );
 }
 
