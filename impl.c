@@ -620,9 +620,7 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.mntlock);
     initialize_lock (&sysblk.scrlock);
     initialize_condition (&sysblk.scrcond);
-#if defined(_MSVC_)
-    /* FORFISH                                                       */
-#else
+#if !defined(_MSVC_)
     /* Lock  to  serialise  posting  of the script waiting semaphore */
     /* init to allow one to enter.                                   */
     {
