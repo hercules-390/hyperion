@@ -54,16 +54,18 @@ ftype=${4:-tst}
 # it   alphabetically   (some   shell   variants   ignore  case  and/or
 # punctuation).
 
-cat $dir/$fns.$ftype >$wfn.tst
+echo defsym testpath $dir >$wfn.tst
+cat $dir/$fns.$ftype >>$wfn.tst
 
 # Run the script through Hercules.  2>&1 disables the panel display and
 # the ability to enter panel commands.
 
+cmd="./hercules -f $dir/tests.conf -r $wfn.tst -t"
 if [ "$3" != "noexit" ] ; then
         echo exit >>$wfn.tst
-        ./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out 2>&1
+        $cmd >$wfn.out 2>&1
 else
-        ./hercules -f $dir/tests.conf -r $wfn.tst >$wfn.out
+        $cmd >$wfn.out
 fi
 
 # Read entire file to allow redtest.rexx to parse the features list

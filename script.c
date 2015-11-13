@@ -822,7 +822,7 @@ int     rc;                             /* (work)                    */
     {
         /* If not found it's probably the Hercules ".RC" file */
         ASSERT( isrcfile );
-
+        printf("rc? %s\n", script_name);
         /* Create a temporary working control entry */
         if (!(pCtl = NewSCRCTL( tid, script_name, isrcfile )))
             return -1; /* (error message already issued) */
