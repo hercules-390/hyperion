@@ -44,6 +44,8 @@ do while lines(in) > 0
          Then havewait = 1
       When msg = 'HHC00809I'
          Then call waitstate
+      When msg = 'HHC01405E'
+         then call test 0, l
       When msg = 'HHC01417I'
          Then
             If verb = 'Machine'

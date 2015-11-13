@@ -126,12 +126,14 @@ for *Prefix.
 
 The test a .tst script defines is normally begun via a special 'runtest'
 script command which supports optional arguments indicating how the test
-should be started as well as the maximum amount of time it should run:
+should be started as well as the maximum amount of time it should run.
+Unlike the 'pause' command, 'runtest' waits only until all CPUs are int
+the stopped state.
 
       RUNTEST   [RESTART|START]   [timeout]   [# comment...]
 
-The first argument must be either "restart" or "start" (or unspecified)
-and indicates how the test should be started: via the Hercules "restart"
+The first argument must be either "restart" or "start" (or be omitted).
+It specified how the test should be started: via the Hercules "restart"
 console command or the "start" console command. The default is to start
 the test via the "restart" command.
 
@@ -143,8 +145,8 @@ from running forever due to a bug in the test or within Hercules itself.
 moment they are done.) The default if not specified is 30 seconds.
 
 Please also note that timeout values are multiplied by the test timeout
-factor value which specified on the command line before being used. The
-test timeout factor value is used to allow for running tests on systems
+factor value which is specified by the -t switch on the Hercules command. The
+test timeout factor value allows for running tests on systems
 that may be slower than the system they were originally designed for.
 Refer to the documentation describing Hercules's supported command line
 arguments.

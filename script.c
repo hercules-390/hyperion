@@ -805,7 +805,7 @@ static int script_abort( SCRCTL* pCtl )
 /*-------------------------------------------------------------------*/
 /* Process a single script file                 (internal, external) */
 /*-------------------------------------------------------------------*/
-int process_script_file( char *script_name, int isrcfile )
+int process_script_file( char *script_name, const int isrcfile )
 {
 SCRCTL* pCtl;                           /* Script processing control */
 char    script_path[MAX_PATH];          /* Full path of script file  */
@@ -832,7 +832,6 @@ int     rc;                             /* (work)                    */
         FreeSCRCTL( pCtl );
         return rc;
     }
-    isrcfile = pCtl->scr_isrcfile;
 
     /* Abort script if already at maximum recursion level */
     if (pCtl->scr_recursion >= MAX_SCRIPT_DEPTH)
@@ -853,18 +852,18 @@ int     rc;                             /* (work)                    */
            ALWAYS issue an error message, even for the ".RC" file.
         */
         int save_errno = errno; /* (save error code for caller) */
+
+        if (ENOENT != errno)    /* If NOT "File Not found" */
         {
-            if (ENOENT != errno)    /* If NOT "File Not found" */
-            {
-                // "Error in function '%s': '%s'"
-                WRMSG( HHC02219, "E", "fopen()", strerror( errno ));
-            }
-            else if (!isrcfile)     /* If NOT the ".RC" file */
-            {
-                // "Script file '%s' not found"
-                WRMSG( HHC01405, "E", script_path );
-            }
+            // "Error in function '%s': '%s'"
+            WRMSG( HHC02219, "E", "fopen()", strerror( errno ));
         }
+        else if (!isrcfile)     /* If NOT the ".RC" file */
+        {
+            // "Script file '%s' not found"
+            WRMSG( HHC01405, "E", script_path );
+        }
+
         errno = save_errno;  /* (restore error code for caller) */
         return -1;
     }
@@ -1034,16 +1033,21 @@ int script_cmd( int argc, char* argv[], char* cmdline )
     /* Find script processing control entry for this thead */
     if ((pCtl = FindSCRCTL( tid )) != NULL)
     {
-        /* This script is recursively calling itself again */
+        /* This script command is issued from a script.  It does not */
+        /* necessarily cause a recursion.                            */
         int i, rc2 = 0;
         for (i=1; !script_abort( pCtl ) && i < argc; i++)
         {
             UpdSCRCTL( pCtl, argv[i] );
             rc = process_script_file( argv[i], 0 );
-            rc2 = MAX( rc, rc2 );
+            if (0 <= rc2 && 0 < rc) rc2 = MAX( rc, rc2 );
+            else if (0 > rc) rc2 = MIN( rc, rc2 );
         }
         return rc2;
     }
+    printf("Script %s on thread %x\n", cmdline, (int) tid);
+    ListScriptsIds();
+      fflush(stdout);
 
     /* Create control entry and add to list */
     if (!(pCtl = NewSCRCTL( 0, argv[1], 0 )))
@@ -1445,7 +1449,6 @@ proc_runtest(SCRCTL *pCtl, char *args)
    }
    else if (args[0]) sscanf(args, "%lf", &secs);
 
-   if (p2) free(p2);
 
    if (secs < MIN_RUNTEST_DUR || secs > MAX_RUNTEST_DUR)
    {
@@ -1453,6 +1456,8 @@ proc_runtest(SCRCTL *pCtl, char *args)
       WRMSG( HHC02335, "W", pCtl->scr_id, args );
       secs = DEF_RUNTEST_DUR;
    }
+
+   if (p2) free(p2);                  /* Thank you, Maartin Hoes     */
 
    ts.tv_sec = secs;
    ts.tv_nsec = (secs - ts.tv_sec) * 1000000000;
