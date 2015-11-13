@@ -46,6 +46,8 @@
 #include "opcode.h"
 #include "inline.h"
 
+// #define JPHTEST
+
 /*-------------------------------------------------------------------*/
 /* Put a CPU in check-stop state                                     */
 /* Must hold the system intlock                                      */
@@ -1491,18 +1493,24 @@ CPU_Wait (REGS* regs)
 
        sem_t * topost = NULL;
 
+#ifdef JPHTEST
       printf("Semaphore %p Configured " F_CPU_BITMAP "; started " F_CPU_BITMAP "; waiting " F_CPU_BITMAP "\n",
          sysblk.scrsem, sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask);
       fflush(stdout);
+#endif // JPHTEST
        /* OK,  we need to post the semaphore unless someone beats us */
        /* to it.                                                     */
        /* The  only  other  reason  sem_wait  can  fail  is that the */
        /* semaphore is not valid.                                    */
        while (sem_wait(&sysblk.pscrsem) && EINTR == errno)
        {
+#ifdef JPHTEST
           printf("eintr\n");
+#endif // JPHTEST
           ;                           /* Try again                   */
+#ifdef JPHTEST
        fflush(stdout);
+#endif // JPHTEST
        }
 
        /* Test  if  the  system is stopped while holding this global */
