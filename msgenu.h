@@ -1400,6 +1400,7 @@ Examples:
 #define HHC02338 "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"
 #define HHC02339 "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
 #define HHC02340 "Script %d: test: cannot initalise semaphore: %s"
+#define HHC02341 "Script %d: test: unknown runtest keyword: %s"
 
 // range 02350 - 02369 available
 

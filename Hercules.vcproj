@@ -3006,6 +3006,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\invpsw.assemble"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\leapfrog.assemble"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\logicimm.assemble"
 								>
 							</File>
@@ -3062,6 +3070,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\invpsw.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\leapfrog.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\logicimm.tst"
 								>
 							</File>
@@ -3074,7 +3090,11 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tests\runtest.tst"
+								RelativePath=".\tests\runtest0.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\runtest4.tst"
 								>
 							</File>
 							<File
@@ -3097,6 +3117,10 @@
 								RelativePath=".\tests\sske390.tst"
 								>
 							</File>
+							<File
+								RelativePath=".\tests\timeout.tst"
+								>
+							</File>
 						</Filter>
 						<Filter
 							Name="listing"
@@ -3107,6 +3131,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\ilc.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\invpsw.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\leapfrog.listing"
 								>
 							</File>
 							<File

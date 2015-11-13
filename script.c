@@ -391,11 +391,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
 #endif /* #if defined( ENABLE_CONFIG_INCLUDE ) */
 
         if ( ( strlen(addargv[0]) <= 4 &&
-#if defined( _MSVC_)
-               sscanf_s(addargv[0], "%x%c", &rc, &c, sizeof(BYTE)) == 1)
-#else
-               sscanf(addargv[0], "%x%c", &rc, &c) == 1 )
-#endif
+               sscanf(addargv[0], "%"SCNx32"%c", &rc, &c) == 1 )
              ||
         /* Also, if addargv[0] contains ':' (added by Harold Grovesteen jan2008)  */
         /* Added because device statements may now contain channel set or LCSS id */
@@ -450,11 +446,7 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 7 && strlen(addargv[0]) == 6
-#if defined( _MSVC_)
-            && sscanf_s(addargv[0], "%x%c", &rc, &c, sizeof(BYTE)) == 1)
-#else
-            && sscanf(addargv[0], "%x%c", &rc, &c) == 1)
-#endif
+            && sscanf(addargv[0], "%"SCNx32"%c", &rc, &c) == 1)
         {
         char *exec_cpuserial[2] = { "cpuserial", NULL };
         char *exec_cpumodel[2]  = { "cpumodel", NULL };
@@ -1106,38 +1098,10 @@ int $runtest_cmd(int argc,char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 static int test_abort( SCRCTL *pCtl )
 {
-    // TODO: decide how test abort should be handled: abort() the
-    // process, issue severity 'S' message and exit Hercules, or
-    // issue 'E' severity message and continue to let redtest.rexx
-    // test results parser script detect/report the failure, CRASH,
-    // etc.
-
     // "Script %d: test: aborted"
     WRMSG( HHC02331, "E", pCtl->scr_id );
-
-#if 0
-    CRASH();
-#elif 0
-    abort();
-#endif
-
+    panel_command( "sysclear");
     return -1;
-}
-
-/*-------------------------------------------------------------------*/
-/*                       is_test_done                                */
-/*-------------------------------------------------------------------*/
-static int is_test_done()
-{
-    /* If all CPUs are now in the STOPPED state then we are done.
-       Note that when a CPU loads a disabled wait state PSW it also
-       sets its state to STOPPED afterwards. See process_interrupt
-       in source module cpu.c
-    */
-    if (sysblk.scrtest > sysblk.cpus)
-        return TRUE;
-
-    return FALSE;   /* runtest has not completed yet */
 }
 
 /*-------------------------------------------------------------------*/
@@ -1145,44 +1109,75 @@ static int is_test_done()
 /*-------------------------------------------------------------------*/
 int runtest( SCRCTL *pCtl, char *cmdline, char *args )
 {
+    char* p2 = NULL;                /* Resolved symbol string        */
     struct timeval beg, now, dur;   /* To calculate remaining time   */
-    double secs;                    /* Optional timeout in seconds   */
+    double secs = DEF_RUNTEST_DUR;  /* Optional timeout in seconds   */
     U32 usecs;                      /* Same thing in microseconds    */
     U32 sleep_usecs;                /* Remaining microseconds        */
     U32 elapsed_usecs;              /* To calculate remaining time   */
     int rc;                         /* Return code from timed wait   */
-
+    int dostart = 0;                /* 0 = start test via "restart"  */
+                                    /* 1 = start test via "start"    */
     UNREFERENCED( cmdline );
 
     ASSERT( sysblk.scrtest );       /* How else did we get called?   */
 
+    /* Parse optional RUNTEST command arguments. */
+    /* Syntax: RUNTEST [RESTART|START] [timeout] */
+
     if (*args && *args != '#')
     {
-        /* Parse the optional timeout value */
 #if defined( ENABLE_BUILTIN_SYMBOLS )
+        p2 = resolve_symbol_string( args );
+        if (p2)
+            args = p2;
+#endif
+
+        if (isalpha( args[0] ))  /* [RESTART|START]? */
         {
-            char *p2 = resolve_symbol_string( args );
-            if (p2)
+#define MAX_KW_LEN 15
+            char kw[ MAX_KW_LEN + 1 ] = {0};
+            char* pkw = NULL;
+
+            if (sscanf( args, "%"QSTR( MAX_KW_LEN )"s %lf", kw, &secs ))
             {
-                secs = atof( p2 );
-                free( p2 );
+                if (strcasecmp( kw, "start" ) == 0)
+                    dostart = 1;
+                else if (strcasecmp( kw, "restart" ) != 0)
+                    pkw = kw;
             }
             else
-                secs = atof( args );
-        }
-#else
-        secs = atof( args );
-#endif
-    }
-    else
-        secs = DEF_RUNTEST_TIMEOUT;
+                pkw = args;
 
-    /* Validate optional timeout value */
-    if (secs < MIN_RUNTEST_TIMEOUT || secs > MAX_RUNTEST_TIMEOUT)
-    {
-        // "Script %d: test: invalid timeout; set to def: %s"
-        WRMSG( HHC02335, "W", pCtl->scr_id, args );
-        secs = DEF_RUNTEST_TIMEOUT;
+            if (pkw)
+            {
+                // "Script %d: test: unknown runtest keyword: %s"
+                WRMSG( HHC02341, "E", pCtl->scr_id, pkw );
+                if (p2)
+                    free( p2 );
+                return test_abort( pCtl );
+            }
+
+            /* Get past keyword to next argument */
+            args += strlen( kw );
+        }
+
+        if ( args[0] ) /* [timeout]? */
+        {
+            if (0
+                || sscanf( args, "%lf", &secs ) < 1
+                || secs < MIN_RUNTEST_DUR
+                || secs > MAX_RUNTEST_DUR
+            )
+            {
+                // "Script %d: test: invalid timeout; set to def: %s"
+                WRMSG( HHC02335, "W", pCtl->scr_id, args );
+                secs = DEF_RUNTEST_DUR;
+            }
+        }
+
+        if (p2)
+            free( p2 );
     }
 
     /* Apply adjustment factor */
@@ -1201,15 +1196,20 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
                                             usecs % 1000000 );
     }
 
-    /* Press the restart button to start the test. NOTE: the
-       restart command itself does not require any arguments. */
+    /* Press the restart or start button to start the test */
 
-    sysblk.scrtest = 1; // (reset)
-    rc = restart_cmd( 0, NULL, NULL );
+    obtain_lock( &sysblk.scrlock );
+    sysblk.scrtest = 1;
+    release_lock( &sysblk.scrlock );
+
+    if (dostart)
+        rc = start_cmd_cpu( 0, NULL, NULL );
+    else
+        rc = restart_cmd( 0, NULL, NULL );
 
     if (rc)
     {
-        // "Script %d: test: restart failed"
+        // "Script %d: test: [re]start failed"
         WRMSG( HHC02330, "E", pCtl->scr_id );
         return test_abort( pCtl );
     }
@@ -1230,7 +1230,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
         }
 
         /* Has the test finished yet? */
-        if (is_test_done())
+        if (sysblk.scrtest > 1)
         {
             rc = 0;
             break;
@@ -1260,7 +1260,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
 
     if (ETIMEDOUT == rc)
     {
-        // HHC02332 "Script %d: test: timeout"
+        // "Script %d: test: timeout"
         WRMSG( HHC02332, "E", pCtl->scr_id );
         return test_abort( pCtl );
     }
@@ -1349,7 +1349,6 @@ do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p)
 
     /* Convert floating point seconds to other subsecond work values */
     msecs = (U32) (secs * 1000.0);
-    usecs = (msecs * 1000);
 
     if (MLVL( VERBOSE ))
     {
@@ -1418,7 +1417,7 @@ proc_runtest(SCRCTL *pCtl, char *args)
 {
    char * p2 = NULL;
    int rv;
-   double secs = DEF_RUNTEST_TIMEOUT; /* 30 secons, perhaps          */
+   double secs = DEF_RUNTEST_DUR;     /* 30 secons, perhaps          */
    int dostart = 0;                /* Assume fire program by restart */
    sem_t sem;
    struct timespec ts, target;
@@ -1448,11 +1447,11 @@ proc_runtest(SCRCTL *pCtl, char *args)
 
    if (p2) free(p2);
 
-   if (secs < MIN_RUNTEST_TIMEOUT || secs > MAX_RUNTEST_TIMEOUT)
+   if (secs < MIN_RUNTEST_DUR || secs > MAX_RUNTEST_DUR)
    {
       // "Script %d: test: invalid timeout; set to def: %s"
       WRMSG( HHC02335, "W", pCtl->scr_id, args );
-      secs = DEF_RUNTEST_TIMEOUT;
+      secs = DEF_RUNTEST_DUR;
    }
 
    ts.tv_sec = secs;

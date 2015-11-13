@@ -53,6 +53,9 @@ EXTRA_DIST =            \
     ilc.assemble        \
     ilc.listing         \
     ilc.tst             \
+    invpsw.assemble     \
+    invpsw.listing      \
+    invpsw.tst          \
     kimd0.txt           \
     kimd1.txt           \
     kimd2.txt           \
@@ -147,6 +150,9 @@ EXTRA_DIST =            \
     kmo9.txt            \
     ldetr.txt           \
     ldxtr.txt           \
+    leapfrog.assemble   \
+    leapfrog.listing    \
+    leapfrog.tst        \
     ledtr.txt           \
     lfpc.txt            \
     llhrl.txt           \
@@ -177,6 +183,8 @@ EXTRA_DIST =            \
     rrxtr.txt           \
     runtest             \
     runtest.cmd         \
+    runtest0.tst        \
+    runtest4.tst        \
     srdt.txt            \
     sske.assemble       \
     sske.listing        \
@@ -198,6 +206,6 @@ EXTRA_DIST =            \
     tdgdt.txt           \
     tests.conf          \
     thder.txt           \
+    timeout.tst         \
     trace.txt           \
-    trte.txt            \
-    wait.tst
+    trte.txt

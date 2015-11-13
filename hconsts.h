@@ -350,11 +350,11 @@
 #define DEF_PAUSE_TIMEOUT         1.0   /* Default pause seconds     */
 #define MAX_PAUSE_TIMEOUT       999.0   /* Maximum pause seconds     */
 
-#define MIN_RUNTEST_TIMEOUT     0.001   /* Minimum runtest seconds   */
-#define DEF_RUNTEST_TIMEOUT      30.0   /* Default runtest seconds   */
-#define MAX_RUNTEST_TIMEOUT     300.0   /* Maximum runtest seconds   */
+#define MIN_RUNTEST_DUR         0.001   /* Minimum runtest seconds   */
+#define DEF_RUNTEST_DUR          30.0   /* Default runtest seconds   */
+#define MAX_RUNTEST_DUR         300.0   /* Maximum runtest seconds   */
 
 #define MAX_RUNTEST_FACTOR  (((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) \
                             / 1000000.0 /* (usecs) */                 \
-                            / MAX_RUNTEST_TIMEOUT)
+                            / MAX_RUNTEST_DUR)
 #endif // _HCONSTS_H

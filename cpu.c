@@ -1459,12 +1459,19 @@ CPU_Wait (REGS* regs)
         wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
     }
 
+#if defined(_MSVC_)
+        /* Let waiting script know all CPUs are now STOPPED */
+        obtain_lock( &sysblk.scrlock );
+        if (sysblk.scrtest && !sysblk.started_mask)
+        {
+            sysblk.scrtest++;
+            broadcast_condition( &sysblk.scrcond );
+        }
+        release_lock( &sysblk.scrlock );
+#else
     /* Quick check to test if lock must be obtainied.  This is valid */
     /* because  the  system  block pointer is set only when all CPUs */
     /* are stopped.                                                  */
-#if defined(_MSVC_)
-    /* FORFISH                                                       */
-#else
     if (sysblk.scrsem && !sysblk.started_mask)
     {
        /* Looks  like we are entering into a state where nothing can */
@@ -1643,19 +1650,6 @@ cpustate_stopping:
         TOD saved_timer = cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask ^= regs->cpubit;
-
-        /* Let waiting script know CPU is now STOPPED. Please
-           note that when a CPU loads a disabled wait state PSW
-           it sets its state to STOPPED as well, and eventually
-           reaches here to actually stop ('CPU_Wait' function).
-        */
-        obtain_lock( &sysblk.scrlock );
-        if (sysblk.scrtest)
-        {
-            sysblk.scrtest++;
-            broadcast_condition( &sysblk.scrcond );
-        }
-        release_lock( &sysblk.scrlock );
 
         CPU_Wait(regs);
 

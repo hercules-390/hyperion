@@ -120,3 +120,34 @@ are case sensitive. Using "*testcase" for example accomplishes nothing.
 logicimm.tst shows examples of all directives, except *Key, *Prefix, and
 *Program;  see sske.tst for an example of *Key and *program.  See pr.tst
 for *Prefix.
+
+.tst file RUNTEST command
+-------------------------
+
+The test a .tst script defines is normally begun via a special 'runtest'
+script command which supports optional arguments indicating how the test
+should be started as well as the maximum amount of time it should run:
+
+      RUNTEST   [RESTART|START]   [timeout]   [# comment...]
+
+The first argument must be either "restart" or "start" (or unspecified)
+and indicates how the test should be started: via the Hercules "restart"
+console command or the "start" console command. The default is to start
+the test via the "restart" command.
+
+The second argument (which is also optional) defines the maximum amount
+of time (specified in whole or fractional number of seconds) that the
+test is allowed to run. This is a safety feature to prevent runaway tests
+from running forever due to a bug in the test or within Hercules itself.
+(Under normal circumstances all tests should end automatically the very
+moment they are done.) The default if not specified is 30 seconds.
+
+Please also note that timeout values are multiplied by the test timeout
+factor value which specified on the command line before being used. The
+test timeout factor value is used to allow for running tests on systems
+that may be slower than the system they were originally designed for.
+Refer to the documentation describing Hercules's supported command line
+arguments.
+
+Other runtest and/or command line arguments may be added in the future
+as they are needed.
