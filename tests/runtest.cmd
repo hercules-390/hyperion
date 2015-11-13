@@ -480,13 +480,14 @@
 
   @REM Build test script consisting of all *.tst files concatenated together
 
+  echo defsym testpath . >> %wfn%.tst
   for %%a in (%tstname%*.tst) do (
-    echo msglvl -debug >> %wfn%.tst
-    echo ostailor null >> %wfn%.tst
-    echo numcpu 1      >> %wfn%.tst
-    type "%%a"         >> %wfn%.tst
+    echo msglvl -debug   >> %wfn%.tst
+    echo ostailor null   >> %wfn%.tst
+    echo numcpu 1        >> %wfn%.tst
+    type "%%a"           >> %wfn%.tst
   )
-  echo exit >> %wfn%.tst
+  echo exit              >> %wfn%.tst
 
 
 
