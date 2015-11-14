@@ -5,6 +5,11 @@
 /* This  file  was  put into the public domain 2015-10-05 by John P. */
 /* Hartmann.   You can use it for anything you like, as long as this */
 /* notice remains.                                                   */
+/*                                                                   */
+/* Process the log file from a Hercules test run.                    */
+/*                                                                   */
+/* One challenge is that messages are issued from different threads. */
+/* Thus the *Done message may overtake, e.g., message 809.           */
 /*********************************************************************/
 
 Signal on novalue
@@ -12,6 +17,7 @@ Signal on novalue
 parse arg in opts
 quiet = wordpos('quiet', opts) > 0
 testcase = '<unknown>'
+comparing = 0
 fails. = 0                            /* .0 is OK .1 is failures     */
 catast = 0                            /* Catastrophic failures       */
 done = 0                              /* Test cases started          */
@@ -21,77 +27,11 @@ active = 1                            /* We do produce output        */
 nest=0                                /* If/then/else nesting        */
 
 do while lines(in) > 0
-   lineno = lineno + 1
-   l = linein(in)
-   /* Another  way  to  handle  a prefix to the response might be to */
-   /* look for HHC.                                                  */
-   p = verify(l, "0123456789: ")      /* Leading timestamp?          */
-   If p = 0                           /* Just a timestamp or nothing */
-      Then iterate
-   If p > 1                           /* Timestamp prefix            */
-      Then l = substr(l, p)           /* Toss it                     */
-
-   parse var l msg verb rest
-   If left(msg, 3) = 'HHC' & right(msg, 1) = 'E'
-      Then lasterror = l
-   Select
-      When msg = 'HHC00801I'
-         Then
-            Do
-               parse var rest ' code ' havepgm . ' ilc'
-            End
-      When msg = 'HHC00803I'          /* Program interrupt loop      */
-         Then havewait = 1
-      When msg = 'HHC00809I'
-         Then call waitstate
-      When msg = 'HHC01405E'
-         then call test 0, l
-      When msg = 'HHC01417I'
-         Then
-            If verb = 'Machine'
-               Then
-                  Do
-                     parse var rest 'dependent assists:' rest
-                     Do while rest \= ''
-                        parse var rest fac rest
-                        facility.fac = 1
-                        /* say 'facility' fac */
-                     End
-                  End
-      When msg = 'HHC01603I'
-         Then
-            If left(verb, 1) = '*'
-               Then call order
-      When msg = 'HHC02269I'
-         then call gprs
-      When msg = 'HHC02277I'
-         Then parse var rest . prefix .
-      When (msg = 'HHC02290I' | msg = 'HHC02291I')
-         Then
-            If comparing
-               Then
-                  Do
-                     parse var rest 'K:' key .
-                     If key = ''
-                        Then parse var rest display +36 /* Save for compare order */
-                        else
-                           Do
-                              keyaddr = substr(verb, 3)
-                              lastkey = key
-                           End
-                  End
-      When left(msg, 8) = 'HHC02332'
-         Then
-            Do
-               If \timeoutOk
-                  Then catast = catast + 1
-               call test timeoutOk, 'Test case timed out in wait.',,
-                  'This is likely an error in Hercules.  Please report'
-            end
-      otherwise
-         /* Quietly ignore                                           */
-   end
+   l = readline()
+   If l \= ''
+      Then call procline l
 end
+
 Select
    When fails.1 = 0 & catast = 0
       Then msg = 'All OK.'
@@ -103,6 +43,111 @@ say 'Done' done 'tests. ' msg
 If catast > 0
    Then say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
 exit fails.1
+
+/*********************************************************************/
+/* Read a line of input and strip timestamp, if any.                 */
+/*********************************************************************/
+
+readline:
+l = ''
+do forever
+   lineno = lineno + 1
+   l = linein(in)
+   /* Another  way  to  handle  a prefix to the response might be to */
+   /* look for HHC.                                                  */
+   parse value word(l, 1) with fn '(' line ')' +0 rpar
+   If rpar = ')'
+      Then
+         Do
+            parse var l . l           /* Drop debug ID               */
+            l = strip(l)
+         end
+   parse var l ?msg ?verb ?rest
+   p = verify(?msg, "0123456789:")    /* Leading timestamp?          */
+   If p = 0                           /* Just a timestamp or nothing */
+      Then iterate
+   If p > 1                           /* Timestamp prefix            */
+      Then l = substr(l, p)           /* Toss it                     */
+   If left(l, 3) \='HHC'
+      Then iterate                    /* Not a message               */
+   If ?msg \= 'HHC01603I'
+      Then leave                      /* Not a comment               */
+   If length(?verb) > 1 & left(?verb, 1) = '*'
+      Then leave                      /* Potential order.            */
+end
+return l
+
+/*********************************************************************/
+/* Process the line                                                  */
+/*********************************************************************/
+
+procline:
+parse arg l
+parse var l msg verb rest
+If left(msg, 3) = 'HHC' & right(msg, 1) = 'E'
+   Then lasterror = l
+Select
+   When msg = 'HHC00801I'
+      Then
+         Do
+            parse var rest ' code ' havepgm . ' ilc'
+         End
+   When msg = 'HHC00803I'          /* Program interrupt loop      */
+      Then havewait = 1
+   When msg = 'HHC00809I'
+      Then call waitstate
+   When msg = 'HHC01405E'
+      then call test 0, l
+   When msg = 'HHC01417I'
+      Then
+         If verb = 'Machine'
+            Then
+               Do
+                  parse var rest 'dependent assists:' rest
+                  Do while rest \= ''
+                     parse var rest fac rest
+                     facility.fac = 1
+                     /* say 'facility' fac */
+                  End
+               End
+   When msg = 'HHC01603I'
+      Then
+         If left(verb, 1) = '*'
+            Then call order
+   When msg = 'HHC02269I'
+      then call gprs
+   When msg = 'HHC02277I'
+      Then parse var rest . prefix .
+   When (msg = 'HHC02290I' | msg = 'HHC02291I')
+      Then
+         If comparing
+            Then
+               Do
+                  parse var rest 'K:' key .
+                  If key = ''
+                     Then parse var rest display +36 /* Save for compare order */
+                     else
+                        Do
+                           keyaddr = substr(verb, 3)
+                           lastkey = key
+                        End
+               End
+   When left(msg, 8) = 'HHC02332'
+      Then
+         Do
+            If \timeoutOk
+               Then catast = catast + 1
+            call test timeoutOk, 'Test case timed out in wait.',,
+               'This is likely an error in Hercules.  Please report'
+         end
+   otherwise
+      /* Quietly ignore                                           */
+end
+return
+
+/*********************************************************************/
+/* Decode orders.                                                    */
+/*********************************************************************/
 
 order:
 info = ''
@@ -165,16 +210,27 @@ prefix = ''
 lasterror = ''
 expl.0 = 0
 timeoutOk = 0
+
 return
 
+/*********************************************************************/
+/* Wind up a test.                                                   */
+/*********************************************************************/
+
 endtest:
+unprocessed = ''                      /* No read ahead stored        */
+nowait = rest = 'nowait'
+
+If \havewait & \nowait
+   Then call lookahead             /* Perhaps *Done overtook message */
+
 Select
    When havepgm \= ''
       Then call figurePgm
    otherwise
 end
 
-If \havewait & rest \= 'nowait'
+If \havewait & \nowait
    Then
       Do
          say '>>>>> line' lineno': No wait state encountered.'
@@ -188,9 +244,36 @@ Select
    otherwise
       msg = rv 'failures.'
 end
-say 'Test' testcase'. ' oks 'OK compares. ' msg
+
+If \quiet | rv \= 0
+   Then say 'Test' testcase'. ' oks 'OK compares. ' msg
+
 fail = rv \= 0
 fails.fail = fails.fail + 1           /* Ok or fail                  */
+If unprocessed \= ''
+   Then call procline unprocessed
+return
+
+/*********************************************************************/
+/* Test  case has ended, but we have not seen a disabled PSW message */
+/* yet.                                                              */
+/*                                                                   */
+/* If havepgm is nonblank, we have seen a program check, but not yet */
+/* the disabled wait PSW that will ensue.                            */
+/*********************************************************************/
+
+lookahead:
+do forever
+   unprocessed = readline()
+   If wordpos(?msg, 'HHC00809I HHC00803I') > 0
+      Then leave
+   If havepgm = ''
+      Then return
+   call procline unprocessed
+end
+say '*** wait leapfrogged. ***' lineno
+call procline unprocessed
+unprocessed = ''
 return
 
 /*********************************************************************/
