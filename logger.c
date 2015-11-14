@@ -481,7 +481,7 @@ DLL_EXPORT void logger_init(void)
 
         /* If standard error is redirected, then use standard error
            as the log file. */
-        if(!isatty(STDOUT_FILENO) && !isatty(STDERR_FILENO))
+        if(sysblk.daemon_mode)
         {
             strlcpy(logger_filename, "STDOUT redirected from command line",
                     sizeof(logger_filename));
