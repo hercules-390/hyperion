@@ -1,8 +1,9 @@
 # This test file was generated from offline assembler source
-# by bldhtc.rexx 12 Nov 2015 19:38:22
+# by bldhtc.rexx 13 Nov 2015 17:16:09
 # Treat as object code.  That is, modifications will be lost.
 # assemble and listing files are provided for information only.
 *Testcase sigp
+numcpu 1
 sysclear
 archmode z
 r    1A0=00000001800000000000000000000200

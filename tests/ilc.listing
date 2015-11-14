@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/11/11 20.20
+-                                                                                           jHLASM 1.0   2015/11/13 17.12
 0  No Overriding ASMAOPT Parameters                                                                                      
    No Overriding Parameters                                                                                              
    No Process Statements                                                                                                 
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1ILC                                           External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/11 20.20
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/13 17.12
 0ILC       SD 00000001 00000000 00000C08             00                                                                  
 1ILC      Instruction length code tests.                                                                        Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 20.20
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/13 17.12
 0                                               3 * This file was put into the public domain 2015-10-22                  
                                                 4 * by John P. Hartmann.  You can use it for anything you like,          
                                                 5 * as long as this notice remains.                                      
@@ -65,123 +65,124 @@
 0                                              11 * To  turn  on  PER,  we  must  be  paging,  but that is easily       *
                                                12 * accomplished with a primary real space token.                       *
 0                                              14  punch '* *Testcase ilc'                                               
-                                               15  punch '* sysclear'                                                    
-                                               16  punch '* archmode z'                                                  
-000000000                00000000 00000C08     18 ilc start 0                                                            
-                                               19  print data                                                            
-                     R:0 00000000              20  using ilc,0                                                           
- 00000000                00000000 00000060     21  org ilc+x'60' Unused bcmode stuff as scratch                          
- 00000060 0002000000000000                     22 stop dc x'0002 0000',f'0',ad(0)                                        
+                                               15  punch '* numcpu 1'                                                    
+                                               16  punch '* sysclear'                                                    
+                                               17  punch '* archmode z'                                                  
+000000000                00000000 00000C08     19 ilc start 0                                                            
+                                               20  print data                                                            
+                     R:0 00000000              21  using ilc,0                                                           
+ 00000000                00000000 00000060     22  org ilc+x'60' Unused bcmode stuff as scratch                          
+ 00000060 0002000000000000                     23 stop dc x'0002 0000',f'0',ad(0)                                        
  00000068 0000000000000000                                                                                               
- 00000070 0002000000000000                     23 abort dc x'0002 0000',f'0',ad(x'dead')                                 
+ 00000070 0002000000000000                     24 abort dc x'0002 0000',f'0',ad(x'dead')                                 
  00000078 000000000000DEAD                                                                                               
-                                               24 * x'80'                                                                
- 00000080                                      25  ds f External interrupt parameter                                     
- 00000084                                      26  ds h CPU address                                                      
- 00000086                                      27  ds h External interrupt code                                          
- 00000088                                      28  ds f SVC ident                                                        
- 0000008C                                      29 pgmident ds f Program interrupt identification                         
-                                               30 * x'90'                                                                
- 00000090                                      31 dxc ds f Data exception code                                           
- 00000094                                      32  ds h monitor code                                                     
- 00000096                                      33 percode ds h                                                           
- 00000098                                      34 peraddr ds d                                                           
- 000000A0                                      35 xaid ds x                                                              
- 000000A1                                      36 peraid ds x PER access identification                                  
- 000000A2                                      37 oaid ds x Operand access identification                                
- 000000A3                                      38  ds x                                                                  
- 000000A4                000000A4 00000150     39  org ilc+x'150' Program old psw                                        
- 00000150                                      40 pgmold ds d                                                            
- 00000158                00000158 000001A0     41  org ilc+x'1a0' Restart                                                
- 000001A0 0000000180000000                     42  dc x'0000 0001 8000 0000',ad(go)                                      
+                                               25 * x'80'                                                                
+ 00000080                                      26  ds f External interrupt parameter                                     
+ 00000084                                      27  ds h CPU address                                                      
+ 00000086                                      28  ds h External interrupt code                                          
+ 00000088                                      29  ds f SVC ident                                                        
+ 0000008C                                      30 pgmident ds f Program interrupt identification                         
+                                               31 * x'90'                                                                
+ 00000090                                      32 dxc ds f Data exception code                                           
+ 00000094                                      33  ds h monitor code                                                     
+ 00000096                                      34 percode ds h                                                           
+ 00000098                                      35 peraddr ds d                                                           
+ 000000A0                                      36 xaid ds x                                                              
+ 000000A1                                      37 peraid ds x PER access identification                                  
+ 000000A2                                      38 oaid ds x Operand access identification                                
+ 000000A3                                      39  ds x                                                                  
+ 000000A4                000000A4 00000150     40  org ilc+x'150' Program old psw                                        
+ 00000150                                      41 pgmold ds d                                                            
+ 00000158                00000158 000001A0     42  org ilc+x'1a0' Restart                                                
+ 000001A0 0000000180000000                     43  dc x'0000 0001 8000 0000',ad(go)                                      
  000001A8 0000000000000200                                                                                               
- 000001B0                000001B0 000001D0     43  org ilc+x'1d0' Program                                                
- 000001D0 0000000180000000                     44  dc x'0000 0001 8000 0000',ad(pgm)                                     
+ 000001B0                000001B0 000001D0     44  org ilc+x'1d0' Program                                                
+ 000001D0 0000000180000000                     45  dc x'0000 0001 8000 0000',ad(pgm)                                     
  000001D8 0000000000000220                                                                                               
- 000001E0                000001E0 00000200     45  org ilc+x'200'  Set PER tracing on.  Must be in relocate mode, so     
- 00000200                                      46 go ds 0h                                                               
- 00000200 41F0 0C00               00000C00     47  la 15,trtbl Address first trace table entry                           
- 00000204 4120 0021               00000021     48  la 2,x'21'                                                            
- 00000208 EB11 0240 002F          00000240     49  lctlg 1,1,cr1                                                         
- 0000020E EB9B 0248 002F          00000248     50  lctlg 9,11,cr9                                                        
- 00000214 AD44 0000      00000000              51  stosm 0,x'44' Per and relocate                                        
-                         00000218              52 perstart equ *                                                         
- 00000218 A72C 0002               00000002     53  mhi 2,2                                                               
+ 000001E0                000001E0 00000200     46  org ilc+x'200'  Set PER tracing on.  Must be in relocate mode, so     
+ 00000200                                      47 go ds 0h                                                               
+ 00000200 41F0 0C00               00000C00     48  la 15,trtbl Address first trace table entry                           
+ 00000204 4120 0021               00000021     49  la 2,x'21'                                                            
+ 00000208 EB11 0240 002F          00000240     50  lctlg 1,1,cr1                                                         
+ 0000020E EB9B 0248 002F          00000248     51  lctlg 9,11,cr9                                                        
+ 00000214 AD44 0000      00000000              52  stosm 0,x'44' Per and relocate                                        
+                         00000218              53 perstart equ *                                                         
 1ILC      Instruction length code tests.                                                                        Page    4
    Active Usings: ILC,R0                                                                                                 
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/11 20.20
-0                        0000021C              54 perstop equ *                                                          
- 0000021C B2B2 0060      00000060              55  lpswe stop                                                            
-                                               56 * Program interrupt handler                                            
- 00000220                                      57 pgm ds 0d                                                              
- 00000220 D213 F000 008C 00000000 0000008C     58  mvc 0(20,15),pgmident                                                 
- 00000226 41F0 F020               00000020     59  la 15,32(,15)                                                         
- 0000022A D501 0260 008E 00000260 0000008E     60  clc =x'0080',pgmident+2                                               
- 00000230 4770 0238               00000238     61  bne badpgm                                                            
- 00000234 B2B2 0150      00000150              62  lpswe pgmold                                                          
- 00000238                                      63 badpgm ds 0h                                                           
- 00000238 B2B2 0070      00000070              64  lpswe abort                                                           
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/13 17.12
+000000218 A72C 0002               00000002     54  mhi 2,2                                                               
+                         0000021C              55 perstop equ *                                                          
+ 0000021C B2B2 0060      00000060              56  lpswe stop                                                            
+                                               57 * Program interrupt handler                                            
+ 00000220                                      58 pgm ds 0d                                                              
+ 00000220 D213 F000 008C 00000000 0000008C     59  mvc 0(20,15),pgmident                                                 
+ 00000226 41F0 F020               00000020     60  la 15,32(,15)                                                         
+ 0000022A D501 0260 008E 00000260 0000008E     61  clc =x'0080',pgmident+2                                               
+ 00000230 4770 0238               00000238     62  bne badpgm                                                            
+ 00000234 B2B2 0150      00000150              63  lpswe pgmold                                                          
+ 00000238                                      64 badpgm ds 0h                                                           
+ 00000238 B2B2 0070      00000070              65  lpswe abort                                                           
  0000023C 00000000                                                                                                       
- 00000240 0000000000000020                     65 cr1 dc ad(x'20') Real space mode                                       
- 00000248 0000000040000000                     66 cr9 dc f'0',x'40 00 00 00',ad(perstart,perstop-1)                      
+ 00000240 0000000000000020                     66 cr1 dc ad(x'20') Real space mode                                       
+ 00000248 0000000040000000                     67 cr9 dc f'0',x'40 00 00 00',ad(perstart,perstop-1)                      
  00000250 0000000000000218                                                                                               
  00000258 000000000000021B                                                                                               
- 00000260                                      67  ltorg                                                                 
- 00000260 0080                                 68                =x'0080'                                                
- 00000262                00000262 00000C00     69  org *+(x'c00'-*+ilc) Trace table and fail if overflow                 
- 00000C00                                      70 trtbl ds d                                                             
- 00000C08                                      71  ds 0d                                                                 
-                                               72  punch '* runtest .1'                                                  
-                                               73  punch '* *Compare'                                                    
-                                               74  punch '* gpr'                                                         
-                                               75  punch '* *Gpr 2 0042'                                                 
-                                               76  punch '* r 8c.14 # last program check for info'                       
-                                               77  punch '* r c00.14'                                                    
-                                               78  punch '* r c00.c'                                                     
-                                               79  punch '* *Want "MHI ilc" 00040080 00000000 000040F0'                  
-                                               80  punch '* r c20.14'                                                    
-                                               81  punch '* *Done'                                                       
-                                               82  end                                                                   
+ 00000260                                      68  ltorg                                                                 
+ 00000260 0080                                 69                =x'0080'                                                
+ 00000262                00000262 00000C00     70  org *+(x'c00'-*+ilc) Trace table and fail if overflow                 
+ 00000C00                                      71 trtbl ds d                                                             
+ 00000C08                                      72  ds 0d                                                                 
+                                               73  punch '* runtest .1'                                                  
+                                               74  punch '* *Compare'                                                    
+                                               75  punch '* gpr'                                                         
+                                               76  punch '* *Gpr 2 0042'                                                 
+                                               77  punch '* r 8c.14 # last program check for info'                       
+                                               78  punch '* r c00.14'                                                    
+                                               79  punch '* r c00.c'                                                     
+                                               80  punch '* *Want "MHI ilc" 00040080 00000000 000040F0'                  
+                                               81  punch '* r c20.14'                                                    
+                                               82  punch '* *Done'                                                       
+                                               83  end                                                                   
 1ILC                                              Relocation Dictionary                                         Page    5
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/11/11 20.20
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2015/11/13 17.12
 0  00000001 00000001 000001A8   A 8     +                                                                                
    00000001 00000001 000001D8   A 8     +                                                                                
    00000001 00000001 00000250   A 8     +                                                                                
    00000001 00000001 00000258   A 8     +                                                                                
 1ILC                            Ordinary Symbol and Literal Cross Reference                                     Page    6
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/11 20.20
-0abort         4 00000070 00000001     X  X                23   64                                                       
- badpgm        2 00000238 00000001     H  H                63   61B                                                      
- cr1           8 00000240 00000001     A  AD               65   49                                                       
- cr9           4 00000248 00000001     F  F                66   50                                                       
- go            2 00000200 00000001     H  H                46   42                                                       
- ilc           1 00000000 00000001     J                   18   20U   21    39    41    43    45    69                   
- perstart      1 00000218 00000001     U                   52   66                                                       
- perstop       1 0000021C 00000001     U                   54   66                                                       
- pgm           8 00000220 00000001     D  D                57   44                                                       
- pgmident      4 0000008C 00000001     F  F                29   58    60                                                 
- pgmold        8 00000150 00000001     D  D                40   62                                                       
- stop          4 00000060 00000001     X  X                22   55                                                       
- trtbl         8 00000C00 00000001     D  D                70   47                                                       
- =x'0080'      2 00000260 00000001     X                   68   60                                                       
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/13 17.12
+0abort         4 00000070 00000001     X  X                24   65                                                       
+ badpgm        2 00000238 00000001     H  H                64   62B                                                      
+ cr1           8 00000240 00000001     A  AD               66   50                                                       
+ cr9           4 00000248 00000001     F  F                67   51                                                       
+ go            2 00000200 00000001     H  H                47   43                                                       
+ ilc           1 00000000 00000001     J                   19   21U   22    40    42    44    46    70                   
+ perstart      1 00000218 00000001     U                   53   67                                                       
+ perstop       1 0000021C 00000001     U                   55   67                                                       
+ pgm           8 00000220 00000001     D  D                58   45                                                       
+ pgmident      4 0000008C 00000001     F  F                30   59    61                                                 
+ pgmold        8 00000150 00000001     D  D                41   63                                                       
+ stop          4 00000060 00000001     X  X                23   56                                                       
+ trtbl         8 00000C00 00000001     D  D                71   48                                                       
+ =x'0080'      2 00000260 00000001     X                   69   61                                                       
 1ILC                               Unreferenced Symbols Defined in CSECTs                                       Page    7
--  Defn  Symbol                                                                             jHLASM 1.0   2015/11/11 20.20
-0    31  dxc                                                                                                             
-     37  oaid                                                                                                            
-     34  peraddr                                                                                                         
-     36  peraid                                                                                                          
-     33  percode                                                                                                         
-     35  xaid                                                                                                            
+-  Defn  Symbol                                                                             jHLASM 1.0   2015/11/13 17.12
+0    32  dxc                                                                                                             
+     38  oaid                                                                                                            
+     35  peraddr                                                                                                         
+     37  peraid                                                                                                          
+     34  percode                                                                                                         
+     36  xaid                                                                                                            
 1ILC                                                   Using Map                                                Page    8
--                                                                                           jHLASM 1.0   2015/11/11 20.20
+-                                                                                           jHLASM 1.0   2015/11/13 17.12
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
-0    20  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00C00     64 ilc,0                         
+0    21  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001   0 00C00     65 ilc,0                         
 1                                   General Purpose Register Cross Reference                                    Page    9
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/11 20.20
-0    0(0)      20U                                                                                                       
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2015/11/13 17.12
+0    0(0)      21U                                                                                                       
      1(1)    (no references identified)                                                                                  
-     2(2)      48S   53M                                                                                                 
+     2(2)      49S   54M                                                                                                 
      3(3)    (no references identified)                                                                                  
      4(4)    (no references identified)                                                                                  
      5(5)    (no references identified)                                                                                  
@@ -194,16 +195,16 @@
     12(C)    (no references identified)                                                                                  
     13(D)    (no references identified)                                                                                  
     14(E)    (no references identified)                                                                                  
-    15(F)      47S   58    59S   59                                                                                      
+    15(F)      48S   59    60S   60                                                                                      
 1ILC                               Diagnostic Cross Reference and Assembler Summary                             Page   10
--                                                                                           jHLASM 1.0   2015/11/11 20.20
+-                                                                                           jHLASM 1.0   2015/11/13 17.12
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
-0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
+0System:  Linux release 3.19.0-33-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    ilc.assemble                                                                                              
-0Assembly Start Time: 20.20.38 Stop Time: 20.20.38 Processor Time: 00.00.00.0161.
+0Assembly Start Time: 17.12.51 Stop Time: 17.12.51 Processor Time: 00.00.00.0132.
  
                                      
  Return Code 000                                                                                                         

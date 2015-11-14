@@ -824,9 +824,6 @@ int     rc;                             /* (work)                    */
     {
         /* If not found it's probably the Hercules ".RC" file */
         ASSERT( isrcfile );
-#ifdef JPHTEST
-        printf("rc? %s\n", script_name);
-#endif // JPHTEST
         /* Create a temporary working control entry */
         if (!(pCtl = NewSCRCTL( tid, script_name, isrcfile )))
             return -1; /* (error message already issued) */
@@ -1049,11 +1046,6 @@ int script_cmd( int argc, char* argv[], char* cmdline )
         }
         return rc2;
     }
-#ifdef JPHTEST
-    printf("Script %s on thread %x\n", cmdline, (int) tid);
-    ListScriptsIds();
-    fflush(stdout);
-#endif // JPHTEST
 
     /* Create control entry and add to list */
     if (!(pCtl = NewSCRCTL( 0, argv[1], 0 )))
@@ -1523,9 +1515,6 @@ proc_runtest(SCRCTL *pCtl, char *args)
       fflush(stdout);
       fflush(stderr);
 #endif // JPHTEST
-#if 0
-      pCtl->scr_flags |= SCR_CANCEL;  /* Stop                        */
-#endif
       panel_command( "sysclear");
       return;
    }

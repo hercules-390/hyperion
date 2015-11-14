@@ -5,6 +5,7 @@ SIGP     TITLE 'Signal processor test case'
 * as long as this notice remains.                                               
                                                                                 
  punch '* *Testcase sigp'                                                       
+ punch '* numcpu 1'                                                             
  punch '* sysclear'                                                             
  punch '* archmode z'                                                           
 sigp start 0                                                                    

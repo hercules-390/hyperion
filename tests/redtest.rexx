@@ -177,7 +177,7 @@ end
 If \havewait & rest \= 'nowait'
    Then
       Do
-         say 'No wait state encountered.'
+         say '>>>>> line' lineno': No wait state encountered.'
          rv = rv + 1
       end
 Select

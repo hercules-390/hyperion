@@ -12,6 +12,7 @@ ILC      TITLE 'Instruction length code tests.'
 * accomplished with a primary real space token.                       *         
                                                                                 
  punch '* *Testcase ilc'                                                        
+ punch '* numcpu 1'                                                             
  punch '* sysclear'                                                             
  punch '* archmode z'                                                           
                                                                                 
