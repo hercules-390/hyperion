@@ -3292,6 +3292,7 @@ BYTE    f = ' ', c = '\0';
     if ( rc < 1 || rc > 2 )
     {
         WRMSG( HHC01451, "E", argv[1], argv[0] );
+        printf("sscanf failed\n");
         return -1;
     }
 
@@ -3344,8 +3345,10 @@ BYTE    f = ' ', c = '\0';
         }
         else
         {
-            overflow  <<= 45;
-            shiftsize <<= SHIFT_MEBIBYTE - 12;
+            overflow = 0;
+            shiftsize >>= 12;
+            if (mainsize & 0x0FFF)
+                ++shiftsize;
         }
 
         if (shiftsize > 0x0010000000000000ULL /* 16E */ ||
