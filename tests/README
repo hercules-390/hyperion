@@ -103,6 +103,10 @@ are case sensitive. Using "*testcase" for example accomplishes nothing.
 *Program    A  program  check  is expected, for example to verify that a
             privileged operation causes an 0c2.
 
+*Imsg       Specify the complete informational message string to compare
+            against  the  last  issued informational message, except for
+            message 1603.
+
 *Error      Specify the complete error message string to compare against
             the last issued error message.
 

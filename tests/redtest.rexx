@@ -84,8 +84,18 @@ return l
 procline:
 parse arg l
 parse var l msg verb rest
-If left(msg, 3) = 'HHC' & right(msg, 1) = 'E'
-   Then lasterror = l
+If left(msg, 3) = 'HHC'
+   Then
+      Select
+         When right(msg, 1) = 'E'
+            Then lasterror = l
+         When msg = 'HHC01603I'       /* Don't get our command echo  */
+            Then nop
+         When right(msg, 1) = 'I'
+            Then lastinfo = l
+         otherwise
+      end
+
 Select
    When msg = 'HHC00801I'
       Then
@@ -165,6 +175,8 @@ Select
       Then call want
    When verb = '*Error'
       Then call emsg
+   When verb = '*Info'
+      Then call imsg
    When verb = '*Explain'
       Then call explain
    When verb = '*Gpr'
@@ -208,6 +220,7 @@ lastkey = ''
 keyaddr = '<unknown>'
 prefix = ''
 lasterror = ''
+lastinfo = ''
 expl.0 = 0
 timeoutOk = 0
 
@@ -325,6 +338,17 @@ If lasterror = ''
    Then call test 0, 'No error message saved for' rest
    Else call test lasterror = rest, 'Error message mismatch. ' info ,,
       'Want:' rest, 'Got: ' lasterror
+return
+
+/*********************************************************************/
+/* Verify the last issue informational message                       */
+/*********************************************************************/
+
+imsg:
+If lastinfo = ''
+   Then call test 0, 'No informational message saved for' rest
+   Else call test lastinfo = rest, 'Informational message mismatch. ' info ,,
+      'Want:' rest, 'Got: ' lastinfo
 return
 
 /*********************************************************************/
