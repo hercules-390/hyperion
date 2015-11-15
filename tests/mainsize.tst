@@ -5,7 +5,7 @@ mainsize -1
 mainsize 0
 *Error HHC01451E Invalid value 0 specified for mainsize
 mainsize 1
-*Info HHC17003I MAIN     storage is 4K (mainsize); storage is not locked
+*Info HHC17003I MAIN     storage is 1M (mainsize); storage is not locked
 mainsize 65535
 *Info HHC17003I MAIN     storage is 64K (mainsize); storage is not locked
 mainsize 65536
