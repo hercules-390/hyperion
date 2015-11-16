@@ -646,6 +646,8 @@ BYTE als =
 
 int archlvl_cmd(int argc, char *argv[], char *cmdline)
 {
+    int     storage_reset = 0;
+
     UNREFERENCED(cmdline);
 
     if (argc < 2)
@@ -732,14 +734,30 @@ int archlvl_cmd(int argc, char *argv[], char *cmdline)
 
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
-    OBTAIN_INTLOCK(NULL);
-    system_reset (sysblk.pcpu, 0, sysblk.arch_mode);
-    RELEASE_INTLOCK(NULL);
+    if (sysblk.arch_mode > ARCH_370 &&
+        sysblk.mainsize  > 0        &&
+        sysblk.mainsize  < (1 << SHIFT_MEBIBYTE))
+    {
+        /* Default main storage to 1M and perform initial system
+           reset */
+        storage_reset = (configure_storage(1 << (SHIFT_MEBIBYTE - 12)) == 0);
+    }
+    else
+    {
+        OBTAIN_INTLOCK(NULL);
+        system_reset (sysblk.pcpu, 0, sysblk.arch_mode);
+        RELEASE_INTLOCK(NULL);
+    }
 
     if ( argc == 2 )
     {
         if ( MLVL(VERBOSE) )
+        {
             WRMSG( HHC02204, "I", "archmode", get_arch_mode_string(NULL) );
+            if (storage_reset)
+                WRMSG( HHC17003, "I", "MAIN", fmt_memsize_KB((U64)sysblk.mainsize >> SHIFT_KIBIBYTE),
+                                 "main", sysblk.mainstor_locked ? "":"not " );
+        }
     }
 
     return 0;
