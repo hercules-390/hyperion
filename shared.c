@@ -438,6 +438,7 @@ char    *strtok_str = NULL;             /* last token                */
             dev->rmtnum = dev->devnum;
 
         /* Process the remaining arguments */
+        rc = 0;
         for (i = 1; i < argc; i++)
         {
 #ifdef HAVE_LIBZ
@@ -453,8 +454,10 @@ char    *strtok_str = NULL;             /* last token                */
             }
 #endif
             WRMSG (HHC00700, "S", argv[i], i + 1);
-            return -1;
+            rc = -1;
         }
+        if (rc)
+            return rc;
     }
 
     /* Set suported compression */
