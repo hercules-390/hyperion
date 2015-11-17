@@ -42,9 +42,12 @@
 
 wfn=allTests
 
-dir=${1:-../hyperion/tests}
+dir_runtest="$(dirname "${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}")"
+dir_hercules="$dir_runtest/.."
+
+dir=${1:-$dir_runtest}
 if [ "$dir" == "-" ] ; then
-        dir=../hyperion/tests
+        dir=$dir_runtest
 fi
 
 fns=${2:-*}
@@ -60,7 +63,7 @@ cat $dir/$fns.$ftype >>$wfn.tst
 # Run the script through Hercules.  2>&1 disables the panel display and
 # the ability to enter panel commands.
 
-cmd="./hercules -f $dir/tests.conf -r $wfn.tst -t"
+cmd="$dir_hercules/hercules -f $dir/tests.conf -r $wfn.tst -t"
 if [ "$3" != "noexit" ] ; then
         echo exit >>$wfn.tst
         $cmd >$wfn.out 2>&1
