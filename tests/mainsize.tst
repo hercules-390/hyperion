@@ -28,7 +28,10 @@ mainsize 1g
 *Error HHC01451E Invalid value 1g specified for mainsize
 mainsize 1G
 *Error HHC01451E Invalid value 1G specified for mainsize
+mainsize 4K
+*Info HHC17003I MAIN     storage is 4K (mainsize); storage is not locked
 archmode esa/390
+*Info HHC17003I MAIN     storage is 1M (mainsize); storage is not locked
 mainsize 1b
 *Info HHC17003I MAIN     storage is 1M (mainsize); storage is not locked
 mainsize 2g
@@ -44,4 +47,9 @@ mainsize 16e
 *Error HHC02388E Configure storage error -1
 mainsize 17E
 *Error HHC01451E Invalid value 17E specified for mainsize
+archmode s/370
+mainsize 4k
+*Info HHC17003I MAIN     storage is 4K (mainsize); storage is not locked
+archmode z/Arch
+*Info HHC17003I MAIN     storage is 1M (mainsize); storage is not locked
 *Done nowait
