@@ -875,7 +875,7 @@ int     dll_count;                      /* index into array          */
                 if (isprint( optopt ))
                     MSGBUF( buf, "'-%c'", optopt );
                 else
-                    MSGBUF( buf, "(hex %02.2x)", optopt );
+                    MSGBUF( buf, "(hex %2.2x)", optopt );
                 // "Invalid/unsupported option: %s"
                 WRMSG( HHC00023, "S", buf );
                 arg_error = 1;
