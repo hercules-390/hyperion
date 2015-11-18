@@ -1,5 +1,12 @@
 *Testcase mainsize check storage size
+
+# This  file  was  put  into  the  public  domain 2015-11-17 by John P.
+# Hartmann.   You  can  use  it  for anything you like, as long as this
+# notice remains.
+
 archmode s/370
+numcpu 1
+*Compare
 mainsize -1
 *Error HHC01451E Invalid value -1 specified for mainsize
 mainsize 0
@@ -35,11 +42,26 @@ archmode esa/390
 mainsize 1b
 *Info HHC17003I MAIN     storage is 1M (mainsize); storage is not locked
 mainsize 2g
+*If $ptrsize = 4
+*Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
+*Error   HHC02388E Configure storage error -1
+*Else # 64 bit
 *Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
+*Fi
 mainsize 2147483647B
+*If $ptrsize = 4
+*Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
+*Error   HHC02388E Configure storage error -1
+*Else # 64 bit
 *Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
+*Fi
 mainsize 2147483648b
+*If $ptrsize = 4
+*Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
+*Error   HHC02388E Configure storage error -1
+*Else # 64 bit
 *Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
+*Fi
 mainsize 2147483649B
 *Error HHC01451E Invalid value 2147483649B specified for mainsize
 archmode z/Arch

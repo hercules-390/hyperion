@@ -40,20 +40,55 @@
 # not  give these embedded files the default extension (unless you want
 # them run twice!).
 
+# We  can  assume  that  the  tests  live in the same directory as this
+# script, but you cannot assume that the executable is in the directory
+# above.  Read INSTALL in the source directory.
+
+# This  script  must  be  run  from  the object directory, that is, the
+# directory  where the "make" command was issued and where the hercules
+# libtool  script  is  built.  Or the directory must contain a symbolic
+# link to the hercules executable.
+
 wfn=allTests
 
-dir_runtest="$(dirname "${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}")"
-dir_hercules="$dir_runtest/.."
 
-dir=${1:-$dir_runtest}
-if [ "$dir" == "-" ] ; then
-        dir=$dir_runtest
+if [ -f config.h ] ; then
+   ptrsize=$(grep SIZEOF_INT_P config.h | cut -d ' ' -f 3)
+   vars="$vars ptrsize=$ptrsize"
 fi
 
-fns=${2:-*}
-ftype=${4:-tst}
+testdir=$(dirname $0)
+dir=${1:-$testdir}
+if [ "$dir" == "-" ] ; then
+        dir=$testdir
+fi
 
-# Generate composite file of all test cases.  File name expansion sorts
+hdir=.
+if [ ! -x hercules ] ; then
+   if [ -x $dir/../hercules ] ; then
+        hdir = $dir/../hercules
+   else
+      echo 'Hercules executable (or the libtool frontend) is not where expected.'
+      exit 16
+   fi
+fi
+
+shift
+
+fns=${1:-*}
+
+shift
+
+exit=${1:-exit}
+
+shift
+
+ftype=${1:-tst}
+
+shift
+
+# Generate  composite  file of all test cases prefixed a defsym command
+# to define the path to the tests directory.  File name expansion sorts
 # it   alphabetically   (some   shell   variants   ignore  case  and/or
 # punctuation).
 
@@ -63,13 +98,12 @@ cat $dir/$fns.$ftype >>$wfn.tst
 # Run the script through Hercules.  2>&1 disables the panel display and
 # the ability to enter panel commands.
 
-cmd="$dir_hercules/hercules -f $dir/tests.conf -r $wfn.tst -t"
-if [ "$3" != "noexit" ] ; then
-        echo exit >>$wfn.tst
-        $cmd >$wfn.out 2>&1
-else
+cmd="$hdir/hercules -f $dir/tests.conf -r $wfn.tst -t"
+if [ "$exit" = "noexit" ] ; then
         $cmd >$wfn.out
+else
+        $cmd >$wfn.out 2>&1
 fi
 
 # Read entire file to allow redtest.rexx to parse the features list
-rexx $dir/redtest.rexx $wfn.out
+rexx $dir/redtest.rexx $wfn.out $vars $*

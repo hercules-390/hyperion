@@ -622,7 +622,7 @@ AC_CHECK_HEADERS( sys/mount.h,    [hc_cv_have_sys_mount_h=yes],    [hc_cv_have_s
 ] )
 
 #------------------------------------------------------------------------------
-AC_CHECK_HEADERS_ONCE(stdatomic.h sys/sysctl.h)
+AC_CHECK_HEADERS_ONCE(stdatomic.h sys/sysctl.h assert.h)
 
 AC_CHECK_HEADERS( sys/mtio.h,     [hc_cv_have_sys_mtio_h=yes],     [hc_cv_have_sys_mtio_h=no]     )
 AC_CHECK_HEADERS( sys/resource.h, [hc_cv_have_sys_resource_h=yes], [hc_cv_have_sys_resource_h=no] )

@@ -5,6 +5,10 @@
 # notice remains.
 
 *Testcase Prefix register and real/absolute storage set/display
+sysclear
+archmode z
+mainstor 8m
+numcpu 1
 *Compare
 pr
 *Prefix 0

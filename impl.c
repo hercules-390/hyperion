@@ -324,6 +324,13 @@ char    pathname[MAX_PATH];             /* (work)                    */
                 WRMSG(HHC01405, "E", pathname);
         // (else error message already issued)
 
+    if (sysblk.daemon_mode)
+    {
+        /* No  panel  to  read  commands.  Either stop or read stdin */
+        /* here or in caller.                                        */
+        quit_cmd(0, NULL, NULL);
+    }
+
     return NULL;
 }
 
