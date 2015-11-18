@@ -14,22 +14,23 @@
 
 Signal on novalue
 
-parse arg in w opts
-quiet = w = 'quiet'
-If quiet
-   Then parse var opts w opts
+parse arg in opts
 values. = ''
-Do while w\=''
-   parse var w var '=' +0 eq +1 value
-   If eq \= '='
-      then say 'Not variable assignment in argument string: ' w
-      Else
-         Do
-            values.var = value
-            If \quiet
-               Then say 'Variable' var 'is set to "'value'".'
-         End
+quiet = 0                             /* Log OK tests too            */
+
+Do while opts\=''
    parse var opts w opts
+   parse var w var '=' +0 eq +1 value
+   Select
+      When w = 'quiet'
+         Then quiet = 1
+      when eq \= '='
+         then say 'Not variable assignment in argument string: ' w
+      otherwise
+         values.var = value
+         If \quiet
+            Then say 'Variable' var 'is set to "'value'".'
+   End
 End
 
 testcase = '<unknown>'

@@ -31,6 +31,8 @@
 
 # 4     File type of test cases.  Default .tst.
 
+# 5+    Passed to redtest.rexx.  "quiet" or <var>=<value>.
+
 # To run a specific test case:
 #       ../hyperion/tests/runtest - <fname>
 # Again, be sure to omit the extension.
@@ -49,13 +51,26 @@
 # libtool  script  is  built.  Or the directory must contain a symbolic
 # link to the hercules executable.
 
+function verlt()
+{
+   if [ "$2" == "Bourne-Again" ] ; then
+      return 1
+   fi
+   echo $*
+   return 0
+}
+
 wfn=allTests
 
-
-if [ -f config.h ] ; then
-   ptrsize=$(grep SIZEOF_INT_P config.h | cut -d ' ' -f 3)
-   vars="$vars ptrsize=$ptrsize"
+if [ ${FUNCNAME[ (( ${#FUNCNAME[@]} - 1 ))]} = "source" ] ; then
+   echo "Do not source $0."
+   return 20
 fi
+
+# Determine  the  relative path to the tests directory.  The default is
+# set on the assumption that this file is in the tests directory, which
+# is  where it is in the source tree.  If this is not the case, you are
+# adviced to write your own derivative of this script.
 
 testdir=$(dirname $0)
 dir=${1:-$testdir}
@@ -68,9 +83,16 @@ if [ ! -x hercules ] ; then
    if [ -x $dir/../hercules ] ; then
         hdir = $dir/../hercules
    else
-      echo 'Hercules executable (or the libtool frontend) is not where expected.'
+      echo 'Hercules executable (or the libtool front end) is not where expected.'
       exit 16
    fi
+fi
+
+if [ -f $hdir/config.h ] ; then
+   ptrsize=$(grep SIZEOF_INT_P $hdir/config.h | cut -d ' ' -f 3)
+   vars="$vars ptrsize=$ptrsize"
+else
+   echo "Unable to determine the size of a pointer.  Specify ptrsize=4 if on a 32-bit system."
 fi
 
 shift
@@ -79,6 +101,9 @@ fns=${1:-*}
 
 shift
 
+# Since  hercules  now  terminates at the end of the .rc script when in
+# daemon mode, this parameter is really a misnomer.
+
 exit=${1:-exit}
 
 shift
@@ -86,6 +111,35 @@ shift
 ftype=${1:-tst}
 
 shift
+
+# Verify that the configuration file and redtest.rexx are available.
+
+rv=0
+if [ ! -f $dir/tests.conf ] ; then
+   echo "Error: Hercules configuration file $dir/tests.conf not found."
+   rv=1
+fi
+
+if [ ! -f $dir/redtest.rexx ] ; then
+   echo "Error: Post processor redtest.rexx is not available."
+   rv=1
+fi
+
+if [ -z $(which rexx) ] ; then
+   echo "Error: REXX interpreter is not available."
+   rv=1
+fi
+
+verlt $(file $hdir/hercules)
+vrv=$?
+if [ $vrv = 0 ] ; then
+   echo "Error:  Hercules executable $hdir/hercules is not the libtool wrapper."
+   rv=1
+fi
+
+if [ 0 != $rv ] ; then
+   exit 12
+fi
 
 # Generate  composite  file of all test cases prefixed a defsym command
 # to define the path to the tests directory.  File name expansion sorts
@@ -101,9 +155,18 @@ cat $dir/$fns.$ftype >>$wfn.tst
 cmd="$hdir/hercules -f $dir/tests.conf -r $wfn.tst -t"
 if [ "$exit" = "noexit" ] ; then
         $cmd >$wfn.out
+        rv=$?
 else
+        # Run  Hercules  in  daemon mode be redirecting both stdout and
+        # stderr.
         $cmd >$wfn.out 2>&1
+        rv=$?
 fi
 
 # Read entire file to allow redtest.rexx to parse the features list
-rexx $dir/redtest.rexx $wfn.out $vars $*
+if [ $rv = 0 ] ; then
+   rexx $dir/redtest.rexx $wfn.out $vars $*
+   rv=$?
+fi
+
+exit $rv
