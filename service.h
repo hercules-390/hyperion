@@ -39,7 +39,7 @@
 #define SCLP_RESOURCE_SHIFT     8
 
 /*-------------------------------------------------------------------*/
-/* Service Call Control Block structure definitions                  */
+/* Service Call Control Block (SCCB) header layout                   */
 /*-------------------------------------------------------------------*/
 typedef struct _SCCB_HEADER {
         HWORD   length;                 /* Total length of SCCB      */
@@ -94,7 +94,19 @@ typedef struct _SCCB_HEADER {
 #define SCCB_RESP_EXCEEDS_SCCB  0xF0
 // #endif /*FEATURE_SYSTEM_CONSOLE*/
 
-/* SCP information data area */
+/*-------------------------------------------------------------------*/
+/* The following maximum value constants define the architectural    */
+/* limit for the amount of real storage based on the realinum and    */
+/* realiszm field widths in the below _SCCB_SCP_INFO structure.      */
+/*-------------------------------------------------------------------*/
+#define MAX_STORINCR        0xFFFFULL    /* SCP realinum field limit */
+#define MAX_INCRSIZE_MB     0xFFULL      /* SCP realiszm field limit */
+#define MAX_1MINCR_STORSIZE (MAX_STORINCR * (       1        * _1M))
+#define MAX_SCP_STORSIZE    (MAX_STORINCR * (MAX_INCRSIZE_MB * _1M))
+
+/*-------------------------------------------------------------------*/
+/* SCCB System Control Program (SCP) information block layout        */
+/*-------------------------------------------------------------------*/
 typedef struct _SCCB_SCP_INFO {
         HWORD   realinum;               /* Number of real storage
                                            increments installed      */
@@ -146,7 +158,7 @@ typedef struct _SCCB_SCP_INFO {
                                            units of 1M, valid only
                                            if realiszm is zero       */
         DBLWRD  grnmx;                  /* Maximum increment number
-                                           when it is larger then
+                                           when it is larger than
                                            64K or when ESAME is on   */
         BYTE    resv8[16];              /* Reserved                  */
     } SCCB_SCP_INFO;
