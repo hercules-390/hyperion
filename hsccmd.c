@@ -590,7 +590,7 @@ int comment_cmd(int argc, char *argv[],char *cmdline)
 /*-------------------------------------------------------------------*/
 int quit_cmd(int argc, char *argv[],char *cmdline)
 {
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if defined( OPTION_SHUTDOWN_CONFIRMATION )
     time_t  end;
 
     UNREFERENCED(cmdline);
@@ -666,7 +666,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     return 0;   /* (make compiler happy) */
 }
 
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if defined( OPTION_SHUTDOWN_CONFIRMATION )
 /*-------------------------------------------------------------------*/
 /* quitmout command                                                  */
 /*-------------------------------------------------------------------*/
@@ -7570,7 +7570,7 @@ int cmdsep_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int ssd_cmd(int argc, char *argv[], char *cmdline)
 {
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if defined( OPTION_SHUTDOWN_CONFIRMATION )
 
     time_t  end;
 

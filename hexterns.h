@@ -467,12 +467,11 @@ LOADPARM_DLL_IMPORT char *str_cpid();
 void get_mpfactors(BYTE *dest);
 
 /* Functions in module impl.c */
+IMPL_DLL_IMPORT int impl(int,char **);
+int quit_cmd(int argc, char *argv[],char *cmdline);
 IMPL_DLL_IMPORT void system_cleanup(void);
-
 typedef void (*LOGCALLBACK)( const char*, size_t );
 typedef void *(*COMMANDHANDLER)(void *);
-
-IMPL_DLL_IMPORT int impl(int,char **);
 IMPL_DLL_IMPORT void registerLogCallback(LOGCALLBACK);
 IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 
