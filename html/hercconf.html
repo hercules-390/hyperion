@@ -3049,10 +3049,18 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt><code>-m <em>MAC address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
                 <dd><p>
-                    where <em>'MAC address'</em> is the optional hardware address for
-                    the virtual interface in the format: hh:hh:hh:hh:hh:hh. The default value
-                    is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion is constructed
-                    from the last 3 octets of the specified <code><i>guestip</i></code>.
+                    where <code><em>'MAC address'</em></code> is the optional hardware address
+                    for your guest's virtual adapter/interface in the format: hh:hh:hh:hh:hh:hh.
+                    The default value is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion
+                    is constructed from the last 3 octets of the specified
+                    <code><i>guestip</i></code>.
+                    <p>
+                    <i>
+                    Note: The MAC address you specify for this option must be unique
+                    as seen by all other devices on your network. It should never,
+                    for example, be the same as the host adapter MAC address specified
+                    on the <code><em>-n</em></code> parameter.
+                    </i>
                     <p>
 
                 <dt><code>-k &nbsp;<em>kernel-capture-buffer-size</em></code>
@@ -3278,7 +3286,6 @@ a real System/390.  The configuration file is an ASCII text file.
         <p>
 
         <dl> <!-- begin LCS parms -->
-
         <dt><code>-n <em>devname</em></code> &nbsp;&nbsp; or &nbsp; <code>--dev <em>devname</em></code>
         <dd><p>
             where <em>devname</em> is:
@@ -3299,10 +3306,13 @@ a real System/390.  The configuration file is an ASCII text file.
                     then TunTap32 automatically selects the first network card
                     it finds, which may not be desirable for some users.
                     <p>
+                    Refer to the Help file included with Fish's
+                    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> product
+                    for for more information about adapter binding order and
+                    for general information regarding CTCI-WIN configuration.
+                    <p>
 
              </dl> <!-- end 'devname' -->
-
-            <p>
 
         <dt><code>-o <em>filename</em></code> &nbsp;&nbsp; or &nbsp; <code>--oat <em>filename</em></code>
         <dd><p>
@@ -3312,12 +3322,33 @@ a real System/390.  The configuration file is an ASCII text file.
             statements in the OAT. (See further below for the <a href=#OAT>syntax
             of the OAT</a>)
             <p>
+            If no OAT is specified, the emulation module
+            will create the following:
+            <p>
+            <ul>
+                <li>An ethernet adapter (port 0) for TCP/IP traffic only.
+                <li>Two device addresses will be defined (devnum and devnum + 1).
+            </ul>
+            <p>
 
         <dt><code>-m <em>MAC Address</em></code> &nbsp;&nbsp; or &nbsp; <code>--mac <em>MAC address</em></code>
         <dd><p>
-            where <em>MAC Address</em> is the optional hardware address of
-            the interface in the format: hh:hh:hh:hh:hh:hh. If you use the
-            <code>--oat</code> option, do not specify an address here.
+            where <code><em>'MAC address'</em></code> is the optional hardware address
+            for your guest's virtual adapter/interface in the format: hh:hh:hh:hh:hh:hh.
+            The default value is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion
+            is constructed from the last 3 octets of the specified
+            <code><i>guestip</i></code>.
+            <p>
+            <i>
+            Note: The MAC address you specify for this option must be unique
+            as seen by all other devices on your network. It should never,
+            for example, be the same as the host adapter MAC address specified
+            on the <code><em>-n</em></code> parameter.
+            </i>
+            <p>
+            Note: If you use the <code>--oat</code> option, do not specify an address
+            here. Instead, specify your desired guest adapter MAC address in your OAT
+            file via the <code>HWADD</code> statement.
             <p>
 
         <dt><code><em>guestip</em></code>
@@ -3332,29 +3363,29 @@ a real System/390.  The configuration file is an ASCII text file.
         <a name="OAT"></a>
         <dt><b>OAT syntax</b>
         <dd><p>
+
             The syntax for the OSA Address Table (OAT) is as follows:
             <p>
-<table border=1 cellpadding=10><tr><td>
-<pre><code>
-*********************************************************
-* Dev   Mode  Port  Entry specific information...       *
-*********************************************************
+<table border=1 cellpadding=20><tr><td>
+<pre><code>*****************************************************
+* Dev    Mode   Port    Entry specific information  *
+*****************************************************
 
-  0400  IP    00    PRI  172.021.003.032
-  0402  IP    00    SEC  172.021.003.033
-  0404  IP    00    NO   172.021.003.038
-  0406  IP    01    NO   172.021.002.016
-  040E  SNA   00
+  0400    IP     00     PRI  172.21.3.32
+  0402    IP     00     SEC  172.21.3.33
+  0404    IP     00     NO   172.21.3.38
+  0406    IP     01     NO   172.21.2.16
+  040E    SNA    00
 
 HWADD  00  02:00:FE:DF:00:42
 HWADD  01  02:00:FE:DF:00:43
 
-ROUTE  00  172.021.003.032  255.255.255.224
+ROUTE  00  172.21.3.32  255.255.255.224
 </code></pre>
 </td></tr></table>
             <p>
 
-            <dl> <!-- begin LCS OAT parms -->
+            <dl> <!-- begin LCS DEV/MODE parms -->
             <dt>where:
             <dd><p>
                 <dl> <!-- (begin INDENT) -->
@@ -3365,95 +3396,89 @@ ROUTE  00  172.021.003.032  255.255.255.224
                     <dt><code><em>Mode</em></code>
                     <dd>is the operation mode: IP or SNA.
                         <p>
-                        <i><b>Note:</b> &nbsp;the SNA operation mode is NOT currently implemented.</i>
+                        <i><b>Note:</b> &nbsp;the SNA operation mode is not currently implemented.</i>
                         <p>
 
                     <dt><code><em>Port</em></code>
-                    <dd>is the virtual (relative) adapter number.
+                    <dd>is the virtual (relative) adapter number (i.e. port number).
                         <p>
                 </dl> <!-- (end INDENT) -->
-            </dl> <!-- end LCS OAT parms -->
+            </dl> <!-- end LCS DEV/MODE parms -->
+            <p>
+
+            The read/write devices can be swapped by coding the odd address
+            of the even-odd pair in the OAT.
+
+            <p>
+
+            Up to 4 virtual (relative) adapters (i.e. ports) 00-03 are currently supported.
 
             <p>
 
             For IP modes, the entry specific information is as follows:
+
             <p>
 
-            <dl> <!-- begin IP Mode parms -->
-            <dl> <!-- (begin INDENT) -->
+            <blockquote>
+                <dl> <!-- begin IP Mode parms -->
 
-                <dt><code>PRI &#124; SEC &#124; NO</code>
-                <dd><p>
-                    Specifies where a packet with an unknown IP
-                    address is forwarded to. PRI is the primary
-                    default entry, SEC specifies the entry to use
-                    when the primary is not available, and NO
-                    specifies that this is not a default entry.
-                    <p>
+                    <dt><code>PRI &#124; SEC &#124; NO</code>
+                    <dd><p>
+                        Specifies where a packet with an unknown IP
+                        address is forwarded to. PRI is the primary
+                        default entry, SEC specifies the entry to use
+                        when the primary is not available, and NO
+                        specifies that this is not a default entry.
+                        <p>
 
-                <dt><code><em>nnn.nnn.nnn.nnn</code></em>
-                <dd><p>
-                    Specifies the home IP address
+                    <dt><code><em>nnn.nnn.nnn.nnn</code></em>
+                    <dd><p>
+                        Specifies the home IP address
 
-            </dl> <!-- (end INDENT) -->
-            </dl> <!-- end IP Mode parms -->
+                </dl> <!-- end IP Mode parms -->
+            </blockquote>
+
             <p>
 
-            When the operation mode is IP, specify only the even (read)
-            device number <em>dev</em>. The odd (write) address will be
-            create automatically.
-            <p>
+            When the operation mode is <code>IP</code>&nbsp; specify only the read
+            (even) device number for <code><em>Dev</em></code>. The write (odd)
+            address will be created automatically.
 
-            <i><b>Note:</b> &nbsp;the SNA operation mode is NOT currently implemented.</i>
             <p>
 
             Additionally, a HWADD and/or ROUTE statement
             may also be included in the OAT:
 
             <p>
-            <dl> <!-- begin HWADD and ROUTE -->
-            <dl> <!-- (begin INDENT) -->
 
-                <dt><code>HWADD &nbsp;pp <i>&nbsp;hh:hh:hh:hh:hh:hh</i></code>
-                <dd><p>
-                    Use the HWADD to specify a hardware (MAC) address for a
-                    virtual adapter. The first parameter after HWADD specifies
-                    the relative adapter for which the address is applied.
+            <blockquote>
+                <dl> <!-- begin HWADD and ROUTE -->
 
-                    <p>
+                    <dt><code>HWADD &nbsp;pp <i>&nbsp;hh:hh:hh:hh:hh:hh</i></code>
+                    <dd><p>
+                        Use the HWADD to specify a hardware (MAC) address for a
+                        virtual adapter (port). The first parameter after HWADD
+                        specifies the relative adapter (port) to which the address
+                        is applied.
 
-                <dt><code>ROUTE &nbsp;pp <i>&nbsp;nnn.nnn.nnn.nnn &nbsp;...</i></code>
-                <dd><p>
-                    The ROUTE statement is included for convenience. This allows the
-                    hercifc program to create a network route for this specified
-                    virtual adapter. Please note that it is not necessary to include
-                    point-to-point routes for each IP address in the table since this
-                    is done automatically by the emulation module.
+                        <p>
 
-                    <p>
+                    <dt><code>ROUTE &nbsp;pp <i>&nbsp;nnn.nnn.nnn.nnn &nbsp;...</i></code>
+                    <dd><p>
+                        The ROUTE statement is included for convenience. This requests
+                        Hercules's network configuration logic (hercifc utility on
+                        Linux or CTCI-WIN on Windows) to automatically create a network
+                        route for this specified virtual adapter. Please note that it
+                        is not necessary to include point-to-point routes for each IP
+                        address in the table since this is done automatically by the
+                        Hercules device driver's emulation module.
 
-            </dl> <!-- (end INDENT) -->
-            </dl> <!-- end HWADD and ROUTE -->
+                        <p>
 
-            The read/write devices can be swapped by coding the odd address
-            of the even-odd pair in the OAT
-            <p>
-
-            Up to 4 virtual (relative) adapters 00-03 are currently supported.
+                </dl> <!-- end HWADD and ROUTE -->
+            </blockquote>
 
         </dl> <!-- end LCS parms -->
-
-        <p>
-
-        If no OAT is specified, the emulation module
-        will create the following:
-        <p>
-
-        <ul>
-            <li>An ethernet adapter (port 0) for TCP/IP traffic only.
-            <li>Two device addresses will be defined (devnum and devnum + 1).
-        </ul>
-        <p>
 
 <p><br>
 
@@ -3600,6 +3625,13 @@ ROUTE  00  172.021.003.032  255.255.255.224
                     is '00:00:5E:nn:nn:nn' where the <i>:nn:nn:nn</i> portion is constructed
                     from the last 3 octets of the specified <code><i>guestip</i></code>.
                     <p>
+                    <i>
+                    Note: The MAC address you specify for this option must be unique
+                    as seen by all other devices on your network. It should never,
+                    for example, be the same as the host adapter MAC address specified
+                    on the <code><em>-n</em></code> parameter.
+                    </i>
+                    <p>
 
                 <dt><code>-k &nbsp;<em>kernel-capture-buffer-size</em></code>
                     <dd>
@@ -3711,12 +3743,18 @@ ROUTE  00  172.021.003.032  255.255.255.224
                     (which is correct for version 2.4 and above of the Linux kernel).
                     The default for OSX is
                     <code>/dev/tun0</code>.
+                    <p>
                     For Windows, specify the IP address or MAC address
                     of your Windows host's real network adapter that the Hercules
                     driver should use to emulate your virtual guest's adapter on.
                     The default is the first adapter found according to Windows'
                     adapter binding order, which may not be the one you want
                     if you have multiple adapters.
+                    <p>
+                    Refer to the Help file included with Fish's
+                    <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> product
+                    for for more information about adapter binding order and
+                    for general information regarding CTCI-WIN configuration.
                     <p>
 
                 <dt><code>ipaddr &nbsp;<em>address</em></code>
@@ -3759,6 +3797,13 @@ ROUTE  00  172.021.003.032  255.255.255.224
                     the low order 23 bits of the IPv4 address. For example,
                     if the ipv4 address is 10.1.2.3 the generated MAC address
                     will be 02:00:5E:81:02:03.
+                    <p>
+                    <i>
+                    Note: The MAC address you specify for this option must be unique
+                    as seen by all other devices on your network. It should never,
+                    for example, be the same as the real host adapter's MAC address
+                    as identified by the <code><em>iface</em></code> parameter.
+                    </i>
                     <p>
 
                 <dt><code>mtu &nbsp;<em>bytes</em></code>
