@@ -44,8 +44,6 @@
  #undef   _GEN_ARCH
 #endif
 
-// #define JPHTEST
-
 /*-------------------------------------------------------------------*/
 /*                Script processing control                          */
 /*-------------------------------------------------------------------*/
@@ -56,7 +54,6 @@ struct SCRCTL {                         /* Script control structure  */
     int     scr_id;                     /* Script identification no. */
     char*   scr_name;                   /* Name of script being run  */
     char*   scr_cmdline;                /* Original command-line     */
-    int     scr_isrcfile;               /* Script is startup ".RC"   */
     int     scr_recursion;              /* Current recursion level   */
     int     scr_flags;                  /* Script processing flags   */
     #define SCR_CANCEL     0x80         /* Cancel script requested   */
@@ -71,7 +68,6 @@ static int scrid = 0;                   /* Script identification no. */
 
 /* Forward declarations:                                             */
 static int do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p);
-static void proc_runtest(SCRCTL *pCtl, char *args);
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
@@ -532,7 +528,8 @@ rexx_done:
 /*-------------------------------------------------------------------*/
 /* Create new SCRCTL entry - lock must *NOT* be held      (internal) */
 /*-------------------------------------------------------------------*/
-SCRCTL* NewSCRCTL( TID tid, const char* script_name, int isrcfile )
+static
+SCRCTL* NewSCRCTL( TID tid, const char* script_name )
 {
     SCRCTL* pCtl;
     char* scr_name;
@@ -555,7 +552,6 @@ SCRCTL* NewSCRCTL( TID tid, const char* script_name, int isrcfile )
     InitializeListLink( &pCtl->link );
     pCtl->scr_tid = tid; /* (may be zero) */
     pCtl->scr_name = scr_name;
-    pCtl->scr_isrcfile = isrcfile;
 
     /* Add the new entry to our list */
     obtain_lock( &sysblk.scrlock );
@@ -825,11 +821,13 @@ int     rc;                             /* (work)                    */
         /* If not found it's probably the Hercules ".RC" file */
         ASSERT( isrcfile );
         /* Create a temporary working control entry */
-        if (!(pCtl = NewSCRCTL( tid, script_name, isrcfile )))
+        if (!(pCtl = NewSCRCTL( tid, script_name )))
             return -1; /* (error message already issued) */
 
-        /* Start over again using our temporary control entry */
-        rc = process_script_file( script_name, isrcfile );
+        /* Start  over again using our temporary control entry.  The */
+        /* screwy second argument is to silence the unused parameter */
+        /* warning when ASSERT does no assert (the mind boggles)     */
+        rc = process_script_file( script_name, 0 & isrcfile );
         FreeSCRCTL( pCtl );
         return rc;
     }
@@ -847,11 +845,9 @@ int     rc;                             /* (work)                    */
     hostpath( script_path, script_name, sizeof( script_path ));
     if (!(fp = fopen( script_path, "r" )))
     {
-        /* We only issue the "File not found" error message if the
-           script file being processed is NOT the ".RC" file since
-           .RC files are optional. For all OTHER type of errors we
-           ALWAYS issue an error message, even for the ".RC" file.
-        */
+        /* We  get  here  with  the  default  script  file only when */
+        /* hercules.rc  exists  as  tested  in  impl.c.   Any  error */
+        /* opening is should be reported to the user.                */
         int save_errno = errno; /* (save error code for caller) */
 
         if (ENOENT != errno)    /* If NOT "File Not found" */
@@ -859,7 +855,7 @@ int     rc;                             /* (work)                    */
             // "Error in function '%s': '%s'"
             WRMSG( HHC02219, "E", "fopen()", strerror( errno ));
         }
-        else if (!isrcfile)     /* If NOT the ".RC" file */
+        else
         {
             // "Script file '%s' not found"
             WRMSG( HHC01405, "E", script_path );
@@ -911,13 +907,6 @@ int     rc;                             /* (work)                    */
         for (stmtlen = (int)strlen(p); stmtlen && isspace(p[stmtlen-1]); stmtlen--);
         p[stmtlen] = 0;
 
-#if !defined(_MSVC_)
-        if (!strncasecmp(p, "runtest", 7) && !(~' ' & p[7]))
-        {
-            proc_runtest(pCtl, p + 7);
-            continue;
-        }
-#endif
         /* Special handling for 'pause' and other statements */
         if (do_special(NULL, NULL, pCtl, p))
             continue;
@@ -1048,7 +1037,7 @@ int script_cmd( int argc, char* argv[], char* cmdline )
     }
 
     /* Create control entry and add to list */
-    if (!(pCtl = NewSCRCTL( 0, argv[1], 0 )))
+    if (!(pCtl = NewSCRCTL( 0, argv[1] )))
         return -1; /* (error msg already issued) */
 
     /* Create a copy of the command line */
@@ -1403,135 +1392,5 @@ do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p)
 
     return TRUE;
 }
-
-#if !defined(_MSVC_)
-
-/*********************************************************************/
-/* RUNTEST [RESTART|START] <timeout>                                 */
-/*                                                                   */
-/* Perform a test case and wait for all CPUs to stop.  Default is to */
-/* fire  off  the testcase by the restart command, but either can be */
-/* specified.                                                        */
-/*********************************************************************/
-
-static void
-proc_runtest(SCRCTL *pCtl, char *args)
-{
-   char * p2 = NULL;
-   int rv;
-   double secs = DEF_RUNTEST_DUR;     /* 30 secons, perhaps          */
-   int dostart = 0;                /* Assume fire program by restart */
-   sem_t sem;
-   struct timespec ts, target;
-   struct timeval beg, end, dur;
-   int eno = 0;                       /* Sampled errno               */
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-   p2 = resolve_symbol_string( args );
-   args = p2;
-#endif
-
-   args += strspn(args, " \t");       /* Strip leading whitespace    */
-   if (isalpha(args[0]))
-   {
-      char kwd[16];
-
-      rv = sscanf(args, "%15s %lf", kwd, &secs);
-      if (!strcasecmp(kwd, "start")) dostart = 1;
-      else if (strcasecmp(kwd, "restart"))
-      {
-         /* Message here                                             */
-         return;                      /* No way to start             */
-      }
-
-   }
-   else if (args[0]) sscanf(args, "%lf", &secs);
-
-
-   if (secs < MIN_RUNTEST_DUR || secs > MAX_RUNTEST_DUR)
-   {
-      // "Script %d: test: invalid timeout; set to def: %s"
-      WRMSG( HHC02335, "W", pCtl->scr_id, args );
-      secs = DEF_RUNTEST_DUR;
-   }
-
-   if (p2) free(p2);                  /* Thank you, Maartin Hoes     */
-
-   ts.tv_sec = secs;
-   ts.tv_nsec = (secs - ts.tv_sec) * 1000000000;
-
-   gettimeofday(&beg, NULL);
-   target.tv_sec = beg.tv_sec + ts.tv_sec;
-   target.tv_nsec = 1000 * beg.tv_usec + ts.tv_nsec;
-
-   while (999999999 < target.tv_nsec)
-   {
-      target.tv_sec++;
-      target.tv_nsec -= 1000000000;
-   }
-
-   /* Initialise the semaphore                                       */
-   if (sem_init(&sem, 0, 0))
-   {
-      /* This is a catastrophic error.                               */
-      /* HHC02340 "Script %d: test: cannot initalise semaphore: %s"  */
-      WRMSG( HHC02340, "E", pCtl->scr_id,  strerror(errno));
-      return;
-   }
-   sysblk.scrsem = &sem;              /* Announce it                 */
-
-   if (dostart) rv = start_cmd_cpu( 0, NULL, NULL );
-   else rv = restart_cmd( 0, NULL, NULL );
-
-   if (rv)
-   {
-      // "Script %d: test: restart failed"
-      WRMSG( HHC02330, "E", pCtl->scr_id );
-      sysblk.scrsem = NULL;           /* Didn't go after all         */
-      sem_destroy(&sem);
-      return;
-   }
-
-   if (MLVL( VERBOSE ))
-      // "Script %d: test: running..."
-      WRMSG( HHC02333, "I", pCtl->scr_id );
-
-   do                                 /* Wait for semaphore          */
-   {
-      rv = sem_timedwait(&sem, &target);
-      if (rv) eno = errno;
-   } while (EINTR == eno);            /* Test script cancel here?    */
-
-   sysblk.scrsem = NULL;              /* In case of timeout          */
-   sem_destroy(&sem);
-
-   if (ETIMEDOUT == eno)
-   {
-      // HHC02332 "Script %d: test: timeout"
-      WRMSG( HHC02332, "E", pCtl->scr_id );
-#ifdef JPHTEST
-      printf("Configured " F_CPU_BITMAP "; started " F_CPU_BITMAP "; waiting " F_CPU_BITMAP "\n",
-         sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask);
-      fflush(stdout);
-      fflush(stderr);
-#endif // JPHTEST
-      panel_command( "sysclear");
-      return;
-   }
-
-   if (MLVL( VERBOSE ))
-   {
-      // "Script %d: test: test ended"
-      WRMSG( HHC02334, "I", pCtl->scr_id );
-
-      gettimeofday( &end, NULL );
-      timeval_subtract( &beg, &end, &dur );
-
-      // "Script %d: test: actual duration: %"PRId32".%06"PRId32" seconds"
-      WRMSG( HHC02338, "I", pCtl->scr_id, (int) dur.tv_sec, (int) dur.tv_usec);
-   }
-}
-
-#endif
 
 #endif /*!defined(_GEN_ARCH)*/

@@ -101,9 +101,6 @@ fns=${1:-*}
 
 shift
 
-# Since  hercules  now  terminates at the end of the .rc script when in
-# daemon mode, this parameter is really a misnomer.
-
 exit=${1:-exit}
 
 shift
@@ -141,24 +138,29 @@ if [ 0 != $rv ] ; then
    exit 12
 fi
 
-# Generate  composite  file of all test cases prefixed a defsym command
-# to define the path to the tests directory.  File name expansion sorts
-# it   alphabetically   (some   shell   variants   ignore  case  and/or
-# punctuation).
+# Generate composite file of all test cases, but do not call it .tst as
+# that  would  cause  a  recursion  if executed in the tests directory.
+# File  name  expansion  sorts  it  alphabetically (some shell variants
+# ignore case and/or punctuation).
 
-echo defsym testpath $dir >$wfn.tst
-cat $dir/$fns.$ftype >>$wfn.tst
+echo defsym testpath $dir|cat - $dir/$fns.$ftype >$wfn.testin
+rv=$?
+if [ $rv != 0 ] ; then
+   exit $rv
+fi
 
-# Run the script through Hercules.  2>&1 disables the panel display and
-# the ability to enter panel commands.
+# Run  the script through Hercules.  Redirecting standard output writes
+# a log file.  2>&1 disables the panel display and the ability to enter
+# panel commands.
 
-cmd="$hdir/hercules -f $dir/tests.conf -r $wfn.tst -t"
+cmd="$hdir/hercules -f $dir/tests.conf -r $wfn.testin -t"
 if [ "$exit" = "noexit" ] ; then
         $cmd >$wfn.out
         rv=$?
 else
         # Run  Hercules  in  daemon mode be redirecting both stdout and
         # stderr.
+        echo exit >>$wfn.testin
         $cmd >$wfn.out 2>&1
         rv=$?
 fi
