@@ -26,13 +26,16 @@ Files  that  have  a  tst extension are to be run by the "runtest" shell
 script  or  "runtest.cmd" command script.  They are run and the Hercules
 console  output is inspected for correctness.  You can create .tst files
 either  "by  hand"; or by assembly on a /360 system (VM, MVS, DOS), then
-TEXT decks then need to be processed into .tst files.
+TEXT decks need to be processed into .tst files.
 
 On  UNIX, assuming that your are building outside the source tree in the
 "atom" directory such that the source is ../hyperion, issue this command
 to run and verify the test cases:
 
    ../hyperion/tests/runtest
+
+"make  check"  in the directory where you built Hercules will find stuff
+wherever you configured it.
 
 On  Windows,  the  command  script  runtest.cmd runs the test cases.  It
 requires the  current directory to be the 'tests' subdirectory where the
@@ -42,11 +45,11 @@ It also supports additional parameters.  Enter "runtest /? or --help for
 more information.
 
 In  either  case,  runtest  first  creates a composite set of test cases
-(allTests.tst  in  the  current  working  directory)  and  then  invokes
+(allTests.testin  in  the  current  working  directory) and then invokes
 Hercules  to run them using the configuration file tests.conf and the rc
-file  just  created.   This  will make the screen flicker while Hercules
-runs.   When  it  completes,  the console output (allTests.out) is  then
-inspected by redtest.rexx and the results are reported to the user.
+file just created.  When it completes, the console output (allTests.out)
+is  then  inspected  by redtest.rexx and the results are reported to the
+user.
 
 The runtest return code is the number of failed test cases.
 
@@ -103,12 +106,12 @@ are case sensitive. Using "*testcase" for example accomplishes nothing.
 *Program    A  program  check  is expected, for example to verify that a
             privileged operation causes an 0c2.
 
-*Imsg       Specify the complete informational message string to compare
-            against  the  last  issued informational message, except for
-            message 1603.
-
-*Error      Specify the complete error message string to compare against
-            the last issued error message.
+*Hmsg       Specify the complete informational message string to compare
+            against  the  last  issued message, except for messages that
+            are  processed by redtest.rexx, plus messages 7 and 1603.  A
+            number  is optional before the message identifier to specify
+            the  last  but  one,  last  but two, etc, see example below.
+            *Imsg and *Error are synonyms for Hmsg.
 
 *Explain    Specify   the  explanatory  text  to  write  when  the  next
             comparison  fails.  You can specify as many *Explains as you
@@ -117,13 +120,46 @@ are case sensitive. Using "*testcase" for example accomplishes nothing.
 
 *Message    Print a message on the output.
 
+*If         Specify  a condition to test (see later).  The expression is
+            evaluated  by  REXX  Interpret.   If the condition holds the
+            following  directives are processed up to the matching *Else
+            or  *Fi.   If  the  condition  does not hold, directives are
+            ignored except that nested *If directives are parsed.
+
+*Else       Flip  the  setting  of  the  matching  *If condition, unless
+            nested in a suppressed *If.
+
+*Fi         End  an  *If.   The process/ignore setting for directives is
+            unstacked.
+
 *Done       End  of a test case.  Specify "nowait" if the test case does
             not  end  by  loading  a  disabled PSW, for example, when it
             tests just console commands without running any code.
 
+*Timeout    A timeout is expected.  Do not use.
+
 logicimm.tst shows examples of all directives, except *Key, *Prefix, and
 *Program;  see sske.tst for an example of *Key and *program.  See pr.tst
-for *Prefix.
+for *Prefix.  See mainsize.tst for conditional processing.
+
+Predefined  variables  are  specified  as  arguments to redtest.rexx and
+extracted from the features message, HHC01417I.  When the runtest script
+(not  to  be confused with the runtest command below) finds config.h, it
+extracts  the  size of a pointer and sets the variable "ptrsize" to 4 or
+8.  For  any facilities listed by message HHC01417I, a variable named by
+the  facility  name is set to 1, for example, cmpxchg1=1.  Variables are
+specified  in  the  expression by a dollar sign followed by the variable
+name; they are read only.
+
+Example of conditional directives:
+
+mainsize 2147483648b
+*If $ptrsize = 4
+*Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
+*Error   HHC02388E Configure storage error -1
+*Else # 64 bit
+*Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
+*Fi
 
 .tst file RUNTEST command
 -------------------------
@@ -131,7 +167,7 @@ for *Prefix.
 The test a .tst script defines is normally begun via a special 'runtest'
 script command which supports optional arguments indicating how the test
 should be started as well as the maximum amount of time it should run.
-Unlike the 'pause' command, 'runtest' waits only until all CPUs are int
+Unlike the 'pause' command, 'runtest' waits only until all CPUs are in
 the stopped state.
 
       RUNTEST   [RESTART|START]   [timeout]   [# comment...]
@@ -146,7 +182,8 @@ of time (specified in whole or fractional number of seconds) that the
 test is allowed to run. This is a safety feature to prevent runaway tests
 from running forever due to a bug in the test or within Hercules itself.
 (Under normal circumstances all tests should end automatically the very
-moment they are done.) The default if not specified is 30 seconds.
+moment they are done.)  If not timeout is specified, the default is 30
+seconds.
 
 Please also note that timeout values are multiplied by the test timeout
 factor value which is specified by the -t switch on the Hercules command. The

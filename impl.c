@@ -31,7 +31,8 @@
 #include "history.h"
 
 /* forward define process_script_file (ISW20030220-3) */
-int process_script_file(char *,int);
+extern int process_script_file(char *,int);
+/* extern int quit_cmd(int argc, char *argv[],char *cmdline);        */
 
 static LOGCALLBACK  log_callback = NULL;
 
@@ -290,20 +291,24 @@ DLL_EXPORT  COMMANDHANDLER  getCommandHandler()
 static char *rcname = NULL;             /* hercules.rc name pointer  */
 static void* process_rc_file (void* dummy)
 {
-int     is_default_rc  = 0;             /* 1 == default name used    */
 char    pathname[MAX_PATH];             /* (work)                    */
 
     UNREFERENCED(dummy);
 
     /* Obtain the name of the hercules.rc file or default */
 
-    if (!rcname)
+    if (!rcname)                      /* -r flag not specified       */
     {
         if (!(rcname = getenv("HERCULES_RC")))
         {
+            struct stat st;
+            int rv = stat("hercules.rc", &st);
+
+            if (-1 == rv) return NULL;       /* Have no default file */
+            /* file name is hostpath invariant                       */
             rcname = "hercules.rc";
-            is_default_rc = 1;
         }
+        else if (!rcname[0]) return NULL; /* Null string in environment */
     }
 
     if(!strcasecmp(rcname,"None"))
@@ -317,18 +322,18 @@ char    pathname[MAX_PATH];             /* (work)                    */
         usleep( 10 * 1000 );
 
     /* Run the script processor for this file */
-
-    if (process_script_file(pathname,1) != 0)
-        if (ENOENT == errno)
-            if (!is_default_rc)
-                WRMSG(HHC01405, "E", pathname);
+    process_script_file(pathname, 1);
         // (else error message already issued)
 
     if (sysblk.daemon_mode)
     {
         /* No  panel  to  read  commands.  Either stop or read stdin */
         /* here or in caller.                                        */
-        quit_cmd(0, NULL, NULL);
+        /* quit_cmd(0, NULL, NULL);                                  */
+        /* But  no,  the  user  could  have  IPLed something or even */
+        /* loaded  a program image from the configuration file.  How */
+        /* to test for nothing active?                               */
+
     }
 
     return NULL;
@@ -627,15 +632,6 @@ int     dll_count;                      /* index into array          */
     initialize_lock (&sysblk.mntlock);
     initialize_lock (&sysblk.scrlock);
     initialize_condition (&sysblk.scrcond);
-#if !defined(_MSVC_)
-    /* Lock  to  serialise  posting  of the script waiting semaphore */
-    /* init to allow one to enter.                                   */
-    {
-       int rv;
-       rv = sem_init(&sysblk.pscrsem, 0, 1);
-       assert(!rv);
-    }
-#endif
     initialize_lock (&sysblk.crwlock);
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);

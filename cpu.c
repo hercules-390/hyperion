@@ -1461,82 +1461,20 @@ CPU_Wait (REGS* regs)
         wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
     }
 
-#if defined(_MSVC_)
-        /* Let waiting script know all CPUs are now STOPPED */
-        obtain_lock( &sysblk.scrlock );
-        if (sysblk.scrtest && !sysblk.started_mask)
-        {
-            sysblk.scrtest++;
-            broadcast_condition( &sysblk.scrcond );
-        }
-        release_lock( &sysblk.scrlock );
-#else
-    /* Quick check to test if lock must be obtainied.  This is valid */
-    /* because  the  system  block pointer is set only when all CPUs */
-    /* are stopped.                                                  */
-    if (sysblk.scrsem && !sysblk.started_mask)
+    /* Let waiting script know all CPUs are now STOPPED */
+    obtain_lock( &sysblk.scrlock );
+    if (sysblk.scrtest && !sysblk.started_mask)
     {
-       /* Looks  like we are entering into a state where nothing can */
-       /* run and a runtest command is active.  So we should wake up */
-       /* the waiting runtest script command.                        */
-
-       /* The  lock  pscrsem serialises access to posting the scrsem */
-       /* semaphore  so  that  it  is  posted once only.  pscrsem is */
-       /* superfluous  if it can be shown that there is no race from */
-       /* the  point  where  the cpu is removed from the started bit */
-       /* map  until  we get here.  If this cannot be guaranteed and */
-       /* the  scrsem  semaphore were to be posted twice and further */
-       /* the   kernel   cannot  discover  that  a  semaphore  at  a */
-       /* particular   address   has   been   destroyed   and   then */
-       /* re-initialised,   we  may  be  posting  the  next  runtest */
-       /* prematurely.                                               */
-
-       sem_t * topost = NULL;
-
-#ifdef JPHTEST
-      printf("Semaphore %p Configured " F_CPU_BITMAP "; started " F_CPU_BITMAP "; waiting " F_CPU_BITMAP "\n",
-         sysblk.scrsem, sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask);
-      fflush(stdout);
-#endif // JPHTEST
-       /* OK,  we need to post the semaphore unless someone beats us */
-       /* to it.                                                     */
-       /* The  only  other  reason  sem_wait  can  fail  is that the */
-       /* semaphore is not valid.                                    */
-       while (sem_wait(&sysblk.pscrsem) && EINTR == errno)
-       {
-#ifdef JPHTEST
-          printf("eintr\n");
-#endif // JPHTEST
-          ;                           /* Try again                   */
-#ifdef JPHTEST
-       fflush(stdout);
-#endif // JPHTEST
-       }
-
-       /* Test  if  the  system is stopped while holding this global */
-       /* lock.                                                      */
-
-       topost = sysblk.scrsem;        /* Save locally                */
-       if (topost)
-       {
-          /* The  only way there can be something started when there */
-          /* was  not earlier is a user entering a command to start. */
-          /* Or a bug, of course.                                    */
-          if (sysblk.started_mask) topost = NULL;  /* Someone active? */
-          else sysblk.scrsem = NULL;  /* We shall post shortly       */
-       }
-
-       sem_post(&sysblk.pscrsem);     /* Release our global lock     */
-       if (topost) sem_post(topost);  /* All CPUs stopped?           */
+        sysblk.scrtest++;
+        broadcast_condition( &sysblk.scrcond );
     }
-#endif
+    release_lock( &sysblk.scrlock );
     /* Wait for interrupt */
     wait_condition (&regs->intcond, &sysblk.intlock);
 
     /* And we're the owner of intlock once again */
     sysblk.intowner = regs->cpuad;
 }
-
 
 #endif /*!defined(_GEN_ARCH)*/
 

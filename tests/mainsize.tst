@@ -66,7 +66,11 @@ mainsize 2147483649B
 *Error HHC01451E Invalid value 2147483649B specified for mainsize
 archmode z/Arch
 mainsize 16e
+*If $ptrsize = 4
+*Error HHC01451E Invalid value 16e specified for mainsize
+*Else # 64 bit
 *Error HHC02388E Configure storage error -1
+*Fi
 mainsize 17E
 *Error HHC01451E Invalid value 17E specified for mainsize
 archmode s/370

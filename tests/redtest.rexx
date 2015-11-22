@@ -38,6 +38,7 @@ comparing = 0
 fails. = 0                            /* .0 is OK .1 is failures     */
 catast = 0                            /* Catastrophic failures       */
 done = 0                              /* Test cases started          */
+stardone = 0                          /* *Done orders met            */
 lineno = 0                            /* Line number in input file   */
 ifnest=0                              /* If/then/else nesting        */
 ifstack = ''
@@ -64,6 +65,7 @@ end
 say 'Done' done 'tests. ' msg
 If catast > 0
    Then say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
+if done \= stardone then say 'Tests malformed. ' done '*Tescase orders met, but' stardone '*Done orders met.'
 exit fails.1
 
 /*********************************************************************/
@@ -92,6 +94,8 @@ do forever
       Then l = substr(l, p)           /* Toss it                     */
    If left(l, 3) \='HHC'
       Then iterate                    /* Not a message               */
+   If ?msg = 'HHC00007I'              /* Where issued                */
+      Then iterate
    If ?msg \= 'HHC01603I'
       Then leave                      /* Not a comment               */
    If length(?verb) > 1 & left(?verb, 1) = '*'
@@ -227,7 +231,7 @@ Select
    When verb = '*Timeout'
       then timeoutOk = 1
    otherwise
-      say 'Bad order: ' verb
+      say 'Bad directive: ' verb
       rv = 16
 end
 return
@@ -266,6 +270,7 @@ return
 /*********************************************************************/
 
 endtest:
+stardone = stardone + 1
 unprocessed = ''                      /* No read ahead stored        */
 nowait = rest = 'nowait'
 
