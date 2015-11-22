@@ -292,6 +292,7 @@
 #endif
 
 #define  SHIFT_KILOBYTE     10
+#define  SHIFT_4K           12
 #define  SHIFT_64KBYTE      16
 #define  SHIFT_MEGABYTE     20
 #define  SHIFT_GIGABYTE     30
@@ -336,6 +337,9 @@
 #define ONE_QUINTILLION ((U64)ONE_QUADRILLION * (U64)(1000))    /* zeros = 18 */
 #define ONE_SEXTILLION  ((U64)ONE_QUINTILLION * (U64)(1000))    /* zeros = 21 */
 #define ONE_SEPTILLION  ((U64)ONE_SEXTILLION  * (U64)(1000))    /* zeros = 24 */
+
+#define  _4K       4096     // (just a much shorter name)
+#define  _1M    1048576     // (just a much shorter name)
 
 /*-------------------------------------------------------------------*/
 /*      Some handy memory/string comparison macros                   */

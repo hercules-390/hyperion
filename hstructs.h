@@ -877,7 +877,7 @@ struct SYSBLK {
 #endif
         LOCK    mntlock;                /* tape mount lock          */
 
-#if       defined( OPTION_SHUTDOWN_CONFIRMATION )
+#if defined( OPTION_SHUTDOWN_CONFIRMATION )
 #define QUITTIME_PERIOD     10
         int     quitmout;               /* Current timeout value     */
         time_t  shutquittime;           /* Quit requested time       */
