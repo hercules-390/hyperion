@@ -967,6 +967,23 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             // only that we need to document via comments the purpose of
             // this test. What's it doing? Why ignore "initiator 1"? etc.
             // PLEASE EXPLAIN! -- Fish
+
+            // The Linux kernel LCS driver has two values defined that
+            // might be found in variable pCmdFrame->bInitiator, #define
+            // LCS_INITIATOR_TCPIP 0x00, and #define LCS_INITIATOR_LGW
+            // 0x01, where LGW is an abbreviation of LAN Gateway. Older
+            // kernel LCS drivers had lots of code related to LGW, but most
+            // of it has been removed from modern kernels (4.3, at the time
+            // of writing). I'm not sure, but I think that applications,
+            // for example IBM's Operator Facility/2, could send commands
+            // to a 3172 from a host attached to the LAN, and that those
+            // commands would arrive with pCmdFrame->bInitiator ==
+            // LCS_INITIATOR_LGW. The current Linux kernel LCS driver only
+            // checks for pCmdFrame->bInitiator == LCS_INITIATOR_LGW in
+            // inbound packets arriving from the LCS device, all outbound
+            // packets sent to the LCS device have pCmdFrame->bInitiator
+            // == LCS_INITIATOR_TCPIP.
+
             if (pCmdFrame->bInitiator == 0x01)
             {
                 PTT_DEBUG( "CMD initiator 0x01", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
