@@ -959,7 +959,7 @@ int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
     hdl_adsc("release_config", release_config, NULL);
 
     /* Build system configuration */
-    if ( cfgorrc[want_cfg].filename && build_config (cfgorrc[want_cfg].filename) )
+    if ( build_config (cfgorrc[want_cfg].filename) )
     {
         delayed_exit(-1);
         return(1);
