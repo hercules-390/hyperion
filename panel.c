@@ -1702,6 +1702,7 @@ char   *kbbuf = NULL;                   /* Keyboard input buffer      */
 int     kblen;                          /* Number of chars in kbbuf   */
 U32     aaddr;                          /* Absolute address for STO   */
 char    buf[1024];                      /* Buffer workarea            */
+size_t  loopcount;                    /* Number of iterations done   */
 
     SET_THREAD_NAME("panel_display");
 
@@ -1811,7 +1812,7 @@ char    buf[1024];                      /* Buffer workarea            */
 #endif
 
     /* Process messages and commands */
-    while ( 1 )
+    for (loopcount = 0; ; loopcount++)
     {
 #if defined( _MSVC_ )
         /* Wait for keyboard input */
@@ -1875,7 +1876,7 @@ char    buf[1024];                      /* Buffer workarea            */
         ADJ_SCREEN_SIZE();
 
         /* If keyboard input has arrived then process it */
-        if (FD_ISSET(keybfd, &readset))
+        if (loopcount && FD_ISSET(keybfd, &readset))
         {
             /* Read character(s) from the keyboard */
             kblen = read (keybfd, kbbuf, kbbufsize-1);

@@ -1249,21 +1249,19 @@ error:
         for (i = 0; cfgorrccount > i; i++)
         {
             if (!cfgorrc[i].filename) /* No value specified          */
-            {
                 cfgorrc[i].filename = getenv(cfgorrc[i].envname);
-                if (!cfgorrc[i].filename)
-                {
-                    rv = stat(cfgorrc[i].defaultfile, &st);
-                    if (!rv) cfgorrc[i].filename = cfgorrc[i].defaultfile;
-                    continue;
-                }
-                if (!cfgorrc[i].filename[0])
-                {
-                   cfgorrc[i].filename = NULL;
-                   continue;
-                }
+            if (!cfgorrc[i].filename) /* No environment var          */
+            {
+                rv = stat(cfgorrc[i].defaultfile, &st);
+                if (!rv) cfgorrc[i].filename = cfgorrc[i].defaultfile;
+                continue;
             }
-            /* if (strcasecmp(cfgorrc[i].filename, "None")           */
+            if (!cfgorrc[i].filename[0]                 /* Null name */
+                || !strcasecmp(cfgorrc[i].filename, "None"))
+            {
+               cfgorrc[i].filename = NULL;          /* Suppress file */
+               continue;
+            }
 
             /* File specified explicitly or by environment           */
             rv = stat(cfgorrc[i].filename, &st);
