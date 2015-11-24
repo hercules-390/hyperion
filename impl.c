@@ -30,11 +30,78 @@
 #include "hostinfo.h"
 #include "history.h"
 
+static char shortopts[] =
+
+   "hf:r:db:vt::"
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+   "s:"
+#endif
+#if defined(OPTION_DYNAMIC_LOAD)
+   "p:l:"
+#endif
+   ;
+
+#if defined(HAVE_GETOPT_LONG)
+static struct option longopts[] =
+{
+    { "test",     optional_argument, NULL, 't' },
+    { "help",     no_argument,       NULL, 'h' },
+    { "config",   required_argument, NULL, 'f' },
+    { "rcfile",   required_argument, NULL, 'r' },
+    { "daemon",   no_argument,       NULL, 'd' },
+    { "herclogo", required_argument, NULL, 'b' },
+    { "verbose",  no_argument,       NULL, 'v' },
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+    { "defsym",   required_argument, NULL, 's' },
+#endif
+
+#if defined(OPTION_DYNAMIC_LOAD)
+    { "modpath",  required_argument, NULL, 'p' },
+    { "ldmod",    required_argument, NULL, 'l' },
+#endif
+    { NULL,       0,                 NULL,  0  }
+};
+#endif
+
+
+static LOGCALLBACK  log_callback = NULL;
+
+struct cfgandrcfile
+{
+   const char * filename;             /* Or NULL                     */
+   const char * const envname; /* Name of environment variable to test */
+   const char * const defaultfile;    /* Default file                */
+   const char * const whatfile;       /* config/restart, for message */
+};
+
+enum cfgorrc
+{
+   want_cfg,
+   want_rc,
+   cfgorrccount
+};
+
+static struct cfgandrcfile cfgorrc[ cfgorrccount ] =
+{
+   { NULL, "HERCULES_CFG", "hercules.cfg", "Configuration", },
+   { NULL, "HERCULES_RC",  "hercules.rc",  "Recovery", },
+};
+
+#if defined(OPTION_DYNAMIC_LOAD)
+#define MAX_DLL_TO_LOAD         50
+static char   *dll_load[MAX_DLL_TO_LOAD];    /* Pointers to modnames */
+static int     dll_count = -1;        /* index into array            */
+#endif
+
 /* forward define process_script_file (ISW20030220-3) */
 extern int process_script_file(char *,int);
 /* extern int quit_cmd(int argc, char *argv[],char *cmdline);        */
 
-static LOGCALLBACK  log_callback = NULL;
+/* Forward declarations:                                             */
+static int process_args(int argc, char *argv[]);
+static void process_stdin(void);
+/* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
 /* Register a LOG callback                                           */
@@ -286,57 +353,30 @@ DLL_EXPORT  COMMANDHANDLER  getCommandHandler()
 }
 
 /*-------------------------------------------------------------------*/
-/* Process .RC file thread                                           */
+/* Process .RC file thread.                                          */
+/*                                                                   */
+/* Called synchronously when in daemon mode.                         */
 /*-------------------------------------------------------------------*/
-static char *rcname = NULL;             /* hercules.rc name pointer  */
 static void* process_rc_file (void* dummy)
 {
 char    pathname[MAX_PATH];             /* (work)                    */
 
     UNREFERENCED(dummy);
 
-    /* Obtain the name of the hercules.rc file or default */
-
-    if (!rcname)                      /* -r flag not specified       */
-    {
-        if (!(rcname = getenv("HERCULES_RC")))
-        {
-            struct stat st;
-            int rv = stat("hercules.rc", &st);
-
-            if (-1 == rv) return NULL;       /* Have no default file */
-            /* file name is hostpath invariant                       */
-            rcname = "hercules.rc";
-        }
-        else if (!rcname[0]) return NULL; /* Null string in environment */
-    }
-
-    if(!strcasecmp(rcname,"None"))
-        return NULL;
-
-    hostpath(pathname, rcname, sizeof(pathname));
+    /* We have a .rc file to run                                 */
+    hostpath(pathname, cfgorrc[want_rc].filename, sizeof(pathname));
 
     /* Wait for panel thread to engage */
 // ZZ FIXME:THIS NEED TO GO
-    while (!sysblk.panel_init)
-        usleep( 10 * 1000 );
+    if (!sysblk.daemon_mode)
+        while (!sysblk.panel_init)
+            usleep( 10 * 1000 );
 
     /* Run the script processor for this file */
     process_script_file(pathname, 1);
         // (else error message already issued)
 
-    if (sysblk.daemon_mode)
-    {
-        /* No  panel  to  read  commands.  Either stop or read stdin */
-        /* here or in caller.                                        */
-        /* quit_cmd(0, NULL, NULL);                                  */
-        /* But  no,  the  user  could  have  IPLed something or even */
-        /* loaded  a program image from the configuration file.  How */
-        /* to test for nothing active?                               */
-
-    }
-
-    return NULL;
+    return NULL;                      /* End the .rc thread.         */
 }
 
 
@@ -345,19 +385,11 @@ char    pathname[MAX_PATH];             /* (work)                    */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int impl(int argc, char *argv[])
 {
-char   *cfgfile;                        /* -> Configuration filename */
-int     c;                              /* Work area for getopt      */
-int     arg_error = 0;                  /* 1=Invalid arguments       */
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
 int     rc;
 #if defined(EXTERNALGUI)
 int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
-#endif
-#if defined(OPTION_DYNAMIC_LOAD)
-#define MAX_DLL_TO_LOAD         50
-char   *dll_load[MAX_DLL_TO_LOAD];      /* Pointers to modnames      */
-int     dll_count;                      /* index into array          */
 #endif
 
     /* Seed the pseudo-random number generator */
@@ -390,13 +422,25 @@ int     dll_count;                      /* index into array          */
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
 
-#if defined(OPTION_DYNAMIC_LOAD)
-    for ( dll_count = 0; dll_count < MAX_DLL_TO_LOAD; dll_count++ )
-        dll_load[dll_count] = NULL;
-    dll_count = -1;
+    SET_THREAD_NAME("impl");
+
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        e_gui = TRUE;
+        argc--;
+    }
 #endif
 
-    SET_THREAD_NAME("impl");
+    /* Scan  argv  array  up  front  and  set decoded variables.  As */
+    /* nothing has been started we can just exit on serious errors.  */
+    rc = process_args(argc, argv);
+    if (rc)
+    {
+        /* HHC02343 "Terminating due to %d argument errors"          */
+        WRMSG(HHC02343, "S", rc);
+        exit(rc);        /* Serously bad arguments?  Stop right here */
+    }
 
     /* Initialize 'hostinfo' BEFORE display_version is called */
     init_hostinfo( &hostinfo );
@@ -409,52 +453,6 @@ int     dll_count;                      /* index into array          */
     /* Ensure hdl_shut is called in case of shutdown
        hdl_shut will ensure entries are only called once */
     atexit(hdl_shut);
-
-    if ( argc > 0 )
-    {
-        int i,len;
-
-        for (len = 0, i = 0; i < argc; i++ )
-            len += (int)strlen( (char *)argv[i] ) + 1;
-
-        sysblk.hercules_cmdline = (char *)malloc( len );
-
-        strlcpy( sysblk.hercules_cmdline, argv[0], len );
-        for ( i = 1; i < argc; i++ )
-        {
-            strlcat( sysblk.hercules_cmdline, " ", len );
-            strlcat( sysblk.hercules_cmdline, argv[i], len );
-        }
-    }
-
-    /* Set program name */
-    if ( argc > 0 )
-    {
-        if ( strlen(argv[0]) == 0 )
-        {
-            sysblk.hercules_pgmname = strdup("hercules");
-            sysblk.hercules_pgmpath = strdup("");
-        }
-        else
-        {
-            char path[MAX_PATH];
-#if defined( _MSVC_ )
-            GetModuleFileName( NULL, path, MAX_PATH );
-#else
-            strncpy(path,argv[0],sizeof(path)-1);
-#endif
-            sysblk.hercules_pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-            strncpy(path,argv[0],sizeof(path)-1);
-#endif
-            sysblk.hercules_pgmpath = strdup(dirname(path));
-        }
-    }
-    else
-    {
-            sysblk.hercules_pgmname = strdup("hercules");
-            sysblk.hercules_pgmpath = strdup("");
-    }
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
     set_symbol( "VERSION", VERSION);
@@ -666,14 +664,15 @@ int     dll_count;                      /* index into array          */
        needs to be set before logger_init gets called since the
        logger_logfile_write function relies on its setting.
     */
-    sysblk.daemon_mode = !isatty(STDERR_FILENO) && !isatty(STDOUT_FILENO);
+    if (!isatty(STDERR_FILENO) && !isatty(STDOUT_FILENO))
+        sysblk.daemon_mode = 1;       /* Leave -d intact             */
 
     /* Initialize the logmsg pipe and associated logger thread.
        This causes all subsequent logmsg's to be redirected to
        the logger facility for handling by virtue of stdout/stderr
        being redirected to the logger facility.
     */
-    logger_init();
+    if (!sysblk.daemon_mode) logger_init();
 
     /*
        Setup the initial codepage
@@ -705,13 +704,6 @@ int     dll_count;                      /* index into array          */
         WRMSG (HHC00018, "W", "NOT " );
 #endif // defined( _MSVC_ )
 
-#ifdef EXTERNALGUI
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
-    {
-        e_gui = TRUE;
-        argc--;
-    }
-#endif
 
 #if !defined(WIN32) && !defined(HAVE_STRERROR_R)
     strerror_r_init();
@@ -723,214 +715,6 @@ int     dll_count;                      /* index into array          */
     InitializeListHead   ( &sysblk.stape_mount_link   );
     InitializeListHead   ( &sysblk.stape_status_link  );
 #endif /* defined(OPTION_SCSI_TAPE) */
-
-    /* Get name of configuration file or default to hercules.cnf */
-    if(!(cfgfile = getenv("HERCULES_CNF")))
-        cfgfile = "hercules.cnf";
-
-    /* Process the command line options */
-    opterr = 0; /* We'll print our own error messages thankyouverymuch */
-    {
-#define  HERCULES_BASE_OPTS     "hf:r:db:vt::"
-#define  HERCULES_SYM_OPTS      ""
-#define  HERCULES_HDL_OPTS      ""
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-#undef   HERCULES_SYM_OPTS
-#define  HERCULES_SYM_OPTS      "s:"
-#endif
-
-#if defined(OPTION_DYNAMIC_LOAD)
-#undef   HERCULES_HDL_OPTS
-#define  HERCULES_HDL_OPTS      "p:l:"
-#endif
-#define  HERCULES_OPTS_STRING   HERCULES_BASE_OPTS  HERCULES_SYM_OPTS  HERCULES_HDL_OPTS
-
-#if defined(HAVE_GETOPT_LONG)
-    static struct option longopts[] =
-    {
-        { "test",     optional_argument, NULL, 't' },
-        { "help",     no_argument,       NULL, 'h' },
-        { "config",   required_argument, NULL, 'f' },
-        { "rcfile",   required_argument, NULL, 'r' },
-        { "daemon",   no_argument,       NULL, 'd' },
-        { "herclogo", required_argument, NULL, 'b' },
-        { "verbose",  no_argument,       NULL, 'v' },
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-        { "defsym",   required_argument, NULL, 's' },
-#endif
-
-#if defined(OPTION_DYNAMIC_LOAD)
-        { "modpath",  required_argument, NULL, 'p' },
-        { "ldmod",    required_argument, NULL, 'l' },
-#endif
-        { NULL,       0,                 NULL,  0  }
-    };
-    while ((c = getopt_long( argc, argv, HERCULES_OPTS_STRING, longopts, NULL )) != EOF)
-#else
-    while ((c = getopt( argc, argv, HERCULES_OPTS_STRING )) != EOF)
-#endif
-    {
-        switch (c) {
-        case 0:         /* getopt_long() set a variable; keep going */
-            break;
-        case 'h':
-            arg_error = 1;
-            break;
-        case 'f':
-            cfgfile = optarg;
-            break;
-        case 'r':
-            rcname = optarg;
-            break;
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-        case 's':
-            {
-            char *sym        = NULL;
-            char *value      = NULL;
-            char *strtok_str = NULL;
-                if ( strlen( optarg ) >= 3 )
-                {
-                    sym   = strtok_r( optarg, "=", &strtok_str);
-                    value = strtok_r( NULL,   "=", &strtok_str);
-                    if ( sym != NULL && value != NULL )
-                    {
-                    int j;
-                        for( j = 0; j < (int)strlen( sym ); j++ )
-                            if ( islower( sym[j] ) )
-                            {
-                                sym[j] = toupper( sym[j] );
-                            }
-                        set_symbol(sym, value);
-                    }
-                    else
-                        WRMSG(HHC01419, "E" );
-                }
-                else
-                    WRMSG(HHC01419, "E");
-            }
-            break;
-#endif
-
-#if defined(OPTION_DYNAMIC_LOAD)
-        case 'p':
-            if(optarg)
-                hdl_setpath(strdup(optarg), FALSE);
-            break;
-        case 'l':
-            {
-            char *dllname, *strtok_str = NULL;
-                for(dllname = strtok_r(optarg,", ",&strtok_str);
-                    dllname;
-                    dllname = strtok_r(NULL,", ",&strtok_str))
-                {
-                    if (dll_count < MAX_DLL_TO_LOAD - 1)
-                        dll_load[++dll_count] = strdup(dllname);
-                    else
-                    {
-                        WRMSG(HHC01406, "W", MAX_DLL_TO_LOAD);
-                        break;
-                    }
-                }
-            }
-            break;
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
-        case 'b':
-            sysblk.logofile = optarg;
-            break;
-        case 'v':
-            sysblk.msglvl |= MLVL_VERBOSE;
-            break;
-        case 'd':
-            sysblk.daemon_mode = 1;
-            break;
-
-        case 't':
-            sysblk.scrtest = 1;
-            sysblk.scrfactor = 1.0;
-
-            if (optarg)
-            {
-                double scrfactor;
-                double max_factor = MAX_RUNTEST_FACTOR;
-                /* Round down to nearest 10th of a second */
-                max_factor = floor( max_factor * 10.0 ) / 10.0;
-                //logmsg("*** max_factor = %3.1f\n", max_factor );
-
-                scrfactor = atof( optarg );
-
-                if (scrfactor >= 1.0 && scrfactor <= max_factor)
-                    sysblk.scrfactor = scrfactor;
-                else
-                {
-                    // "Test timeout factor %s outside of valid range 1.0 to %3.1f"
-                    WRMSG( HHC00020, "S", optarg, max_factor );
-                    arg_error = 1;
-                }
-            }
-            break;
-
-        default:
-            {
-                char buf[16];
-                if (isprint( optopt ))
-                    MSGBUF( buf, "'-%c'", optopt );
-                else
-                    MSGBUF( buf, "(hex %2.2x)", optopt );
-                // "Invalid/unsupported option: %s"
-                WRMSG( HHC00023, "S", buf );
-                arg_error = 1;
-            }
-
-        } /* end switch(c) */
-    } /* end while */
-    } /* end Process the command line options */
-
-    /* Treat filename None as special */
-    if(!strcasecmp(cfgfile,"None"))
-        cfgfile = NULL;
-
-    while (optind < argc)
-    {
-        // "Unrecognized option: %s"
-        WRMSG( HHC00024, "S", argv[optind++] );
-        arg_error = 1;
-    }
-
-    /* Terminate if invalid arguments were detected */
-    if (arg_error)
-    {
-        char pgm[MAX_PATH];
-        char* strtok_str = NULL;
-        strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
-
-        /* Show them all of our command-line arguments... */
-
-        // "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]]%s [> logfile]"
-
-        WRMSG (HHC01414, "S", "");   // (blank line)
-#if defined(OPTION_DYNAMIC_LOAD)
-        WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str),
-            " [-p dyn-load-dir] [[-l dynmod-to-load]...]");
-#else
-        WRMSG (HHC01407, "S", strtok_r(pgm,".", &strtok_str), "");
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
-        WRMSG (HHC01414, "S", "");   // (blank line)
-
-        fflush(stderr);
-        fflush(stdout);
-        usleep(100000);
-
-        do_shutdown();
-
-        fflush(stderr);
-        fflush(stdout);
-        usleep(100000);
-
-        return(1);
-    }
 
     if (sysblk.scrtest)
     {
@@ -1175,17 +959,25 @@ int     dll_count;                      /* index into array          */
     hdl_adsc("release_config", release_config, NULL);
 
     /* Build system configuration */
-    if ( build_config (cfgfile) )
+    if ( cfgorrc[want_cfg].filename && build_config (cfgorrc[want_cfg].filename) )
     {
         delayed_exit(-1);
         return(1);
     }
 
-    /* Start up the RC file processing thread */
-    rc = create_thread(&rctid,DETACHED,
-                  process_rc_file,NULL,"process_rc_file");
-    if (rc)
-        WRMSG(HHC00102, "E", strerror(rc));
+    /* Process  the  .rc  file  synchronously  when  in daemon mode. */
+    /* Otherwise Start up the RC file processing thread.             */
+    if (cfgorrc[want_rc].filename)
+    {
+        if (sysblk.daemon_mode) process_rc_file(NULL);
+        else
+        {
+            rc = create_thread(&rctid,DETACHED,
+                          process_rc_file,NULL,"process_rc_file");
+            if (rc)
+                WRMSG(HHC00102, "E", strerror(rc));
+        }
+    }
 
     if (log_callback)
     {
@@ -1210,28 +1002,7 @@ int     dll_count;                      /* index into array          */
             daemon_task();/* Returns only AFTER Hercules is shutdown */
         else
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
-        {
-            char   *msgbuf;
-            int     msgidx;
-            int     msglen;
-
-            /* Tell RC file and HAO threads they may now proceed */
-            sysblk.panel_init = 1;
-
-            /*
-            **  PROGRAMMING NOTE: when Hercules is run in true daemon
-            **  mode, the below loop is NEVER broken out of. Instead,
-            **  the "do_shutdown_now" function calls 'exit' to return
-            **  control back to the operating system once Hercules is
-            **  completely shutdown.
-            */
-
-            /* Retrieve messages from logger and write to stderr */
-            while (1)
-                if ((msglen = log_read( &msgbuf, &msgidx, LOG_BLOCK )))
-                    if (isatty( STDERR_FILENO ))
-                        fwrite( msgbuf, msglen, 1, stderr );
-        }
+            process_stdin();
     }
 
     /*
@@ -1250,6 +1021,297 @@ int     dll_count;                      /* index into array          */
     return 0; /* return back to bootstrap.c */
 } /* end function impl */
 
+/*********************************************************************/
+/* Process  arguments  up front, but build the command string before */
+/* getopt mangles argv[]                                             */
+/*********************************************************************/
+
+static int
+process_args(int argc, char *argv[])
+{
+int     arg_error = 0;                  /* 1=Invalid arguments       */
+int     c = 0;                        /* Next option flag            */
+
+    /* Set program name */
+    if ( argc > 0 && strlen(argv[0]) )
+    {
+        char path[MAX_PATH];
+#if defined( _MSVC_ )
+        GetModuleFileName( NULL, path, MAX_PATH );
+#else
+        strncpy(path,argv[0],sizeof(path)-1);
+#endif
+        sysblk.hercules_pgmname = strdup(basename(path));
+#if !defined( _MSVC_ )
+        strncpy(path,argv[0],sizeof(path)-1);
+#endif
+        sysblk.hercules_pgmpath = strdup(dirname(path));
+    }
+    else
+    {
+            sysblk.hercules_pgmname = strdup("hercules");
+            sysblk.hercules_pgmpath = strdup("");
+    }
+
+    if ( argc > 0 )
+    {
+        int i;
+        size_t len;
+
+        for (len = 0, i = 0; i < argc; i++ )
+            len += strlen( argv[i] ) + 1;
+
+        sysblk.hercules_cmdline = (char *)malloc( len );
+
+        strlcpy( sysblk.hercules_cmdline, argv[0], len );
+        for ( i = 1; i < argc; i++ )
+        {
+            strlcat( sysblk.hercules_cmdline, " ", len );
+            strlcat( sysblk.hercules_cmdline, argv[i], len );
+        }
+    }
+
+    opterr = 0; /* We'll print our own error messages thankyouverymuch */
+
+    if (2 <= argc && !strcmp(argv[1], "-?"))
+    {
+        arg_error++;
+        goto error;
+    }
+
+    for (; EOF != c ;)
+    {
+        c =                       /* Work area for getopt        */
+#if defined(HAVE_GETOPT_LONG)
+            getopt_long( argc, argv, shortopts, longopts, NULL );
+#else
+            getopt( argc, argv, shortopts );
+#endif
+        switch (c) {
+        case EOF:
+            break;
+        case 0:         /* getopt_long() set a variable; keep going */
+            break;
+        case 'h':
+            arg_error++;
+            break;
+        case 'f':
+            cfgorrc[want_cfg].filename = optarg;
+            break;
+        case 'r':
+            cfgorrc[want_rc].filename = optarg;
+            break;
+
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+        case 's':
+            {
+            char *sym        = NULL;
+            char *value      = NULL;
+            char *strtok_str = NULL;
+                if ( strlen( optarg ) >= 3 )
+                {
+                    sym   = strtok_r( optarg, "=", &strtok_str);
+                    value = strtok_r( NULL,   "=", &strtok_str);
+                    if ( sym != NULL && value != NULL )
+                    {
+                    int j;
+                        for( j = 0; j < (int)strlen( sym ); j++ )
+                            if ( islower( sym[j] ) )
+                            {
+                                sym[j] = toupper( sym[j] );
+                            }
+                        set_symbol(sym, value);
+                    }
+                    else
+                        WRMSG(HHC01419, "E" );
+                }
+                else
+                    WRMSG(HHC01419, "E");
+            }
+            break;
+#endif
+
+#if defined(OPTION_DYNAMIC_LOAD)
+        case 'p':
+            if (optarg && hdl_setpath(optarg, FALSE))
+                arg_error++;
+            break;
+        case 'l':
+            {
+            char *dllname, *strtok_str = NULL;
+                for(dllname = strtok_r(optarg,", ",&strtok_str);
+                    dllname;
+                    dllname = strtok_r(NULL,", ",&strtok_str))
+                {
+                    if (dll_count < MAX_DLL_TO_LOAD - 1)
+                        dll_load[++dll_count] = strdup(dllname);
+                    else
+                    {
+                        WRMSG(HHC01406, "W", MAX_DLL_TO_LOAD);
+                        break;
+                    }
+                }
+            }
+            break;
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
+        case 'b':
+            sysblk.logofile = optarg;
+            break;
+        case 'v':
+            sysblk.msglvl |= MLVL_VERBOSE;
+            break;
+        case 'd':
+            sysblk.daemon_mode = 1;
+            break;
+
+        case 't':
+            sysblk.scrtest = 1;
+            sysblk.scrfactor = 1.0;
+
+            if (optarg)
+            {
+                double scrfactor;
+                double max_factor = MAX_RUNTEST_FACTOR;
+                /* Round down to nearest 10th of a second */
+                max_factor = floor( max_factor * 10.0 ) / 10.0;
+                //logmsg("*** max_factor = %3.1f\n", max_factor );
+
+                scrfactor = atof( optarg );
+
+                if (scrfactor >= 1.0 && scrfactor <= max_factor)
+                    sysblk.scrfactor = scrfactor;
+                else
+                {
+                    // "Test timeout factor %s outside of valid range 1.0 to %3.1f"
+                    WRMSG( HHC00020, "S", optarg, max_factor );
+                    arg_error++;
+                }
+            }
+            break;
+
+        default:
+            {
+                char buf[16];
+                if (isprint( optopt ))
+                    MSGBUF( buf, "'-%c'", optopt );
+                else
+                    MSGBUF( buf, "(hex %2.2x)", optopt );
+                // "Invalid/unsupported option: %s"
+                WRMSG( HHC00023, "S", buf );
+                arg_error++;
+            }
+
+        } /* end switch(c) */
+    } /* end while */
+
+    while (optind < argc)
+    {
+        // "Unrecognized option: %s"
+        WRMSG( HHC00024, "S", argv[optind++] );
+        arg_error++;
+    }
+
+error:
+
+    /* Terminate if invalid arguments were detected */
+    if (arg_error)
+    {
+        char pgm[MAX_PATH];
+        char* strtok_str = NULL;
+        strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
+        const char symsub[] =
+#if defined(ENABLE_BUILTIN_SYMBOLS)
+            " [-s sym=val]";
+#else
+            "";
+#endif
+        const char dlsub[] =
+#if defined(OPTION_DYNAMIC_LOAD)
+            " [-p dyn-load-dir] [[-l dynmod-to-load]...]";
+#else
+            "";
+#endif /* defined(OPTION_DYNAMIC_LOAD) */
+
+        /* Show them all of our command-line arguments... */
+
+        /* "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"*/
+        WRMSG (HHC01414, "S", "");   // (blank line)
+        WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str), symsub, dlsub);
+        WRMSG (HHC01414, "S", "");   // (blank line)
+
+    }
+    else             /* Check for config and rc file, but don't open */
+    {
+        int i;
+        struct stat st;
+        int rv;
+
+        for (i = 0; cfgorrccount > i; i++)
+        {
+            if (!cfgorrc[i].filename) /* No value specified          */
+            {
+                cfgorrc[i].filename = getenv(cfgorrc[i].envname);
+                if (!cfgorrc[i].filename)
+                {
+                    rv = stat(cfgorrc[i].defaultfile, &st);
+                    if (!rv) cfgorrc[i].filename = cfgorrc[i].defaultfile;
+                    continue;
+                }
+                if (!cfgorrc[i].filename[0])
+                {
+                   cfgorrc[i].filename = NULL;
+                   continue;
+                }
+            }
+            /* if (strcasecmp(cfgorrc[i].filename, "None")           */
+
+            /* File specified explicitly or by environment           */
+            rv = stat(cfgorrc[i].filename, &st);
+            if (-1 == rv)
+            {
+                /* HHC02342 "%s file %s not found:  %s"              */
+                WRMSG (HHC02342, "S", cfgorrc[i].whatfile,
+                    cfgorrc[i].filename, strerror(errno));
+                arg_error++;
+            }
+        }
+    }
+    fflush(stderr);
+    fflush(stdout);
+    return arg_error;
+}
+
+/*********************************************************************/
+/* Process commands from standard input in daemon mode.              */
+/*********************************************************************/
+
+static void
+process_stdin(void)
+{
+    /* No  panel thread  to  read  commands.                         */
+    for (; !feof(stdin);)
+    {
+        char linebfr[256];
+        char * fstr;
+
+        fstr = fgets(linebfr, sizeof(linebfr), stdin);
+        if (fstr)
+        {
+            int slen = strlen(linebfr);
+
+            if (slen && '\n' == linebfr[slen - 1])
+                linebfr[slen - 1] = 0; /* Remove lf to ensure no repeat */
+            panel_command(linebfr);
+        }
+    }
+    /* We  come here only when the user did ctl-d on a tty or end of */
+    /* file  of the standard input.  No quit command has been issued */
+    /* since that (via do_shutdown()) would not return.              */
+
+    if (sysblk.started_mask)          /* All quiesced?               */
+        usleep( 10 * 1000 );          /* Wait for CPUs to stop       */
+    quit_cmd(0, NULL, NULL);          /* Then pull the plug          */
+}
 
 /*-------------------------------------------------------------------*/
 /* System cleanup                                                    */

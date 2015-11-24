@@ -68,7 +68,7 @@
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
-int build_config (char *hercules_cnf)
+int build_config (const char *hercules_cnf)
 {
 int     i;                              /* Array subscript           */
 int     devtmax;                        /* Max number device threads */

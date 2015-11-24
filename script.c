@@ -240,7 +240,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int process_config (char *cfg_name)
+DLL_EXPORT int process_config (const char *cfg_name)
 {
 #ifdef EXTERNALGUI
 char buf[1024];                         /* Config statement buffer   */

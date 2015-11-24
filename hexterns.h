@@ -262,10 +262,10 @@ HSYS_DLL_IMPORT int extgui;             // __attribute__ ((deprecated));
 #endif /*EXTERNALGUI*/
 
 /* Functions in module bldcfg.c */
-int build_config (char *fname);
+int build_config (const char *fname);
 
 /* Functions in module script.c */
-SCRI_DLL_IMPORT int process_config (char *fname);
+SCRI_DLL_IMPORT int process_config (const char *fname);
 SCRI_DLL_IMPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 
 /* Functions in module config.c */
