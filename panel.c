@@ -1887,6 +1887,11 @@ size_t  loopcount;                    /* Number of iterations done   */
                 fprintf (stderr, MSG(HHC00015, "E", strerror(errno) ) );
                 break;
             }
+            if (!kblen)
+            {
+                panel_command("quit");             /* Force shutdown */
+                break;                /* EOF on input.  Don't loop   */
+            }
 
             kbbuf[kblen] = '\0';
 
