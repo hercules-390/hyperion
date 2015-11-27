@@ -100,7 +100,6 @@ extern int process_script_file(char *,int);
 
 /* Forward declarations:                                             */
 static int process_args(int argc, char *argv[]);
-static void process_stdin(void);
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
@@ -1002,7 +1001,18 @@ int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
             daemon_task();/* Returns only AFTER Hercules is shutdown */
         else
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
-            process_stdin();
+        {
+            process_script_file("-", 1);
+
+            /* We come here only when the user did ctl-d on a tty or */
+            /* end  of  file of the standard input.  No quit command */
+            /* has  been issued since that (via do_shutdown()) would */
+            /* not return.                                           */
+
+            if (sysblk.started_mask)  /* All quiesced?               */
+                usleep( 10 * 1000 );  /* Wait for CPUs to stop       */
+            quit_cmd(0, NULL, NULL);  /* Then pull the plug          */
+        }
     }
 
     /*
@@ -1277,38 +1287,6 @@ error:
     fflush(stderr);
     fflush(stdout);
     return arg_error;
-}
-
-/*********************************************************************/
-/* Process commands from standard input in daemon mode.              */
-/*********************************************************************/
-
-static void
-process_stdin(void)
-{
-    /* No  panel thread  to  read  commands.                         */
-    for (; !feof(stdin);)
-    {
-        char linebfr[256];
-        char * fstr;
-
-        fstr = fgets(linebfr, sizeof(linebfr), stdin);
-        if (fstr)
-        {
-            int slen = strlen(linebfr);
-
-            if (slen && '\n' == linebfr[slen - 1])
-                linebfr[slen - 1] = 0; /* Remove lf to ensure no repeat */
-            panel_command(linebfr);
-        }
-    }
-    /* We  come here only when the user did ctl-d on a tty or end of */
-    /* file  of the standard input.  No quit command has been issued */
-    /* since that (via do_shutdown()) would not return.              */
-
-    if (sysblk.started_mask)          /* All quiesced?               */
-        usleep( 10 * 1000 );          /* Wait for CPUs to stop       */
-    quit_cmd(0, NULL, NULL);          /* Then pull the plug          */
 }
 
 /*-------------------------------------------------------------------*/
