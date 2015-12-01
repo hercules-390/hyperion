@@ -725,26 +725,25 @@ Examples:
 #define HHC00899 "Facility(%s) not supported for archmode %s"
 
 // reserve 009xx for ctc related messages
-/*ctc_ctci.c*/
-#define HHC00900 "%1d:%04X CTC: error in function %s: %s"
-#define HHC00901 "%1d:%04X %s: interface %s, type %s opened"
+/* ctcadpt.c, ctc_ctci.c, ctc_lcs.c, ctc_ptp.c, qeth.c */
+#define HHC00900 "%1d:%04X %s: Error in function %s: %s"
+#define HHC00901 "%1d:%04X %s: Interface %s, type %s opened"
 #define HHC00902 "%1d:%04X %s: ioctl %s failed for device %s: %s"
-#define HHC00904 "%1d:%04X CTC: halt or clear recognized"
-#define HHC00905 "%1d:%04X CTC: received %d bytes size frame"
+#define HHC00904 "%1d:%04X %s: Halt or clear recognized"
 #define HHC00906 "%1d:%04X CTC: write CCW count %u is invalid"
 #define HHC00907 "%1d:%04X CTC: interface command: %s %8.8X"
 #define HHC00908 "%1d:%04X CTC: incomplete write buffer segment header at offset %4.4X"
 #define HHC00909 "%1d:%04X CTC: invalid write buffer segment length %u at offset %4.4X"
-#define HHC00910 "%1d:%04X CTC: sending packet to device %s"
-#define HHC00911 "%1d:%04X CTC: error writing to device %s: %s"
-#define HHC00912 "%1d:%04X CTC: error reading from device %s: %s"
-#define HHC00913 "%1d:%04X CTC: received %d bytes size packet from device %s"
+#define HHC00910 "%1d:%04X %s: Send%s packet of size %d bytes to device %s"
+#define HHC00911 "%1d:%04X %s: Error writing to device %s: %d %s"
+#define HHC00912 "%1d:%04X %s: Error reading from device %s: %d %s"
+#define HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
 #define HHC00914 "%1d:%04X CTC: packet frame too big, dropped"
-#define HHC00915 "%1d:%04X CTC: incorrect number of parameters"
-#define HHC00916 "%1d:%04X CTC: option %s value %s invalid"
-#define HHC00917 "%1d:%04X CTC: default value %s is used for option %s"
-#define HHC00918 "%1d:%04X CTC: option %s unknown or specified incorrectly"
-#define HHC00919 "%1d:%04X CTC: option %s must be specified"
+#define HHC00915 "%1d:%04X %s: Incorrect number of parameters"
+#define HHC00916 "%1d:%04X %s: Option %s value %s invalid"
+// #define HHC00917 "%1d:%04X CTC: default value %s is used for option %s"
+#define HHC00918 "%1d:%04X %s: Option %s unknown or specified incorrectly"
+// #define HHC00919 "%1d:%04X CTC: option %s must be specified"
 
 /* ctc_lcs.c */
 #define HHC00920 "%1d:%04X CTC: lcs device %04X not in configuration"
@@ -798,9 +797,14 @@ Examples:
 #define HHC00976 "%1d:%04X CTC: EOF on read, CTC network down"
 #define HHC00977 "%1d:%04X CTC: lcs command packet ignored (bInitiator == 0x01)"
 #define HHC00978 "CTC: lcs device port %2.2X: STILL trying to enqueue REPLY frame to device %4.4X %s"
+#define HHC00979 "%s: %s: %s %s %s"
 
-// range 00980 - 00989 available
-// range 00990 - 00999 available
+/* ctc_ctci.c, ctc_lcs.c, ctc_ptp.c */
+#define HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+#define HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
+#define HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
+#define HHC00983 "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
+#define HHC00984 "%1d:%04X %s: port %2.2X: Receive frame of size %d bytes (with %s packet) from device %s"
 
 // reserve 010xx for communication adapter specific component messages
 /* comm3705.c and commadpt.c console.c */
@@ -1900,12 +1904,6 @@ Examples:
 // reserve 039xx for ptp related messages
 #define HHC03901 "%1d:%04X PTP: Guest and driver IP addresses are the same"
 #define HHC03902 "%1d:%04X PTP: Inet6 not supported"
-#define HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-#define HHC03904 "%1d:%04X PTP: Receive %s packet of size %d bytes from device %s"
-#define HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
-#define HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
-#define HHC03907 "%1d:%04X PTP: Send %s packet of size %d bytes to device %s"
-#define HHC03909 "PTP: data trace: %s %s %s"
 #define HHC03910 "%1d:%04X PTP: Hercules has maximum read length of size %d bytes and actual MTU of size %d bytes"
 #define HHC03911 "%1d:%04X PTP: Guest has maximum read length of size %d bytes and actual MTU of size %d bytes"
 #define HHC03912 "%1d:%04X PTP: Guest has the driver IP address %s"
@@ -1928,15 +1926,7 @@ Examples:
 #define HHC03952 "%1d:%04X PTP: MAC: %s"
 #define HHC03953 "%1d:%04X PTP: IPv4: Drive %s/%s (%s): Guest %s"
 #define HHC03954 "%1d:%04X PTP: IPv6: Drive %s/%s %s/%s: Guest %s"
-#define HHC03960 "%1d:%04X %s: error in function %s: %s"
-#define HHC03964 "%1d:%04X %s: halt or clear recognized"
 #define HHC03965 "%id:%04X %s: Preconfigured interface %s does not exist or is not accessible by Hercules"
-#define HHC03971 "%1d:%04X %s: error writing to device %s: %d %s"
-#define HHC03972 "%1d:%04X %s: error reading from device %s: %d %s"
-#define HHC03975 "%1d:%04X %s: incorrect number of parameters"
-#define HHC03976 "%1d:%04X %s: option %s value %s invalid"
-#define HHC03978 "%1d:%04X %s: option %s unknown or specified incorrectly"
-#define HHC03979 "%1d:%04X %s: unknown option specified, or specified incorrectly"
 #define HHC03981 "%1d:%04X %s: %s: %s %s  %s"
 #define HHC03982 "%s: %s %s  %s"
 #define HHC03983 "%1d:%04X %s: %s"

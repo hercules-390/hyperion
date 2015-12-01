@@ -367,7 +367,7 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     // The first argument is the device emulation type
     if( argc < 1 )
     {
-        WRMSG (HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+        WRMSG (HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTC");
         return -1;
     }
 
@@ -886,7 +886,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
     // Check for correct number of arguments
     if (argc != 4)
     {
-        WRMSG (HHC00915, "E", SSID_TO_LCSS(dev->ssid), dev->devnum );
+        WRMSG (HHC00915, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC");
         return -1;
     }
 
@@ -897,7 +897,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         sscanf( listenp, "%u%c", &lport, &c ) != 1 ||
         lport < 1024 || lport > 65534 )
     {
-        WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "port number", listenp );
+        WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "port number", listenp);
         return -1;
     }
 
@@ -917,7 +917,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         }
         else
         {
-            WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "IP address", remaddr );
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "IP address", remaddr);
             return -1;
         }
     }
@@ -929,7 +929,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         sscanf( remotep, "%u%c", &rport, &c ) != 1 ||
         rport < 1024 || rport > 65534 )
     {
-        WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "port number", remotep );
+        WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "port number", remotep);
         return -1;
     }
 
@@ -940,7 +940,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
         sscanf( mtusize, "%u%c", &mtu, &c ) != 1 ||
         mtu < 46 || mtu > 65536 )
     {
-        WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "MTU size", mtusize );
+        WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "MTU size", mtusize);
         return -1;
     }
 
@@ -960,7 +960,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
     if( parm.listenfd < 0 )
     {
-        WRMSG (HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "socket()", strerror( HSO_errno ) );
+        WRMSG (HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "socket()", strerror( HSO_errno ) );
         CTCX_Close( dev );
         return -1;
     }
@@ -979,7 +979,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
                sizeof( parm.addr ) );
     if( rc < 0 )
     {
-        WRMSG( HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "bind()", strerror( HSO_errno ) );
+        WRMSG( HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "bind()", strerror( HSO_errno ) );
         CTCX_Close( dev );
         return -1;
     }
@@ -1008,7 +1008,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 
         if( parm.listenfd < 0 )
         {
-            WRMSG(HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "socket()", strerror( HSO_errno ) );
+            WRMSG(HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "socket()", strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
@@ -1024,14 +1024,14 @@ static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
                   (struct sockaddr *)&parm.addr,
                   sizeof( parm.addr ) ) < 0 )
         {
-            WRMSG(HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "bind()", strerror( HSO_errno ) );
+            WRMSG(HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "bind()", strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
 
         if( listen( parm.listenfd, 1 ) < 0 )
         {
-            WRMSG(HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "listen()", strerror( HSO_errno ) );
+            WRMSG(HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "listen()", strerror( HSO_errno ) );
             CTCX_Close( dev );
             return -1;
         }
@@ -1267,7 +1267,9 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U32   sCount,
     // Trace the packet received from the TUN device
     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
     {
-        WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength, "TUN" );
+        // "%1d:%04X %s: receive%s packet of size %d bytes from device %s"
+        WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTC",
+                             "", iLength, "TUN" );
         packet_trace( pDEVBLK->buf, iLength, '<' );
     }
 
@@ -1390,7 +1392,7 @@ int r, i;
 char *ipaddress;
 
     if (argc < 2) {
-        WRMSG (HHC00915, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG (HHC00915, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC");
         return -1;
     }
 
@@ -1399,14 +1401,14 @@ char *ipaddress;
     argv++;
 
     if (socketpair (AF_UNIX, SOCK_STREAM, 0, sockfd) < 0) {
-        WRMSG (HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "socketpair()", strerror(errno));
+        WRMSG (HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "socketpair()", strerror(errno));
         return -1;
     }
 
     r = fork ();
 
     if (r < 0) {
-        WRMSG (HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "fork()", strerror(errno));
+        WRMSG (HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "fork()", strerror(errno));
         return -1;
     } else if (r == 0) {
         /* child */
@@ -1458,13 +1460,13 @@ U16 lcss;
      * The vmnet is only initialised when both are initialised.
      */
     if (argc < 3) {
-        WRMSG(HHC00915, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+        WRMSG(HHC00915, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC");
         return -1;
     }
     rc=parse_single_devnum(argv[0],&lcss,&xdevnum);
     if (rc<0)
     {
-        WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "device number", argv[0]);
+        WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "device number", argv[0]);
         return -1;
     }
     xdev = find_device_by_devnum(lcss,xdevnum);
@@ -1564,7 +1566,7 @@ int n;
                 }
                 if( n == EINTR )
                     return -3;
-                WRMSG (HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "read()", strerror(errno));
+                WRMSG (HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "CTC", "read()", strerror(errno));
                 SLEEP(2);
             }
         } while (n <= 0);

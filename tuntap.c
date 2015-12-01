@@ -1288,6 +1288,16 @@ int FormatMAC( char** ppszMACAddr, BYTE* mac )
 /* ------------------------------------------------------------------ */
 void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
 {
+    return net_data_trace( NULL, pAddr, iLen, bDir, 'I', "packet trace", 0 );
+}
+
+
+/* ------------------------------------------------------------------ */
+/* net_data_trace                                                     */
+/* ------------------------------------------------------------------ */
+void net_data_trace( DEVBLK* pDEVBLK, BYTE* pAddr, int iLen, BYTE bDir, BYTE bSev, char* pWhat, U32 uOpt )
+{
+    char*         pType;
     int           offset;
     unsigned int  i;
     u_char        c = '\0';
@@ -1297,7 +1307,13 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
     char          print_line[64];
     char          tmp[32];
 
-    for( offset = 0; offset < iLen; )
+    UNREFERENCED( uOpt );
+
+
+    if (pDEVBLK) pType = pDEVBLK->typname;
+    else pType = "CTC";
+
+    for (offset = 0; offset < iLen; )
     {
         memset( print_ascii, ' ', sizeof(print_ascii)-1 );    /* set to spaces */
         print_ascii[sizeof(print_ascii)-1] = '\0';            /* with null termination */
@@ -1338,7 +1354,12 @@ void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
             }
         }
 
-        WRMSG(HHC00964, "I", print_line, print_ascii, print_ebcdic );
+        // HHC00979 "%s: %s: %s %s %s"
+        if( bSev == 'D' ) {
+          WRMSG(HHC00979, "D", pType, pWhat, print_line, print_ascii, print_ebcdic );
+        } else {
+          WRMSG(HHC00979, "I", pType, pWhat, print_line, print_ascii, print_ebcdic );
+        }
     }
 }
 

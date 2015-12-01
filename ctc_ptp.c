@@ -101,7 +101,6 @@ static void*    remove_and_free_any_buffers_on_chain( PTPATH* pPTPATH );
 static PTPHDR*  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize );
 static void*    alloc_storage( DEVBLK* pDEVBLK, int iSize );
 
-static void     ptpdata_trace( BYTE* pAddr, int iLen, BYTE bDir );
 
 static int      parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                                  int argc, char** argv );
@@ -881,6 +880,12 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 {
     PTPATH*   pPTPATH;
     PTPBLK*   pPTPBLK;
+    char*     pGuestIP4;
+    char*     pDriveIP4;
+#if defined(ENABLE_IPV6)
+    char*     pGuestIP6;
+    char*     pDriveIP6;
+#endif
 
 
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
@@ -895,15 +900,35 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 
     pPTPBLK = pPTPATH->pPTPBLK;
 
+    if (strlen( pPTPBLK->szGuestIPAddr4 ))
+       pGuestIP4 = pPTPBLK->szGuestIPAddr4;
+    else
+       pGuestIP4 = "-";
+
+    if (strlen( pPTPBLK->szDriveIPAddr4 ))
+       pDriveIP4 = pPTPBLK->szDriveIPAddr4;
+    else
+       pDriveIP4 = "-";
+
 #if defined(ENABLE_IPV6)
+    if (strlen( pPTPBLK->szGuestIPAddr6 ))
+       pGuestIP6 = pPTPBLK->szGuestIPAddr6;
+    else
+       pGuestIP6 = "-";
+
+    if (strlen( pPTPBLK->szDriveIPAddr6 ))
+       pDriveIP6 = pPTPBLK->szDriveIPAddr6;
+    else
+       pDriveIP6 = "-";
+
     if (pPTPBLK->fIPv4Spec && pPTPBLK->fIPv6Spec)
     {
         snprintf( pBuffer, iBufLen-1, "%s %s/%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
-                  pPTPBLK->szGuestIPAddr4,
-                  pPTPBLK->szDriveIPAddr4,
-                  pPTPBLK->szGuestIPAddr6,
-                  pPTPBLK->szDriveIPAddr6,
+                  pGuestIP4,
+                  pDriveIP4,
+                  pGuestIP6,
+                  pDriveIP6,
                   pPTPBLK->szTUNIfName,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
@@ -913,8 +938,8 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
 #endif /* defined(ENABLE_IPV6) */
         snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
-                  pPTPBLK->szGuestIPAddr4,
-                  pPTPBLK->szDriveIPAddr4,
+                  pGuestIP4,
+                  pDriveIP4,
                   pPTPBLK->szTUNIfName,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
@@ -924,8 +949,8 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
     {
         snprintf( pBuffer, iBufLen-1, "%s %s/%s (%s)%s IO[%"PRIu64"]",
                   pPTPBLK->pDEVBLKRead->typname,
-                  pPTPBLK->szGuestIPAddr6,
-                  pPTPBLK->szDriveIPAddr6,
+                  pGuestIP6,
+                  pDriveIP6,
                   pPTPBLK->szTUNIfName,
                   pPTPBLK->fDebug ? " -d" : "",
                   pDEVBLK->excps );
@@ -972,17 +997,17 @@ void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
     // Display up to 256-bytes of data, if debug is active
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPDATA))
     {
-        // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
-        WRMSG(HHC03906, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
+        // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
+        WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname, (int)uCount );
         iTraceLen = uCount;
         if (iTraceLen > 256)
         {
             iTraceLen = 256;
-            // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC03903, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, (int)(uCount - iTraceLen) );
         }
-        ptpdata_trace( pIOBuf, iTraceLen, FROM_GUEST );
+        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'D', "data", 0 );
     }
 
     // Process depending on what was writen by the guest.
@@ -993,8 +1018,8 @@ void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
         // Display TH etc. structured, if debug is active
         if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPEXPAND))
         {
-            // HHC03906 "%1d:%04X PTP: Accept data of size %d bytes from guest"
-            WRMSG(HHC03906, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
+            // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
+            WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname,(int)uCount );
             mpc_display_ptp_th_etc( pDEVBLK, pMPC_TH, FROM_GUEST, 64 );
         }
 
@@ -1035,18 +1060,19 @@ void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
         // HHC03931 "%1d:%04X PTP: Accept data of size %d bytes contains unknown data"
         WRMSG(HHC03931, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)uCount );
 
-        // Display up to 256-bytes of data, if debug is not active
+        // Display up to 128-bytes of data, if debug is not active.
+        // If debug is active, the data has already been diplayed.
         if (!pPTPBLK->fDebug && !(pPTPBLK->uDebugMask & DBGPTPDATA))
         {
             iTraceLen = uCount;
-            if (iTraceLen > 256)
+            if (iTraceLen > 128)
             {
-                iTraceLen = 256;
-                // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                WRMSG(HHC03903, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                iTraceLen = 128;
+                // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      iTraceLen, (int)(uCount - iTraceLen) );
             }
-            ptpdata_trace( pIOBuf, iTraceLen, FROM_GUEST );
+            net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'I', "data", 0 );
         }
 
         // None of the accepted data was sucessfully processed, and it will
@@ -1313,11 +1339,11 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         iPktVer = ( ( pData[0] & 0xF0 ) >> 4 );
         if (iPktVer == 4)
         {
-            strcpy( cPktVer, "IPv4" );
+            strcpy( cPktVer, " IPv4" );
         }
         else if (iPktVer == 6)
         {
-            strcpy( cPktVer, "IPv6" );
+            strcpy( cPktVer, " IPv6" );
         }
         else
         {
@@ -1326,14 +1352,14 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             WRMSG(HHC03933, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  pPTPBLK->szTUNIfName );
             iTraceLen = iDataLen;
-            if (iTraceLen > 256)
+            if (iTraceLen > 128)
             {
-                iTraceLen = 256;
-                // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                iTraceLen = 128;
+                // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      iTraceLen, iDataLen - iTraceLen );
             }
-            ptpdata_trace( pData, iTraceLen, FROM_GUEST );
+            net_data_trace( pDEVBLK, pData, iTraceLen, FROM_GUEST, 'I', "data", 0 );
             rv = -2;
             break;
         }
@@ -1372,14 +1398,14 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             WRMSG(HHC03934, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  pPTPBLK->szTUNIfName );
             iTraceLen = iDataLen;
-            if (iTraceLen > 256)
+            if (iTraceLen > 128)
             {
-                iTraceLen = 256;
-                // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                iTraceLen = 128;
+                // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      iTraceLen, iDataLen - iTraceLen );
             }
-            ptpdata_trace( pData, iTraceLen, FROM_GUEST );
+            net_data_trace( pDEVBLK, pData, iTraceLen, FROM_GUEST, 'I', "data", 0 );
             rv = -2;
             break;
         }
@@ -1389,14 +1415,14 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             WRMSG(HHC03935, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  pPTPBLK->szTUNIfName );
             iTraceLen = iDataLen;
-            if (iTraceLen > 256)
+            if (iTraceLen > 128)
             {
-                iTraceLen = 256;
-                // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                iTraceLen = 128;
+                // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      iTraceLen, iDataLen - iTraceLen );
             }
-            ptpdata_trace( pData, iTraceLen, FROM_GUEST );
+            net_data_trace( pDEVBLK, pData, iTraceLen, FROM_GUEST, 'I', "data", 0 );
             rv = -2;
             break;
         }
@@ -1424,18 +1450,18 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
             // Trace the IP packet before sending to TUN interface
             if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPPACKET))
             {
-                // HHC03907 "%1d:%04X PTP: Send %s packet of size %d bytes to device '%s'"
-                WRMSG(HHC03907, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                // HHC00910 "%1d:%04X %s: Send%s packet of size %d bytes to device %s"
+                WRMSG(HHC00910, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      cPktVer, iPktLen, pPTPBLK->szTUNIfName );
-                packet_trace( pData, iPktLen, '<' );
+                net_data_trace( pDEVBLK, pData, iPktLen, FROM_GUEST, 'D', "packet", 0 );
             }
 
             // Write the IP packet to the TUN interface
             rv = TUNTAP_Write( pPTPBLK->fd, pData, iPktLen );
             if (rv < 0)
             {
-                // HHC03971 "%1d:%04X %s: error writing to device %s: %d %s"
-                WRMSG(HHC03971, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00911 "%1d:%04X %s: error writing to device %s: %d %s"
+                WRMSG(HHC00911, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                         pPTPBLK->szTUNIfName, errno, strerror( errno ) );
                 rv = -3;
                 break;
@@ -1565,8 +1591,8 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
                 {
                     if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
                     {
-                        // HHC03964 "%1d:%04X %s: halt or clear recognized"
-                        WRMSG(HHC03964, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
+                        // HHC00904 "%1d:%04X %s: halt or clear recognized"
+                        WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
                     }
                     *pUnitStat = CSW_CE | CSW_DE;
                     *pResidual = uCount;
@@ -1767,26 +1793,26 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U32     uCount,
     // Display TH etc. structured, if debug is active
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPEXPAND))
     {
-        // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
-        WRMSG(HHC03905, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iIOLen );
+        // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
+        WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, iIOLen );
         mpc_display_ptp_th_etc( pDEVBLK, (MPC_TH*)pIOBuf, TO_GUEST, 64 );
     }
 
     // Display up to 256-bytes of the read data, if debug is active.
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPDATA))
     {
-        // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
-        WRMSG(HHC03905, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iIOLen );
+        // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
+        WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, iIOLen );
         FETCH_FW( uTotalLen, pMPC_TH->length );
         iTraceLen = uTotalLen;
         if (iTraceLen > 256)
         {
             iTraceLen = 256;
-            // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC03903, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, (int)(uTotalLen - iTraceLen) );
         }
-        ptpdata_trace( pIOBuf, iTraceLen, TO_GUEST );
+        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, TO_GUEST, 'D', "data", 0 );
     }
 
     // Reset length field in PTPHDR
@@ -1860,25 +1886,25 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
     // Display TH etc. structured, if debug is active
     if (uFirst4 == MPC_TH_FIRST4 && (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPEXPAND)))
     {
-        // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
-        WRMSG(HHC03905, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iDataLen );
+        // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
+        WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, iDataLen );
         mpc_display_ptp_th_etc( pDEVBLK, pMPC_TH, TO_GUEST, 64 );
     }
 
     // Display up to 256-bytes of the read data, if debug is active.
     if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPDATA))
     {
-        // HHC03905 "%1d:%04X PTP: Present data of size %d bytes to guest"
-        WRMSG(HHC03905, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iDataLen );
+        // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
+        WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, iDataLen );
         iTraceLen = iDataLen;
         if (iTraceLen > 256)
         {
             iTraceLen = 256;
-            // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC03903, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, iDataLen - iTraceLen );
         }
-        ptpdata_trace( pIOBuf, iTraceLen, TO_GUEST );
+        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, TO_GUEST, 'D', "data", 0 );
     }
 
     // When we are handshaking the sixth CCW in the chain marks the
@@ -2041,8 +2067,8 @@ void*  ptp_read_thread( void* arg )
         {
             if (!pPTPBLK->fCloseInProgress)
             {
-                // HHC03972 "%1d:%04X %s: error reading from device %s: %d %s"
-                WRMSG(HHC03972, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00912 "%1d:%04X %s: error reading from device %s: %d %s"
+                WRMSG(HHC00912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      pPTPBLK->szTUNIfName, errno, strerror( errno ) );
             }
             break;
@@ -2056,11 +2082,11 @@ void*  ptp_read_thread( void* arg )
         iPktVer = ( ( pTunBuf[0] & 0xF0 ) >> 4 );
         if (iPktVer == 4)
         {
-            strcpy( cPktVer, "IPv4" );
+            strcpy( cPktVer, " IPv4" );
         }
         else if (iPktVer == 6)
         {
-            strcpy( cPktVer, "IPv6" );
+            strcpy( cPktVer, " IPv6" );
         }
         else
         {
@@ -2069,14 +2095,14 @@ void*  ptp_read_thread( void* arg )
             WRMSG(HHC03921, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
                                  iLength, pPTPBLK->szTUNIfName );
             iTraceLen = iLength;
-            if (iTraceLen > 256)
+            if (iTraceLen > 128)
             {
-                iTraceLen = 256;
-                // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                iTraceLen = 128;
+                // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      iTraceLen, iLength - iTraceLen );
             }
-            packet_trace( (BYTE*)pTunBuf, iTraceLen, '>' );
+            net_data_trace( pDEVBLK, (BYTE*)pTunBuf, iTraceLen, TO_GUEST, 'I', "data", 0 );
             continue;
         }
 
@@ -2115,14 +2141,14 @@ void*  ptp_read_thread( void* arg )
                                  iLength, pPTPBLK->szTUNIfName,
                                  iPktLen );
             iTraceLen = iLength;
-            if (iTraceLen > 256)
+            if (iTraceLen > 128)
             {
-                iTraceLen = 256;
-                // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                iTraceLen = 128;
+                // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      iTraceLen, iLength - iTraceLen );
             }
-            packet_trace( (BYTE*)pTunBuf, iTraceLen, '>' );
+            net_data_trace( pDEVBLK, (BYTE*)pTunBuf, iTraceLen, TO_GUEST, 'I', "data", 0 );
             continue;
         }
 
@@ -2173,14 +2199,14 @@ void*  ptp_read_thread( void* arg )
                                      iLength, pPTPBLK->szTUNIfName,
                                      (int)pPTPBLK->yActMTU );
                 iTraceLen = iLength;
-                if (iTraceLen > 256)
+                if (iTraceLen > 128)
                 {
-                    iTraceLen = 256;
-                    // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                    WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                    iTraceLen = 128;
+                    // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                    WRMSG(HHC00980, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                          iTraceLen, iLength - iTraceLen );
                 }
-                packet_trace( (BYTE*)pTunBuf, iTraceLen, '>' );
+                net_data_trace( pDEVBLK, (BYTE*)pTunBuf, iTraceLen, TO_GUEST, 'I', "data", 0 );
                 break;
             }
 
@@ -2195,14 +2221,14 @@ void*  ptp_read_thread( void* arg )
                                      iLength, pPTPBLK->szTUNIfName,
                                      pPTPHDR->iAreaLen - LEN_OF_PAGE_ONE );
                 iTraceLen = iLength;
-                if (iTraceLen > 256)
+                if (iTraceLen > 128)
                 {
-                    iTraceLen = 256;
-                    // HHC03903 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                    WRMSG(HHC03903, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                    iTraceLen = 128;
+                    // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                    WRMSG(HHC00980, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                          iTraceLen, iLength - iTraceLen );
                 }
-                packet_trace( (BYTE*)pTunBuf, iTraceLen, '>' );
+                net_data_trace( pDEVBLK, (BYTE*)pTunBuf, iTraceLen, TO_GUEST, 'I', "data", 0 );
                 break;
             }
 
@@ -2230,10 +2256,10 @@ void*  ptp_read_thread( void* arg )
                 // Display the IP packet just read, if the device group is being debugged.
                 if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPPACKET))
                 {
-                    // HHC03904 "%1d:%04X PTP: Receive %s packet of size %d bytes from device '%s'"
-                    WRMSG(HHC03904, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                    // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
+                    WRMSG(HHC00913, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                          cPktVer, iLength, pPTPBLK->szTUNIfName );
-                    packet_trace( (BYTE*)pTunBuf, iLength, '>' );
+                    net_data_trace( pDEVBLK, (BYTE*)pTunBuf, iLength, TO_GUEST, 'D', "packet", 0 );
                 }
 
                 // Fix-up various pointers
@@ -2438,8 +2464,8 @@ PTPHDR*  alloc_ptp_buffer( DEVBLK* pDEVBLK, int iSize )
     {
         // Report the bad news.
         MSGBUF( etext, "malloc(%n)", &iBufLen );
-        // HHC03960 "%1d:%04X %s: error in function '%s': '%s'"
-        WRMSG(HHC03960, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+        // HHC00900 "%1d:%04X %s: error in function %s: %s"
+        WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              etext, strerror(errno) );
         return NULL;
     }
@@ -2471,8 +2497,8 @@ void*  alloc_storage( DEVBLK* pDEVBLK, int iSize )
     {
         // Report the bad news.
         MSGBUF( etext, "malloc(%n)", &iStorLen );
-        // HHC03960 "%1d:%04X %s: error in function '%s': '%s'"
-        WRMSG(HHC03960, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+        // HHC00900 "%1d:%04X %s: error in function %s: %s"
+        WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              etext, strerror(errno) );
         return NULL;
     }
@@ -2481,73 +2507,6 @@ void*  alloc_storage( DEVBLK* pDEVBLK, int iSize )
     memset( pStorPtr, 0, iStorLen );
 
     return pStorPtr;
-}
-
-
-/* ------------------------------------------------------------------ */
-/* ptpdata_trace()                                                    */
-/* ------------------------------------------------------------------ */
-// Function to trace PTP data.
-// Other than the message number this function is a copy of
-// packet_trace() in tuntap.c.
-
-void  ptpdata_trace( BYTE* pAddr, int iLen, BYTE bDir )
-{
-    int           offset;
-    unsigned int  i;
-    u_char        c = '\0';
-    u_char        e = '\0';
-    char          print_ascii[17];
-    char          print_ebcdic[17];
-    char          print_line[64];
-    char          tmp[32];
-
-    for( offset = 0; offset < iLen; )
-    {
-        memset( print_ascii, ' ', sizeof(print_ascii)-1 );    /* set to spaces */
-        print_ascii[sizeof(print_ascii)-1] = '\0';            /* with null termination */
-        memset( print_ebcdic, ' ', sizeof(print_ebcdic)-1 );  /* set to spaces */
-        print_ebcdic[sizeof(print_ebcdic)-1] = '\0';          /* with null termination */
-        memset( print_line, 0, sizeof( print_line ) );
-
-        snprintf((char *) print_line, sizeof(print_line), "+%4.4X%c ", offset, bDir );
-        print_line[sizeof(print_line)-1] = '\0';            /* force null termination */
-
-        for( i = 0; i < 16; i++ )
-        {
-            c = *pAddr++;
-
-            if (offset < iLen)
-            {
-                snprintf((char *) tmp, 32, "%2.2X", c );
-                tmp[sizeof(tmp)-1] = '\0';
-                strlcat((char *) print_line, (char *) tmp, sizeof(print_line) );
-
-                print_ebcdic[i] = print_ascii[i] = '.';
-                e = guest_to_host( c );
-
-                if (isprint( e ))
-                    print_ebcdic[i] = e;
-                if (isprint( c ))
-                    print_ascii[i] = c;
-            }
-            else
-            {
-                strlcat((char *) print_line, "  ", sizeof(print_line) );
-            }
-
-            offset++;
-            if (( offset & 3 ) == 0)
-            {
-                strlcat((char *) print_line, " ", sizeof(print_line) );
-            }
-        }
-
-        // HHC03909 "PTP: data trace: %s %s %s"
-        WRMSG(HHC03909, "I", print_line, print_ascii, print_ebcdic );
-    }
-
-    return;
 }
 
 
@@ -2696,8 +2655,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 // Not an IP address, check for valid MAC
                 if (ParseMAC( optarg, mac ) != 0)
                 {
-                    // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                    WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                    // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                           "adapter address", optarg );
                     return -1;
                 }
@@ -2706,8 +2665,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             // This is the file name of the special TUN/TAP character device
             if (strlen( optarg ) > sizeof(pPTPBLK->szTUNCharDevName)-1)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                       "device name", optarg );
                 return -1;
             }
@@ -2718,8 +2677,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         case 'x':     // TUN network interface name
             if (strlen( optarg ) > sizeof(pPTPBLK->szTUNIfName)-1)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                       "TUN device name", optarg );
                 return -1;
             }
@@ -2757,8 +2716,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             if (iMTU < 576 || iMTU > 14336 ||
                 strlen(optarg) > sizeof(pPTPBLK->szMTU)-1)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                       "MTU size", optarg );
                 return -1;
             }
@@ -2783,8 +2742,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //
 //          if ( strlen(optarg) > sizeof(pPTPBLK->szMaxBfru)-1 )
 //          {
-//              // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-//              WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+//              // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+//              WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
 //                    "MaxBfru number", optarg );
 //              return -1;
 //          }
@@ -2814,8 +2773,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 iDebugMask = atoi( optarg );
                 if (iDebugMask < 1 || iDebugMask > 255)
                 {
-                    // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                    WRMSG(HHC03976, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                    // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                    WRMSG(HHC00916, "W", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                           "debug mask", optarg );
                     iDebugMask = DBGPTPPACKET;
                 }
@@ -2844,8 +2803,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             if (ParseMAC( optarg, mac ) != 0 ||
                 strlen(optarg) > sizeof(pPTPBLK->szMACAddress)-1 )
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                       "MAC address", optarg );
                 return -1;
             }
@@ -2857,8 +2816,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             if (iKernBuff * 1024 < MIN_CAPTURE_BUFFSIZE ||
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                       "kernel buffer size", optarg );
                 return -1;
             }
@@ -2870,8 +2829,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             if (iIOBuff * 1024 < MIN_PACKET_BUFFSIZE ||
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                       "dll i/o buffer size", optarg );
                 return -1;
             }
@@ -2880,8 +2839,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #endif /* defined(OPTION_W32_CTCI) */
 
         default:  /* Note: the variable c has a value that makes default: equivalent to case '?': */
-            // HHC03979 "%1d:%04X %s: unknown option specified, or specified incorrectly"
-            WRMSG(HHC03979, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
+            // HHC00918 "%1d:%04X %s: option %s unknown or specified incorrectly"
+            WRMSG(HHC00918, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, argv[optind-1]);
             return -1;
         }
 
@@ -2930,8 +2889,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
     {
         if (strlen( argv[0] ) > sizeof(pPTPBLK->szTUNIfName)-1)
         {
-            // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-            WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+            // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                   "TUN device name", argv[0] );
             return -1;
         }
@@ -2946,8 +2905,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 #endif /* !defined(OPTION_W32_CTCI) */
     else
     {
-        // HHC03975 "%1d:%04X %s: incorrect number of parameters"
-        WRMSG(HHC03975, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
+        // HHC00915 "%1d:%04X %s: incorrect number of parameters"
+        WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
         return -1;
     }
 
@@ -2992,8 +2951,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         }
         if (ilhost > (size_t)(sizeof(hrb.host)-1))
         {
-            // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-            WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+            // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                   "IP address", *argv );
             return -1;
         }
@@ -3068,8 +3027,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 else
                 {
                     // Something that isn't very useful has been specifed..
-                    // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                    WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                    // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                          "IP address", *argv );
                     return -1;
                 }
@@ -3088,8 +3047,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                   snprintf( (char*)tmp, 256, "Prefix size specification moved from guest to drive" );
                   WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, tmp );
                 }
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                      "IP address", *argv );
                 return -1;
             }
@@ -3097,8 +3056,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             else
             {
                 // Hmm... the Guest IPv6 address was specified with a prefix size.
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                      "IP address", *argv );
                 return -1;
             }
@@ -3134,8 +3093,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         }
         if (ilhost > (size_t)(sizeof(hrb.host)-1))
         {
-            // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-            WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+            // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                   "IP address", *argv );
             return -1;
         }
@@ -3159,8 +3118,8 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         rc = resolve_host( &hrb);
         if (rc != 0)
         {
-            // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-            WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+            // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                   "IP address", *argv );
             return -1;
         }
@@ -3184,16 +3143,16 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             {
                 if (ilprfx > (size_t)sizeof(pPTPBLK->szDrivePfxSiz4)-1)
                 {
-                    // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                    WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                    // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                           "prefix size", *argv );
                     return -1;
                 }
                 iPfxSiz = atoi( cpprfx );
                 if (( iPfxSiz < 0 ) || ( iPfxSiz > 32 ))
                 {
-                    // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                    WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                    // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                           "prefix size", *argv );
                     return -1;
                 }
@@ -3222,16 +3181,16 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
             {
                 if (ilprfx > (size_t)sizeof(pPTPBLK->szDrivePfxSiz6)-1)
                 {
-                    // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                    WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                    // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                           "prefix size", *argv );
                     return -1;
                 }
                 iPfxSiz = atoi( cpprfx );
                 if (( iPfxSiz < 0 ) || ( iPfxSiz > 128 ))
                 {
-                    // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                    WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                    // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                           "prefix size", *argv );
                     return -1;
                 }
@@ -3313,7 +3272,7 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
                          pPTPBLK->szTUNIfName);
     return -1;
 #else /* defined(OPTION_W32_CTCI) */
-/* From Linux man page */
+/* Extract from Linux getifaddrs/freeifaddrs man page */
 //
 //    struct ifaddrs {
 //         struct ifaddrs  *ifa_next;    /* Next item in list */
@@ -3408,10 +3367,21 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
     struct hifr          hifr;
 
 
+    /* */
+    memset( &drive4, 0, sizeof(drive4) );
+    memset( &guest4, 0, sizeof(guest4) );
+    memset( &mask4, 0, sizeof(mask4) );
+#if defined(ENABLE_IPV6)
+    memset( &addr6, 0, sizeof(addr6) );
+    memset( &mask6, 0, sizeof(mask6) );
+    memset( &adll6, 0, sizeof(adll6) );
+    memset( &mall6, 0, sizeof(mall6) );
+#endif /* defined(ENABLE_IPV6) */
+
     /* Get the address information for all of the interfaces */
     if (getifaddrs(&ifaddr) == -1) {
-        // HHC03960 "%1d:%04X %s: error in function '%s': '%s'"
-        WRMSG(HHC03960, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+        // HHC00900 "%1d:%04X %s: error in function %s: %s"
+        WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              "getifaddrs", strerror(errno) );
         return -1;
     }
@@ -3558,7 +3528,7 @@ int  get_preconfigured_value( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK )
           }
         }
         snprintf( pPTPBLK->szDrivePfxSiz6, sizeof(pPTPBLK->szDrivePfxSiz6)-1, "%d", pfx.size );
-        if (have_adll6 &&have_mall6) {
+        if (have_adll6 && have_mall6) {
           /* Setup drive IPv6 link local address */
           hinet_ntop( AF_INET6, &adll6, pPTPBLK->szDriveLLAddr6, sizeof(pPTPBLK->szDriveLLAddr6) );
           memcpy( &pPTPBLK->iaDriveLLAddr6, &adll6, sizeof(pPTPBLK->iaDriveLLAddr6) );

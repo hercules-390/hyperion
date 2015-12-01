@@ -159,8 +159,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         {
             char buf[40];
             MSGBUF(buf, "malloc(%d)", (int)sizeof(LCSBLK));
-            // "%1d:%04X CTC: error in function %s: %s"
-            WRMSG( HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
+            // "%1d:%04X %s: error in function %s: %s"
+            WRMSG( HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                  buf, strerror(errno) );
             return -1;
         }
         memset( pLCSBLK, 0, sizeof( LCSBLK ) );
@@ -748,7 +749,7 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             obtain_lock( &pLCSPORT->PortEventLock );
             PTT_DEBUG(        "GOT  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             {
-                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSBLK->fDebug)
                     // "%1d:%04X CTC: lcs triggering port %2.2X event"
                     WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
 
@@ -920,9 +921,18 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
     U16         iEthLen      = 0;
     int         nEthFrames   = 0;
     int         nEthBytes    = 0;
+    char        cPktType[8];
     char        buf[32];
+    U16         hwEthernetType;
 
-    UNREFERENCED( sCount );
+
+    // Display the data written by the guest, if debug is active.
+    if( pLCSDEV->pLCSBLK->fDebug )
+    {
+        // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
+        WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname, (int)sCount );
+        net_data_trace( pDEVBLK, pIOBuf, (int)sCount, '<', 'D', "data", 0 );
+    }
 
     // Process each frame in the buffer...
 
@@ -960,7 +970,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             {
                 // "%1d:%04X CTC: lcs command packet received"
                 WRMSG( HHC00922, "D", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
-                packet_trace( (BYTE*) pCmdFrame, iLength, '>' );
+                net_data_trace( pDEVBLK, (BYTE*)pCmdFrame, iLength, '<', 'D', "command", 0 );
             }
 
             // FIXME: what is this all about? I'm not saying it's wrong,
@@ -1065,9 +1075,9 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             break; // end case LCS_FRMTYP_CMD
 
         case LCS_FRMTYP_ENET:   // Ethernet Passthru
-        case LCS_FRMTYP_TR:     // Token Ring
-        case LCS_FRMTYP_FDDI:   // FDDI
-        case LCS_FRMTYP_AUTO:   // auto-detect
+        case LCS_FRMTYP_TR:     // Token Ring        These two cases really shouldn't be here. TR and FDDI frame
+        case LCS_FRMTYP_FDDI:   // FDDI              headers have different layouts to Ethernet frame header.
+        case LCS_FRMTYP_AUTO:   // auto-detect       And this one probably shouldn't either.
 
             PTT_DEBUG( "WRIT: Eth frame   ", 000, pDEVBLK->devnum, -1 );
 
@@ -1076,11 +1086,27 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             iEthLen      = iLength - sizeof(LCSETHFRM);
 
             // Trace Ethernet frame before sending to TAP device
-            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+            if( pLCSDEV->pLCSBLK->fDebug )
             {
-                // "%1d:%04X CTC: sending packet to file %s"
-                WRMSG( HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
-                packet_trace( (BYTE*)pEthFrame, iEthLen, '>' );
+                FETCH_HW( hwEthernetType, pEthFrame->hwEthernetType );
+                if( hwEthernetType == ETH_TYPE_IP ) {
+                  strcpy( cPktType, "IPv4" );
+                } else if( hwEthernetType == ETH_TYPE_IPV6 ) {
+                  strcpy( cPktType, "IPv6" );
+                } else if( hwEthernetType == ETH_TYPE_ARP ) {
+                  strcpy( cPktType, "ARP" );
+                } else if( hwEthernetType == ETH_TYPE_RARP ) {
+                  strcpy( cPktType, "RARP" );
+                } else if( hwEthernetType == ETH_TYPE_SNA ) {
+                  strcpy( cPktType, "SNA" );
+                } else {
+                  strcpy( cPktType, "unknown" );
+                }
+                // HHC00983 "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
+                WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                     pLCSHDR->bSlot, iEthLen, cPktType,
+                                     pLCSDEV->pLCSBLK->Port[pLCSHDR->bSlot].szNetIfName );
+                net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '<', 'D', "eth frame", 0 );
             }
 
             // Write the Ethernet frame to the TAP device
@@ -1099,7 +1125,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                 pDEVBLK->sense[0] = SENSE_EC;
                 *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
                 LCS_EndMWrite( pDEVBLK, nEthBytes, nEthFrames );
-                PTT_DEBUG( "WRIT ENTRY        ", 000, pDEVBLK->devnum, -1 );
+                PTT_DEBUG( "WRIT EXIT         ", 000, pDEVBLK->devnum, -1 );
                 return;
             }
             PTT_TIMING( "af write", 0, iEthLen, 1 );
@@ -1232,7 +1258,7 @@ static void  UpdatePortStarted( int bStarted, DEVBLK* pDEVBLK, PLCSPORT pLCSPORT
     PTT_DEBUG(         "REL  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     release_lock( &pLCSPORT->PortDataLock );
 
-    if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+    if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSPORT->pLCSBLK->fDebug)
         // "%1d:%04X CTC: lcs triggering port %2.2X event"
         WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
 
@@ -1793,6 +1819,7 @@ static void*  LCS_PortThread( void* arg)
     BYTE        szBuff[2048];
     char        bReported = 0;
     char        bStartReported = 0;
+    char        cPktType[8];
 
     pDEVBLK = pLCSPORT->pLCSBLK->pDevices->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
 
@@ -1884,19 +1911,32 @@ static void*  LCS_PortThread( void* arg)
             break;
         }
 
-        if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-        {
-            // Trace the frame
-            // "CTC: lcs device port %2.2X: read buffer"
-            WRMSG( HHC00945, "I", pLCSPORT->bPort );
-            packet_trace( szBuff, iLength, '>' );
-
-            bReported = 0;
-        }
-
         pEthFrame = (PETHFRM)szBuff;
 
         FETCH_HW( hwEthernetType, pEthFrame->hwEthernetType );
+
+        if (pLCSPORT->pLCSBLK->fDebug)
+        {
+            if( hwEthernetType == ETH_TYPE_IP ) {
+              strcpy( cPktType, "IPv4" );
+            } else if( hwEthernetType == ETH_TYPE_IPV6 ) {
+              strcpy( cPktType, "IPv6" );
+            } else if( hwEthernetType == ETH_TYPE_ARP ) {
+              strcpy( cPktType, "ARP" );
+            } else if( hwEthernetType == ETH_TYPE_RARP ) {
+              strcpy( cPktType, "RARP" );
+            } else if( hwEthernetType == ETH_TYPE_SNA ) {
+              strcpy( cPktType, "SNA" );
+            } else {
+              strcpy( cPktType, "unknown" );
+            }
+            // HHC00984 "%1d:%04X %s: port %2.2X: Receive frame of size %d bytes (with %s packet) from device %s"
+            WRMSG( HHC00984, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                  pLCSPORT->bPort, iLength, cPktType, pLCSPORT->szNetIfName );
+            net_data_trace( pDEVBLK, szBuff, iLength, '>', 'D', "eth frame", 0 );
+
+            bReported = 0;
+        }
 
         // Housekeeping
         pPrimaryLCSDEV   = NULL;
@@ -2301,7 +2341,6 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
     PLCSHDR     pLCSHdr;
     PLCSDEV     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
     size_t      iLength = 0;
-    int         rc      = 0;
 
     struct timespec  waittime;
     struct timeval   now;
@@ -2338,9 +2377,9 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
         PTT_DEBUG(       "GOT  DevEventLock ", 000, pDEVBLK->devnum, -1 );
         {
             PTT_DEBUG( "WAIT DevEventLock ", 000, pDEVBLK->devnum, -1 );
-            rc = timed_wait_condition( &pLCSDEV->DevEvent,
-                                       &pLCSDEV->DevEventLock,
-                                       &waittime );
+            timed_wait_condition( &pLCSDEV->DevEvent,
+                                  &pLCSDEV->DevEventLock,
+                                  &waittime );
         }
         PTT_DEBUG(        "WOKE DevEventLock ", 000, pDEVBLK->devnum, -1 );
         PTT_DEBUG(        "REL  DevEventLock ", 000, pDEVBLK->devnum, -1 );
@@ -2356,9 +2395,9 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
             PTT_DEBUG(    "*HALT or CLEAR*   ", *pUnitStat, pDEVBLK->devnum, sCount );
 
-            if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                // "%1d:%04X CTC: halt or clear recognized"
-                WRMSG( HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug)
+                // HHC00904 "%1d:%04X %s: halt or clear recognized"
+                WRMSG( HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
             return;
         }
 
@@ -2422,13 +2461,12 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
     memcpy( pIOBuf, pLCSDEV->bFrameBuffer, iLength );
 
-    // Trace the i/o if requested...
-
-    if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+    // Display the data read by the guest, if debug is active.
+    if( pLCSDEV->pLCSBLK->fDebug )
     {
-        // "%1d:%04X CTC: lcs read"
-        WRMSG( HHC00921, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
-        packet_trace( pIOBuf, (int)iLength, '<' );
+        // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
+        WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, (int)iLength );
+        net_data_trace( pDEVBLK, pIOBuf, iLength, '>', 'D', "data", 0 );
     }
 
     // Reset frame buffer to empty...
@@ -2554,8 +2592,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
                 // "%1d:%04X CTC: option %s value %s invalid"
-                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                      "device name", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "device name", optarg );
                 return -1;
             }
 
@@ -2566,9 +2604,9 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'x':  /* TAP network interface name */
             if( strlen( optarg ) > sizeof(pLCSBLK->Port[0].szNetIfName)-1 )
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                      "TAP device name", optarg );
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "TAP device name", optarg );
                 return -1;
             }
             strlcpy( pLCSBLK->Port[0].szNetIfName, optarg, sizeof(pLCSBLK->Port[0].szNetIfName) );
@@ -2581,8 +2619,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             if( ParseMAC( optarg, mac ) != 0 )
             {
                 // "%1d:%04X CTC: option %s value %s invalid"
-                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                      "MAC address", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "MAC address", optarg );
                 return -1;
             }
 
@@ -2613,8 +2651,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
                 // "%1d:%04X CTC: option %s value %s invalid"
-                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                      "kernel buffer size", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "kernel buffer size", optarg );
                 return -1;
             }
 
@@ -2629,8 +2667,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
                 // "%1d:%04X CTC: option %s value %s invalid"
-                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
-                      "dll i/o buffer size", optarg );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "dll i/o buffer size", optarg );
                 return -1;
             }
 
@@ -2657,9 +2695,9 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     /* -m or the -o options has been specified, reject the -x option.  */
     if (saw_if && saw_conf)
     {
-        /* HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid" */
-        WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-              "TUN device name", pLCSBLK->Port[0].szNetIfName );
+        /* HHC00916 "%1d:%04X %s: option %s value %s invalid" */
+        WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+               "TAP device name", pLCSBLK->Port[0].szNetIfName );
         return -1;
     }
 #endif /*!defined(OPTION_W32_CTCI)*/
@@ -2667,8 +2705,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     if (argc > 1)
     {
         /* There are two or more arguments. */
-        /* HHC03975 "%1d:%04X %s: incorrect number of parameters" */
-        WRMSG(HHC03975, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
+        /* HHC00915 "%1d:%04X %s: incorrect number of parameters" */
+        WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
         return -1;
     }
     else if (argc == 1)
@@ -2683,15 +2721,15 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             pLCSBLK->Port[0].fPreconfigured = FALSE;
         } else {
 #if defined(OPTION_W32_CTCI)
-            WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                  "IP address", *argv );
+            WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                   "IP address", *argv );
             return -1;
 #else /*defined(OPTION_W32_CTCI)*/
             /* The argument is not an IPv4 address. If the -x option was */
             /* specified, the argument shouldn't have been specified.    */
             if (saw_if ) {
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                      "IP address", *argv );
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "IP address", *argv );
                 return -1;
             }
             /* The -x option was not specified, so the argument should be the  */

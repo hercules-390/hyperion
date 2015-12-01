@@ -809,7 +809,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 OSA_BHR *rsp_bhr;
 
 MPC_RRH *req_rrh;
-MPC_PH  *req_ph;
+/* MPC_PH  *req_ph; */
 
 U32 offrrh;
 U16 offph;
@@ -818,7 +818,7 @@ U16 offph;
     FETCH_FW(offrrh,req_th->offrrh);
     req_rrh = (MPC_RRH*)((BYTE*)req_th+offrrh);
     FETCH_HW(offph,req_rrh->offph);
-    req_ph = (MPC_PH*)((BYTE*)req_rrh+offph);
+    /* req_ph = (MPC_PH*)((BYTE*)req_rrh+offph); */
 
     switch(req_rrh->type) {
 
@@ -1680,8 +1680,8 @@ static QRC read_packet( DEVBLK* dev, OSA_GRP *grp )
         }
         else
         {
-            // HHC03972 "%1d:%04X %s: error reading from device %s: %d %s"
-            WRMSG(HHC03972, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+            // HHC00912 "%1d:%04X %s: error reading from device %s: %d %s"
+            WRMSG(HHC00912, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
                 "QETH", grp->ttifname, errnum, strerror( errnum ));
             errno = errnum;
             PTT_QETH_TRACE( "rdpack exit", dev->bufsize, dev->buflen, QRC_EIOERR );
@@ -1720,8 +1720,8 @@ static QRC write_packet( DEVBLK* dev, OSA_GRP *grp,
         return QRC_SUCCESS;
     }
 
-    // HHC03971 "%1d:%04X %s: error writing to device %s: %d %s"
-    WRMSG(HHC03971, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+    // HHC00911 "%1d:%04X %s: error writing to device %s: %d %s"
+    WRMSG(HHC00911, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
         "QETH", grp->ttifname, errnum, strerror( errnum ));
     errno = errnum;
     PTT_QETH_TRACE( "wrpack exit", 0, pktlen, QRC_EIOERR );
@@ -2142,13 +2142,13 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         U16 length;
         case HDR_ID_LAYER2:
         {
-            ETHFRM* eth;
+         /* ETHFRM* eth; */
             OSA_HDR2* o2hdr = (OSA_HDR2*)hdr;
             hdrlen = sizeof(OSA_HDR2);
             pkt = hdr + hdrlen;
             FETCH_HW( length, o2hdr->pktlen );
             pktlen = length;
-            eth = (ETHFRM*)pkt;
+         /* eth = (ETHFRM*)pkt; */
             break;
         }
         case HDR_ID_LAYER3:
@@ -2711,8 +2711,8 @@ int i;
         }
         else
         {
-            // HHC03978 "%1d:%04X %s: option '%s' unknown or specified incorrectly"
-            WRMSG(HHC03978, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, argv[i] );
+            // HHC00918 "%1d:%04X %s: option %s unknown or specified incorrectly"
+            WRMSG(HHC00918, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname, argv[i] );
         }
     }
 
@@ -2733,8 +2733,8 @@ int i;
         {
             if (ParseMAC( grp->tthwaddr, mac ) != 0)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "hwaddr", grp->tthwaddr );
                 free(grp->tthwaddr);
                 grp->tthwaddr = NULL;
@@ -2752,8 +2752,8 @@ int i;
             rc = resolve_host( &hrb);
             if (rc != 0)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr", grp->ttipaddr );
                 free(grp->ttipaddr);
                 grp->ttipaddr = NULL;
@@ -2786,8 +2786,8 @@ int i;
             /* Build new prefix length based on netmask */
             if (netmask2prefix( grp->ttnetmask, &new_ttpfxlen ) != 0)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "netmask", grp->ttnetmask );
                 free(grp->ttnetmask);
                 if(grp->ttipaddr)
@@ -2821,8 +2821,8 @@ int i;
             /* Build new netmask based on prefix length */
             if (prefix2netmask( grp->ttpfxlen, &new_ttnetmask ) != 0)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr", grp->ttipaddr );
                 free(grp->ttpfxlen);
                 if(grp->ttipaddr)
@@ -2863,8 +2863,8 @@ int i;
             rc = resolve_host( &hrb);
             if (rc != 0)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr6", grp->ttipaddr6 );
                 free(grp->ttipaddr6);
                 grp->ttipaddr6 = NULL;
@@ -2886,8 +2886,8 @@ int i;
             pfxlen = atoi(grp->ttpfxlen6);
             if (rc != 0 || pfxlen > 128 )
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr6", grp->ttpfxlen6 );
                 free(grp->ttpfxlen6);
                 grp->ttpfxlen6 = NULL;
@@ -2905,8 +2905,8 @@ int i;
         {
             if(sscanf(grp->ttchpid, "%x%c", &chpid, &c) != 1 || chpid < 0x00 || chpid > 0xFF)
             {
-                // HHC03976 "%1d:%04X %s: option '%s' value '%s' invalid"
-                WRMSG(HHC03976, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                // HHC00916 "%1d:%04X %s: option %s value %s invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "chpid", grp->ttchpid );
                 free(grp->ttchpid);
                 grp->ttchpid = NULL;
@@ -4805,8 +4805,8 @@ static OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
     {
         // Report the bad news.
         MSGBUF( etext, "malloc(%n)", &buflen );
-        // HHC03960 "%1d:%04X %s: error in function '%s': '%s'"
-        WRMSG(HHC03960, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+        // HHC00900 "%1d:%04X %s: error in function %s: %s"
+        WRMSG(HHC00900, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                              etext, strerror(errno) );
         return NULL;
     }

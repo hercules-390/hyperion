@@ -192,8 +192,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     {
         char buf[40];
         MSGBUF(buf, "malloc(%d)", (int)sizeof(CTCBLK));
-        // "%1d:%04X CTC: error in function '%s': '%s'"
-        WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, buf, strerror(errno) );
+        // "%1d:%04X %s: error in function %s: %s"
+        WRMSG(HHC00900, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI", buf, strerror(errno) );
         return -1;
     }
 
@@ -628,6 +628,8 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
                   int     iBufLen, char*  pBuffer )
 {
     CTCBLK*  pCTCBLK;
+    char*    pGuestIP;
+    char*    pDriveIP;
 
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
 
@@ -636,17 +638,26 @@ void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
     if(!pCTCBLK)
     {
         strlcpy(pBuffer,"*Uninitialized",iBufLen);
+        return;
     }
+
+    if (strlen( pCTCBLK->szGuestIPAddr ))
+       pGuestIP = pCTCBLK->szGuestIPAddr;
     else
-    {
-        snprintf( pBuffer, iBufLen-1, "CTCI %s/%s (%s)%s IO[%"PRIu64"]",
-                  pCTCBLK->szGuestIPAddr,
-                  pCTCBLK->szDriveIPAddr,
-                  pCTCBLK->szTUNIfName,
-                  pCTCBLK->fDebug ? " -d" : "",
-                  pDEVBLK->excps );
-        pBuffer[iBufLen-1] = '\0';
-    }
+       pGuestIP = "-";
+
+    if (strlen( pCTCBLK->szDriveIPAddr ))
+       pDriveIP = pCTCBLK->szDriveIPAddr;
+    else
+       pDriveIP = "-";
+
+    snprintf( pBuffer, iBufLen-1, "CTCI %s/%s (%s)%s IO[%"PRIu64"]",
+              pGuestIP,
+              pDriveIP,
+              pCTCBLK->szTUNIfName,
+              pCTCBLK->fDebug ? " -d" : "",
+              pDEVBLK->excps );
+    pBuffer[iBufLen-1] = '\0';
 
     return;
 }
@@ -716,8 +727,8 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U32   sCount,
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
                     {
-                        // "%1d:%04X CTC: halt or clear recognized"
-                        WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                        // "%1d:%04X %s: halt or clear recognized"
+                        WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
                     }
 
                     *pUnitStat = CSW_CE | CSW_DE;
@@ -768,9 +779,9 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
         if( pCTCBLK->fDebug )
         {
-            // "%1d:%04X CTC: received %d bytes size frame"
-            WRMSG(HHC00905, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, (int)iLength );
-            packet_trace( pCTCBLK->bFrameBuffer, (int)iLength, '>' );
+            // "%1d:%04X %s: Present data of size %d bytes to guest"
+            WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI", (int)iLength);
+            net_data_trace( pDEVBLK, pCTCBLK->bFrameBuffer, (int)iLength, '>', 'D', "data", 0 );
         }
 
         // Reset frame buffer
@@ -902,9 +913,10 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
         // Trace the IP packet before sending to TUN device
         if( pCTCBLK->fDebug )
         {
-            // "%1d:%04X CTC: sending packet to device '%s'"
-            WRMSG(HHC00910, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNIfName );
-            packet_trace( pSegment->bData, sDataLen, '<' );
+            // "%1d:%04X %s: send%s packet of size %d bytes to device %s"
+            WRMSG(HHC00910, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
+                                 "", sDataLen, pCTCBLK->szTUNIfName );
+            net_data_trace( pDEVBLK, pSegment->bData, sDataLen, '<', 'D', "packet", 0 );
         }
 
         // Write the IP packet to the TUN/TAP interface
@@ -912,10 +924,9 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
 
         if( rc < 0 )
         {
-            // "%1d:%04X CTC: error writing to device '%s': '%s'"
-            WRMSG(HHC00911, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNIfName,
-                    strerror( errno ) );
-
+            // "%1d:%04X %s: error writing to device %s: %d %s"
+            WRMSG(HHC00911, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
+                                 pCTCBLK->szTUNIfName, errno, strerror( errno ));
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
             return;
@@ -996,9 +1007,9 @@ static void*  CTCI_ReadThread( void* arg )
         {
             if( !pCTCBLK->fCloseInProgress )
             {
-                // "%1d:%04X CTC: error reading from device '%s': '%s'"
-                WRMSG(HHC00912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pCTCBLK->szTUNIfName,
-                    strerror( errno ) );
+                // "%1d:%04X %s: error reading from device %s: %d %s"
+                WRMSG(HHC00912, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
+                                     pCTCBLK->szTUNIfName, errno, strerror( errno ));
             }
             break;
         }
@@ -1008,9 +1019,10 @@ static void*  CTCI_ReadThread( void* arg )
 
         if( pCTCBLK->fDebug )
         {
-            // "%1d:%04X CTC: received %d bytes size packet from device '%s'"
-            WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, iLength, pCTCBLK->szTUNIfName );
-            packet_trace( szBuff, iLength, '>' );
+            // "%1d:%04X %s: receive%s packet of size %d bytes from device %s"
+            WRMSG(HHC00913, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
+                                 "", iLength, pCTCBLK->szTUNIfName );
+            net_data_trace( pDEVBLK, szBuff, iLength, '>', 'D', "packet", 0 );
         }
 
         // Enqueue frame on buffer, if buffer is full, keep trying
@@ -1178,7 +1190,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     if( argc < 1 )
     {
         // "%1d:%04X CTC: incorrect number of parameters"
-        WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+        WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
         return -1;
     }
     // Compatability with old format configuration files needs to be
@@ -1263,7 +1275,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 if( ParseMAC( optarg, mac ) != 0 )
                 {
                     // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                           "adapter address", optarg );
                     return -1;
                 }
@@ -1273,7 +1285,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( strlen( optarg ) > sizeof( pCTCBLK->szTUNCharDevName ) - 1 )
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "device name", optarg );
                 return -1;
             }
@@ -1284,8 +1296,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         case 'x':     // TUN network interface name
             if( strlen( optarg ) > sizeof(pCTCBLK->szTUNIfName)-1 )
             {
-                // HHC00916 "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                // HHC00916 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "TUN device name", optarg );
                 return -1;
             }
@@ -1302,7 +1314,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "kernel buffer size", optarg );
                 return -1;
             }
@@ -1317,7 +1329,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "dll i/o buffer size", optarg );
                 return -1;
             }
@@ -1329,7 +1341,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( ParseMAC( optarg, mac ) != 0 )
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "MAC address", optarg );
                 return -1;
             }
@@ -1346,7 +1358,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iMTU < 46 || iMTU > 65536 )
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "MTU size", optarg );
                 return -1;
             }
@@ -1359,7 +1371,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( inet_aton( optarg, &addr ) == 0 )
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "netmask", optarg );
                 return -1;
             }
@@ -1409,7 +1421,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( inet_aton( *argv, &addr ) == 0 )
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "IP address", *argv );
                 return -1;
             }
@@ -1420,7 +1432,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( inet_aton( *argv, &addr ) == 0 )
             {
                 // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "IP address", *argv );
                 return -1;
             }
@@ -1434,8 +1446,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         {
             if( strlen( *argv ) > sizeof(pCTCBLK->szTUNIfName)-1 )
             {
-                // HHC00916 "%1d:%04X CTC: option '%s' value '%s' invalid"
-                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                // HHC00916 "%1d:%04X %s: option '%s' value '%s' invalid"
+                WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                       "TUN device name", optarg );
                 return -1;
             }
@@ -1452,7 +1464,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         else
         {
             // "%1d:%04X CTC: incorrect number of parameters"
-            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
             return -1;
         }
 
@@ -1477,7 +1489,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( argc != 5 )
         {
             // "%1d:%04X CTC: incorrect number of parameters"
-            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
             return -1;
         }
 
@@ -1486,7 +1498,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             strlen( *argv ) > sizeof( pCTCBLK->szTUNCharDevName ) - 1 )
         {
             // "%1d:%04X CTC: option '%s' value '%s' invalid"
-            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                   "device name", *argv );
             return -1;
         }
@@ -1501,7 +1513,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( iMTU < 46 || iMTU > 65536 )
         {
             // "%1d:%04X CTC: option '%s' value '%s' invalid"
-            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                   "MTU size", *argv );
             return -1;
         }
@@ -1513,7 +1525,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( inet_aton( *argv, &addr ) == 0 )
         {
             // "%1d:%04X CTC: option '%s' value '%s' invalid"
-            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                   "IP address", *argv );
             return -1;
         }
@@ -1526,7 +1538,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( inet_aton( *argv, &addr ) == 0 )
         {
             // "%1d:%04X CTC: option '%s' value '%s' invalid"
-            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                   "IP address", *argv );
             return -1;
         }
@@ -1539,7 +1551,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( inet_aton( *argv, &addr ) == 0 )
         {
             // "%1d:%04X CTC: option '%s' value '%s' invalid"
-            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+            WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                   "netmask", *argv );
             return -1;
         }
@@ -1551,7 +1563,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( argc > 0 )
         {
             // "%1d:%04X CTC: incorrect number of parameters"
-            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+            WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
             return -1;
         }
 #else // defined( OPTION_W32_CTCI )
@@ -1569,7 +1581,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 if( inet_aton( *argv, &addr ) == 0 )
                 {
                     // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                           "IP address", *argv );
                     return -1;
                 }
@@ -1585,7 +1597,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     if( ParseMAC( *argv, mac ) != 0 )
                     {
                         // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                        WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                        WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                               "MAC address", *argv );
                         return -1;
                     }
@@ -1619,7 +1631,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     iKernBuff * 1024 > MAX_CAPTURE_BUFFSIZE )
                 {
                     // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                           "kernel buffer size", *argv );
                     return -1;
                 }
@@ -1637,7 +1649,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     iIOBuff * 1024 > MAX_PACKET_BUFFSIZE )
                 {
                     // "%1d:%04X CTC: option '%s' value '%s' invalid"
-                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,
+                    WRMSG(HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI",
                           "dll i/o buffer size", *argv );
                     return -1;
                 }
@@ -1649,7 +1661,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
             default:
                 // "%1d:%04X CTC: incorrect number of parameters"
-                WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum );
+                WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
                 return -1;
             }
         }

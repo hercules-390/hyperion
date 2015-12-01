@@ -157,6 +157,7 @@ extern void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip );
 extern int  ParseMAC( char* pszMACAddr, BYTE* pbMACAddr );
 extern int  FormatMAC( char** ppszMACAddr, BYTE* mac );
 extern void packet_trace( BYTE *addr, int len, BYTE dir );
+extern void net_data_trace( DEVBLK* dev, BYTE* addr, int len, BYTE dir, BYTE sev, char* what, U32 opt );
 
 // ====================================================================
 //                      Helper Macros
