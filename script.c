@@ -240,7 +240,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int process_config (char *cfg_name)
+DLL_EXPORT int process_config (const char *cfg_name)
 {
 #ifdef EXTERNALGUI
 char buf[1024];                         /* Config statement buffer   */
@@ -841,28 +841,37 @@ int     rc;                             /* (work)                    */
         return -1;
     }
 
-    /* Open the specified script file */
-    hostpath( script_path, script_name, sizeof( script_path ));
-    if (!(fp = fopen( script_path, "r" )))
+    if (!strcmp(script_name, "-"))    /* Standard input?             */
     {
-        /* We  get  here  with  the  default  script  file only when */
-        /* hercules.rc  exists  as  tested  in  impl.c.   Any  error */
-        /* opening is should be reported to the user.                */
-        int save_errno = errno; /* (save error code for caller) */
-
-        if (ENOENT != errno)    /* If NOT "File Not found" */
+        fp = stdin;
+        strcpy(script_path, "<stdin>");
+    }
+    else
+    {
+        /* Open the specified script file */
+        hostpath( script_path, script_name, sizeof( script_path ));
+        if (!(fp = fopen( script_path, "r" )))
         {
-            // "Error in function '%s': '%s'"
-            WRMSG( HHC02219, "E", "fopen()", strerror( errno ));
-        }
-        else
-        {
-            // "Script file '%s' not found"
-            WRMSG( HHC01405, "E", script_path );
-        }
+            /* We  get  here  with the default script file only when */
+            /* hercules.rc  exists  as  tested in impl.c.  Any error */
+            /* opening is should be reported to the user.            */
 
-        errno = save_errno;  /* (restore error code for caller) */
-        return -1;
+            int save_errno = errno; /* (save error code for caller) */
+
+            if (ENOENT != errno)    /* If NOT "File Not found" */
+            {
+                // "Error in function '%s': '%s'"
+                WRMSG( HHC02219, "E", "fopen()", strerror( errno ));
+            }
+            else
+            {
+                // "Script file '%s' not found"
+                WRMSG( HHC01405, "E", script_path );
+            }
+
+            errno = save_errno;  /* (restore error code for caller) */
+            return -1;
+        }
     }
 
     pCtl->scr_recursion++;

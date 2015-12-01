@@ -970,7 +970,7 @@ Examples:
 #define HHC01404 "Cannot create the Automatic Operator thread"
 #define HHC01405 "Script file %s not found"
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
-#define HHC01407 "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]]%s [> logfile]"
+#define HHC01407 "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
 #define HHC01408 "Hercules terminating, see previous messages for reason"
 #define HHC01409 "Load of dyngui.dll failed, hercules terminated"
 #define HHC01410 "Cannot register %s handler: %s"
@@ -1405,6 +1405,8 @@ Examples:
 #define HHC02339 "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
 #define HHC02340 "Script %d: test: cannot initalise semaphore: %s"
 #define HHC02341 "Script %d: test: unknown runtest keyword: %s"
+#define HHC02342 "%s file '%s' not found:  %s"
+#define HHC02343 "Terminating due to %d argument errors"
 
 // range 02350 - 02369 available
 

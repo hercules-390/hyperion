@@ -62,8 +62,8 @@ function verlt()
 
 wfn=allTests
 
-if [ ${FUNCNAME[ (( ${#FUNCNAME[@]} - 1 ))]} = "source" ] ; then
-   echo "Do not source $0."
+if [ ${FUNCNAME[0]} == "source" ] ; then
+   echo "Do not source $BASH_SOURCE"
    return 20
 fi
 
@@ -153,7 +153,7 @@ fi
 # a log file.  2>&1 disables the panel display and the ability to enter
 # panel commands.
 
-cmd="$hdir/hercules -f $dir/tests.conf -r $wfn.testin -t"
+cmd="$hdir/hercules -d -f $dir/tests.conf -r $wfn.testin -t"
 if [ "$exit" = "noexit" ] ; then
         $cmd >$wfn.out
         rv=$?
