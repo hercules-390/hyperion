@@ -1288,7 +1288,7 @@ int FormatMAC( char** ppszMACAddr, BYTE* mac )
 /* ------------------------------------------------------------------ */
 void packet_trace( BYTE* pAddr, int iLen, BYTE bDir )
 {
-    return net_data_trace( NULL, pAddr, iLen, bDir, 'I', "packet trace", 0 );
+    net_data_trace( NULL, pAddr, iLen, bDir, 'I', "packet trace", 0 );
 }
 
 

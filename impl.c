@@ -1228,7 +1228,6 @@ error:
     {
         char pgm[MAX_PATH];
         char* strtok_str = NULL;
-        strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
         const char symsub[] =
 #if defined(ENABLE_BUILTIN_SYMBOLS)
             " [-s sym=val]";
@@ -1243,7 +1242,7 @@ error:
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
 
         /* Show them all of our command-line arguments... */
-
+        strncpy(pgm, sysblk.hercules_pgmname, sizeof(pgm));
         /* "Usage: %s [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"*/
         WRMSG (HHC01414, "S", "");   // (blank line)
         WRMSG (HHC01407, "S", strtok_r(pgm,".",&strtok_str), symsub, dlsub);
