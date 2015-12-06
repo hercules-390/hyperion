@@ -2283,7 +2283,6 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             {
                 pPTPATH = dev->dev_data;
                 pPTPBLK = pPTPATH->pPTPBLK;
-                pPTPBLK->fDebug = onoff;
                 pPTPBLK->uDebugMask = mask;
             }
         }
@@ -2330,7 +2329,6 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                 pDEVBLK = pDEVGRP->memdev[i];
                 pPTPATH = pDEVBLK->dev_data;
                 pPTPBLK = pPTPATH->pPTPBLK;
-                pPTPBLK->fDebug = onoff;
                 pPTPBLK->uDebugMask = mask;
             }
         }
@@ -2482,7 +2480,6 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
                      dev->ctctype == CTC_PTP )
                 {
                     pPTPBLK = dev->group->grp_data;
-                    pPTPBLK->fDebug = onoff;
                     pPTPBLK->uDebugMask = mask;
                 }
             }
@@ -2513,7 +2510,6 @@ int ptp_cmd( int argc, char *argv[], char *cmdline )
             {
                 pDEVBLK = pDEVGRP->memdev[i];
                 pPTPBLK = pDEVBLK->group->grp_data;
-                pPTPBLK->fDebug = onoff;
                 pPTPBLK->uDebugMask = mask;
             }
 

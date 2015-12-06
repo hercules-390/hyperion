@@ -98,7 +98,6 @@ struct  _PTPBLK
 
     LOCK        UpdateLock;                // Lock
 
-    u_int       fDebug:1;                  // Debugging
     u_int       uDebugMask;                // Debug mask
     u_int       fIPv4Spec:1;               // IPv4 specified
     u_int       fIPv6Spec:1;               // IPv6 specified
