@@ -348,11 +348,9 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 
     if (argc > 1)
     {
-        int bError = FALSE;
         if (argc > 2)
         {
             WRMSG(HHC02205, "E", argv[2], "");
-            bError = TRUE;
         }
         else if ( CMD( argv[1],midnight,3 ) )
         {
@@ -377,7 +375,6 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
             if ( sscanf( argv[1], "%d%c", &interval, &c ) != 1 || interval < 1 )
             {
                 WRMSG(HHC02205, "E", argv[1], ": invalid maxrates interval" );
-                bError = TRUE;
             }
             else
             {
@@ -2556,7 +2553,6 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
     int      i;
     u_int    j;
     DEVGRP*  pDEVGRP;
-    DEVBLK*  pDEVBLK;
 
     UNREFERENCED( cmdline );
 
@@ -2702,7 +2698,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 
             {
             char buf[128];
-            MSGBUF( buf, "%s for %s device %1d:%04X pair",
+            MSGBUF( buf, "%s for %s device %1d:%04X group",
                     onoff ? "on" : "off",
                     "QETH",
                     lcss, devnum );
@@ -2714,61 +2710,11 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
         return 0;
     }
 
-    // Format:  "qeth  group  <devnum>"
-
-    else if ( argc >= 2 && CMD(argv[1],group,5) )
-    {
-
-        if ( argc == 3 )
-        {
-            if ( parse_single_devnum( argv[2], &lcss, &devnum) == 0 )
-            {
-                if ( !(dev = find_device_by_devnum( lcss, devnum )) )
-                {
-                    devnotfound_msg( lcss, devnum );
-                    return -1;
-                }
-
-                if ( !dev->allocated ||
-                     dev->devtype != 0x1731 )
-                {
-                    // HHC02209 "%1d:%04X device is not a '%s'"
-                    WRMSG(HHC02209, "E", lcss, devnum, "QETH" );
-                    return -1;
-                }
-
-                pDEVGRP = dev->group;
-
-                for ( i=0; i < pDEVGRP->acount; i++ )
-                {
-                    pDEVBLK = pDEVGRP->memdev[i];
-                }
-
-                // HHC02204 "%-14s set to %s"
-                WRMSG(HHC02204, "I", "QETH group", "produce something useful, someday soon");
-            }
-            else
-            {
-                // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
-                WRMSG( HHC02299, "E", argv[0] );
-                return -1;
-            }
-        }
-        else
-        {
-            // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
-            WRMSG( HHC02299, "E", argv[0] );
-            return -1;
-        }
-
-        return 0;
-    }
-
     // HHC02299 "Invalid command usage. Type 'help %s' for assistance."
     WRMSG( HHC02299, "E", argv[0] );
     return -1;
 
-}
+}  /* End of qeth_cmd */
 
 
 #if defined(OPTION_W32_CTCI)
