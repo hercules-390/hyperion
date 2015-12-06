@@ -594,7 +594,7 @@ int  ptp_init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     pPTPBLK->pDEVBLKWrite->tid = pPTPBLK->tid;
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPCONFVALUE))
+    if (pPTPBLK->uDebugMask & DBGPTPCONFVALUE)
     {
 #if defined(OPTION_W32_CTCI)
         // HHC03952 "%1d:%04X PTP: MAC: %s"
@@ -666,7 +666,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
     }
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPCCW))
+    if (pPTPBLK->uDebugMask & DBGPTPCCW)
     {
         // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %08X: Chained %02X: PrevCode %02X: CCWseq %d"
         WRMSG(HHC03992, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
@@ -809,7 +809,7 @@ void  ptp_execute_ccw( DEVBLK* pDEVBLK, BYTE  bCode,
     }
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPCCW))
+    if (pPTPBLK->uDebugMask & DBGPTPCCW)
     {
         // HHC03993 "%1d:%04X %s: Status %02X: Residual %08X: More %02X"
         WRMSG(HHC03993, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
@@ -930,7 +930,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pGuestIP6,
                   pDriveIP6,
                   pPTPBLK->szTUNIfName,
-                  pPTPBLK->fDebug ? " -d" : "",
+                  pPTPBLK->uDebugMask ? " -d" : "",
                   pDEVBLK->excps );
     }
     else if (pPTPBLK->fIPv4Spec)
@@ -941,7 +941,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pGuestIP4,
                   pDriveIP4,
                   pPTPBLK->szTUNIfName,
-                  pPTPBLK->fDebug ? " -d" : "",
+                  pPTPBLK->uDebugMask ? " -d" : "",
                   pDEVBLK->excps );
 #if defined(ENABLE_IPV6)
     }
@@ -952,7 +952,7 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                   pGuestIP6,
                   pDriveIP6,
                   pPTPBLK->szTUNIfName,
-                  pPTPBLK->fDebug ? " -d" : "",
+                  pPTPBLK->uDebugMask ? " -d" : "",
                   pDEVBLK->excps );
     }
 #endif /* defined(ENABLE_IPV6) */
@@ -995,7 +995,7 @@ void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
     FETCH_FW( uFirst4, pMPC_TH->first4 );
 
     // Display up to 256-bytes of data, if debug is active
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPDATA))
+    if (pPTPBLK->uDebugMask & DBGPTPDATA)
     {
         // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
         WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname, (int)uCount );
@@ -1016,7 +1016,7 @@ void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
     {
 
         // Display TH etc. structured, if debug is active
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPEXPAND))
+        if (pPTPBLK->uDebugMask & DBGPTPEXPAND)
         {
             // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
             WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname,(int)uCount );
@@ -1062,7 +1062,7 @@ void  ptp_write( DEVBLK* pDEVBLK, U32  uCount,
 
         // Display up to 128-bytes of data, if debug is not active.
         // If debug is active, the data has already been diplayed.
-        if (!pPTPBLK->fDebug && !(pPTPBLK->uDebugMask & DBGPTPDATA))
+        if (!(pPTPBLK->uDebugMask & DBGPTPDATA))
         {
             iTraceLen = uCount;
             if (iTraceLen > 128)
@@ -1448,7 +1448,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
         if (fWantPkt)
         {
             // Trace the IP packet before sending to TUN interface
-            if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPPACKET))
+            if (pPTPBLK->uDebugMask & DBGPTPPACKET)
             {
                 // HHC00910 "%1d:%04X %s: Send%s packet of size %d bytes to device %s"
                 WRMSG(HHC00910, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
@@ -1791,7 +1791,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U32     uCount,
     }
 
     // Display TH etc. structured, if debug is active
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPEXPAND))
+    if (pPTPBLK->uDebugMask & DBGPTPEXPAND)
     {
         // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
         WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, iIOLen );
@@ -1799,7 +1799,7 @@ void  read_read_buffer( DEVBLK* pDEVBLK,   U32     uCount,
     }
 
     // Display up to 256-bytes of the read data, if debug is active.
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPDATA))
+    if (pPTPBLK->uDebugMask & DBGPTPDATA)
     {
         // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
         WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, iIOLen );
@@ -1884,7 +1884,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
     memcpy( pIOBuf, pMPC_TH, iDataLen );
 
     // Display TH etc. structured, if debug is active
-    if (uFirst4 == MPC_TH_FIRST4 && (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPEXPAND)))
+    if (uFirst4 == MPC_TH_FIRST4 && (pPTPBLK->uDebugMask & DBGPTPEXPAND))
     {
         // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
         WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, iDataLen );
@@ -1892,7 +1892,7 @@ void  read_chain_buffer( DEVBLK* pDEVBLK,   U32  uCount,
     }
 
     // Display up to 256-bytes of the read data, if debug is active.
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPDATA))
+    if (pPTPBLK->uDebugMask & DBGPTPDATA)
     {
         // HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
         WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, iDataLen );
@@ -2254,7 +2254,7 @@ void*  ptp_read_thread( void* arg )
                 // The IP packet will fit into the read buffer.
 
                 // Display the IP packet just read, if the device group is being debugged.
-                if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPPACKET))
+                if (pPTPBLK->uDebugMask & DBGPTPPACKET)
                 {
                     // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
                     WRMSG(HHC00913, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
@@ -2767,7 +2767,6 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 //          break;
 
         case 'd':     // Diagnostics
-            pPTPBLK->fDebug = TRUE;
             if (optarg)
             {
                 iDebugMask = atoi( optarg );
@@ -3828,7 +3827,7 @@ void*  ptp_unsol_int_thread( void* arg )
     }
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPCCW))
+    if (pPTPBLK->uDebugMask & DBGPTPCCW)
     {
         // HHC03994 "%1d:%04X %s: Status %02X"
         WRMSG(HHC03994, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
@@ -3977,7 +3976,7 @@ void  write_hx0_01( DEVBLK* pDEVBLK, U32  uCount,
 
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "In HX0" );
     }
@@ -4139,7 +4138,7 @@ void  write_hx0_00( DEVBLK* pDEVBLK, U32  uCount,
 
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "In HX0" );
     }
@@ -4207,7 +4206,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
 
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "In HX2" );
     }
@@ -4458,7 +4457,7 @@ void  write_hx2( DEVBLK* pDEVBLK, U32  uCount,
         memcpy( pPTPVTMre, &VTAM_ebcdic, 4 );      // 'VTAM' in EBCDIC
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "Out HX0" );
             mpc_display_description( pDEVBLK, "Out HX2" );
@@ -4639,7 +4638,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_ENABLE:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
         }
@@ -4695,7 +4694,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_SETUP:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
         }
@@ -4733,7 +4732,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_CONFIRM:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
         }
@@ -4763,7 +4762,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_DISABLE:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4103 (CM_DISABLE)" );
         }
@@ -4775,7 +4774,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case CM_TAKEDOWN:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (Issuer) PUK 0x4105 (CM_TAKEDOWN)" );
         }
@@ -4790,7 +4789,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_ENABLE:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
         }
@@ -4847,7 +4846,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_SETUP:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
         }
@@ -4884,7 +4883,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_CONFIRM:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
         }
@@ -4913,7 +4912,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case DM_ACT:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
         }
@@ -4925,7 +4924,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_DISABLE:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4103 (ULP_DISABLE)" );
         }
@@ -4937,7 +4936,7 @@ int   write_rrh_417E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case ULP_TAKEDOWN:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0x417E (CmComm) PUK 0x4105 (ULP_TAKEDOWN)" );
         }
@@ -5147,7 +5146,7 @@ PTPHDR*  build_417E_cm_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     }
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4102 (CM_ENABLE)" );
     }
@@ -5252,7 +5251,7 @@ PTPHDR*  build_417E_cm_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     pMPC_PUSre[2]->vc.pus_06.unknown04[0] = 0xC8;        // !!! //
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4104 (CM_SETUP)" );
     }
@@ -5357,7 +5356,7 @@ PTPHDR*  build_417E_cm_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     pMPC_PUSre[2]->vc.pus_07.unknown04[0] = 0xC8;        // !!! //
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (Issuer) PUK 0x4106 (CM_CONFIRM)" );
     }
@@ -5518,7 +5517,7 @@ PTPHDR*  build_417E_ulp_enable( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr,
     }
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4102 (ULP_ENABLE)" );
     }
@@ -5646,7 +5645,7 @@ PTPHDR*  build_417E_ulp_setup( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 #endif /* defined(ENABLE_IPV6) */
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4104 (ULP_SETUP)" );
     }
@@ -5774,7 +5773,7 @@ PTPHDR*  build_417E_ulp_confirm( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
 #endif /* defined(ENABLE_IPV6) */
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4106 (ULP_CONFIRM)" );
     }
@@ -5862,7 +5861,7 @@ PTPHDR*  build_417E_dm_act( DEVBLK* pDEVBLK, MPC_RRH* pMPC_RRHwr )
     memcpy( pMPC_PUSre->vc.pus_04.token, pPTPBLK->yTokenUlpConnection, MPC_TOKEN_LENGTH );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x417E (CmComm) PUK 0x4360 (DM_ACT)" );
     }
@@ -5926,7 +5925,7 @@ int   write_rrh_C17E( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case PUK_4501:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC17E (Issuer)" );
         }
@@ -6063,7 +6062,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case WILL_YOU_START_IPV4:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you start IPv4?" );
         }
@@ -6124,7 +6123,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case WILL_YOU_START_IPV6:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you start IPv6?" );
         }
@@ -6199,7 +6198,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case I_WILL_START_IPV4:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will start IPv4" );
         }
@@ -6223,7 +6222,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case I_WILL_START_IPV6:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will start IPv6" );
         }
@@ -6267,7 +6266,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case MY_ADDRESS_IPV4:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
           mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) My address IPv4" );
         }
@@ -6409,7 +6408,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case MY_ADDRESS_IPV6:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) My address IPv6" );
         }
@@ -6607,7 +6606,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case YOUR_ADDRESS_IPV4:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Your address IPv4" );
         }
@@ -6631,7 +6630,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case YOUR_ADDRESS_IPV6:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Your address IPv6" );
         }
@@ -6691,7 +6690,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case WILL_YOU_STOP_IPV4:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you stop IPv4?" );
         }
@@ -6725,7 +6724,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case WILL_YOU_STOP_IPV6:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) Will you stop IPv6?" );
         }
@@ -6762,7 +6761,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case I_WILL_STOP_IPV4:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will stop IPv4" );
         }
@@ -6790,7 +6789,7 @@ int   write_rrh_C108( DEVBLK* pDEVBLK, MPC_TH* pMPC_THwr, MPC_RRH* pMPC_RRHwr )
     case I_WILL_STOP_IPV6:
 
         // Display various information, maybe
-        if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+        if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
         {
             mpc_display_description( pDEVBLK, "In RRH 0xC108 (UlpComm) I will stop IPv6" );
         }
@@ -6916,7 +6915,7 @@ PTPHDR*  build_C108_will_you_start_4( DEVBLK* pDEVBLK )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you start IPv4?" );
     }
@@ -6993,7 +6992,7 @@ PTPHDR*  build_C108_will_you_start_6( DEVBLK* pDEVBLK )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you start IPv6?" );
     }
@@ -7070,7 +7069,7 @@ PTPHDR*  build_C108_i_will_start_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     STORE_HW( pMPC_PIXre->rcode, uRCode );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will start IPv4" );
     }
@@ -7148,7 +7147,7 @@ PTPHDR*  build_C108_i_will_start_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     STORE_HW( pMPC_PIXre->rcode, uRCode );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will start IPv6" );
     }
@@ -7226,7 +7225,7 @@ PTPHDR*  build_C108_my_address_4( DEVBLK* pDEVBLK )
     memcpy( pMPC_PIXre->ipaddr, &pPTPBLK->iaDriveIPAddr4, 4 );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) My address IPv4" );
     }
@@ -7313,7 +7312,7 @@ PTPHDR*  build_C108_my_address_6( DEVBLK* pDEVBLK, u_int fLL )
     }
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) My address IPv6" );
     }
@@ -7392,7 +7391,7 @@ PTPHDR*  build_C108_your_address_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     memcpy( pMPC_PIXre->ipaddr, pMPC_PIXwr->ipaddr, 4 );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Your address IPv4" );
     }
@@ -7471,7 +7470,7 @@ PTPHDR*  build_C108_your_address_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr, U16 uR
     memcpy( pMPC_PIXre->ipaddr, pMPC_PIXwr->ipaddr, 16 );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Your address IPv6" );
     }
@@ -7548,7 +7547,7 @@ PTPHDR*  build_C108_will_you_stop_4( DEVBLK* pDEVBLK )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you stop IPv4?" );
     }
@@ -7625,7 +7624,7 @@ PTPHDR*  build_C108_will_you_stop_6( DEVBLK* pDEVBLK )
     STORE_HW( pMPC_PIXre->idnum, ++pPTPBLK->uIdNum );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) Will you stop IPv6?" );
     }
@@ -7702,7 +7701,7 @@ PTPHDR*  build_C108_i_will_stop_4( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will stop IPv4" );
     }
@@ -7779,7 +7778,7 @@ PTPHDR*  build_C108_i_will_stop_6( DEVBLK* pDEVBLK, MPC_PIX* pMPC_PIXwr )
     memcpy( pMPC_PIXre->idnum, pMPC_PIXwr->idnum, sizeof(pMPC_PIXre->idnum) );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0xC108 (UlpComm) I will stop IPv6" );
     }
@@ -7881,7 +7880,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
     }
@@ -7958,7 +7957,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Router solicitation" );
     }
@@ -8035,7 +8034,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Neighbor advertisment" );
     }
@@ -8123,7 +8122,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Group membership report" );
     }
@@ -8211,7 +8210,7 @@ void  build_8108_icmpv6_packets( DEVBLK* pDEVBLK )
     calculate_icmpv6_checksum( pIP6FRMre, pIcmpHdr, (int)uLength6 );
 
     // Display various information, maybe
-    if (pPTPBLK->fDebug && (pPTPBLK->uDebugMask & DBGPTPUPDOWN))
+    if (pPTPBLK->uDebugMask & DBGPTPUPDOWN)
     {
         mpc_display_description( pDEVBLK, "Out RRH 0x8108 (UlpComm) Group membership report" );
     }
