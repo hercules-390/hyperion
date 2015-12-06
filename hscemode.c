@@ -204,14 +204,14 @@ int traceopt_cmd(int argc, char *argv[], char *cmdline)
         }
         if ( MLVL(VERBOSE) )
         {
-            WRMSG(HHC02203, "I", "Hercules inst trace displayed",
+            WRMSG(HHC02203, "I", "Hercules inst trace display",
                 sysblk.showregsnone ? "noregs mode" :
                 sysblk.showregsfirst ? "regsfirst mode" : "traditional mode");
         }
     }
     else
     {
-        WRMSG(HHC02203, "I", "Hercules inst trace displayed",
+        WRMSG(HHC02203, "I", "Hercules inst trace display",
             sysblk.showregsnone ? "noregs mode" :
             sysblk.showregsfirst ? "regsfirst mode" : "traditional mode");
     }
