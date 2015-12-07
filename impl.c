@@ -32,7 +32,10 @@
 
 static char shortopts[] =
 
-   "ehf:r:db:vt::"
+#if defined( EXTERNALGUI )
+    "e"
+#endif
+   "hf:r:db:vt::"
 #if defined(ENABLE_BUILTIN_SYMBOLS)
    "s:"
 #endif
@@ -51,7 +54,9 @@ static struct option longopts[] =
     { "daemon",   no_argument,       NULL, 'd' },
     { "herclogo", required_argument, NULL, 'b' },
     { "verbose",  no_argument,       NULL, 'v' },
+#if defined( EXTERNALGUI )
     { "externalgui",  no_argument,   NULL, 'e' },
+#endif
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
     { "defsym",   required_argument, NULL, 's' },
@@ -89,7 +94,9 @@ static struct cfgandrcfile cfgorrc[ cfgorrccount ] =
    { NULL, "HERCULES_RC",  "hercules.rc",  "Recovery", },
 };
 
-static int e_gui;                     /* EXTERNALGUI parm            */
+#if defined( EXTERNALGUI )
+static int e_gui = FALSE;             /* EXTERNALGUI parm            */
+#endif
 
 #if defined(OPTION_DYNAMIC_LOAD)
 #define MAX_DLL_TO_LOAD         50
@@ -423,7 +430,8 @@ int     rc;
 
     SET_THREAD_NAME("impl");
 
-#ifdef EXTERNALGUI
+    /* Remain compatible with older external gui versions */
+#if defined( EXTERNALGUI )
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
         e_gui = TRUE;
@@ -671,7 +679,11 @@ int     rc;
        the logger facility for handling by virtue of stdout/stderr
        being redirected to the logger facility.
     */
-    if (!sysblk.daemon_mode || e_gui) logger_init();
+    if (!sysblk.daemon_mode
+#if defined( EXTERNALGUI )
+        || e_gui
+#endif
+    ) logger_init();
 
     /*
        Setup the initial codepage
@@ -847,11 +859,10 @@ int     rc;
     }
 #endif /* defined(OPTION_DYNAMIC_LOAD) */
 
-#ifdef EXTERNALGUI
-    /* Set GUI flag if specified as final argument */
+#if defined( EXTERNALGUI ) && defined( OPTION_DYNAMIC_LOAD )
+    /* Load DYNGUI module if needed */
     if (e_gui)
     {
-#if defined(OPTION_DYNAMIC_LOAD)
         if (hdl_load("dyngui",HDL_LOAD_DEFAULT) != 0)
         {
             usleep(10000); /* (give logger thread time to issue
@@ -860,9 +871,8 @@ int     rc;
             delayed_exit(-1);
             return(1);
         }
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
     }
-#endif /*EXTERNALGUI*/
+#endif /* defined( EXTERNALGUI ) && defined( OPTION_DYNAMIC_LOAD ) */
 
     /* Register the SIGINT handler */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
@@ -1173,9 +1183,11 @@ int     c = 0;                        /* Next option flag            */
         case 'd':
             sysblk.daemon_mode = 1;
             break;
+#if defined( EXTERNALGUI )
         case 'e':
             e_gui = 1;
             break;
+#endif
 
         case 't':
             sysblk.scrtest = 1;

@@ -192,6 +192,7 @@ To start Hercules enter this command at the host's command prompt:
               [ -r <em>rcfile</em> ]             |  [ --rcfile=<em>rcfile</em> ]
               [ -b <em>logofile</em> ]           |  [ --herclogo=<em>logofile</em> ]
               [ -d ]                    |  [ --daemon ]
+              [ -e ]                    |  [ --externalgui ]
               [ -p <em>dyndir</em> ]             |  [ --modpath=<em>dyndir</em> ]
               [ -l <em>modname</em> ] ...        |  [ --ldmod=<em>modname</em> ] ...
               [ -s <em>symbol=value</em> ] ...   |  [ --defsym=<em>symbol=value</em> ] ...
@@ -227,6 +228,10 @@ where:
 
             specifies that Hercules is to be run in 'daemon' mode,
             wherein it runs invisibly with no attached console.
+        <p>
+        <dt><code><em>-e</em></em></code><p><dd>
+
+            indicates Hercules is to be controlled by an External GUI.
         <p>
         <dt><code><em>dyndir</em></code><p><dd>
 
