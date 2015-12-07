@@ -32,7 +32,7 @@
 
 static char shortopts[] =
 
-   "hf:r:db:vt::"
+   "ehf:r:db:vt::"
 #if defined(ENABLE_BUILTIN_SYMBOLS)
    "s:"
 #endif
@@ -51,6 +51,7 @@ static struct option longopts[] =
     { "daemon",   no_argument,       NULL, 'd' },
     { "herclogo", required_argument, NULL, 'b' },
     { "verbose",  no_argument,       NULL, 'v' },
+    { "externalgui",  no_argument,   NULL, 'e' },
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
     { "defsym",   required_argument, NULL, 's' },
@@ -87,6 +88,8 @@ static struct cfgandrcfile cfgorrc[ cfgorrccount ] =
    { NULL, "HERCULES_CFG", "hercules.cnf", "Configuration", },
    { NULL, "HERCULES_RC",  "hercules.rc",  "Recovery", },
 };
+
+static int e_gui;                     /* EXTERNALGUI parm            */
 
 #if defined(OPTION_DYNAMIC_LOAD)
 #define MAX_DLL_TO_LOAD         50
@@ -387,9 +390,6 @@ DLL_EXPORT int impl(int argc, char *argv[])
 TID     rctid;                          /* RC file thread identifier */
 TID     logcbtid;                       /* RC file thread identifier */
 int     rc;
-#if defined(EXTERNALGUI)
-int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
-#endif
 
     /* Seed the pseudo-random number generator */
     srand( time(NULL) );
@@ -671,7 +671,7 @@ int     e_gui = FALSE;                  /* EXTERNALGUI parm          */
        the logger facility for handling by virtue of stdout/stderr
        being redirected to the logger facility.
     */
-    if (!sysblk.daemon_mode) logger_init();
+    if (!sysblk.daemon_mode || e_gui) logger_init();
 
     /*
        Setup the initial codepage
@@ -1172,6 +1172,9 @@ int     c = 0;                        /* Next option flag            */
             break;
         case 'd':
             sysblk.daemon_mode = 1;
+            break;
+        case 'e':
+            e_gui = 1;
             break;
 
         case 't':
