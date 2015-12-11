@@ -306,7 +306,7 @@ int     msgcount = 22;
     hprintf(webblk->sock, "</PRE>\n");
 
     hprintf(webblk->sock, "<FORM method=post>Command:\n");
-    hprintf(webblk->sock, "<INPUT type=text name=command size=80>\n");
+    hprintf(webblk->sock, "<INPUT type=text name=command size=80 autofocus>\n");
     hprintf(webblk->sock, "<INPUT type=submit name=send value=\"Send\">\n");
     hprintf(webblk->sock, "<INPUT type=hidden name=%srefresh value=1>\n",autorefresh ? "auto" : "no");
     hprintf(webblk->sock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
