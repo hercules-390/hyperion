@@ -806,6 +806,7 @@ static int script_abort( SCRCTL* pCtl )
 int process_script_file( char *script_name, const int isrcfile )
 {
 SCRCTL* pCtl;                           /* Script processing control */
+char   *scrname;                        /* Resolved script name      */
 char    script_path[MAX_PATH];          /* Full path of script file  */
 FILE   *fp          = NULL;             /* Script FILE pointer       */
 char    stmt[ MAX_SCRIPT_STMT ];        /* script statement buffer   */
@@ -841,7 +842,12 @@ int     rc;                             /* (work)                    */
         return -1;
     }
 
-    if (!strcmp(script_name, "-"))    /* Standard input?             */
+#if defined( ENABLE_BUILTIN_SYMBOLS )
+    if (!(scrname = resolve_symbol_string( script_name )))
+#endif
+    scrname = strdup( script_name );
+
+    if (!strcmp(scrname, "-"))    /* Standard input?             */
     {
         fp = stdin;
         strcpy(script_path, "<stdin>");
@@ -849,7 +855,7 @@ int     rc;                             /* (work)                    */
     else
     {
         /* Open the specified script file */
-        hostpath( script_path, script_name, sizeof( script_path ));
+        hostpath( script_path, scrname, sizeof( script_path ));
         if (!(fp = fopen( script_path, "r" )))
         {
             /* We  get  here  with the default script file only when */
@@ -870,6 +876,7 @@ int     rc;                             /* (work)                    */
             }
 
             errno = save_errno;  /* (restore error code for caller) */
+            free( scrname );
             return -1;
         }
     }
@@ -894,7 +901,7 @@ int     rc;                             /* (work)                    */
     if (!script_abort( pCtl ) && !strncmp( p, "/*", 2 ))
     {
         char *rcmd[2] = { "exec", NULL };
-        rcmd[1] = script_name;
+        rcmd[1] = script_path;
         fclose( fp ); fp = NULL;
         exec_cmd( 2, rcmd, NULL );  /* (synchronous) */
         goto script_end;
@@ -933,7 +940,7 @@ script_end:
         if (feof( fp ))
         {
             // "Script %d: file '%s' processing ended"
-            WRMSG( HHC02264, "I", pCtl->scr_id, script_name );
+            WRMSG( HHC02264, "I", pCtl->scr_id, script_path );
         }
         else /* (canceled, recursion, or i/o error) */
         {
@@ -955,7 +962,7 @@ script_end:
     }
 
     pCtl->scr_recursion--;
-
+    free( scrname );
     return 0;
 }
 /* end process_script_file */

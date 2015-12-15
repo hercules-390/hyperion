@@ -2027,16 +2027,15 @@ het_fsb( HETB *hetb )
             int het_bsf( HETB *hetb )
 
     DESCRIPTION
-            Repositions the current block pointer in an HET file to the
-            previous tapemark.
+            Repositions the current block pointer in an HET file to
+            the previous tapemark.
 
     RETURN VALUE
-            If no errors are detected then the return value will be >= 0 and
-            will be the new block number.
+            If no errors are detected the return value will always
+            be < 0 and be equal to the HETE_TAPEMARK error value.
 
-            If an error occurs, then the return value will be < 0 and will be
-            the same as those returned by het_bsb() with the exception that
-            HETE_TAPEMARK and HETE_BOT will not occur.
+            If an error occurs, then the return value will be < 0
+            and other than HETE_TAPEMARK (such as HETE_BOT, etc).
 
     EXAMPLE
             //
@@ -2059,7 +2058,7 @@ het_fsb( HETB *hetb )
                         rc = het_bsf( hetb );
                         if( rc >= 0 )
                         {
-                            printf( "Backspaced (sort of :-))\n" );
+                            printf( "Backspaced\n" );
                         }
                     }
                 }
@@ -2085,7 +2084,7 @@ het_bsf( HETB *hetb )
     int rc;
 
     /*
-    || Backspace until we hit a tapemark
+    || Backspace block until we either BSB over a tapemark or reach BOT
     */
     do
     {
@@ -2094,15 +2093,8 @@ het_bsf( HETB *hetb )
     while( rc >= 0 );
 
     /*
-    || Success
-    */
-    if( ( rc == HETE_BOT ) || ( rc == HETE_TAPEMARK ) )
-    {
-        return( hetb->cblk );
-    }
-
-    /*
-    || Failure
+    || Success or Failure.  Note: HETE_TAPEMARK is a negative value but
+    || should be treated by the caller as success.
     */
     return( rc );
 }

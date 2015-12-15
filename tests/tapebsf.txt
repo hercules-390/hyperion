@@ -1,0 +1,164 @@
+#----------------------------------------------------------------------
+#             Test S/370 $(ftype) tape BSF into Load Point
+#----------------------------------------------------------------------
+
+#     Initialization...
+
+panrate fast            # refresh rate
+stopall                 # stop all cpus
+archmode S/370          # reported problem archmode
+sysclear                # sysCLEAR! (not sysRESET!)
+detach $(tapecuu)       # in case it already exists
+attach $(tapecuu) 3420 $(tapefile)
+t+$(tapecuu)            # trace CCWs
+
+
+#     Low core...
+
+r 00=0008000000000200   # Restart new PSW
+r 68=000A00000000DEAD   # Program New PSW
+r 78=0008000000000001   # I/O New PSW
+r 40=0000000000000000   # CSW
+r 48=00000000           # CAW
+
+
+#     The test program itself...
+
+r 200=41100$(tapecuu)   # R1 = tape device number
+
+
+#     First I/O:    Position AFTER tapemark (buffer 1)
+
+r 204=41200400          # R2 = channel program (buffer 1)
+r 208=4020004A          # plug into CAW
+r 20C=41200220          # R2 = continue
+r 210=4020007E          # plug into I/O new PSW
+r 214=9C001000          # start I/O
+r 218=477002F8          # abort if not started
+r 21C=82000310          # wait for I/O interrupt
+r 220=950C0044          # CE + DE? (normal)
+r 224=477002F4          # failure if not
+
+#     Second I/O:   Position BEFORE tapemark
+
+r 228=41200420          # R2 = channel program (BSF)
+r 22C=4020004A          # plug into CAW
+r 230=41200240          # R2 = continue
+r 234=4020007E          # plug into I/O new PSW
+r 238=9C001000          # start I/O
+r 23C=82000310          # wait for I/O interrupt
+r 240=950C0044          # CE + DE? (normal)
+r 244=477002F4          # failure if not
+
+#     Third I/O:    Backspace file to Load Point (where bug occurred)
+
+r 248=41200420          # R2 = channel program (BSF)
+r 24C=4020004A          # plug into CAW
+r 250=41200260          # R2 = continue
+r 254=4020007E          # plug into I/O new PSW
+r 258=9C001000          # start I/O
+r 25C=82000310          # wait for I/O interrupt
+r 260=950E0044          # CE + DE + Unit Check (error)?
+r 264=477002F4          # failure if not
+
+#     Fourth I/O:   Retrieve sense (buffer 2)
+
+r 268=41200428          # R2 = channel program (buffer 2)
+r 26C=4020004A          # plug into CAW
+r 270=41200280          # R2 = continue
+r 274=4020007E          # plug into I/O new PSW
+r 278=9C001000          # start I/O
+r 27C=82000310          # wait for I/O interrupt
+r 280=950C0044          # CE + DE? (normal)
+r 284=477002F4          # failure if not
+
+#     Fifth I/O:    Read data (buffer 2)
+
+r 288=41200430          # R2 = channel program (buffer 2)
+r 28C=4020004A          # plug into CAW
+r 290=412002A0          # R2 = continue
+r 294=4020007E          # plug into I/O new PSW
+r 298=9C001000          # start I/O
+r 29C=82000310          # wait for I/O interrupt
+r 2A0=950C0044          # CE + DE? (normal)
+r 2A4=477002F4          # failure if not
+
+
+#     Verify sense bytes and data read from tape...
+
+r 2A8=91080501          # loadpoint bit?  (buffer 1)
+r 2AC=478002F4          # failure if not
+r 2B0=91080511          # loadpoint bit?  (buffer 2)
+r 2B4=478002F4          # failure if not
+
+r 2B8=D50303180508      # VOL1 label?     (buffer 1)
+r 2BE=477002F4          # failure if not
+r 2C2=D50303180518      # VOL1 label?     (buffer 2)
+r 2C8=477002F4          # failure if not
+
+r 2CC=47F002F0          # otherwise success
+
+
+#   Load success or failure PSW
+
+r 2F0=82000300          # Load Success PSW
+r 2F4=82000308          # Load Failure PSW
+r 2F8=82000320          # Load Failure PSW
+
+
+#     Working storage...
+
+r 300=000A000000000000  # Success disabled wait psw
+r 308=000A000000EEEEEE  # Failure disabled wait psw
+r 310=020A000000000000  # Enabled wait for I/O psw
+r 318=E5D6D3F1          # Expected read data  (VOL1)
+r 320=000A000000000$(tapecuu) # tape device does not exist
+
+
+#     Channel programs...
+
+r 400=0700000060000000  # Rewind
+r 408=0400050060000002  # Sense 2 bytes (buffer 1)
+r 410=0200050860000004  # Read 4 bytes  (buffer 1)
+r 418=3F00000020000000  # FORWARD space file
+
+r 420=2F00000020000000  # BACKSPACE File
+
+r 428=0400051020000002  # Sense 2 bytes (buffer 2)
+
+r 430=0200051820000004  # Read 4 bytes  (buffer 2)
+
+
+#     I/O buffer 1  (BEFORE error)
+
+r 500=ffff              # sense (0048) Tape Unit Status A (ready), Tape is at load point
+r 508=ffffffff          # data  (VOL1)
+
+
+#     I/O buffer 2  (AFTER error)
+
+r 510=ffff              # sense (0048) Tape Unit  Status A (ready), Tape is at load point
+r 518=ffffffff          # data  (VOL1)
+
+
+#     Run the test...
+
+runtest 0.5
+
+*Compare
+r 500.2
+*Want 0048
+
+*Compare
+r 508.4
+*Want E5D6D3F1
+
+*Compare
+r 510.2
+*Want 0048
+
+*Compare
+r 518.4
+*Want E5D6D3F1
+
+*Done

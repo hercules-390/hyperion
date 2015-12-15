@@ -56,7 +56,7 @@ LOG_DLL_IMPORT void fwritemsg( FILE* f, const char* filename, int line, const ch
 #define logdevtr( _dev, ... ) \
 do { \
     if(dev->ccwtrace||dev->ccwstep) \
-        logmsg( __VA_ARGS__ ); \
+        writemsg( __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__ ); \
 } while (0)
 
 LOGR_DLL_IMPORT void logger_init();

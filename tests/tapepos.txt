@@ -1,47 +1,55 @@
-panrate fast
-stopall
-archmode S/370
-sysreset
+#----------------------------------------------------------------------
+#   Test SCSI tape 3480 Locate Block / Read BlockId positioning
+#----------------------------------------------------------------------
 
-r 00=0000000000000400  # Restart new PSW
-r 28=000200000000DEAD  # Program new PSW
 
-r 48=00000440          # CAW (addr channel pgm)
+#     Define test parameters...
 
-r 400=41100590         # R1 = device address 590 (tape)
-r 404=9C001000         # SIO 0(R1)
+defsym  tapecuu         590
+defsym  scsiname        /dev/nst0       # Linux
+defsym  scsiname        \\.\Tape0       # Windows
+defsym  scsiopts        --blkid-32      # real=3590, virt=3480
+defsym  blockid         0000C0FF        # block number 49407
+defsym  locate_secs     30              # time locate will take
 
-r 408=82000430         # LPSW WAITPSW
-r 430=000200000000BEEF # WAITPSW
 
-r 440=4F00048040000004 # Locate Block CCW
-r 448=2200049040000008 # Read BlockId CCW
-r 450=4F00049040000004 # Locate Block CCW
-r 458=2200049800000008 # Read BlockId CCW
+#     Initialization...
 
-r 480=0000C0FF         # Locate Block i/p (xC0FF=49407)
-r 490=0000000000000000 # Read BlockId o/p #1
-r 498=0000000000000000 # Read BlockId o/p #2
+panrate fast            # Refresh rate
+stopall                 # Stop all cpus
+archmode S/370          # Set test archmode
+sysclear                # sysCLEAR! (not sysRESET!)
+detach $(tapecuu)       # In case it already exists
+attach $(tapecuu) 3480 $(scsiname) $(scsiopts)
+t+$(tapecuu)            # Trace CCWs
 
-detach 590             # in case it already exists
-pause 1
 
-attach 590 3480 \\.\tape0     # note: could use AWS file instead
-pause 1
+#     The test program itself...
 
-s+                     # enable instruction tracing
-t+590                  # enable ccw tracing on device 590
-pause 1
+r 00=0000000000000400   # Restart new PSW
+r 68=000200000000DEAD   # Program new PSW
 
-restart                # start test
-pause 1
+r 48=00000440           # CAW (addr channel pgm)
 
-startall               # step to SIO instruction
-pause 1
+r 400=41100$(tapecuu)   # R1 = tape device address
+r 404=9C001000          # SIO 0(R1)
 
-startall               # step to LPSW instruction
-pause 1
+r 408=82000430          # LPSW WAITPSW
+r 430=0002000000000000  # WAITPSW
 
-pause 30               # give tape drive time to do its thing
+r 440=4F00048040000004  # Locate Block CCW
+r 448=2200049040000008  # Read BlockId CCW
+r 450=4F00049040000004  # Locate Block CCW
+r 458=2200049800000008  # Read BlockId CCW
 
-r 480.20               # display results; should all be same
+r 480=$(blockid)        # Locate Block i/p
+r 488=00000000          # (zero pad)
+r 490=0000000000000000  # Read BlockId o/p #1
+r 498=0000000000000000  # Read BlockId o/p #2
+
+
+#     Run the test...
+
+restart                 # Start the test
+pause $(locate_secs)    # Give tape drive time to do its thing
+r 480.20                # Display results; should all be same

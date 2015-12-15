@@ -3038,6 +3038,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\awsbsf.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\cmd-abs-2K.txt"
 								>
 							</File>
@@ -3066,6 +3070,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\hetbsf.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\ilc.tst"
 								>
 							</File>
@@ -3079,6 +3087,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\logicimm.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mainsize.tst"
 								>
 							</File>
 							<File
@@ -3115,6 +3127,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\sske390.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\tapebsf.txt"
 								>
 							</File>
 							<File

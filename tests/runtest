@@ -56,13 +56,17 @@ function verlt()
    if [ "$2" == "Bourne-Again" ] ; then
       return 1
    fi
+   # "POSIX shell script text executable"
+   if [ "$2" == "POSIX" ] ; then
+      return 1
+   fi
    echo $*
    return 0
 }
 
 wfn=allTests
 
-if [ ${FUNCNAME[0]} == "source" ] ; then
+if [ "${FUNCNAME[0]}" == "source" ] ; then
    echo "Do not source $BASH_SOURCE"
    return 20
 fi
@@ -70,7 +74,7 @@ fi
 # Determine  the  relative path to the tests directory.  The default is
 # set on the assumption that this file is in the tests directory, which
 # is  where it is in the source tree.  If this is not the case, you are
-# adviced to write your own derivative of this script.
+# advised to write your own derivative of this script.
 
 testdir=$(dirname $0)
 dir=${1:-$testdir}
@@ -81,7 +85,7 @@ fi
 hdir=.
 if [ ! -x hercules ] ; then
    if [ -x $dir/../hercules ] ; then
-        hdir = $dir/../hercules
+        hdir=$dir/..
    else
       echo 'Hercules executable (or the libtool front end) is not where expected.'
       exit 16
@@ -127,6 +131,9 @@ if [ -z $(which rexx) ] ; then
    rv=1
 fi
 
+# Determine if "hercules" is a libtool wrapper script
+# or an executable binary.
+
 verlt $(file $hdir/hercules)
 vrv=$?
 if [ $vrv = 0 ] ; then
@@ -134,7 +141,7 @@ if [ $vrv = 0 ] ; then
    rv=1
 fi
 
-if [ 0 != $rv ] ; then
+if [ "0" != "$rv" ] ; then
    exit 12
 fi
 
@@ -145,7 +152,7 @@ fi
 
 echo defsym testpath $dir|cat - $dir/$fns.$ftype >$wfn.testin
 rv=$?
-if [ $rv != 0 ] ; then
+if [ "$rv" != "0" ] ; then
    exit $rv
 fi
 
@@ -154,19 +161,19 @@ fi
 # panel commands.
 
 cmd="$hdir/hercules -d -f $dir/tests.conf -r $wfn.testin -t"
-if [ "$exit" = "noexit" ] ; then
-        $cmd >$wfn.out
+if [ "$exit" == "noexit" ] ; then
+        LD_LIBRARY_PATH=$hdir $cmd >$wfn.out
         rv=$?
 else
         # Run  Hercules  in  daemon mode be redirecting both stdout and
         # stderr.
         echo exit >>$wfn.testin
-        $cmd >$wfn.out 2>&1
+        LD_LIBRARY_PATH=$hdir $cmd >$wfn.out 2>&1
         rv=$?
 fi
 
 # Read entire file to allow redtest.rexx to parse the features list
-if [ $rv = 0 ] ; then
+if [ "$rv" == "0" ] ; then
    rexx $dir/redtest.rexx $wfn.out $vars $*
    rv=$?
 fi

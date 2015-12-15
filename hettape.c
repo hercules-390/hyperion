@@ -508,23 +508,36 @@ off_t cursize;
 /*-------------------------------------------------------------------*/
 /* Backspace to previous logical file of HET format file             */
 /*                                                                   */
-/* If successful, return value is zero, and the current file number  */
-/* in the device block is decremented.                               */
-/* If error, return value is -1 and unitstat is set to CE+DE+UC      */
+/* If successful, the return value is zero and the current file      */
+/* number in the device block is decremented.                        */
+/*                                                                   */
+/* If error, the return value is -1 and unitstat is set to CE+DE+UC  */
+/*                                                                   */
+/* In either case the current block number in the HET control block  */
+/* is always updated.                                                */
 /*-------------------------------------------------------------------*/
 int bsf_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 
-    /* Exit if already at BOT */
-    if (dev->curfilen==1 && dev->nxtblkpos == 0)
+    /* Error if already at load point */
+    if (dev->curfilen == 1 && dev->hetb->cblk == 0)
     {
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
     }
 
+    /* Attempt the backspace file */
     rc = het_bsf (dev->hetb);
-    if (rc < 0)
+
+    /* Return code from het_bsf will always be negative */
+    ASSERT( rc < 0 );
+
+    /* Maintain position */
+    dev->blockid = dev->hetb->cblk;
+
+    /* Check for true I/O error */
+    if (rc < 0 && (rc != HETE_TAPEMARK && rc != HETE_BOT))
     {
         char msgbuf[128];
         MSGBUF( msgbuf, "Het error '%s': '%s'", het_error(rc), strerror(errno));
@@ -534,8 +547,17 @@ int             rc;                     /* Return code               */
         return -1;
     }
 
+    /* Error if we backspaced into load point */
+    if (rc == HETE_BOT)
+    {
+        build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
+        return -1;
+    }
+
+    /* Otherwise verify the only other possibility */
+    ASSERT( rc == HETE_TAPEMARK );
+
     /* Maintain position */
-    dev->blockid = rc;
     dev->curfilen--;
 
     /* Return success */

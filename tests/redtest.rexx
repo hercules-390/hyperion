@@ -169,7 +169,7 @@ Select
          end
    When \comparing /* Toss other messages, particularly during start */
       Then nop
-   otherwise           /* Something else.  Store for *Imsg or *error */
+   otherwise           /* Something else.  Store for *Info or *Error */
       ? = lastmsg.0 + 1
       lastmsg.? = l
       lastmsg.0 = ?
