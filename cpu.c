@@ -1461,14 +1461,29 @@ CPU_Wait (REGS* regs)
         wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
     }
 
-    /* Let waiting script know all CPUs are now STOPPED */
-    obtain_lock( &sysblk.scrlock );
-    if (sysblk.scrtest && !sysblk.started_mask)
+    /*
+    ** Let test script know when a CPU either stops or loads a
+    ** disabled wait state PSW, but NOT when a CPU simply loads
+    ** an ENABLED wait PSW such as when it wishes to simply wait
+    ** for an I/O, External or other type of interrupt.
+    **
+    ** NOTE: we can't rely on just sysblk.started_mask since there
+    ** is no guarantee the last CPU to have its sysblk.started_mask
+    ** cleared will actually be the last CPU to reach this point.
+    */
+    if (WAITSTATE( &regs->psw ) && !IS_IC_DISABLED_WAIT_PSW( regs ))
+        ;   /* enabled wait: do nothing */
+    else
     {
-        sysblk.scrtest++;
-        broadcast_condition( &sysblk.scrcond );
+        obtain_lock( &sysblk.scrlock );
+        if (sysblk.scrtest)
+        {
+            sysblk.scrtest++;
+            broadcast_condition( &sysblk.scrcond );
+        }
+        release_lock( &sysblk.scrlock );
     }
-    release_lock( &sysblk.scrlock );
+
     /* Wait for interrupt */
     wait_condition (&regs->intcond, &sysblk.intlock);
 

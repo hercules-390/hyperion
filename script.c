@@ -1206,7 +1206,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
     /* Press the restart or start button to start the test */
 
     obtain_lock( &sysblk.scrlock );
-    sysblk.scrtest = 1;
+    sysblk.scrtest = 1; /*(reset)*/
     release_lock( &sysblk.scrlock );
 
     if (dostart)
@@ -1236,8 +1236,18 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
             return -1;
         }
 
-        /* Has the test finished yet? */
-        if (sysblk.scrtest > 1)
+        /*           Has the test completed yet?
+        **
+        ** Before test scripts are started the sysblk.scrtest
+        ** counter is always reset to '1' to indicate testing
+        ** mode is active (see further above). When each CPU
+        ** completes its test (by either stopping or loading
+        ** a disabled wait PSW) code in cpu.c then increments
+        ** sysblk.scrtest. Only when sysblk.scrtest has been
+        ** incremented past the number of configured CPUs is
+        ** the test then considered to be complete.
+        */
+        if (sysblk.scrtest > sysblk.cpus)
         {
             rc = 0;
             break;
