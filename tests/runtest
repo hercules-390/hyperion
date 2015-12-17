@@ -53,13 +53,15 @@
 
 function verlt()
 {
-   if [ "$2" == "Bourne-Again" ] ; then
-      return 1
-   fi
+   # "Bourne-Again shell script text executable"
+   # "Bourne-Again shell script executable (binary data)"
    # "POSIX shell script text executable"
-   if [ "$2" == "POSIX" ] ; then
+   # "POSIX shell script executable (binary data)"
+
+   if [ "$2" == "Bourne-Again" -o "$2" == "POSIX" ] ; then
       return 1
    fi
+
    echo $*
    return 0
 }
