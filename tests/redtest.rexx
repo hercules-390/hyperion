@@ -65,7 +65,7 @@ end
 say 'Done' done 'tests. ' msg
 If catast > 0
    Then say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
-if done \= stardone then say 'Tests malformed. ' done '*Tescase orders met, but' stardone '*Done orders met.'
+if done \= stardone then say 'Tests malformed. ' done '*Testcase orders met, but' stardone '*Done orders met.'
 exit fails.1
 
 /*********************************************************************/
@@ -73,8 +73,10 @@ exit fails.1
 /*********************************************************************/
 
 readline:
-l = ''
 do forever
+   l = ''
+   If 0 = lines(in)
+      Then return ''                  /* EOF                         */
    lineno = lineno + 1
    l = linein(in)
    /* Another  way  to  handle  a prefix to the response might be to */
@@ -169,7 +171,7 @@ Select
          end
    When \comparing /* Toss other messages, particularly during start */
       Then nop
-   otherwise           /* Something else.  Store for *Info or *Error */
+   otherwise                     /* Something else.  Store for *Hmsg */
       ? = lastmsg.0 + 1
       lastmsg.? = l
       lastmsg.0 = ?
