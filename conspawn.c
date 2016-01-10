@@ -82,7 +82,10 @@ int main(int argc, char* argv[])
         // Build arguments string from passed args...
 
         for (i=3, k=0; i < argc; i++)
+        {
             k += strlen(argv[i]) + 1;
+            if (strchr(argv[i],' ')) k += 2;
+        }
 
         if (k)
         {
@@ -100,7 +103,9 @@ int main(int argc, char* argv[])
 
             for (i=3; i < argc; ++i)
             {
+                if (strchr(argv[i],' ')) strcat(p,"\"");
                 strcat(p,argv[i]);
+                if (strchr(argv[i],' ')) strcat(p,"\"");
                 if (i != (argc-1)) strcat(p," ");
             }
 
@@ -155,7 +160,10 @@ int main(int argc, char* argv[])
     // Re-build a complete command line from passed args...
 
     for (i=1, k=0; i < argc; i++)
+    {
         k += strlen(argv[i]) + 1;
+        if (strchr(argv[i],' ')) k += 2;
+    }
 
     if (!k)
     {
@@ -179,7 +187,9 @@ int main(int argc, char* argv[])
 
     for (i=1; i < argc; ++i)
     {
+        if (strchr(argv[i],' ')) strcat(p,"\"");
         strcat(p,argv[i]);
+        if (strchr(argv[i],' ')) strcat(p,"\"");
         if (i != (argc-1)) strcat(p," ");
     }
 
