@@ -1,0 +1,36 @@
+* move long extended test case                                                  
+                                                                                
+* This file was put into the public domain 2016-01-16                           
+* by John P. Hartmann.  You can use it for anything you like,                   
+* as long as this notice remains.                                               
+                                                                                
+                                                                                
+ punch '* *Testcase mvcle-370'                                                  
+ punch '* sysclear'                                                             
+ punch '* archmode s/370'                                                       
+mvcle start 0                                                                   
+ using *,0                                                                      
+ dc a(0,go) /370 restart PSW                                                    
+ org mvcle+x'68' /370 program                                                   
+ dc x'0002 0000',a(x'deaddead')                                                 
+ org mvcle+x'1a0' Restart                                                       
+ dc x'0000 0001 8000 0000',ad(go)                                               
+ org mvcle+x'1d0' Program                                                       
+ dc x'0002 0001 8000 0000',ad(x'deaddead') z                                    
+ org mvcle+x'200'                                                               
+go equ *                                                                        
+ la 2,go                                                                        
+ la 3,4                                                                         
+ la 1,6                                                                         
+ mvcle 0,2,1                                                                    
+ lpsw stop                                                                      
+ ds 0d                                                                          
+stop dc x'0002 0000',f'0',ad(0)  Both /370 and z                                
+ ltorg                                                                          
+ punch '* *Program 0001' Expect program check                           00240000
+ punch '* runtest .1'                                                           
+ punch '* *Compare'                                                             
+ punch '* r 0.8'                                                                
+ punch '* *Want 00000000 00000200'                                              
+ punch '* *Done'                                                                
+ end                                                                            
