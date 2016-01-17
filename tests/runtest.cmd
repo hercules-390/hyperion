@@ -20,6 +20,7 @@
   echo         %~n0     [ -d tdir ]  [-n tname]  [-f ftype]  [-t factor]
   echo                     [-64 ^| -32 ]  [-b build]  [-r [rpts[:fails]]]
   echo                     [{-v QUIET ^| name:value} ... ]  [--noexit]
+  echo                     [-w wfn ]
   echo.
   echo     EXAMPLE
   echo.
@@ -28,54 +29,57 @@
   echo     ARGUMENTS
   echo.
   echo         -d tdir     The path from the current directory to the 'tests'
-  echo                     subdirectory. The path must not contain any blanks.
+  echo                     subdirectory.  The path must not contain any blanks.
   echo                     The default value is "..\hyperion\tests".
   echo.
   echo         -n tname    File name of test file omitting the file extension
   echo                     ^(see -f option^) or the default "*" ^(without the
   echo                     quotes^) to run all tests in the -d directory.
   echo.
-  echo         -f ftype    File type of the test files. The default is "tst".
+  echo         -f ftype    File type of the test files.  The default is "tst".
   echo.
   echo         -t factor   Is an optional test timeout factor between 1.0
-  echo                     and %mttof%. The test timeout factor is used to
+  echo                     and %mttof%.  The test timeout factor is used to
   echo                     increase each test script's timeout value so as
   echo                     to compensate for the speed of your own system
   echo                     compared to the speed of the system the tests
-  echo                     were designed for. See NOTES for more info.
+  echo                     were designed for.  See NOTES for more info.
   echo.
   echo         -64, -32    Which host architecture of Hercules binaries should
   echo                     be used: the 64-bit version or the 32-bit version.
-  echo                     Optional. The default is -64.
+  echo                     Optional.  The default is -64.
   echo.
   echo         -b build    Either 'DEBUG' or 'RETAIL' indicating which build
   echo                     of Hercules should be used: the unoptimized debug
   echo                     build or the optimized release build.  Optional.
   echo                     The default is to use the optimized release build.
   echo.
-  echo         -r          Optional repeat switch. When specified, %~n0
+  echo         -r          Optional repeat switch.  When specified, %~n0
   echo                     will re-run the specified test^(s^) rpts times or
-  echo                     until fails failures occur. The default if neither
-  echo                     is specified is "%defrpts%:%deffail%". The --noexit option is
+  echo                     until fails failures occur.  The default if neither
+  echo                     is specified is "%defmaxruns%:%defmaxfail%".  The --noexit option is
   echo                     ignored when the -r repeat option is specified.
   echo.
   echo         -v var...   Optional variable^(s^) to pass to the redtest.rexx
-  echo                     script such as QUIET or name:value. You may repeat
+  echo                     script such as QUIET or name:value.  You may repeat
   echo                     this option as many times as neeed.
   echo.
   echo         --noexit    Specify --noexit to suppress the exit command that
-  echo                     normally terminates the test cases. This will allow
+  echo                     normally terminates the test cases.  This will allow
   echo                     you to poke around with console commands after the
-  echo                     test script has run. Note: the --noexit option is
+  echo                     test script has run.  Note: the --noexit option is
   echo                     ignored when the -r repeat option is specified.
+  echo.
+  echo         -w wfn      Base name of work file ^(i.e. just the file name
+  echo                     without the extension^).  The default is %defwfn%.
   echo.
   echo     NOTES
   echo.
-  echo         %~nx0 requires Open Rexx or Regina Rexx to be installed
-  echo         with Open Rexx being the preferred choice.
+  echo         %~nx0 requires OORexx or Regina Rexx to be installed,
+  echo         with OORexx being the preferred choice.
   echo.
   echo         The 'tests' subdirectory is expected to be a subdirectory
-  echo         of the main Hercules source code directory. That is to say
+  echo         of the main Hercules source code directory.  That is to say
   echo         the parent directory of the directory specified in the -d
   echo         option is presumed to be the Hercules source code directory
   echo         where the "msvc..." subdirectories containing the binaries
@@ -90,22 +94,23 @@
   echo         are done.
   echo.
   echo         Only the '-v' option may be specified multiple times which
-  echo         are passed to redtest.rexx in the order specified. For all
+  echo         are passed to redtest.rexx in the order specified.  For all
   echo         other options only the last value specified is used.
   echo.
-  echo         %~nx0 uses "%wfn%" as the base name for all of its
-  echo         work files. Therefore all "%wfn%.*" files in the current
-  echo         directory may be deleted and/or modified as a result of
-  echo         invoking %~n0.
+  echo         %~nx0 uses "%defwfn%" as the base name for all of its
+  echo         work files.  Therefore all "%defwfn%.*" files in the current
+  echo         directory may be deleted/modified as a result of invoking
+  echo         %~n0.  This can be overridden by specifying a different
+  echo         one via the '-w' option.
   echo.
   echo         The results of the test runs are directed into a Hercules
-  echo         logfile called %wfn%.out in the current directory. If any
-  echo         tests fail you should begin your investigation there.
+  echo         logfile called %defwfn%.out in the current directory.  If
+  echo         any tests fail you should begin your investigation there.
   echo.
   echo     EXIT STATUS
   echo.
-  echo         n           Number of tests which have failed: 0 if all
-  echo                     tests passed (success). Non-zero otherwise.
+  echo         n           Number of tests which have failed.  0 if all
+  echo                     tests passed (success).  Non-zero otherwise.
   echo.
   echo     AUTHOR
   echo.
@@ -113,7 +118,7 @@
   echo.
   echo     VERSION
   echo.
-  echo         3.0         (December 13, 2015)
+  echo         3.1         (January 17, 2016)
   echo.
 
   set "hlp=1"
@@ -152,6 +157,7 @@
   set "maxfail="
   set "ttof="
   call :calc_mttof
+  set "wfn="
 
   set "deftdir=..\hyperion\tests"
   set "deftname=*"
@@ -159,10 +165,10 @@
   set "defbitness=64"
   set "defbuild=retail"
   set "defrepeat="
-  set "defrpts=100"
-  set "deffail=3"
+  set "defmaxruns=100"
+  set "defmaxfail=3"
+  set "defwfn=allTests"
 
-  set "wfn=allTests"
   set "cfg=tests.conf"
 
   set "cmdargs=%*"
@@ -409,52 +415,49 @@
 ::-----------------------------------------------------------------------------
 ::                   ( parse_options_loop helper )
 ::-----------------------------------------------------------------------------
+:parseopt
+
+  @REM  This function expects the next two command line arguments
+  @REM  %1 and %2 to be passed to it.  %1 is expected to be a true
+  @REM  option (its first character should start with a / or -).
+  @REM
+  @REM  Both argument are them examined and the results are placed into
+  @REM  the following variables:
+  @REM
+  @REM    opt:        The current option as-is (e.g. "-d")
+  @REM
+  @REM    optname:    Just the characters following the '-' (e.g. "d")
+  @REM
+  @REM    optval:     The next token following the option (i.e. %2),
+  @REM                but only if it's not an option itself (not isopt).
+  @REM                Otherwise optval is set to empty/undefined since
+  @REM                it is not actually an option value but is instead
+  @REM                the next option.
+
+  set "opt=%~1"
+  set "optname=%opt:~1%"
+  set "optval=%~2"
+  setlocal
+  call :isopt "%optval%"
+  endlocal && set "#=%isopt%"
+  if defined # set "optval="
+  %return%
+
+
+::-----------------------------------------------------------------------------
+::                   ( parse_options_loop helper )
+::-----------------------------------------------------------------------------
 :isopt
 
   @REM  Examines first character of passed value to determine
   @REM  whether it's the next option or not. If it starts with
   @REM  a '/' or '-' then it's the next option. Else it's not.
 
-  set "isopt=%~1"
-  if not defined isopt %return%
-  set "isopt=%isopt:~0,1%"
-  if "%isopt%" == "/" %return%
-  if "%isopt%" == "-" %return%
+  set           "isopt=%~1"
+  if not defined isopt     %return%
+  if "%isopt:~0,1%" == "/" %return%
+  if "%isopt:~0,1%" == "-" %return%
   set "isopt="
-  %return%
-
-
-::-----------------------------------------------------------------------------
-::                   ( parse_options_loop helper )
-::-----------------------------------------------------------------------------
-:parseopt
-
-  @REM    opt:        The current option as-is (e.g. "-d")
-  @REM    optname:    Just the characters following the '-' (e.g. "d")
-
-  set "opt=%~1"
-  set "optname=%opt:~1%"
-  %return%
-
-
-::-----------------------------------------------------------------------------
-::                   ( parse_options_loop helper )
-::-----------------------------------------------------------------------------
-:parse_opt_value
-
-  @REM  First passed argument is the name of the option variable.
-  @REM  The second passed argument is the value to be parsed.
-
-  @REM  If the value to be parsed isn't actually a value (but is
-  @REM  instead the next option), the specified option variable
-  @REM  is set to empty/undefined. Otherwise the specified option
-  @REM  variable is set to the unparsed value.
-
-  set "opt_varname=%~1"
-  set "opt_varvalue=%~2"
-  set "%opt_varname%="
-  call :isopt "%opt_varvalue%"
-  if not defined isopt set "%opt_varname%=%opt_varvalue%"
   %return%
 
 
@@ -464,10 +467,23 @@
 :parse_options_loop
 
   if "%~1" == "" goto :options_loop_end
-  call :isopt "%~1"
-  if not defined isopt goto :parse_positional_opts
-  call :parseopt "%~1"
+
+  @REM  Parse next option...
+
+  call :isopt    "%~1"
+  call :parseopt "%~1" "%~2"
   shift /1
+
+  if not defined isopt (
+
+    @REM  Must be a positional option.
+    @REM  Set optname identical to opt
+    @REM  and empty meaningless optval.
+
+    set "optname=%opt%"
+    set "optval="
+    goto :parse_positional_opts
+  )
 
   if /i "%optname%" == "d" goto :parse_d_opt
   if /i "%optname%" == "n" goto :parse_n_opt
@@ -476,85 +492,88 @@
   if /i "%optname%" == "b" goto :parse_b_opt
   if /i "%optname%" == "r" goto :parse_r_opt
   if /i "%optname%" == "v" goto :parse_v_opt
+  if /i "%optname%" == "w" goto :parse_w_opt
 
   if /i "%optname%" == "32" goto :parse_3264_opt
   if /i "%optname%" == "64" goto :parse_3264_opt
 
   @REM  Determine if --xxxx option
+
   call :isopt "%optname%"
   if not defined isopt goto :parse_unknown_opt
   call :parseopt "%optname%"
 
+  @REM  Long "--xxxxx" option parsing...
+
   if /i "%optname%" == "noexit" goto :parse_noexit_opt
+  @REM  "%optname%" == "foo"    goto :parse_foo_opt
+  @REM  "%optname%" == "bar"    goto :parse_bar_opt
+  @REM   etc...
 
   goto :parse_unknown_opt
 
 :parse_d_opt
 
-  call :parse_opt_value tdir "%~1"
-  if not defined    tdir goto :parse_missing_argument
+  if not defined optval goto :parse_missing_argument
+  set "tdir=%optval%"
   shift /1
   goto :parse_options_loop
 
 :parse_n_opt
 
-  call :parse_opt_value tname "%~1"
-  if not defined    tname goto :parse_missing_argument
+  if not defined optval goto :parse_missing_argument
+  set "tname=%optval%"
   shift /1
   goto :parse_options_loop
 
 :parse_f_opt
 
-  call :parse_opt_value ftype "%~1"
-  if not defined    ftype goto :parse_missing_argument
+  if not defined optval goto :parse_missing_argument
+  set "ftype=%optval%"
   shift /1
   goto :parse_options_loop
 
 :parse_b_opt
 
-  call :parse_opt_value build "%~1"
-  if not defined    build goto :parse_missing_argument
+  if not defined optval goto :parse_missing_argument
+  set "build=%optval%"
   shift /1
   goto :parse_options_loop
 
 :parse_t_opt
 
-  call :parse_opt_value ttof "%~1"
-  if not defined    ttof goto :parse_missing_argument
+  if not defined optval goto :parse_missing_argument
+  set "ttof=%optval%"
+  shift /1
+  goto :parse_options_loop
+
+:parse_w_opt
+
+  if not defined optval goto :parse_missing_argument
+  set "wfn=%optval%"
   shift /1
   goto :parse_options_loop
 
 :parse_v_opt
 
-  call :parse_opt_value var "%~1"
-  if not defined    var goto :parse_missing_argument
-
-  @REM  Parse ':' delimited argument value...
-  for /f "tokens=1,2* delims=:" %%a in ("%var%") do (
+  if not defined optval goto :parse_missing_argument
+  for /f "tokens=1,2* delims=:" %%a in ("%optval%") do (
     set "a=%%a"
     set "b=%%b"
   )
-
-  if defined b (
-    set "vars=%vars% %a%=%b%"
+  if not defined b (
+    set "vars=%vars% %optval%"
   ) else (
-    set "vars=%vars% %a%"
+    set "vars=%vars% %a%=%b%"
   )
-
   shift /1
   goto :parse_options_loop
 
 :parse_r_opt
 
-  @REM  NOTE: The repeat option's argument is OPTIONAL
-  call :parse_opt_value repeat "%~1"
-  if not defined repeat (
-    set "repeat=1"
-    goto :parse_options_loop
-  )
-
-  @REM  Parse ':' delimited argument value...
-  for /f "tokens=1,2* delims=:" %%a in ("%repeat%") do (
+  set "repeat=1"
+  if not defined optval goto :parse_options_loop
+  for /f "tokens=1,2* delims=:" %%a in ("%optval%") do (
     set "maxruns=%%a"
     set "maxfail=%%b"
   )
@@ -575,25 +594,24 @@
 
   @REM  We no longer support any positional arguments
   goto :parse_unknown_opt
-
   @REM  But if we did, this is how we would parse them...
 
 :checkif_positional_argument_1
 
   if defined positional_argument_1 goto :checkif_positional_argument_2
-  set "positional_argument_1=%~1"
+  set       "positional_argument_1=%opt%"
   goto :parse_options_loop
 
 :checkif_positional_argument_2
 
   if defined positional_argument_2 goto :checkif_positional_argument_3
-  set "positional_argument_2=%~1"
+  set       "positional_argument_2=%opt%"
   goto :parse_options_loop
 
 :checkif_positional_argument_3
 
-  if defined positional_argument_1 goto :checkif_positional_argument_4
-  set "positional_argument_3=%~1"
+  if defined positional_argument_3 goto :checkif_positional_argument_4
+  set       "positional_argument_3=%opt%"
   goto :parse_options_loop
 
 :checkif_positional_argument_4
@@ -604,7 +622,6 @@
 :parse_unknown_opt
 
   echo ERROR: Unknown/unsupported option '%opt%'. 1>&2
-  shift /1
   set /a "rc=1"
   goto :parse_options_loop
 
@@ -616,23 +633,21 @@
 
 :options_loop_end
 
-goto :skip
-  @REM  Debug: values after parsing
-  echo.
-  echo tdir     = %tdir%
-  echo tname    = %tname%
-  echo ftype    = %ftype%
-  echo build    = %build%
-  echo ttof     = %ttof%
-  echo vars     = %vars%
-  echo bitness  = %bitness%
-  echo.
-  echo noexit   = %noexit%
-  echo repeat   = %repeat%
-  echo maxruns  = %maxruns%
-  echo maxfail  = %maxfail%
-  echo.
-:skip
+  %TRACE% Debug: values after parsing:
+  %TRACE%.
+  %TRACE% tdir     = %tdir%
+  %TRACE% tname    = %tname%
+  %TRACE% ftype    = %ftype%
+  %TRACE% build    = %build%
+  %TRACE% ttof     = %ttof%
+  %TRACE% vars     = %vars%
+  %TRACE% bitness  = %bitness%
+  %TRACE%.
+  %TRACE% repeat   = %repeat%
+  %TRACE% maxruns  = %maxruns%
+  %TRACE% maxfail  = %maxfail%
+  %TRACE% noexit   = %noexit%
+  %TRACE%.
 
   goto :validate_args
 
@@ -648,11 +663,12 @@ goto :skip
   if not defined bitness set "bitness=%defbitness%"
   if not defined build   set "build=%defbuild%"
   if not defined repeat  set "repeat=%defrepeat%"
-  if not defined maxruns set "maxruns=%defrpts%"
-  if not defined maxfail set "maxfail=%deffail%"
+  if not defined maxruns set "maxruns=%defmaxruns%"
+  if not defined maxfail set "maxfail=%defmaxfail%"
+  if not defined wfn     set "wfn=%defwfn%"
 
 
-  @REM Validate path to tests directory
+  @REM  Validate path to tests directory
 
   call :isdir "%tdir%"
   if not defined isdir (
@@ -661,7 +677,7 @@ goto :skip
   )
 
 
-  @REM Validate test(s) name and file type
+  @REM  Validate test(s) name and file type
 
   if not exist "%tdir%\%tname%.%ftype%" (
     echo ERROR: Test^(s^) "%tdir%\%tname%.%ftype%" not found. 1>&2
@@ -669,7 +685,7 @@ goto :skip
   )
 
 
-  @REM Validate retail/debug build option (only first char is checked)
+  @REM  Validate retail/debug build option (only first char is checked)
 
   set "dbg=%build%"
   if defined dbg (
@@ -684,7 +700,7 @@ goto :skip
   )
 
 
-  @REM Validate which herc binaries to use (64-bit or 32-bit)
+  @REM  Validate which herc binaries to use (64-bit or 32-bit)
 
   if "%bitness%" == "64" (
     set "hdir=msvc.%dbg%AMD64.bin"
@@ -711,7 +727,7 @@ goto :skip
   )
 
 
-  @REM Validate repeat option arguments
+  @REM  Validate repeat option arguments
 
   if not defined repeat goto :skip
 
@@ -731,7 +747,7 @@ goto :skip
 :skip
 
 
-  @REM Validate /t factor option
+  @REM  Validate /t factor option
 
   if not defined ttof goto :skip
 
@@ -752,7 +768,7 @@ goto :skip
 :skip
 
 
-  @REM Add validation of other arguments here...
+  @REM  Add validation of other arguments here...
 
   goto :validate_args_done
 
@@ -761,24 +777,22 @@ goto :skip
 
   if not "%rc%" == "0" %exit%
 
-goto :skip
-  @REM  Debug: values after validation
-  echo.
-  echo tdir     = %tdir%
-  echo tname    = %tname%
-  echo ftype    = %ftype%
-  echo build    = %build%
-  echo ttof     = %ttof%
-  echo vars     = %vars%
-  echo bitness  = %bitness%
-  echo.
-  echo noexit   = %noexit%
-  echo repeat   = %repeat%
-  echo maxruns  = %maxruns%
-  echo maxfail  = %maxfail%
-  echo.
-  goto :exitnow
-:skip
+  %TRACE% Debug: values after validation:
+  %TRACE%.
+  %TRACE% tdir     = %tdir%
+  %TRACE% tname    = %tname%
+  %TRACE% ftype    = %ftype%
+  %TRACE% build    = %build%
+  %TRACE% ttof     = %ttof%
+  %TRACE% vars     = %vars%
+  %TRACE% bitness  = %bitness%
+  %TRACE%.
+  %TRACE% repeat   = %repeat%
+  %TRACE% maxruns  = %maxruns%
+  %TRACE% maxfail  = %maxfail%
+  %TRACE% noexit   = %noexit%
+  %TRACE%.
+  if defined DEBUG goto :exitnow
 
   goto :begin
 
@@ -817,9 +831,9 @@ goto :skip
 
   @REM Build test script consisting of all *.tst files concatenated together
 
+  echo msglvl -debug +emsgloc     >> %wfn%.tst
   echo defsym testpath %tdir%     >> %wfn%.tst
   for %%a in (%tdir%\%tname%.%ftype%) do (
-    echo msglvl -debug +emsgloc   >> %wfn%.tst
     echo ostailor null            >> %wfn%.tst
     echo numcpu 1                 >> %wfn%.tst
     echo mainsize 2               >> %wfn%.tst
@@ -859,9 +873,9 @@ goto :skip
   @REM  be speified as all one argument too: e.g. -t2.0, not -t 2.0.
 
   if defined noexit (
-    "%tdir%\..\%hdir%\hercules.exe" -t%ttof% -f %tdir%\%cfg% -r %wfn%.rc > %wfn%.out
+    "%tdir%\..\%hdir%\hercules.exe" -d -t%ttof% -f %tdir%\%cfg% -r %wfn%.rc > %wfn%.out
   ) else (
-    "%tdir%\..\%hdir%\hercules.exe" -t%ttof% -f %tdir%\%cfg% -r %wfn%.rc > %wfn%.out 2>&1
+    "%tdir%\..\%hdir%\hercules.exe" -d -t%ttof% -f %tdir%\%cfg% -r %wfn%.rc > %wfn%.out 2>&1
   )
 
 

@@ -10,7 +10,7 @@ commands.
 ----
 
 Files that have a tst extension are to be run by the "runtest" or
-"runtest.cmd" shell script. They are run and the Hercules console
+"runtest.cmd" shell script.  They are run and the Hercules console
 output is then inspected for correctness by an automated rexx script.
 You can create .tst files either "by hand" or by assembly on a /360
 system (VM, MVS, DOS), then TEXT decks need to be processed into
@@ -20,42 +20,43 @@ system (VM, MVS, DOS), then TEXT decks need to be processed into
 .assemble
 ---------
 
-Source files for the .tst test cases. On z/VM with HLASM, the test
-cases can be prepared by BLDHTC EXEC. ASMTST XEDIT is a sample macro
+Source files for the .tst test cases.  On z/VM with HLASM, the test
+cases can be prepared by BLDHTC EXEC.  ASMTST XEDIT is a sample macro
 to perform the build step from within the XEdit session.
 
 On VM/370, you can use the system assembler to assemble, but you must
-somehow process the TEXT deck yourself. Perhaps download and run
+somehow process the TEXT deck yourself.  Perhaps download and run
 through a command script?
 
 
 .txt
 ----
 
-Files that have a txt extension are in most cases manually executed test
-scripts invoked via the Hercules "script" command. Their output must be
-manually eyeballed to ensure they executed correctly. Usually they end
-by loading a disabled PSW. If the PSW's instruction address is 0 then
-the test case likely completed successfully.
+Files that have a txt extension are in most cases manually executed
+test scripts invoked via the Hercules "script" command.  Their output
+must be manually eyeballed to ensure they executed correctly.  Usually
+they end by loading a disabled PSW.  If the PSW's instruction address
+is 0 then the test case likely completed successfully.
 
 However, some files with a txt extension are actually automated runtest
-tst script fragments that some automated runtest tst scripts use to hold
-test script statements that are common across more than one automated
-runtest tst script which the primary tst script calls via the "script"
-Hercules script command.
+tst script fragments that some automated runtest tst scripts use to
+hold test script statements that are common across more than one
+automated runtest tst script which the primary tst script calls via the
+"script" Hercules script command.
 
 The only way to know for sure is to grep all .tst and .txt files for
 the given filename to find which .tst/.txt script, if any, invokes that
-particular .txt file via a "script" command. If no .tst/.txt scripts
-contain a script command to call the given .txt file, then the .txt file
-is a stand alone manually invoked test script. Otherwise the test script
-is intended to be called by some other .tst/.txt script and thus should
-not normally be manually invoked.
+particular .txt file via a "script" command.  If no .tst/.txt scripts
+contain a script command to call the given .txt file, then the .txt
+file is a stand alone manually invoked test script.  Otherwise the test
+script is intended to be called by some other .tst/.txt script and thus
+should not normally be manually invoked.
 
 Another less reliable way to tell is to check if the script uses any of
-the .tst file directives documented further below. If it does, then the
-chances are good the file was intended to be "called" via a .tst script.
-Otherwise it is probably a standalone manually invoked test script.
+the .tst file directives documented further below.  If it does, then
+the chances are good the file was intended to be "called" via a .tst
+script.  Otherwise it is probably a standalone manually invoked test
+script.
 
 
 .core
@@ -82,92 +83,95 @@ following command to run and verify the .tst test cases:
 "make check" in the directory where you built Hercules will find stuff
 wherever you configured it.
 
-On Windows the batch file "runtest.cmd" runs the test cases. Its first
+On Windows the batch file "runtest.cmd" runs the test cases.  Its first
 few parameters are identical (almost) to the parameters accepted by
 the UNIX runtest shell script, but supports many additional parameters
-as well. Enter "runtest /? or --help for more information.
+as well.  Enter "runtest /? or --help for more information.
 
 In either case, runtest first creates a composite set of test cases
 (allTests.testin in the current working directory) and then invokes
-Hercules to run them using the configuration file tests.conf and the rc
-file just created. When it completes, the console output (allTests.out)
-is then inspected by redtest.rexx and the results are reported to the
-user.
+Hercules to run them using the configuration file tests.conf and the
+rc file just created.  When it completes, the console output
+(allTests.out) is then inspected by redtest.rexx and the results are
+reported to the user.
 
-The runtest return code is the number of failed test cases. A return
-code of 0 indicates success (no failed test cases). Any other return
+The runtest return code is the number of failed test cases.  A return
+code of 0 indicates success (no failed test cases).  Any other return
 code indicates failure (one or more failed test cases).
 
 The tail end of an early sample output is:
 
-  Test SSKE S/390 nextlast.  3 OK compares.  All pass.
-  Test SSKE S/390 lastpage.  3 OK compares.  All pass.
-  Test timeout.  2 OK compares.  All pass.
-  Done 138 tests.  All OK.
+  Test SSKE S/390 nextlast.   3 OK compares.   All pass.
+  Test SSKE S/390 lastpage.   3 OK compares.   All pass.
+  Test timeout.   2 OK compares.   All pass.
+  Done 138 tests.   All OK.
   [/usr/data/src/hercules/atom]
 
 
 .tst file runtest command
 -------------------------
 
-The test a .tst script defines is normally begun via a special 'runtest'
-script command which supports optional arguments indicating how the test
-should be started as well as the maximum amount of time it should run.
-Unlike the 'pause' command, 'runtest' waits only until all CPUs are in
-the stopped state.
+The test a .tst script defines is normally begun via a special runtest
+script command which supports optional arguments indicating how the
+test should be started as well as the maximum amount of time it should
+run. Unlike the 'pause' command, 'runtest' waits only until all CPUs
+are in the stopped state.
 
       runtest   [restart|start]   [timeout]   [# comment...]
 
 The first argument must be either "restart" or "start" (or be omitted).
-It specifies how the test should be started: via the Hercules "restart"
-console command or the "start" console command. The default is to start
-the test via the "restart" command.
+It specifies how the test should be started: via the Hercules restart
+console command or the "start" console command.  The default is to
+start the test via the "restart" command.
 
 The second argument (which is also optional) defines the maximum amount
 of time (specified in whole or fractional number of seconds) that the
-test is allowed to run. This is a safety feature to prevent runaway tests
-from running forever due to a bug in the test or within Hercules itself.
-Under normal circumstances all tests should end automatically the very
-moment they are done. If no timeout is specified, the default is 30
-seconds.
+test is allowed to run.  This is a safety feature to prevent runaway
+tests from running forever due to a bug in the test or within Hercules
+itself.  Under normal circumstances all tests should end automatically
+the very moment they are done.  If no timeout is specified, the default
+is 30 seconds.
 
-Please also note that timeout values are multiplied by the test timeout
-factor value which is specified by the -t switch on the Hercules command.
-The test timeout factor value allows for running tests on systems that
-may be slower than the system they were originally designed for. Refer to
-the documentation describing Hercules's supported command line arguments.
+Please also note that timeout values are multiplied by the test
+timeout factor value which is specified by the -t switch on the
+Hercules command.  The test timeout factor value allows for running
+tests on systems that may be slower than the system they were
+originally designed for.  Refer to the documentation describing
+Hercules's supported command line arguments.
 
 Other runtest and/or command line arguments may be added in the future
 as they are needed.
 
-The runtest .tst script command is almost always immediately followed by
-Hercules console commands to display storage or registers, etc, as well
-as several of the below .tst file directives to verify the test case ran
-correctly.
+The runtest .tst script command is almost always immediately followed
+by Hercules console commands to display storage or registers, etc, as
+well as several of the below .tst file directives to verify the test
+case ran correctly.
 
 
 .tst file directives
 --------------------
 
 .tst files are executed as Hercules rc files, so they contain Hercules
-console commands. A number of loud comments (beginning with an
-asterisk) are interpretted by redtest.rexx as directives. All directives
-are case sensitive. Using "*testcase" for example accomplishes nothing.
+console commands.  A number of loud comments (beginning with an
+asterisk) are interpretted by redtest.rexx as directives.  All
+directives are case sensitive.  Using "*testcase" for example
+accomplishes nothing.
 
-*           Comment; ignored. There must be a blank after the asterisk.
+*           Comment; ignored.  There must be a blank after the
+            asterisk.
 
 *Testcase   Identify beginning of a test case.
 
 *Compare    An r command follows and the output should be stored for
             later comparison.
 
-*Want       The expected r command output. A string identifying the
+*Want       The expected r command output.  A string identifying the
             comparison may be enclosed in double quotes before the
             compare data.
 
 *Gpr        A previous gpr console command should have been issued to
-            display the general registers. The specified register is
-            compared with the stored data. Specify a decimal register
+            display the general registers.  The specified register is
+            compared with the stored data.  Specify a decimal register
             number with no leading zero.
 
 *Key        Compare the specified key against the key displayed in the
@@ -179,52 +183,54 @@ are case sensitive. Using "*testcase" for example accomplishes nothing.
 *Program    A program check is expected, for example to verify that a
             privileged operation causes an 0c2.
 
-*Hmsg       Specify the complete informational message string to compare
-            against the last issued message, except for messages that
-            are processed by redtest.rexx, plus messages 7 and 1603. A
-            number is optional before the message identifier to specify
-            the last but one, last but two, etc, see example below.
+*Hmsg       Specify the complete informational message string to
+            compare against the last issued message, except for
+            messages that are processed by redtest.rexx, plus messages
+            7 and 1603.  A number is optional before the message
+            identifier to specify the last but one, last but two, etc,
+            see example below.
 
-*Info       Synonym for *Hmsg. Use if informational message is expected.
-*Error      Synonym for *Hmsg. Use if error message is expected.
+*Info       Synonym for *Hmsg.  Use if an informational message is
+            expected.
+*Error      Synonym for *Hmsg.  Use if an error message is expected.
 
 *Explain    Specify  the explanatory text to write when the next
-            comparison fails. You can specify as many *Explains as you
-            like for multiline messages. The explain array is cleared
+            comparison fails.  You can specify as many *Explains as you
+            like for multiline messages.  The explain array is cleared
             once a test has been done, whether OK or not.
 
 *Message    Print a message on the output.
 
-*If         Specify a condition to test (see later). The expression is
-            evaluated by REXX Interpret.  If the condition holds the
+*If         Specify a condition to test (see later).  The expression is
+            evaluated by REXX interpreter.   If the condition holds the
             following directives are processed up to the matching *Else
-            or *Fi.  If the condition does not hold, directives are
+            or *Fi.   If the condition does not hold, directives are
             ignored except that nested *If directives are parsed.
 
 *Else       Flip the setting of the matching *If condition, unless
             nested in a suppressed *If.
 
-*Fi         End an *If.  The process/ignore setting for directives is
+*Fi         End an *If.   The process/ignore setting for directives is
             unstacked.
 
-*Done       End of a test case. Specify "nowait" if the test case does
+*Done       End of a test case.  Specify "nowait" if the test case does
             not end by loading a disabled PSW, for example, when it
             tests just console commands without running any code.
 
-*Timeout    A timeout is expected. Do not use.
+*Timeout    A timeout is expected.  Do not use.
 
-logicimm.tst shows examples of all directives, except *Key, *Prefix, and
-*Program; see sske.tst for an example of *Key and *program. See pr.tst
-for *Prefix. See mainsize.tst for conditional processing.
+logicimm.tst shows examples of all directives, except *Key, *Prefix,
+and *Program; see sske.tst for an example of *Key and *program.  See
+pr.tst for *Prefix.  See mainsize.tst for conditional processing.
 
 Predefined variables are specified as arguments to redtest.rexx and
-extracted from the features message, HHC01417I. When the runtest script
-(not to be confused with the runtest command below) finds config.h, it
-extracts the size of a pointer and sets the variable "ptrsize" to 4 or
-8. For any facilities listed by message HHC01417I, a variable named by
-the facility name is set to 1, for example, cmpxchg1=1. Variables are
-specified in the expression by a dollar sign followed by the variable
-name; they are read only.
+extracted from the features message, HHC01417I.  When the runtest
+script (not to be confused with the runtest command below) finds
+config.h, it extracts the size of a pointer and sets the variable
+"ptrsize" to 4 or 8.  For any facilities listed by message HHC01417I,
+a variable named by the facility name is set to 1, for example,
+cmpxchg1=1.  Variables are specified in the expression by a dollar
+sign followed by the variable name; they are read only.
 
 Example of conditional directives:
 
