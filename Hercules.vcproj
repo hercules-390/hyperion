@@ -3022,6 +3022,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\mvcle.assemble"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\sigp.assemble"
 								>
 							</File>
@@ -3098,6 +3102,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\mvcle.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\pr.tst"
 								>
 							</File>
@@ -3167,6 +3175,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\mhi.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mvcle.listing"
 								>
 							</File>
 							<File

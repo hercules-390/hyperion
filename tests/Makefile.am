@@ -169,6 +169,9 @@ EXTRA_DIST =            \
     mhi.assemble        \
     mhi.listing         \
     mhi.tst             \
+    mvcle.assemble      \
+    mvcle.listing       \
+    mvcle.tst           \
     mvcos.txt           \
     mxtr.txt            \
     popcnt.txt          \
