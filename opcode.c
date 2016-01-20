@@ -2263,7 +2263,7 @@ static zz_func opcode_table[0x100][GEN_MAXARCH] = {
  /*A6*/   GENx370x390x900 (execute_opcode_a6xx,a6xx,""),
  /*A7*/   GENx370x390x900 (execute_opcode_a7_x,a7_x,""),
  /*A8*/   GENx37Xx390x900 (move_long_extended,RS,"MVCLE"),
- /*A9*/   GENx370x390x900 (compare_logical_long_extended,RS,"CLCLE"),
+ /*A9*/   GENx37Xx390x900 (compare_logical_long_extended,RS,"CLCLE"),
  /*AA*/   GENx___x___x___ ,
  /*AB*/   GENx___x___x___ ,
  /*AC*/   GENx370x390x900 (store_then_and_system_mask,SI,"STNSM"),
