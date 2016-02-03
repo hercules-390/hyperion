@@ -2285,6 +2285,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\util\voldsext.cmd"
+					>
+				</File>
+				<File
 					RelativePath=".\util\zzsacard.bin"
 					>
 				</File>

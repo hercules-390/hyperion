@@ -1429,13 +1429,49 @@ Examples:
 //dasdcat.c
 #define HHC02400 "Directory block byte count is invalid"
 #define HHC02401 "Non-PDS-members not yet supported"
-#define HHC02402 "Unknown option %s value %s"
+#define HHC02402 "Unknown 'member:flags' formatting option %s"
 #define HHC02403 "Failed opening %s"
 #define HHC02404 "Can't make 80 column card images from block length %d"
-#define HHC02405 "Usage: %s [-i dasd_image [sf=shadow-file-name] dsname...]...\n" \
-       "          dsname can (currently must) be pdsname/spec\n" \
-       "          spec is memname[:flags], * (all) or ? (list)\n" \
-       "          flags can include (c)ard images, (a)scii"
+#define HHC02405 "Usage:\n"                                                         \
+       "HHC02405I\n"                                                                \
+       "HHC02405I       %s [-i dasd_image [sf=shadowfile] spec...]...\n"            \
+       "HHC02405I\n"                                                                \
+       "HHC02405I Where:\n"                                                         \
+       "HHC02405I\n"                                                                \
+       "HHC02405I       -i             indicates next arg is input file\n"          \
+       "HHC02405I       dasd_image     input dasd image file\n"                     \
+       "HHC02405I       shadowfile     optional dasd image shadow file\n"           \
+       "HHC02405I       spec           pdsname/memname[:flags]\n"                   \
+       "HHC02405I\n"                                                                \
+       "HHC02405I       pdsname        the name of the partitioned dataset\n"       \
+       "HHC02405I       memname        either a specific member name or one\n"      \
+       "HHC02405I                      of the following special characters:\n"      \
+       "HHC02405I\n"                                                                \
+       "HHC02405I                         '?'    just list all of the names\n"      \
+       "HHC02405I                                of pdsname's members\n"            \
+       "HHC02405I\n"                                                                \
+       "HHC02405I                         '*'    selects all pdsname members\n"     \
+       "HHC02405I\n"                                                                \
+       "HHC02405I       flags          indicates how to format selected members:\n" \
+       "HHC02405I\n"                                                                \
+       "HHC02405I                         'c'    as 72 or 80 column card images\n"  \
+       "HHC02405I                         's'    indicates 'c' shoud be 80 cols\n"  \
+       "HHC02405I                         'a'    as plain unformatted ASCII\n"      \
+       "HHC02405I                         '?'    member CCCCHHR/size info only\n"   \
+       "HHC02405I\n"                                                                \
+       "HHC02405I More than one flag may be specified. The 's' option is ignored\n" \
+       "HHC02405I unless the 'c' option is also specified. Both imply 'a' ASCII.\n" \
+       "HHC02405I\n"                                                                \
+       "HHC02405I If no flags are given the member is written in binary exactly\n"  \
+       "HHC02405I as-is. Use caution when no formatting flags are given since\n"    \
+       "HHC02405I many terminal programs do not react too well when pure binary\n"  \
+       "HHC02405I data is written to the screen. When selecting a single member\n"  \
+       "HHC02405I without any formatting options it is highly recommended that\n"   \
+       "HHC02405I you redirect output to another file (e.g. dasdcat ... > file).\n" \
+       "HHC02405I\n"                                                                \
+       "HHC02405I Return code is 0 if successful or 1 if any errors."
+#define HHC02406 "Member '%s' not found in dataset '%s' on volume '%s'"
+#define HHC02407 "%s/%s/%-8s %8s bytes from %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32" to %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32
 //dasdconv.c
 #define HHC02410 "Usage: %s [options] infile outfile\n" \
        "          infile:  name of input HDR-30 CKD image file ('-' means stdin)\n" \

@@ -26,24 +26,27 @@
 #define UTILITY_NAME    "dasdcat"
 
 /* Option flags */
-#define OPT_ASCIIFY 0x1
-#define OPT_CARDS 0x2
-#define OPT_PDS_WILDCARD 0x4
-#define OPT_PDS_LISTONLY 0x8
-#define OPT_SEQNO 0x10
+#define OPT_ASCIIFY         0x01
+#define OPT_CARDS           0x02
+#define OPT_PDS_WILDCARD    0x04
+#define OPT_PDS_LISTONLY    0x08
+#define OPT_SEQNO           0x10
+#define OPT_MEMINFO_ONLY    0x20
 
 /* function prototypes */
 int do_cat          (CIFBLK *cif, char *file);
+int get_volser      (CIFBLK *cif);
 int do_cat_cards    (BYTE *buf, int len, unsigned long optflags);
-int do_cat_nonpds   (CIFBLK *cif, DSXTENT *extent, int noext,
-                     unsigned long optflags);
 int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
-                     char *pdsmember, unsigned long optflags);
-int end_of_track    (BYTE *p);
+                     char* dsname, char *pdsmember, unsigned long optflags);
 int process_member  (CIFBLK *cif, int noext, DSXTENT extent[],
-                     BYTE *ttr, unsigned long optflags);
+                     BYTE *ttr, unsigned long optflags,
+                     char* dsname, char* memname);
 int process_dirblk  (CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
-                     char *pdsmember, unsigned long optflags);
+                     char* dsname, char *pdsmember, unsigned long optflags);
+
+static int found = 0;
+static char volser[7];
 
 int main(int argc, char **argv)
 {
@@ -59,7 +62,7 @@ int main(int argc, char **argv)
     {
         // "Usage: dasdcat..."
         WRMSG( HHC02405, "I", pgm );
-        exit(2);
+        return 1;
     }
 
  /*
@@ -85,13 +88,20 @@ int main(int argc, char **argv)
          }
          cif = open_ckd_image(fn, sfn, O_RDONLY | O_BINARY, IMAGE_OPEN_NORMAL);
          if (!cif)
+         {
              // "Failed opening %s"
              FWRMSG( stderr, HHC02403, "E", *argv );
-     }
-     else
-     {
-         if (do_cat(cif, *argv))
              rc = 1;
+             break;
+         }
+     }
+     else if (cif)
+     {
+         if ((rc = do_cat( cif, *argv )) != 0)
+         {
+             rc = 1;
+             break;
+         }
      }
  }
 
@@ -99,12 +109,6 @@ int main(int argc, char **argv)
  close_ckd_image(cif);
 
  return rc;
-}
-
-int end_of_track(BYTE *p)
-{
- return p[0] == 0xff && p[1] == 0xff && p[2] == 0xff && p[3] == 0xff
- && p[4] == 0xff && p[5] == 0xff && p[6] == 0xff && p[7] == 0xff;
 }
 
 int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
@@ -119,7 +123,9 @@ int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
     while (len)
     {
      char card[81];
-        make_asciiz(card, sizeof(card), buf, (optflags & OPT_SEQNO) ? 80 : 72);
+     int srclen = (optflags & OPT_SEQNO) ? 80 : 72;
+        make_asciiz(card, sizeof(card), buf, srclen);
+
         if (optflags & OPT_PDS_WILDCARD)
         {
             putchar('|');
@@ -134,7 +140,8 @@ int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
 }
 
 int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
-                    BYTE *ttr, unsigned long optflags)
+                    BYTE *ttr, unsigned long optflags,
+                    char* dsname, char* memname)
 {
  int   rc;
  u_int trk;
@@ -143,6 +150,11 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
  U8    head;
  U8    rec;
  BYTE *buf;
+ 
+ U32   beg_cyl  = 0;
+ U8    beg_head = 0;
+ U8    beg_rec  = 0;
+ U64   tot_len  = 0;
 
     set_codepage(NULL);
 
@@ -159,46 +171,70 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
         if (rc < 0)
             return -1;
 
-        if (rc > 0)
+        if (rc > 0)  /* end of track */
         {
             trk++;
             rec = 1;
             continue;
         }
 
-        if (len == 0)
+        if (len == 0) /* end of member */
             break;
 
-        if (optflags & OPT_CARDS)
-            do_cat_cards(buf, len, optflags);
+        if (optflags & OPT_MEMINFO_ONLY)
+        {
+            if (!beg_cyl)
+            {
+                beg_cyl  = cyl;
+                beg_head = head;
+                beg_rec  = rec;
+            }
+            tot_len += len;
+        }
+        else if (optflags & OPT_CARDS)
+        {
+            /* Formatted 72 or 80 column ASCII card images */
+            if ((rc = do_cat_cards(buf, len, optflags)) != 0)
+                return -1; // (len not multiple of 80 bytes)
+        }
+        else if (optflags & OPT_ASCIIFY)
+        {
+            /* Unformatted ASCII text */
+            BYTE *p;
+            for (p = buf; len--; p++)
+                putchar(guest_to_host(*p));
+        }
         else
-            if (optflags & OPT_ASCIIFY)
-            {
-             BYTE *p;
-                for (p = buf; len--; p++)
-                    putchar(guest_to_host(*p));
-            }
-            else
-            {
+        {
+            /* Output member in binary exactly as-is */
 #if O_BINARY != 0
-                setmode(fileno(stdout),O_BINARY);
+            setmode(fileno(stdout),O_BINARY);
 #endif
-                fwrite(buf, len, 1, stdout);
-            }
+            fwrite(buf, len, 1, stdout);
+        }
 
         rec++;
     }
+
+    if (optflags & OPT_MEMINFO_ONLY)
+        // "%s/%s/%-8s %8s bytes from %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32" to %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32
+        FWRMSG( stdout, HHC02407, "I",
+            volser, dsname, memname, fmt_memsize( tot_len ),
+            (U32) beg_cyl, (U32) beg_head, (U32) beg_rec,
+            (U32)     cyl, (U32)     head, (U32)     rec );
+
     return 0;
 }
 
 int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
- char *pdsmember, unsigned long optflags)
+ char* dsname, char *pdsmember, unsigned long optflags)
 {
  int rc;
  int dirrem;
  char memname[9];
+ static const BYTE endofdir[8] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
- /* Load number of bytes in directory block */
+    /* Load number of bytes in directory block */
     dirrem = (dirblk[0] << 8) | dirblk[1];
     if (dirrem < 2 || dirrem > 256)
     {
@@ -207,13 +243,7 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
         return -1;
     }
 
-    if (!strcmp(pdsmember, "*"))
-        optflags |= OPT_PDS_WILDCARD;
-    else
-        if (!strcmp(pdsmember, "?"))
-            optflags |= OPT_PDS_LISTONLY;
-
- /* Point to first directory entry */
+    /* Point to first directory entry */
     dirblk += 2;
     dirrem -= 2;
 
@@ -222,32 +252,58 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
      PDSDIR *dirent = (PDSDIR*)dirblk;
      int k, size;
 
-        if (end_of_track(dirent->pds2name))
-            return 1;
+        /* Check for end of directory */
+        if (memcmp( endofdir, dirent->pds2name, 8 ) == 0)
+            return +1; /* (logical EOF) */
 
+        /* Extract this member's name */
         make_asciiz(memname, sizeof(memname), dirent->pds2name, 8);
 
         if (optflags & OPT_PDS_LISTONLY)
         {
          char memname_lc[9];
+            /* List just the member names in this PDS */
             memcpy(memname_lc, memname, sizeof(memname));
             string_to_lower(memname_lc);
             puts(memname_lc);
         }
         else
-            if ((optflags & OPT_PDS_WILDCARD) || !strcmp(pdsmember, memname))
+        {
+            /* Are we interested in this specific member? */
+            if (0
+                || (optflags & OPT_PDS_WILDCARD)
+                || strcmp( pdsmember, memname ) == 0
+            )
             {
-                if (optflags & OPT_PDS_WILDCARD)
+                if (optflags & OPT_PDS_WILDCARD && !(optflags & OPT_MEMINFO_ONLY))
                     printf("> Member %s\n", memname);
-                rc = process_member(cif, noext, extent, dirent->pds2ttrp, optflags);
+                else if (1
+                    && !(optflags & OPT_MEMINFO_ONLY)
+                    && !isatty( fileno( stdout ))
+                )
+                {
+                    /* Delete any existing o/p file contents */
+                    rewind( stdout );
+                    ftruncate( fileno( stdout ), 0 );
+                }
+
+                rc = process_member(cif, noext, extent, dirent->pds2ttrp, optflags, dsname, memname);
                 if (rc < 0)
                     return -1;
-            }
 
- /* Load the user data halfword count */
+                /* If not ALL members then we're done */
+                if (!(optflags & OPT_PDS_WILDCARD))
+                {
+                    found = 1;
+                    return +1; /* (logical EOF) */
+                }
+            }
+        }
+
+        /* Load the user data halfword count */
         k = dirent->pds2indc & PDS2INDC_LUSR;
 
- /* Point to next directory entry */
+        /* Point to next directory entry */
         size = 12 + k*2;
         dirblk += size;
         dirrem -= size;
@@ -256,17 +312,17 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
 }
 
 int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
-                    char *pdsmember, unsigned long optflags)
+                    char* dsname, char *pdsmember, unsigned long optflags)
 {
  int   rc;
  u_int trk;
  U8    rec;
 
- /* Point to the start of the directory */
+    /* Point to the start of the directory */
     trk = 0;
     rec = 1;
 
- /* Read the directory */
+    /* Read the directory */
     while (1)
     {
      BYTE *blkptr;
@@ -283,44 +339,33 @@ int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
         if (rc < 0)
             return -1;
 
-        if (rc > 0)
+        if (rc > 0)     /* end of track */
         {
             trk++;
             rec = 1;
             continue;
         }
 
-        if (len == 0)
-            break;
+        if (len == 0)   /* physical end of file */
+            return 0;
 
         memcpy(dirblk, blkptr, sizeof(dirblk));
 
-        rc = process_dirblk(cif, noext, extent, dirblk, pdsmember, optflags);
+        rc = process_dirblk(cif, noext, extent, dirblk, dsname, pdsmember, optflags);
         if (rc < 0)
             return -1;
-        if (rc > 0)
-            break;
+
+        if (rc > 0)     /* logical end of file */
+            return 0;
 
         rec++;
     }
-    return rc;
-}
-
-int do_cat_nonpds(CIFBLK *cif, DSXTENT *extent, int noext,
- unsigned long optflags)
-{
-    UNREFERENCED(cif);
-    UNREFERENCED(extent);
-    UNREFERENCED(noext);
-    UNREFERENCED(optflags);
-    // "Non-PDS-members not yet supported"
-    FWRMSG( stderr, HHC02401, "E" );
-    return -1;
+    UNREACHABLE_CODE();
 }
 
 int do_cat(CIFBLK *cif, char *file)
 {
- int rc;
+ int rc = 0;
  DSXTENT extent[16];
  int noext;
  char buff[100]; /* must fit max length DSNAME/MEMBER..OPTS */
@@ -329,8 +374,8 @@ int do_cat(CIFBLK *cif, char *file)
  char *p;
  char *pdsmember = 0;
 
-    if (!cif)
-        return 1;
+    if ((rc = get_volser( cif )) != 0)
+        return rc;
 
     strncpy(buff, file, sizeof(buff));
     buff[sizeof(buff)-1] = 0;
@@ -347,16 +392,22 @@ int do_cat(CIFBLK *cif, char *file)
                 optflags |= OPT_CARDS;
             else if (*p == 's')
                 optflags |= OPT_SEQNO;
+            else if (*p == '?')
+                optflags |= OPT_MEMINFO_ONLY;
             else
             {
                 char buf[2];
                 buf[0] = *p;
                 buf[1] = 0;
-                // "Unknown option %s value %s"
-                FWRMSG( stderr, HHC02402, "E", "dataset name", buf );
+                // "Unknown 'member:flags' formatting option %s"
+                FWRMSG( stderr, HHC02402, "E", buf );
+                rc = -1;
             }
         }
     }
+
+    if (rc != 0)
+        return rc;
 
     p = strchr(buff, '/');
     if (p)
@@ -398,9 +449,47 @@ int do_cat(CIFBLK *cif, char *file)
 #endif /*EXTERNALGUI*/
 
     if (pdsmember)
-        rc = do_cat_pdsmember(cif, extent, noext, pdsmember, optflags);
+    {
+        if      (!strcmp(pdsmember, "*")) optflags |= OPT_PDS_WILDCARD;
+        else if (!strcmp(pdsmember, "?")) optflags |= OPT_PDS_LISTONLY;
+
+        rc = do_cat_pdsmember(cif, extent, noext, dsname, pdsmember, optflags);
+
+        if (!(optflags & (OPT_PDS_LISTONLY | OPT_PDS_WILDCARD)) && !found)
+        {
+            // "Member '%s' not found in dataset '%s' on volume '%s'"
+            FWRMSG( stderr, HHC02406, "E", pdsmember, dsname, volser );
+            rc = 1;
+        }
+    }
     else
-        rc = do_cat_nonpds(cif, extent, noext, optflags);
+    {
+        // "Non-PDS-members not yet supported"
+        FWRMSG( stderr, HHC02401, "E" );
+        rc = 1;
+    }
 
     return rc;
+}
+
+int get_volser( CIFBLK *cif )
+{
+    unsigned char *vol1data;
+    int rc;
+    U16 rlen;
+
+    rc = read_block( cif, 0, 0, 3, 0, 0, &vol1data, &rlen );
+
+    if (rc < 0)
+        return -1;
+
+    if (rc > 0)
+    {
+        // "%s record not found"
+        FWRMSG( stderr, HHC02471, "E", "VOL1" );
+        return -1;
+    }
+
+    make_asciiz( volser, sizeof(volser), vol1data+4, 6 );
+    return 0;
 }
