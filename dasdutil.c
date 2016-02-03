@@ -538,7 +538,20 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     dev->quiet     = (option & IMAGE_OPEN_QUIET)    ? 1 : 0;
 
     /* If the filename has a `:' then it may be a remote device */
-    rmtdev = strchr(fname, ':');
+    if ((rmtdev = strchr(fname, ':')))
+    {
+        /* Verify port number follows colon */
+        char *p;
+        for (p = rmtdev + 1; *p && *p != ':'; p++)
+        {
+            if (!isdigit(*p))  /* (port numbers are always numeric) */
+            {
+                /* Not a port number ==> not really a remote device */
+                rmtdev = NULL;
+                break;
+            }
+        }
+    }
 
     /* Read the device header so we can determine the device type */
     strlcpy( sfxname, fname, sizeof(sfxname));
