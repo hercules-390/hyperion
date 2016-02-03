@@ -40,7 +40,7 @@
   echo         than the way such arguments are passed to Hercules utilities.
   echo         Hercules utilities use the format sf="path with blanks" where
   echo         only the path but not the sf= prefix is quoted.  When passed
-  echo         to %~nx0 however, use the format "sf=path wqith blanks"
+  echo         to %~nx0 however, use the format "sf=path with blanks"
   echo         where the entire argument is quoted if it contains any blanks.
   echo.
   echo         %~n0 first uses dasdls to obtain a list of all datasets on
