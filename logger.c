@@ -287,7 +287,7 @@ static void logger_logfile_timestamp()
     }
 }
 
-LOGR_DLL_IMPORT void logger_timestamped_logfile_write( void* pBuff, size_t nBytes )
+DLL_EXPORT void logger_timestamped_logfile_write( void* pBuff, size_t nBytes )
 {
     if (logger_hrdcpy)
     {
