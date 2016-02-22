@@ -1261,8 +1261,8 @@ het_write( HETB *hetb, void *sbuf, int slen )
     int flags;
     unsigned long tlen;
     char *tbuf = NULL;
-    size_t tsiz = ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12);
 #if defined(HAVE_LIBZ) || defined( HET_BZIP2 )
+    size_t tsiz = ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12);
     tbuf = malloc_aligned( tsiz, 4096 );
     if (!tbuf)
     {
