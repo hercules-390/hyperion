@@ -70,7 +70,6 @@ static struct option longopts[] =
 };
 #endif
 
-
 static LOGCALLBACK  log_callback = NULL;
 
 struct cfgandrcfile
@@ -140,7 +139,6 @@ static void delayed_exit (int exit_code)
     return;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Signal handler for SIGINT signal                                  */
 /*-------------------------------------------------------------------*/
@@ -174,6 +172,25 @@ static void sigint_handler (int signo)
 } /* end function sigint_handler */
 
 /*-------------------------------------------------------------------*/
+/* Perform immediate/emergency shutdown                              */
+/*-------------------------------------------------------------------*/
+static void do_emergency_shutdown()
+{
+    sysblk.shutdown = TRUE;
+
+    if (!sysblk.shutimmed)
+    {
+        sysblk.shutimmed = TRUE;
+        do_shutdown();
+    }
+    else // (already in progress)
+    {
+        while (!sysblk.shutfini)
+            usleep(100000);
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /* Signal handler for SIGTERM signal                                 */
 /*-------------------------------------------------------------------*/
 static void sigterm_handler (int signo)
@@ -195,91 +212,211 @@ static void sigterm_handler (int signo)
 } /* end function sigterm_handler */
 
 #if defined( _MSVC_ )
-
 /*-------------------------------------------------------------------*/
-/* Signal handler for Windows signals                                */
+/* Windows console control signal handler                            */
 /*-------------------------------------------------------------------*/
-static BOOL WINAPI console_ctrl_handler (DWORD signo)
+static BOOL WINAPI console_ctrl_handler( DWORD signo )
 {
-    int i;
-
-    SetConsoleCtrlHandler(console_ctrl_handler, FALSE);   // turn handler off while processing
-
     switch ( signo )
     {
+    ///////////////////////////////////////////////////////////////
+    //
+    //                    PROGRAMMING NOTE
+    //
+    ///////////////////////////////////////////////////////////////
+    //
+    // "SetConsoleCtrlHandler function HandlerRoutine Callback
+    //  Function:"
+    //
+    //   "Return Value:"
+    //
+    //     "If the function handles the control signal, it
+    //      should return TRUE."
+    //
+    //   "CTRL_LOGOFF_EVENT:"
+    //
+    //     "Note that this signal is received only by services.
+    //      Interactive applications are terminated at logoff,
+    //      so they are not present when the system sends this
+    //      signal."
+    //
+    //   "CTRL_SHUTDOWN_EVENT:"
+    //
+    //     "Interactive applications are not present by the time
+    //      the system sends this signal, therefore it can be
+    //      received only be services in this situation."
+    //
+    //   "CTRL_CLOSE_EVENT:"
+    //
+    //      "... if the process does not respond within a certain
+    //       time-out period (5 seconds for CTRL_CLOSE_EVENT..."
+    //
+    ///////////////////////////////////////////////////////////////
+    //
+    //  What this all boils down to is we'll never receive the
+    //  logoff and shutdown signals (via this callback), and
+    //  we only have a maximum of 5 seconds to return TRUE from
+    //  the CTRL_CLOSE_EVENT signal. Thus, as normal shutdowns
+    //  may likely take longer than 5 seconds and our goal is
+    //  to try hard to shutdown Hercules as gracfully as we can,
+    //  we are left with little choice but to always perform
+    //  an immediate/emergency shutdown for CTRL_CLOSE_EVENT.
+    //
+    ///////////////////////////////////////////////////////////////
+
         case CTRL_BREAK_EVENT:
-            WRMSG (HHC01400, "I");
 
-            OBTAIN_INTLOCK(NULL);
+            // "CTRL_BREAK_EVENT received: %s"
+            WRMSG( HHC01400, "I", "pressing interrupt key" );
 
+            OBTAIN_INTLOCK( NULL );
             ON_IC_INTKEY;
+            WAKEUP_CPUS_MASK( sysblk.waiting_mask );
+            RELEASE_INTLOCK( NULL );
 
-            /* Signal waiting CPUs that an interrupt is pending */
-            WAKEUP_CPUS_MASK (sysblk.waiting_mask);
-
-            RELEASE_INTLOCK(NULL);
-
-            SetConsoleCtrlHandler(console_ctrl_handler, TRUE);  // reset handler
             return TRUE;
-            break;
+
         case CTRL_C_EVENT:
-            WRMSG(HHC01401, "I");
-            SetConsoleCtrlHandler(console_ctrl_handler, TRUE);  // reset handler
+
+            if (!sysblk.shutimmed)
+                // "CTRL_C_EVENT received: %s"
+                WRMSG( HHC01401, "I", "initiating emergency shutdown" );
+            do_emergency_shutdown();
             return TRUE;
-            break;
+
+
         case CTRL_CLOSE_EVENT:
-        case CTRL_SHUTDOWN_EVENT:
-        case CTRL_LOGOFF_EVENT:
-            if ( !sysblk.shutdown )  // (system shutdown not initiated)
-            {
-                WRMSG(HHC01402, "I", ( signo == CTRL_CLOSE_EVENT ? "close" :
-                                      signo == CTRL_SHUTDOWN_EVENT ? "shutdown" : "logoff" ),
-                                    ( signo == CTRL_CLOSE_EVENT ? "immediate " : "" ) );
 
-                if ( signo == CTRL_CLOSE_EVENT )
-                    sysblk.shutimmed = TRUE;
-                do_shutdown();
-
-//                logmsg("%s(%d): return from shutdown\n", __FILE__, __LINE__ ); /* debug */
-
-                for ( i = 0; i < 120; i++ )
-                {
-                    if ( sysblk.shutdown && sysblk.shutfini )
-                    {
-//                        logmsg("%s(%d): %d shutdown completed\n",  /* debug */
-//                                __FILE__, __LINE__, i );           /* debug */
-                        break;
-                    }
-                    else
-                    {
-//                        logmsg("%s(%d): %d waiting for shutdown to complete\n",   /* debug */
-//                                __FILE__, __LINE__, i );                          /* debug */
-                        sleep(1);
-                    }
-                }
-                if ( !sysblk.shutfini )
-                {
-                    sysblk.shutimmed = TRUE;
-                    do_shutdown();
-                }
-            }
-            else
-            {
-                sysblk.shutimmed = TRUE;
-                do_shutdown();
-                WRMSG(HHC01403, "W", ( signo == CTRL_CLOSE_EVENT ? "close" :
-                                      signo == CTRL_SHUTDOWN_EVENT ? "shutdown" : "logoff" ) );
-            }
+            if (!sysblk.shutimmed)
+                // "CTRL_CLOSE_EVENT received: %s"
+                WRMSG( HHC01402, "I", "initiating emergency shutdown" );
+            do_emergency_shutdown();
             return TRUE;
-            break;
+
         default:
-            return FALSE;
+
+            return FALSE;  // (not handled; call next signal handler)
     }
 
-} /* end function console_ctrl_handler */
-#endif
+    UNREACHABLE_CODE();
+}
+
+/*-------------------------------------------------------------------*/
+/* Windows hidden window message handler                             */
+/*-------------------------------------------------------------------*/
+static LRESULT CALLBACK MainWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+    switch (msg)
+    {
+    ///////////////////////////////////////////////////////////////
+    //
+    //                    PROGRAMMING NOTE
+    //
+    ///////////////////////////////////////////////////////////////
+    //
+    //  "If an application returns FALSE in response to
+    //   WM_QUERYENDSESSION, it still appears in the shutdown
+    //   UI. Note that the system does not allow console
+    //   applications or applications without a visible window
+    //   to cancel shutdown. These applications are automatically
+    //   terminated if they do not respond to WM_QUERYENDSESSION
+    //   or WM_ENDSESSION within 5 seconds or if they return FALSE
+    //   in response to WM_QUERYENDSESSION."
+    //
+    ///////////////////////////////////////////////////////////////
+    //
+    //  What this all boils down to is we can NEVER prevent the
+    //  user from logging off or shutting down since not only are
+    //  we a console application but our window is created invisible
+    //  as well. Thus we only have a maximum of 5 seconds to return
+    //  TRUE from WM_QUERYENDSESSION or return 0 from WM_ENDSESSION,
+    //  and since a normal shutdown may likely take longer than 5
+    //  seconds and our goal is to try hard to shutdown Hercules as
+    //  gracfully as possible, we are left with little choice but to
+    //  perform an immediate emergency shutdown once we receive the
+    //  WM_ENDSESSION message with a WPARAM value of TRUE.
+    //
+    ///////////////////////////////////////////////////////////////
+
+        case WM_QUERYENDSESSION:
+
+            // "%s received: %s"
+            WRMSG( HHC01403, "I", "WM_QUERYENDSESSION", "allow" );
+            return TRUE;    // Vote "YES"... (we have no choice!)
+
+        case WM_ENDSESSION:
+
+            if (!wParam)    // FALSE? (session not really ending?)
+            {
+                // Some other application (or the user themselves)
+                // has aborted the logoff or system shutdown...
+
+                // "%s received: %s"
+                WRMSG( HHC01403, "I", "WM_ENDSESSION", "aborted" );
+                return 0; // (message processed)
+            }
+
+            // User is logging off or the system is being shutdown.
+            // We have a maximum of 5 seconds to shutdown Hercules.
+
+            // "%s received: %s"
+            WRMSG( HHC01403, "I", "WM_ENDSESSION", "initiating emergency shutdown" );
+            do_emergency_shutdown();
+            return 0; // (message handled)
+
+        default:
+
+            return DefWindowProc( hWnd, msg, wParam, lParam );
+    }
+
+    UNREACHABLE_CODE();
+}
+
+// Create invisible message handling window...
+
+static BOOL CreateMsgWindow()
+{
+    HWND      hWnd  =  NULL;
+    WNDCLASS  wc    =  {0};
+
+    wc.lpfnWndProc    =  MainWndProc;
+    wc.hInstance      =  GetModuleHandle(0);
+    wc.lpszClassName  =  "Hercules";
+
+    RegisterClass( &wc );
+
+    hWnd = CreateWindowEx( 0,
+        "Hercules", "Hercules",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        NULL, NULL,
+        GetModuleHandle(0), NULL );
+
+    return hWnd ? TRUE : FALSE;
+}
+
+// Window message thread -- pumps window messages...
+
+static void* WinMsgThread( void* arg )
+{
+    if ((*(BOOL*)arg = CreateMsgWindow()))
+    {
+        MSG msg;
+        while (GetMessage( &msg, NULL , 0 , 0 ))
+        {
+            TranslateMessage ( &msg );
+            DispatchMessage  ( &msg );
+        }
+    }
+    return NULL;
+}
+#endif /* defined( _MSVC_ ) */
 
 #if !defined(NO_SIGABEND_HANDLER)
+/*-------------------------------------------------------------------*/
+/* Linux watchdog thread -- detects malfunctioning CPU engines       */
+/*-------------------------------------------------------------------*/
 static void *watchdog_thread(void *arg)
 {
 S64 savecount[MAX_CPU_ENGINES];
@@ -335,6 +472,9 @@ int i;
 }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
+/*-------------------------------------------------------------------*/
+/* Herclin (plain line mode Hercules) message callback function      */
+/*-------------------------------------------------------------------*/
 void* log_do_callback( void* dummy )
 {
     char* msgbuf;
@@ -352,6 +492,9 @@ void* log_do_callback( void* dummy )
     return (NULL);
 }
 
+/*-------------------------------------------------------------------*/
+/* Return panel command handler to herclin line mode hercules        */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT  COMMANDHANDLER  getCommandHandler()
 {
     return (panel_command);
@@ -383,7 +526,6 @@ char    pathname[MAX_PATH];             /* (work)                    */
 
     return NULL;                      /* End the .rc thread.         */
 }
-
 
 /*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
@@ -881,6 +1023,7 @@ int     rc;
     /* Register the SIGTERM handler */
     if ( signal (SIGTERM, sigterm_handler) == SIG_ERR )
     {
+        // "Cannot register %s handler: %s"
         WRMSG(HHC01410, "S", "SIGTERM", strerror(errno));
         delayed_exit(-1);
         return(1);
@@ -890,9 +1033,32 @@ int     rc;
     /* Register the Window console ctrl handlers */
     if (!IsDebuggerPresent())
     {
+        TID dummy;
+        BOOL bSuccess = FALSE;
+
         if (!SetConsoleCtrlHandler( console_ctrl_handler, TRUE ))
         {
+            // "Cannot register %s handler: %s"
             WRMSG( HHC01410, "S", "Console-ctrl", strerror( errno ));
+            delayed_exit(-1);
+            return(1);
+        }
+
+        if ((rc = create_thread( &dummy, DETACHED,
+            WinMsgThread, (void*) &bSuccess, "WinMsgThread" )) != 0)
+        {
+            // "Error in function create_thread(): %s"
+            WRMSG( HHC00102, "E", strerror( rc ));
+            delayed_exit(-1);
+            return(1);
+        }
+
+        Sleep( 100 ); // (wait for WinMsgThread to set 'bSuccess')
+
+        if (!bSuccess)
+        {
+            // "Error in function %s: %s"
+            WRMSG( HHC00136, "E", "WinMsgThread", "CreateWindowEx() failed");
             delayed_exit(-1);
             return(1);
         }
@@ -1041,7 +1207,6 @@ int     rc;
 /* Process  arguments  up front, but build the command string before */
 /* getopt mangles argv[]                                             */
 /*********************************************************************/
-
 static int
 process_args(int argc, char *argv[])
 {

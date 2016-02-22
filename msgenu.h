@@ -963,10 +963,10 @@ Examples:
 
 // reserve 014xx for initialization and shutdown
 /* impl.c */
-#define HHC01400 "Ctrl-break intercepted: interrupt key pressed simulated"
-#define HHC01401 "Ctrl-c intercepted"
-#define HHC01402 "%s event received: shutdown %sstarting..."
-#define HHC01403 "%s event received, shutdown previously requested..."
+#define HHC01400 "CTRL_BREAK_EVENT received: %s"
+#define HHC01401 "CTRL_C_EVENT received: %s"
+#define HHC01402 "CTRL_CLOSE_EVENT received: %s"
+#define HHC01403 "%s received: %s"
 #define HHC01404 "Cannot create the Automatic Operator thread"
 #define HHC01405 "Script file %s not found"
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
