@@ -193,6 +193,7 @@
  00002008 0000000000000000                    135 oiybytes dc 8x'00'                                                      01170000
  00002010 FFFFFFFFFFFFFFFF                    136 xiybytes dc 8x'ff'                                                      01180000
  00002018                                     137  ltorg                                                                 
+                                              +++  punch '* numcpu 1'                                                     01185000
                                               138  punch '* runtest .1'                                                   01190000
                                               139  comp nibytes,8,'01020408 10204080'                                     01200000
                                               140+ punch '* *Compare'                                                     01-00000021
