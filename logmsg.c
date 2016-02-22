@@ -446,23 +446,26 @@ static void _flog_write_pipe( FILE* f, char* msg )
        or we're otherwise unable to send it through the pipe.
     */
     int rc = 0;
+    int len = (int) strlen( msg );
     if (0
         || sysblk.shutdown
         || stdout != f
         || !logger_syslogfd[ LOG_WRITE ]
-        || (rc = write_pipe( logger_syslogfd[ LOG_WRITE ], msg, strlen( msg ))) < 0
+        || (rc = write_pipe( logger_syslogfd[ LOG_WRITE ], msg, len )) < 0
     )
     {
-        if (rc < 0)
-        {
-            int  errnum = HSO_errno;
-            char errmsg[ 128 ];
-            MSGBUF( errmsg, "%s", strerror( errnum ));
-            fprintf( f, "*** %s: write_pipe() failed; errno=%d: %s",
-                __FUNCTION__, errnum, errmsg );
-        }
+        fprintf( f, "%s", msg );   /* (write msg to screen) */
 
-        fprintf( f, "%s", msg );
+        // PROGRAMMING NOTE: the external GUI receives messages
+        // not only via its logfile stream but also via its stderr
+        // stream as well so we skip the logfile write in order to
+        // prevent duplicate messages.
+
+        if (sysblk.shutdown && !extgui)
+        {
+            // Note: call does nothing if no logfile exists.
+            logger_timestamped_logfile_write( msg, len );
+        }
     }
 }
 

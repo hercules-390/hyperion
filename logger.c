@@ -287,6 +287,16 @@ static void logger_logfile_timestamp()
     }
 }
 
+LOGR_DLL_IMPORT void logger_timestamped_logfile_write( void* pBuff, size_t nBytes )
+{
+    if (logger_hrdcpy)
+    {
+        if (!sysblk.logoptnotime)
+            logger_logfile_timestamp();
+        logger_logfile_write( pBuff, nBytes );
+    }
+}
+
 static void* logger_thread(void *arg)
 {
 int bytes_read;
@@ -445,9 +455,7 @@ int bytes_read;
         char buf[64];
         // "Logger: logger thread terminating"
         MSGBUF( buf, MSG( HHC02103, "I" ));
-        if (!sysblk.logoptnotime)
-            logger_logfile_timestamp();
-        logger_logfile_write( buf, strlen( buf ) );
+        logger_timestamped_logfile_write( buf, strlen( buf ));
     }
 
     /* Redirect all msgs to stderr */

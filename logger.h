@@ -67,6 +67,7 @@ LOGR_DLL_IMPORT void log_sethrdcpy(char *filename);
 LOGR_DLL_IMPORT void log_wakeup(void *arg);
 LOGR_DLL_IMPORT char *log_dsphrdcpy();
 LOGR_DLL_IMPORT int logger_isactive();
+LOGR_DLL_IMPORT void  logger_timestamped_logfile_write( void* pBuff, size_t nBytes );
 
 /* Log routing section */
 typedef void LOG_WRITER(void*, char*);

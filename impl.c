@@ -94,10 +94,6 @@ static struct cfgandrcfile cfgorrc[ cfgorrccount ] =
    { NULL, "HERCULES_RC",  "hercules.rc",  "Recovery", },
 };
 
-#if defined( EXTERNALGUI )
-static int e_gui = FALSE;             /* EXTERNALGUI parm            */
-#endif
-
 #if defined(OPTION_DYNAMIC_LOAD)
 #define MAX_DLL_TO_LOAD         50
 static char   *dll_load[MAX_DLL_TO_LOAD];    /* Pointers to modnames */
@@ -434,7 +430,7 @@ int     rc;
 #if defined( EXTERNALGUI )
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        e_gui = TRUE;
+        extgui = TRUE;
         argc--;
     }
 #endif
@@ -681,7 +677,7 @@ int     rc;
     */
     if (!sysblk.daemon_mode
 #if defined( EXTERNALGUI )
-        || e_gui
+        || extgui
 #endif
     ) logger_init();
 
@@ -861,7 +857,7 @@ int     rc;
 
 #if defined( EXTERNALGUI ) && defined( OPTION_DYNAMIC_LOAD )
     /* Load DYNGUI module if needed */
-    if (e_gui)
+    if (extgui)
     {
         if (hdl_load("dyngui",HDL_LOAD_DEFAULT) != 0)
         {
@@ -1185,7 +1181,7 @@ int     c = 0;                        /* Next option flag            */
             break;
 #if defined( EXTERNALGUI )
         case 'e':
-            e_gui = 1;
+            extgui = 1;
             break;
 #endif
 
