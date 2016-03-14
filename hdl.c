@@ -302,7 +302,8 @@ char        *dtname;
 unsigned int n;
 size_t       m;
 
-    m = strlen(ltype) + sizeof(HDL_HDTP_Q);
+    /* Don't forget the extra +1 for the \0 ending.             @PJJ */
+    m = strlen(ltype) + sizeof(HDL_HDTP_Q) + 1;
     dtname = malloc(m);
     strlcpy(dtname,HDL_HDTP_Q,m);
     strlcat(dtname,ltype,m);
