@@ -1017,7 +1017,9 @@ DLL_EXPORT char * hgets(char *b,size_t c,int s)
     while(ix<c)
     {
         b[ix]=hgetc(s);
-        if(b[ix]==EOF)
+//      if(b[ix]==EOF)         /* GCC Warning: always false     @PJJ */
+//                             /* due to -Wtype-limits;         @PJJ */
+        if ((int)b[ix] == EOF) /* Corrected.                    @PJJ */
         {
             return NULL;
         }
@@ -1337,7 +1339,7 @@ int initialize_utility( int argc, char* argv[],
                         char*  desc,
                         char** pgm )
 {
-    char*  exename;                     /* Executable name with .ext */        
+    char*  exename;                     /* Executable name with .ext */
     char*  nameonly;                    /* Exename without any .ext  */
     char*  strtok_str;                  /* Work (strtok_r context)   */
     char   namedesc[256];               /* Message build work area   */
