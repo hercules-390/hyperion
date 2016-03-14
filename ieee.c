@@ -534,7 +534,8 @@ static INLINE BYTE ARCH_DEP(float32_signaling_compare)( void* ctx, float32 op1, 
 
 #if !defined(_IEEE_NONARCHDEP_)
 
-#if !defined(HAVE_MATH_H)
+#if !defined(HAVE_MATH_H) && (_MSC_VER < VS2015)
+/* Avoid double definition for VS2015 (albeit with different values). */
 /* All floating-point numbers can be put in one of these categories.  */
 enum
 {

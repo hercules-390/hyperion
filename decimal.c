@@ -1151,7 +1151,7 @@ int     carry;                          /* Carry indicator           */
 } /* end DEF_INST(multiply_decimal) */
 
 
-#if defined(_MSVC_) && (_MSC_VER == VS2010)
+#if defined(_MSVC_) && (_MSC_VER >= VS2010)
 #pragma optimize( "", off )
 #endif
 
@@ -1246,7 +1246,7 @@ int     carry;                          /* Carry indicator           */
 
 } /* end DEF_INST(shift_and_round_decimal) */
 
-#if defined(_MSVC_) && (_MSC_VER == VS2010)
+#if defined(_MSVC_) && (_MSC_VER >= VS2010)
 #pragma optimize( "", on )
 #endif
 

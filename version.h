@@ -39,7 +39,10 @@
   since they are ALWAYS numeric whereas VERSION is not.
 */
 #if defined( _MSVC_ ) && (!defined(V1) || !defined(V2) || !defined(V3) || !defined(V4))
-  #error "VERSION not defined properly"
+  // MSVC version 19.00 uses V1-V2-V3-V4; this will need to be revised.
+  #if ( _MSC_VER < 1600 )
+    #error "VERSION not defined properly"
+  #endif
 #endif
 
 /*

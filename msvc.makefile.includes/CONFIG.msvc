@@ -17,6 +17,7 @@
 #       Don't forget to update the 'targetver.h' header too!
 #       Don't forget to update the 'makefile.bat' file also!
 
+vers_vs2015=14
 vers_vs2013=12
 vers_vs2012=11
 vers_vs2010=10
@@ -29,7 +30,10 @@ vers_vs2005=8
 #       Don't forget to update the 'targetver.h' header too!
 #       Don't forget to update the 'makefile.bat' file also!
 
-!IFDEF VS120COMNTOOLS
+!IFDEF VS140COMNTOOLS
+!MESSAGE Makefile will assume VS14 or VS2015 Express (MSVC version 20)
+vsversion=$(vers_vs2015)
+!ELSEIFDEF VS120COMNTOOLS
 !MESSAGE Makefile will assume VS12 or VS2013 Express (MSVC version 18)
 vsversion=$(vers_vs2013)
 !ELSEIFDEF VS110COMNTOOLS
