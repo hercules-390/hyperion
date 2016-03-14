@@ -1765,6 +1765,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
                          sfmerge:1,     /* 1=sf-* merge              */
                          sfforce:1;     /* 1=sf-* force              */
         int              sflevel;       /* sfk xxxx level            */
+		int				 batchml;       /* message level for batch ops  */
 
         BYTE             comps;         /* Supported compressions    */
         BYTE             comp;          /* Override compression      */
@@ -1772,7 +1773,8 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
 
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */
-        int              gcs;           /* Number garbage collectors */
+        int              gcs;           /* Number garbage collector threads started */
+		int				 gca;           /* Number garbage collector threads active */
         int              gcmax;         /* Max garbage collectors    */
         int              gcwait;        /* Wait time in seconds      */
         int              gcparm;        /* Adjustment parm           */
@@ -1781,13 +1783,15 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         COND             wrcond;        /* I/O condition             */
         int              wrpending;     /* Number writes pending     */
         int              wrwaiting;     /* Number writers waiting    */
-        int              wrs;           /* Number writer threads     */
+        int              wrs;           /* Number writer threads started  */
+		int				 wra;           /* Number writer threads active  */
         int              wrmax;         /* Max writer threads        */
         int              wrprio;        /* Writer thread priority    */
 
         LOCK             ralock;        /* Readahead lock            */
         COND             racond;        /* Readahead condition       */
-        int              ras;           /* Number readahead threads  */
+        int              ras;           /* Number readahead threads started */
+		int				 raa;           /* Number readadead threads active */
         int              ramax;         /* Max readahead threads     */
         int              rawaiting;     /* Number threads waiting    */
         int              ranbr;         /* Readahead queue size      */
