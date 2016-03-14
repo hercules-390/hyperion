@@ -1271,10 +1271,14 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ctceyState;             /* CTCE State   y-side  @PJJ */
         BYTE    ctceyCmd;               /* CTCE Command y-side  @PJJ */
         BYTE    ctceyCmdSCB;            /* CTCE Cmd SCB source  @PJJ */
+        BYTE    ctce_UnitStat;          /* CTCE final UnitStat  @PJJ */
         int     ctcefd;                 /* CTCE RecvThread File @PJJ */
                                         /*      Desc / socket # @PJJ */
         LOCK    ctceEventLock;          /* CTCE Condition LOCK  @PJJ */
         COND    ctceEvent;              /* CTCE Recvd Condition @PJJ */
+        int     ctce_lport;             /* CTCE Local  port #   @PJJ */
+        int     ctce_rport;             /* CTCE Remote port #   @PJJ */
+        struct in_addr ctce_ipaddr;     /* CTCE Dest IP addr    @PJJ */
 
         /*  Device dependent fields for printer                      */
 
