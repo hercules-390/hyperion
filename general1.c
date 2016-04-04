@@ -2173,11 +2173,19 @@ U64     old, new;                       /* old, new values           */
 #if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE)
 
 #if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)
+#ifndef MAX_CSST_FC
 #define MAX_CSST_FC 2
+#endif /*#ifndef MAX_CSST_FC*/
+#ifndef MAX_CSST_SC
 #define MAX_CSST_SC 4
+#endif /*#ifndef MAX_CSST_SC*/
 #else
+#ifndef MAX_CSST_FC
 #define MAX_CSST_FC 1
+#endif /*#ifndef MAX_CSST_FC*/
+#ifndef MAX_CSST_SC
 #define MAX_CSST_SC 3
+#endif /*#ifndef MAX_CSST_SC*/
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -2192,11 +2200,13 @@ VADR    addr1, addr2;                   /* Effective addresses       */
 VADR    addrp;                          /* Parameter list address    */
 BYTE   *main1;                          /* Mainstor address of op1   */
 int     ln2;                            /* Second operand length - 1 */
+#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)
 U64     old16l=0, old16h=0,
-        new16l=0, new16h=0;             /* swap values for cmpxchg16 */
+        new16l=0, new16h=0,             /* swap values for cmpxchg16 */
+        stv16h=0,stv16l=0;              /* 16-byte store value pair  */
+#endif /*#if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)*/
 U64     old8=0, new8=0;                 /* Swap values for cmpxchg8  */
 U32     old4=0, new4=0;                 /* Swap values for cmpxchg4  */
-U64     stv16h=0,stv16l=0;              /* 16-byte store value pair  */
 U64     stv8=0;                         /* 8-byte store value        */
 U32     stv4=0;                         /* 4-byte store value        */
 U16     stv2=0;                         /* 2-byte store value        */
@@ -2240,7 +2250,7 @@ BYTE    sc;                             /* Store characteristic      */
     }
 
 #if defined(FEATURE_COMPARE_AND_SWAP_AND_STORE_FACILITY_2)
-    if(r3 & 1)
+    if((r3 & 1) && (fc == 2))
     {
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
     }
