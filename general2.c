@@ -2228,10 +2228,10 @@ DEF_INST(convert_utf8_to_utf32)
 
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf32, 3, dest, r1, regs);
-    SET_GR_A(r1, regs, (dest + 4) & ADDRESS_MAXWRAP(regs));
-    SET_GR_A(r1 + 1, regs, destlen - 4);
-    SET_GR_A(r2, regs, (srce + read) & ADDRESS_MAXWRAP(regs));
-    SET_GR_A(r2 + 1, regs, srcelen - read);
+    SET_GR_A(r1, regs, (dest += 4) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r1 + 1, regs, destlen -= 4);
+    SET_GR_A(r2, regs, (srce += read) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r2 + 1, regs, srcelen -= read);
 
     xlated += read;
   }
@@ -2345,10 +2345,10 @@ DEF_INST(convert_utf16_to_utf32)
 
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf32, 3, dest, r1, regs);
-    SET_GR_A(r1, regs, (dest + 4) & ADDRESS_MAXWRAP(regs));
-    SET_GR_A(r1 + 1, regs, destlen - 4);
-    SET_GR_A(r2, regs, (srce + read) & ADDRESS_MAXWRAP(regs));
-    SET_GR_A(r2 + 1, regs, srcelen - read);
+    SET_GR_A(r1, regs, (dest += 4) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r1 + 1, regs, destlen -= 4);
+    SET_GR_A(r2, regs, (srce += read) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r2 + 1, regs, srcelen -= read);
 
     xlated += read;
   }
@@ -2481,10 +2481,10 @@ DEF_INST(convert_utf32_to_utf8)
 
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf8, write - 1, dest, r1, regs);
-    SET_GR_A(r1, regs, (dest + write) & ADDRESS_MAXWRAP(regs));
-    SET_GR_A(r1 + 1, regs, destlen - write);
-    SET_GR_A(r2, regs, (srce + 4) & ADDRESS_MAXWRAP(regs));
-    SET_GR_A(r2 + 1, regs, srcelen - 4);
+    SET_GR_A(r1, regs, (dest += write) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r1 + 1, regs, destlen -= write);
+    SET_GR_A(r2, regs, (srce += 4) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r2 + 1, regs, srcelen -= 4);
 
     xlated += 4;
   }
@@ -2578,10 +2578,10 @@ DEF_INST(convert_utf32_to_utf16)
 
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf16, write - 1, dest, r1, regs);
-    SET_GR_A(r1, regs, (dest + write) & ADDRESS_MAXWRAP(regs));
-    SET_GR_A(r1 + 1, regs, destlen - write);
-    SET_GR_A(r2, regs, (srce + 4) & ADDRESS_MAXWRAP(regs));
-    SET_GR_A(r2 + 1, regs, srcelen - 4);
+    SET_GR_A(r1, regs, (dest += write) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r1 + 1, regs, destlen -= write);
+    SET_GR_A(r2, regs, (srce += 4) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r2 + 1, regs, srcelen -= 4);
 
     xlated += 4;
   }
