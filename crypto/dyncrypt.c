@@ -3543,7 +3543,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
   }
 
   /* Calculate subkeys Kx and Ky */
-  if(k[0] & 0x80)
+  if(!(k[0] & 0x80))
     shift_left(k, k, 8);
   else
   {
@@ -3553,7 +3553,7 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
   }
   if(parameter_block[0] != 64)
   {
-    if(k[0] & 0x80)
+    if(!(k[0] & 0x80))
       shift_left(k, k, 8);
     else
     {
@@ -3562,6 +3562,10 @@ static void ARCH_DEP(pcc_cmac_dea)(REGS *regs)
         k[i] ^= r64[i];
     }
   }
+
+#ifdef OPTION_PCC_DEBUG
+  LOGBYTE("Subkey:", k, 8);
+#endif /* #ifdef OPTION_PCC_DEBUG */
 
   /* XOR with kx or ky and encrypt */
   for(i = 0; i < 8; i++)
@@ -3627,7 +3631,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
   tfc = GR0_tfc(regs);
   wrap = GR0_wrap(regs);
   keylen = (tfc - 17) * 8 + 8;
-  parameter_blocklen = keylen + 24;
+  parameter_blocklen = keylen + 40;
   if(wrap)
     parameter_blocklen += 32;
 
@@ -3689,7 +3693,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
   aes_encrypt(&context, k, k);
 
   /* Calculate subkeys Kx and Ky */
-  if(k[0] & 0x80)
+  if(!(k[0] & 0x80))
     shift_left(k, k, 16);
   else
   {
@@ -3699,7 +3703,7 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
   }
   if(parameter_block[0] != 128)
   {
-    if(k[0] & 0x80)
+    if(!(k[0] & 0x80))
       shift_left(k, k, 16);
     else
     {
@@ -3708,6 +3712,10 @@ static void ARCH_DEP(pcc_cmac_aes)(REGS *regs)
         k[i] ^= r128[i];
     }
   }
+
+#ifdef OPTION_PCC_DEBUG
+  LOGBYTE("Subkey:", k, 16);
+#endif /* #ifdef OPTION_PCC_DEBUG */
 
   /* XOR with kx or ky and encrypt */
   for(i = 0; i < 16; i++)
