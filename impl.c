@@ -1098,6 +1098,9 @@ int     rc;
         sa.sa_flags = 0;
 #endif
 
+        /* Explictily initialize sa_mask to its default.        @PJJ */
+        sigemptyset(&sa.sa_mask);
+
         if( sigaction(SIGILL, &sa, NULL)
          || sigaction(SIGFPE, &sa, NULL)
          || sigaction(SIGSEGV, &sa, NULL)

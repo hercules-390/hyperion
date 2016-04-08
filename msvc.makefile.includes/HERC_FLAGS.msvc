@@ -40,7 +40,9 @@ MAX_CPU_ENGINES = 8
 !ENDIF
 
 rcflags = $(rcflags) -D _MSVC_ -D "VERSION=$(VERSION)" -D V1=$(V1) -D V2=$(V2) -D V3=$(V3) -D V4=$(V4)
-cflags  = $(cflags)  /D _MSVC_ /D "VERSION=$(VERSION)" -D V1=$(V1) -D V2=$(V2) -D V3=$(V3) -D V4=$(V4) /D MAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
+# cflags  = $(cflags)  /D _MSVC_ /D "VERSION=$(VERSION)" -D V1=$(V1) -D V2=$(V2) -D V3=$(V3) -D V4=$(V4) /D MAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
+cflags  = $(cflags)  /D _MSVC_ /D "VERSION=$(VERSION)" /D MAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
+
 
 !IF DEFINED(CUSTOM_BUILD_STRING)
 cflags  = $(cflags)  /D CUSTOM_BUILD_STRING=\"$(CUSTOM_BUILD_STRING)\"
@@ -55,6 +57,16 @@ cflags = $(cflags) /D HDL_BUILD_SHARED /D OPTION_DYNAMIC_LOAD
 # Suppress some deprecation warnings that aren't really deprecation warnings
 cflags = $(cflags) -D _CRT_SECURE_NO_DEPRECATE
 cflags = $(cflags) -D _CRT_NONSTDC_NO_DEPRECATE
+
+# ... or warnings that would unduly become promoted into errors due to option /WX
+!IF $(vsversion) >= 14
+cflags = $(cflags) /wd4996
+cflags = $(cflags) /wd4312
+cflags = $(cflags) /wd4477
+cflags = $(cflags) /wd4172
+cflags = $(cflags) /wd4776
+!ENDIF
+
 ldebug = $(ldebug) /MANIFEST
 
 # WIN64 builds set level-4 diagnostics which are too intense for our liking,

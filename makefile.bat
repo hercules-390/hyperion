@@ -314,6 +314,7 @@
 ::
 ::-----------------------------------------------------------------------------
 
+:vs140
 :vs120
 :vs110
 :vs100
@@ -397,6 +398,18 @@
 ::              occurs for any given compilation.
 ::
 :: -------------------------------------------------------------------
+
+:try_vs140
+
+  if "%VS140COMNTOOLS%" == "" goto :try_vs120
+  if exist "%VS140COMNTOOLS%..\..\VC\vcvarsall.bat"  (
+     set "build_env=vs140"
+     set "VSTOOLSDIR=%VS140COMNTOOLS%"
+     echo Visual Studio 2015 detected
+     %return%
+  )
+
+  set "VS140COMNTOOLS="
 
 :try_vs120
 
@@ -528,9 +541,10 @@
 :cfg_sdk_env
 
 
-  :: VS2008/VS2010/VS2012/VS2013 multi-config multi-platform parallel build?
+  :: VS2008/VS2010/VS2012/VS2013/VS2015 multi-config multi-platform parallel build?
 
   if    not "%CFG%"        == ""            %return%
+  if /i     "%build_env%"  == "vs140"       goto :multi_cfg
   if /i     "%build_env%"  == "vs120"       goto :multi_cfg
   if /i     "%build_env%"  == "vs110"       goto :multi_cfg
   if /i     "%build_env%"  == "vs100"       goto :multi_cfg
@@ -563,9 +577,10 @@
   if /i     "%build_type%" == "DEBUG-X64"   set "targ_arch=amd64"
   if /i     "%build_type%" == "RETAIL-X64"  set "targ_arch=amd64"
 
-  :: VS2008/VS2010/VS2012/VS2013 multi-config multi-platform parallel build?
+  :: VS2008/VS2010/VS2012/VS2013/VS2015 multi-config multi-platform parallel build?
 
   if    not "%targ_arch%"  == ""            goto :set_CPU_etc
+  if /i     "%build_env%"  == "vs140"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs120"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs110"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs100"       goto :multi_targ_arch
