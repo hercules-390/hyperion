@@ -150,7 +150,7 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
  U8    head;
  U8    rec;
  BYTE *buf;
- 
+
  U32   beg_cyl  = 0;
  U8    beg_head = 0;
  U8    beg_rec  = 0;

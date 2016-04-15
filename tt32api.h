@@ -36,7 +36,7 @@
   #if defined(_UNICODE) || defined(UNICODE)
     #if defined(_DEBUG) || defined(DEBUG)
       #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "64UD"
-    #else 
+    #else
       #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "64U"
     #endif
   #else
@@ -50,7 +50,7 @@
   #if defined(_UNICODE) || defined(UNICODE)
     #if defined(_DEBUG) || defined(DEBUG)
       #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "32UD"
-    #else 
+    #else
       #define  BASE_TUNTAP32_NAME  TUNTAP_APPNAME  "32U"
     #endif
   #else

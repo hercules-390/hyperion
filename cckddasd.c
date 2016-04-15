@@ -356,8 +356,8 @@ int             fdflags;                /* File flags                */
     cckd_unlock_devchain();
 
     cckdblk.batch = dev->batch;
-	
-	if (cckdblk.batch)
+
+    if (cckdblk.batch)
     {
         cckdblk.nostress = 1;
         cckdblk.freepend = 0;
@@ -1509,23 +1509,23 @@ int             rc;
     }
 
     /* Schedule the readahead if any are pending */
-	if (cckdblk.ra1st >= 0)
-		if (cckdblk.rawaiting)
-			signal_condition(&cckdblk.racond);
-		else if (cckdblk.ras < cckdblk.ramax)   /* Schedule a new read-ahead thread  */
-		{
-			if (!cckdblk.batch || cckdblk.batchml > 1)
-				WRMSG(HHC00107, "I", "cckd_ra()", cckdblk.raa, cckdblk.ras, cckdblk.ramax);
-			++cckdblk.ras;
-			release_lock(&cckdblk.ralock);  /* release lock across thread create to prevent interlock  */
-			rc = create_thread(&tid, JOINABLE, cckd_ra, NULL, "cckd_ra");
-			obtain_lock(&cckdblk.ralock);
-			if (rc)
-			{
-				WRMSG(HHC00106, "E", "cckd_ra()", cckdblk.ras-1, cckdblk.ramax, strerror(rc));
-				--cckdblk.ras;
-			}
-		}
+    if (cckdblk.ra1st >= 0)
+        if (cckdblk.rawaiting)
+            signal_condition(&cckdblk.racond);
+        else if (cckdblk.ras < cckdblk.ramax)   /* Schedule a new read-ahead thread  */
+        {
+            if (!cckdblk.batch || cckdblk.batchml > 1)
+                WRMSG(HHC00107, "I", "cckd_ra()", cckdblk.raa, cckdblk.ras, cckdblk.ramax);
+            ++cckdblk.ras;
+            release_lock(&cckdblk.ralock);  /* release lock across thread create to prevent interlock  */
+            rc = create_thread(&tid, JOINABLE, cckd_ra, NULL, "cckd_ra");
+            obtain_lock(&cckdblk.ralock);
+            if (rc)
+            {
+                WRMSG(HHC00106, "E", "cckd_ra()", cckdblk.ras-1, cckdblk.ramax, strerror(rc));
+                --cckdblk.ras;
+            }
+        }
 
     release_lock (&cckdblk.ralock);
 
@@ -1557,40 +1557,40 @@ int             k;                      /* Index                     */
 /*-------------------------------------------------------------------*/
 void* cckd_ra (void* arg)
 {
-	CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-	DEVBLK         *dev;                    /* Readahead devblk          */
-	int             trk;                    /* Readahead track           */
-	int             ra;                     /* Readahead index           */
-	int             r;                      /* Readahead queue index     */
-	TID             tid;                    /* Readahead thread id       */
-	char            threadname[40];
-	int             rc;
+    CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+    DEVBLK         *dev;                    /* Readahead devblk          */
+    int             trk;                    /* Readahead track           */
+    int             ra;                     /* Readahead index           */
+    int             r;                      /* Readahead queue index     */
+    TID             tid;                    /* Readahead thread id       */
+    char            threadname[40];
+    int             rc;
 
-	UNREFERENCED(arg);
+    UNREFERENCED(arg);
 
-	obtain_lock(&cckdblk.ralock);
-	ra = ++cckdblk.raa;  /* increment nr ra threads dispatched */
-	MSGBUF(threadname, "Read-ahead thread-%d", ra);
+    obtain_lock(&cckdblk.ralock);
+    ra = ++cckdblk.raa;  /* increment nr ra threads dispatched */
+    MSGBUF(threadname, "Read-ahead thread-%d", ra);
 
-	/* Return if too many already started */
-	if (ra > cckdblk.ramax)
-	{
-		--cckdblk.ras;  /* decrement count started */
-		--cckdblk.raa;  /* decrement count running */
-		if (!cckdblk.ramax)
-		{
-			signal_condition(&cckdblk.termcond);
-			if (!cckdblk.batch || cckdblk.batchml > 1)
-				WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
-		}
-		else
-			if (!cckdblk.batch || cckdblk.batchml > 0)
-				WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(0), ra, cckdblk.ramax);
-		release_lock(&cckdblk.ralock);
-		return NULL;
-	}
+    /* Return if too many already started */
+    if (ra > cckdblk.ramax)
+    {
+        --cckdblk.ras;  /* decrement count started */
+        --cckdblk.raa;  /* decrement count running */
+        if (!cckdblk.ramax)
+        {
+            signal_condition(&cckdblk.termcond);
+            if (!cckdblk.batch || cckdblk.batchml > 1)
+                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+        }
+        else
+            if (!cckdblk.batch || cckdblk.batchml > 0)
+                WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(0), ra, cckdblk.ramax);
+        release_lock(&cckdblk.ralock);
+        return NULL;
+    }
 
-	if (!cckdblk.batch || cckdblk.batchml > 1)
+    if (!cckdblk.batch || cckdblk.batchml > 1)
         WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
 
     while (ra <= cckdblk.ramax)   /* continue until ramax=0 (shutdown) or max reduced by command line */
@@ -1620,22 +1620,22 @@ void* cckd_ra (void* arg)
 
         /* Schedule the other readaheads if any are still pending */
         if (cckdblk.ra1st)
-			if (cckdblk.rawaiting)
+            if (cckdblk.rawaiting)
                 signal_condition (&cckdblk.racond);
             else if (cckdblk.ras < cckdblk.ramax)
-			{
-				if (!cckdblk.batch || cckdblk.batchml > 1)
-					WRMSG(HHC00107, "I", "cckd_ra() from cckd_ra()", cckdblk.raa, cckdblk.ras, cckdblk.ramax);
-				++cckdblk.ras;
-				release_lock(&cckdblk.ralock);  /* release lock across thread create to prevent interlock  */
-				rc = create_thread(&tid, JOINABLE, cckd_ra, NULL, "cckd_ra");
-				obtain_lock(&cckdblk.ralock);
-				if (rc)
-				{
-					WRMSG(HHC00106, "E", "cckd_ra() from cckd_ra()", cckdblk.ras-1, cckdblk.ramax, strerror(rc));
-					--cckdblk.ras;
-				}
-			}
+            {
+                if (!cckdblk.batch || cckdblk.batchml > 1)
+                    WRMSG(HHC00107, "I", "cckd_ra() from cckd_ra()", cckdblk.raa, cckdblk.ras, cckdblk.ramax);
+                ++cckdblk.ras;
+                release_lock(&cckdblk.ralock);  /* release lock across thread create to prevent interlock  */
+                rc = create_thread(&tid, JOINABLE, cckd_ra, NULL, "cckd_ra");
+                obtain_lock(&cckdblk.ralock);
+                if (rc)
+                {
+                    WRMSG(HHC00106, "E", "cckd_ra() from cckd_ra()", cckdblk.ras-1, cckdblk.ramax, strerror(rc));
+                    --cckdblk.ras;
+                }
+            }
 
         if (!cckd || cckd->stopping || cckd->merging) continue;
 
@@ -1649,10 +1649,10 @@ void* cckd_ra (void* arg)
         cckd->ras--;
     }
 
-	if (!cckdblk.batch || cckdblk.batchml > 1)
+    if (!cckdblk.batch || cckdblk.batchml > 1)
         WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
     --cckdblk.ras;
-	--cckdblk.raa;
+    --cckdblk.raa;
     if (!cckdblk.ras) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.ralock);
     return NULL;
@@ -1682,20 +1682,20 @@ TID             tid;                    /* Writer thread id          */
             signal_condition (&cckdblk.wrcond);
         else if (cckdblk.wrs < cckdblk.wrmax)
         {
-			if (!cckdblk.batch || cckdblk.batchml > 1)
-				WRMSG(HHC00107, "I", "cckd_writer()", cckdblk.wra, cckdblk.wrs, cckdblk.wrmax);
-			++cckdblk.wrs; 
-			release_lock(&cckdblk.wrlock);  /* release lock across thread create to prevent interlock  */
-			rc = create_thread(&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
-			obtain_lock(&cckdblk.wrlock);
-			if (rc)
-			{
-				WRMSG(HHC00106, "E", "cckd_writer()", cckdblk.wrs-1, cckdblk.wrmax, strerror(rc));
-				--cckdblk.wrs;
-			}
+            if (!cckdblk.batch || cckdblk.batchml > 1)
+                WRMSG(HHC00107, "I", "cckd_writer()", cckdblk.wra, cckdblk.wrs, cckdblk.wrmax);
+            ++cckdblk.wrs;
+            release_lock(&cckdblk.wrlock);  /* release lock across thread create to prevent interlock  */
+            rc = create_thread(&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
+            obtain_lock(&cckdblk.wrlock);
+            if (rc)
+            {
+                WRMSG(HHC00106, "E", "cckd_writer()", cckdblk.wrs-1, cckdblk.wrmax, strerror(rc));
+                --cckdblk.wrs;
+            }
         }
 
-	release_lock (&cckdblk.wrlock);
+    release_lock (&cckdblk.wrlock);
 }
 
 
@@ -1803,28 +1803,28 @@ int             rc;
     obtain_lock (&cckdblk.wrlock);
 
     writer = ++cckdblk.wra;
-	MSGBUF(threadname, "Writer thread-%d", writer);
+    MSGBUF(threadname, "Writer thread-%d", writer);
 
     /* Return with message if too many already started */
     if (writer > cckdblk.wrmax)
     {
         --cckdblk.wrs;  /* decrease threads started */
-		--cckdblk.wra;  /* decrease threads active  */
-		if (!cckdblk.wrmax)  /* choose thread termination message  */
-		{
-			signal_condition(&cckdblk.termcond);  /* shutting down */
-			if (!cckdblk.batch || cckdblk.batchml > 1)
-			  WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
-		}
-		else
-			if (!cckdblk.batch || cckdblk.batchml > 0)
-				WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(0), writer, cckdblk.wrmax);
-		release_lock (&cckdblk.wrlock);
+        --cckdblk.wra;  /* decrease threads active  */
+        if (!cckdblk.wrmax)  /* choose thread termination message  */
+        {
+            signal_condition(&cckdblk.termcond);  /* shutting down */
+            if (!cckdblk.batch || cckdblk.batchml > 1)
+              WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
+        }
+        else
+            if (!cckdblk.batch || cckdblk.batchml > 0)
+                WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(0), writer, cckdblk.wrmax);
+        release_lock (&cckdblk.wrlock);
         return NULL;
     }
 
-	if (!cckdblk.batch || cckdblk.batchml > 1)
-		WRMSG ( HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
+    if (!cckdblk.batch || cckdblk.batchml > 1)
+        WRMSG ( HHC00100, "I", thread_id(), get_thread_priority(0), threadname);
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
     {
@@ -1857,20 +1857,20 @@ int             rc;
                 signal_condition (&cckdblk.wrcond);
             else if (cckdblk.wrs < cckdblk.wrmax)
             {
-				if (!cckdblk.batch || cckdblk.batchml > 1)
-					WRMSG(HHC00107, "I", "cckd_writer() from cckd_writer()", cckdblk.wra, cckdblk.wrs, cckdblk.wrmax);
-				++cckdblk.wrs;
-				release_lock(&cckdblk.wrlock);  /* release lock across thread create to prevent interlock  */
-				rc = create_thread(&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
-				obtain_lock(&cckdblk.wrlock);
-				if (rc)
-				{
-					WRMSG(HHC00106, "E", "cckd_writer() from cckd_writer()", cckdblk.wrs-1, cckdblk.wrmax, strerror(rc));
-					--cckdblk.wrs;
-				}
+                if (!cckdblk.batch || cckdblk.batchml > 1)
+                    WRMSG(HHC00107, "I", "cckd_writer() from cckd_writer()", cckdblk.wra, cckdblk.wrs, cckdblk.wrmax);
+                ++cckdblk.wrs;
+                release_lock(&cckdblk.wrlock);  /* release lock across thread create to prevent interlock  */
+                rc = create_thread(&tid, JOINABLE, cckd_writer, NULL, "cckd_writer");
+                obtain_lock(&cckdblk.wrlock);
+                if (rc)
+                {
+                    WRMSG(HHC00106, "E", "cckd_writer() from cckd_writer()", cckdblk.wrs-1, cckdblk.wrmax, strerror(rc));
+                    --cckdblk.wrs;
+                }
             }
-        
-		release_lock (&cckdblk.wrlock);
+
+        release_lock (&cckdblk.wrlock);
 
         /* Prepare to compress */
         CCKD_CACHE_GETKEY(o, devnum, trk);
@@ -1931,24 +1931,24 @@ int             rc;
         release_lock (&cckd->filelock);
 
         /* Schedule the garbage collector */
-		obtain_lock(&cckdblk.gclock);  /* ensure read integrity for gc count */
-		if (cckdblk.gcs < cckdblk.gcmax)
-		{
-			if (!cckdblk.batch || cckdblk.batchml > 1)
-				WRMSG(HHC00107, "I", "cckd_gcol()", cckdblk.gca, cckdblk.gcs, cckdblk.gcmax);
-			++cckdblk.gcs;
-			release_lock(&cckdblk.gclock);  /* release lock across thread create to prevent interlock  */
-			rc = create_thread(&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
-			if (rc)
-			{
-				WRMSG(HHC00106, "E", "cckd_gcol()", cckdblk.gcs-1, cckdblk.gcmax, strerror(rc));
-				obtain_lock(&cckdblk.gclock);
-				--cckdblk.gcs;
-				release_lock(&cckdblk.gclock);
-			}
-		}
-		else
-			release_lock(&cckdblk.gclock);
+        obtain_lock(&cckdblk.gclock);  /* ensure read integrity for gc count */
+        if (cckdblk.gcs < cckdblk.gcmax)
+        {
+            if (!cckdblk.batch || cckdblk.batchml > 1)
+                WRMSG(HHC00107, "I", "cckd_gcol()", cckdblk.gca, cckdblk.gcs, cckdblk.gcmax);
+            ++cckdblk.gcs;
+            release_lock(&cckdblk.gclock);  /* release lock across thread create to prevent interlock  */
+            rc = create_thread(&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
+            if (rc)
+            {
+                WRMSG(HHC00106, "E", "cckd_gcol()", cckdblk.gcs-1, cckdblk.gcmax, strerror(rc));
+                obtain_lock(&cckdblk.gclock);
+                --cckdblk.gcs;
+                release_lock(&cckdblk.gclock);
+            }
+        }
+        else
+            release_lock(&cckdblk.gclock);
 
         obtain_lock (&cckd->cckdiolock);
         cache_lock (CACHE_DEVBUF);
@@ -1968,10 +1968,10 @@ int             rc;
         obtain_lock(&cckdblk.wrlock);
     }
 
-	if (!cckdblk.batch || cckdblk.batchml > 1)
+    if (!cckdblk.batch || cckdblk.batchml > 1)
         WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), threadname);
     cckdblk.wrs--;
-	cckdblk.wra--;
+    cckdblk.wra--;
     if (cckdblk.wrs == 0) signal_condition(&cckdblk.termcond);
     release_lock(&cckdblk.wrlock);
     return NULL;
@@ -4672,14 +4672,14 @@ void cckd_unlock_devchain()
 
 /*-------------------------------------------------------------------*/
 /* Garbage Collection thread                                         */
-/*																	 */
-/*	While provision is made in the code that initiates cckd_gcol	 */
-/*	for execution of more than one concurrent Garbage Collector,	 */
-/*	the thread runs with mutex cckdblk.gclock held at all times		 */
-/*	and is therefore limited to one concurrent thread.  We'll leave	 */
-/*	the initiation code as-is in anticipation of the day when we 	 */
-/*	might get to a max of one collector per compressed device.		 */
-/*																	 */
+/*                                                                   */
+/*  While provision is made in the code that initiates cckd_gcol     */
+/*  for execution of more than one concurrent Garbage Collector,     */
+/*  the thread runs with mutex cckdblk.gclock held at all times      */
+/*  and is therefore limited to one concurrent thread.  We'll leave  */
+/*  the initiation code as-is in anticipation of the day when we     */
+/*  might get to a max of one collector per compressed device.       */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 void* cckd_gcol(void* arg)
 {
@@ -4709,27 +4709,27 @@ int             gctab[5]= {             /* default gcol parameters   */
     /* Return without messages if too many already started */
     if (gcol > cckdblk.gcmax)
     {
-		--cckdblk.gcs;
-		--cckdblk.gca;
-		if (!cckdblk.gcs)
-		{
-			signal_condition(&cckdblk.termcond);  /* signal if last gcol thread ending before init. */
-			if (!cckdblk.batch || cckdblk.batchml > 1)
-				WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), "Garbage collector");
-		}
-		else
-			if (!cckdblk.batch || cckdblk.batchml > 0)
-				WRMSG(HHC00108, "W", thread_id(), "cckd_gcol()", get_thread_priority(0), cckdblk.gcs, cckdblk.gcmax);
-		release_lock (&cckdblk.gclock);
-        return NULL;		/* back to the shadows again  */
+        --cckdblk.gcs;
+        --cckdblk.gca;
+        if (!cckdblk.gcs)
+        {
+            signal_condition(&cckdblk.termcond);  /* signal if last gcol thread ending before init. */
+            if (!cckdblk.batch || cckdblk.batchml > 1)
+                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(0), "Garbage collector");
+        }
+        else
+            if (!cckdblk.batch || cckdblk.batchml > 0)
+                WRMSG(HHC00108, "W", thread_id(), "cckd_gcol()", get_thread_priority(0), cckdblk.gcs, cckdblk.gcmax);
+        release_lock (&cckdblk.gclock);
+        return NULL;        /* back to the shadows again  */
     }
 
-	if (!cckdblk.batch || cckdblk.batchml > 1)
-		WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Garbage collector");
+    if (!cckdblk.batch || cckdblk.batchml > 1)
+        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(0), "Garbage collector");
 
     while (gcol <= cckdblk.gcmax)
     {
-		cckd_lock_devchain(0);
+        cckd_lock_devchain(0);
         /* Perform collection on each device */
         for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
         {
@@ -4834,11 +4834,11 @@ int             gctab[5]= {             /* default gcol parameters   */
         timed_wait_condition (&cckdblk.gccond, &cckdblk.gclock, &tm);
     }
 
-	if (!cckdblk.batch || cckdblk.batchml > 1)
-	    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), "Garbage collector");
+    if (!cckdblk.batch || cckdblk.batchml > 1)
+        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(0), "Garbage collector");
 
     cckdblk.gcs--;
-	cckdblk.gca--;
+    cckdblk.gca--;
     if (!cckdblk.gcs) signal_condition (&cckdblk.termcond);
     release_lock (&cckdblk.gclock);
     return NULL;
@@ -5909,24 +5909,24 @@ int   rc;
                 cckd_unlock_devchain();
                 if (flag && cckdblk.gcs < cckdblk.gcmax)  /* Schedule the garbage collector */
                 {
-					obtain_lock(&cckdblk.gclock);  /* ensure read integrity for gc count */
-					if (cckdblk.gcs < cckdblk.gcmax)
-					{
-						if (!cckdblk.batch || cckdblk.batchml > 1)
-							WRMSG(HHC00107, "I", "cckd_gcol() by command line", cckdblk.gca, cckdblk.gcs, cckdblk.gcmax);
-						++cckdblk.gcs;
-						release_lock(&cckdblk.gclock);  /* release lock across thread create to prevent interlock  */
-						rc = create_thread(&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
-						if (rc)
-						{
-							WRMSG(HHC00106, "E", "cckd_gcol() by command line", cckdblk.gcs-1, cckdblk.gcmax, strerror(rc));
-							obtain_lock(&cckdblk.gclock);
-							--cckdblk.gcs;
-							release_lock(&cckdblk.gclock);
-						}
-					}
-					else
-						release_lock(&cckdblk.gclock);
+                    obtain_lock(&cckdblk.gclock);  /* ensure read integrity for gc count */
+                    if (cckdblk.gcs < cckdblk.gcmax)
+                    {
+                        if (!cckdblk.batch || cckdblk.batchml > 1)
+                            WRMSG(HHC00107, "I", "cckd_gcol() by command line", cckdblk.gca, cckdblk.gcs, cckdblk.gcmax);
+                        ++cckdblk.gcs;
+                        release_lock(&cckdblk.gclock);  /* release lock across thread create to prevent interlock  */
+                        rc = create_thread(&tid, JOINABLE, cckd_gcol, NULL, "cckd_gcol");
+                        if (rc)
+                        {
+                            WRMSG(HHC00106, "E", "cckd_gcol() by command line", cckdblk.gcs-1, cckdblk.gcmax, strerror(rc));
+                            obtain_lock(&cckdblk.gclock);
+                            --cckdblk.gcs;
+                            release_lock(&cckdblk.gclock);
+                        }
+                    }
+                    else
+                        release_lock(&cckdblk.gclock);
                 }
             }
         }

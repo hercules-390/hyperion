@@ -4441,9 +4441,9 @@ char           *strtok_str = NULL;      /* last token position       */
         return -1;
     }
 
-	if (cif->devblk.cckd_ext)        /* have a compressed ckd extension?  */
-		cckdblk.batchml = infolvl;   /* yes, save message level in cckdblk for cckddasd   */
-	
+    if (cif->devblk.cckd_ext)        /* have a compressed ckd extension?  */
+        cckdblk.batchml = infolvl;   /* yes, save message level in cckdblk for cckddasd   */
+
     /* Display progress message */
     XMINFF (0, MSG( HHC02521, "I", devtype, volser ) );
 
