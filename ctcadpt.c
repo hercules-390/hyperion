@@ -3172,7 +3172,7 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
     if( ( *pUnitStat !=
         ( ( ( eCTCE_Cmd_Xfr == CTCE_RCV ) && ( IS_CTCE_MATCH( pCTCE_Info->actions ) ) )
         ? ( CSW_CE | CSW_DE ) : ( pCTCE_Info->x_unit_stat ) ) )
-        && !( *pUnitStat & ( CSW_UC || CSW_UX || CSW_SM ) )
+        && !( *pUnitStat & ( CSW_UC | CSW_UX | CSW_SM ) )
         && !( ( eCTCE_Cmd_Xfr == CTCE_RCV ) && ( IS_CTCE_WAIT( pCTCE_Info->actions ) ) )
         &&  ( ( eCTCE_Cmd_Xfr != CTCE_RCV ) || ( *pUnitStat != 0 ) )
         && !( pCTCE_Info->de_ready ) )
