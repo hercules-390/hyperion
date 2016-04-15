@@ -467,11 +467,11 @@ char            memnama[9];             /* Member name (ASCIIZ)      */
                                                                 1 : 0;
 
         /* Check that the member has a single text record */
-        if ((dirent->pds2usrd[8] & 0x01) == 0 || totlen != txtlen)
+		memtab[n].multitxt = ((dirent->pds2usrd[8] & 0x01) == 0 || totlen != txtlen) ? 1 : 0;
+		if (memtab[n].multitxt)
         {
             // "Member %s is not a single text record"
             FWRMSG( stderr, HHC02453, "W", memnama );
-            memtab[n].multitxt = 1;
         }
 
         /* Check that the total module length does not exceed X'7F8' */
