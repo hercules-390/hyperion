@@ -172,25 +172,6 @@ static void sigint_handler (int signo)
 } /* end function sigint_handler */
 
 /*-------------------------------------------------------------------*/
-/* Perform immediate/emergency shutdown                              */
-/*-------------------------------------------------------------------*/
-static void do_emergency_shutdown()
-{
-    sysblk.shutdown = TRUE;
-
-    if (!sysblk.shutimmed)
-    {
-        sysblk.shutimmed = TRUE;
-        do_shutdown();
-    }
-    else // (already in progress)
-    {
-        while (!sysblk.shutfini)
-            usleep(100000);
-    }
-}
-
-/*-------------------------------------------------------------------*/
 /* Signal handler for SIGTERM signal                                 */
 /*-------------------------------------------------------------------*/
 static void sigterm_handler (int signo)
@@ -212,6 +193,25 @@ static void sigterm_handler (int signo)
 } /* end function sigterm_handler */
 
 #if defined( _MSVC_ )
+/*-------------------------------------------------------------------*/
+/* Perform immediate/emergency shutdown                              */
+/*-------------------------------------------------------------------*/
+static void do_emergency_shutdown()
+{
+    sysblk.shutdown = TRUE;
+
+    if (!sysblk.shutimmed)
+    {
+        sysblk.shutimmed = TRUE;
+        do_shutdown();
+    }
+    else // (already in progress)
+    {
+        while (!sysblk.shutfini)
+            usleep(100000);
+    }
+}
+
 /*-------------------------------------------------------------------*/
 /* Windows console control signal handler                            */
 /*-------------------------------------------------------------------*/
