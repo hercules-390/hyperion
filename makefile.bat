@@ -3,6 +3,8 @@
   setlocal
   set "TRACE=if defined DEBUG echo"
   set "return=goto :EOF"
+  set "break=goto :break"
+  set "exit=goto :exit"
   set "rc=0"
   goto :parse_args
 
@@ -41,6 +43,41 @@
 ::*  in order for the Visual Studio IDE to detect it as a build error since   *
 ::*  exiting with a non-zero return code doesn't do the trick. Visual Studio  *
 ::*  apparently examines the message-text looking for error/warning strings.  *
+::*                                                                           *
+::*****************************************************************************
+::*                                                                           *
+::*                         PROGRAMMING NOTE                                  *
+::*                                                                           *
+::*  It's important to use 'setlocal' before calling the Microsoft batch      *
+::*  file that sets up the build environment and to call 'endlocal' before    *
+::*  exiting.                                                                 *
+::*                                                                           *
+::*  Doing this ensures the build environment is freshly initialized each     *
+::*  time this batch file is invoked, thus ensuing a valid build environment  *
+::*  is created each time a build is performed. Failure to do so runs the     *
+::*  risk of not only causing an incompatible (invalid) build environment     *
+::*  being constructed as a result of subsequent build setting being created  *
+::*  on top of the previous build settings, but also risks overflowing the    *
+::*  environment area since the PATH and LIB variables would keep growing     *
+::*  ever longer and longer.                                                  *
+::*                                                                           *
+::*  Therefore to ensure that never happens and that we always start with a   *
+::*  freshly initialized and (hopefully!) valid build environment each time,  *
+::*  we use 'setlocal' and 'endlocal' to push/pop the local environment pool  *
+::*  each time we are called.                                                 *
+::*                                                                           *
+::*  Also note that while it would be simpler to just create a "front end"    *
+::*  batch file to issue the setlocal before invoking this batch file (and    *
+::*  then do the endlocal once we return), doing it that way leaves open      *
+::*  the possibility that someone who doesn't know better from bypassing      *
+::*  the font-end batch file altogether and invoking us directly and then     *
+::*  asking for help when they have problems because their Hercules builds    *
+::*  or Hercules itself is not working properly.                              *
+::*                                                                           *
+::*  Yes, it's more effort to do it this way but as long as you're careful    *
+::*  it's well worth it in my personal opinion.                               *
+::*                                                                           *
+::*                                               -- Fish, March 2009         *
 ::*                                                                           *
 ::*****************************************************************************
 
@@ -111,7 +148,7 @@
   echo.
 
   set "rc=1"
-  goto :exit
+  %exit%
 
 
 ::-----------------------------------------------------------------------------
@@ -132,7 +169,7 @@
   set "SolutionDir="
 
   call :parse_args_loop %*
-  if not "%rc%" == "0" goto :exit
+  if not "%rc%" == "0" %exit%
   goto :begin
 
 :parse_args_loop
@@ -243,65 +280,30 @@
 
   call :set_build_env
   if %rc% NEQ 0 (set "rc=1"
-                 goto :exit)
+                 %exit%)
 
   call :validate_makefile
   if %rc% NEQ 0 (set "rc=1"
-                 goto :exit)
+                 %exit%)
 
   call :validate_num_cpus
   if %rc% NEQ 0 (set "rc=1"
-                 goto :exit)
+                 %exit%)
 
   call :set_cfg
   if %rc% NEQ 0 (set "rc=1"
-                 goto :exit)
-
+                 %exit%)
 
   call :set_targ_arch
   if %rc% NEQ 0 (set "rc=1"
-                 goto :exit)
+                 %exit%)
 
   call :set_VERSION
   if %rc% NEQ 0 (set "rc=1"
-                 goto :exit)
+                 %exit%)
 
   goto :%build_env%
 
-
-::-----------------------------------------------------------------------------
-::                          PROGRAMMING NOTE
-::-----------------------------------------------------------------------------
-::
-::  It's important to use 'setlocal' before calling the Microsoft batch file
-::  that sets up the build environment and to call 'endlocal' before exiting.
-::
-::  Doing this ensures the build environment is freshly initialized each time
-::  this batch file is invoked, thereby ensuing a valid build environment is
-::  created each time a build is performed. Failure to do so runs the risk of
-::  not only an incompatible (invalid) build environment being constructed as
-::  a result of subsequent build setting being created on top of the previous
-::  build settings, but also risks overflowing the environment area since the
-::  PATH and LIB variables would thus keep growing ever longer and longer.
-::
-::  Thus to ensure that never happens and that we always start with a freshly
-::  initialized and (hopefully!) valid build environment each time, we use
-::  setlocal and endlocal to push/pop the local environment space each time
-::  we are called.
-::
-::  Also note that while it would be simpler to simply create a "front end"
-::  batch file to issue the setlocal before invoking this batch file (and
-::  then do the endlocal once we return), doing it that way leaves open the
-::  possibility that some smart-aleck newbie developer who doesn't know any
-::  better from bypassing the font-end batch file altogether and invoking us
-::  directly and then asking for support when he has problems because builds
-::  their Hercules builds are not working correctly.
-::
-::  Yes it's more effort to do things this way but as long as you're careful
-::  it's worth it in my personal opinion.
-::
-::                                                -- Fish, March 2009
-::
 ::-----------------------------------------------------------------------------
 ::                           Visual Studio
 ::-----------------------------------------------------------------------------
@@ -325,11 +327,7 @@
 
   call :set_host_arch
   if %rc% NEQ 0 (set "rc=1"
-                 goto :exit)
-
-  :: (see 'setlocal' PROGRAMMING NOTE further above!)
-
-  setlocal
+                 %exit%)
 
   call "%VSTOOLSDIR%..\..\VC\vcvarsall.bat"  %host_arch%%targ_arch%
   goto :nmake
@@ -342,14 +340,9 @@
 :sdk
 :toolkit
 
-  :: (see 'setlocal' PROGRAMMING NOTE further above!)
-
-  setlocal
-
   if /i "%build_env%"   == "toolkit" call "%bat_dir%vcvars32.bat"
   if /i     "%new_sdk%" == "NEW"     call "%bat_dir%\bin\setenv" /%BLD%  /%CFG%
   if /i not "%new_sdk%" == "NEW"     call "%bat_dir%\setenv"     /%BLD%  /%CFG%
-
   goto :nmake
 
 
@@ -399,14 +392,21 @@
 ::
 :: -------------------------------------------------------------------
 
+  set "vs2015=140"
+  set "vs2013=120"
+  set "vs2012=110"
+  set "vs2010=100"
+  set "vs2008=90"
+  set "vs2005=80"
+
 :try_vs140
 
   if "%VS140COMNTOOLS%" == "" goto :try_vs120
   if exist "%VS140COMNTOOLS%..\..\VC\vcvarsall.bat"  (
-     set "build_env=vs140"
      set "VSTOOLSDIR=%VS140COMNTOOLS%"
-     echo Visual Studio 2015 detected
-     %return%
+     set "vsname=2015"
+     set "vsver=%vs2015%"
+     goto :got_vstudio
   )
 
   set "VS140COMNTOOLS="
@@ -415,10 +415,10 @@
 
   if "%VS120COMNTOOLS%" == "" goto :try_vs110
   if exist "%VS120COMNTOOLS%..\..\VC\vcvarsall.bat"  (
-     set "build_env=vs120"
      set "VSTOOLSDIR=%VS120COMNTOOLS%"
-     echo Visual Studio 2013 detected
-     %return%
+     set "vsname=2013"
+     set "vsver=%vs2013%"
+     goto :got_vstudio
   )
 
   set "VS120COMNTOOLS="
@@ -427,10 +427,10 @@
 
   if "%VS110COMNTOOLS%" == "" goto :try_vs100
   if exist "%VS110COMNTOOLS%..\..\VC\vcvarsall.bat" (
-     set "build_env=vs110"
      set "VSTOOLSDIR=%VS110COMNTOOLS%"
-     echo Visual Studio 2012 detected
-     %return%
+     set "vsname=2012"
+     set "vsver=%vs2012%"
+     goto :got_vstudio
   )
 
   set "VS110COMNTOOLS="
@@ -439,10 +439,10 @@
 
   if "%VS100COMNTOOLS%" == "" goto :try_vs90
   if exist "%VS100COMNTOOLS%..\..\VC\vcvarsall.bat" (
-     set "build_env=vs100"
      set "VSTOOLSDIR=%VS100COMNTOOLS%"
-     echo Visual Studio 2010 detected
-     %return%
+     set "vsname=2010"
+     set "vsver=%vs2010%"
+     goto :got_vstudio
   )
 
   set "VS100COMNTOOLS="
@@ -451,10 +451,10 @@
 
   if "%VS90COMNTOOLS%" == "" goto :try_vs80
   if exist "%VS90COMNTOOLS%..\..\VC\vcvarsall.bat" (
-     set "build_env=vs90"
      set "VSTOOLSDIR=%VS90COMNTOOLS%"
-     echo Visual Studio 2008 detected
-     %return%
+     set "vsname=2008"
+     set "vsver=%vs2008%"
+     goto :got_vstudio
   )
 
   set "VS90COMNTOOLS="
@@ -463,10 +463,10 @@
 
   if "%VS80COMNTOOLS%" == "" goto :try_toolkit
   if exist "%VS80COMNTOOLS%..\..\VC\vcvarsall.bat" (
-     set "build_env=vs80"
      set "VSTOOLSDIR=%VS80COMNTOOLS%"
-     echo Visual Studio 2005 detected
-     %return%
+     set "vsname=2005"
+     set "vsver=%vs2005%"
+     goto :got_vstudio
   )
 
   set "VS80COMNTOOLS="
@@ -479,6 +479,12 @@
   set "bat_dir=%VCToolkitInstallDir%"
   echo Visual Studio 2003 ToolKit detected
   %return%
+
+:got_vstudio
+
+   set "build_env=vs%vsver%"
+   echo Visual Studio %vsname% detected
+   %return%
 
 :bad_build_env
 
@@ -870,12 +876,74 @@
 
 
 ::-----------------------------------------------------------------------------
+:fxxx
+
+  @REM  Parses semi-colon delimited variable (e.g. PATH, LIB, INCLUDE, etc.)
+
+  setlocal enabledelayedexpansion
+
+  set @=%~1
+
+  echo.
+  echo %@%=
+  echo.
+
+  @REM  Delayed expansion used here!
+  set _=!%@%!
+
+:fxxx_loop
+
+  for /f "delims=; tokens=1*" %%a in ("%_%") do (
+    echo   %%a
+    if "%%b" == "" %break%
+    set _=%%b
+    goto :fxxx_loop
+  )
+
+:break
+
+  endlocal
+  %return%
+
+
+::-----------------------------------------------------------------------------
 ::                            CALL NMAKE
 ::-----------------------------------------------------------------------------
 :nmake
 
   set  "MAX_CPU_ENGINES=%num_cpus%"
 
+  if defined vsver (
+    if %vsver% GTR %vs2008% (
+
+      @REM  Dump all environment variables...
+      echo.
+      echo --------------------------- ENVIRONMENT POOL ---------------------------
+      echo.
+      set
+    )
+  )
+
+  @REM  Format the PATH, LIB and INCLUDE variables for easier reading
+  echo.
+  echo -------------------------- PATH, LIB, INCLUDE --------------------------
+  echo.
+  call :fxxx PATH
+  call :fxxx LIB
+  call :fxxx INCLUDE
+
+
+  @REM  Check for existence of required <win32.mak> file.
+  set "opath=%path%"
+  set "path=%opath%;%include%"
+  call :fullpath "win32.mak"
+  set "path=%opath%"
+  set "opath="
+  if not defined fullpath goto :win32_mak_missing
+
+  echo.
+  echo --------------------------------- MAKE ---------------------------------
+  echo.
 
   ::  Additional nmake arguments (for reference):
   ::
@@ -885,14 +953,35 @@
   ::   -g        display !INCLUDEd files (VS2005 or greater only)
 
 
-
   nmake -nologo -f "%makefile_name%" -s %extra_nmake_args%
   set "rc=%errorlevel%"
-  goto :exit
+  %exit%
+
+::-----------------------------------------------------------------------------
+::                     Required win32.mak not found
+::-----------------------------------------------------------------------------
+:win32_mak_missing
+
+  echo %~nx0^(1^) : error C9999 : ^<win32.mak^> not found!
+  set "rc=1"
+
+  echo %~nx0^(1^) : warning C9999 : .
+  echo %~nx0^(1^) : warning C9999 : You need to have the Windows 7.1 SDK installed which has ^<win32.mak^>.
+  echo %~nx0^(1^) : warning C9999 : Neither the Windows 8 SDK nor the Windows 10 SDK has ^<win32.mak^>.
+  echo %~nx0^(1^) : warning C9999 : Only the Windows 7.1 or older SDK will have ^<win32.mak^>.
+  if %vsver% GEQ %vs2015% (
+    echo %~nx0^(1^) : warning C9999 : .
+    echo %~nx0^(1^) : warning C9999 : When you install Visual Studio 2015 Community Edition Update 2, you must
+    echo %~nx0^(1^) : warning C9999 : be careful to also select the "Windows XP Support for C++" option in the
+    echo %~nx0^(1^) : warning C9999 : "Visual C++" section of the "Programming Languages" feature, which is
+    echo %~nx0^(1^) : warning C9999 : the option that installs the Windows 7.1 SDK containing ^<win32.mak^>.
+  )
+  echo %~nx0^(1^) : warning C9999 : .
+  %exit%
 
 
 ::-----------------------------------------------------------------------------
-::    VS2008/VS2010/VS2012/VS2013 multi-config multi-platform parallel build
+::      Visual Studio multi-config multi-platform parallel build
 ::-----------------------------------------------------------------------------
 ::
 ::  The following is special logic to leverage Fish's "RunJobs" tool
@@ -943,7 +1032,7 @@
 
   "%runjobs_cmd%" %CFG%-%targ_arch%.jobs
   set "rc=%errorlevel%"
-  goto :exit
+  %exit%
 
 
 :no_runjobs
@@ -951,7 +1040,7 @@
   echo.
   echo %~nx0^(1^) : error C9999 : Could not find "%runjobs_cmd%" anywhere on your system
   set "rc=1"
-  goto :exit
+  %exit%
 
 
 ::-----------------------------------------------------------------------------
