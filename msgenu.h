@@ -235,7 +235,7 @@ Examples:
 /*-------------------------------------------------------------------*/
 
 /* Hercules messages */
-#define HHC00001 "%s"
+#define HHC00001 "%s%s"
 #define HHC00002 "SCLP console not receiving %s"
 #define HHC00003 "Empty SCP command issued"
 #define HHC00004 "Control program identification: type %s, name %s, sysplex %s, level %"PRIX64
@@ -810,7 +810,7 @@ Examples:
 #define HHC00984 "%1d:%04X %s: port %2.2X: Receive frame of size %d bytes (with %s packet) from device %s"
 
 // reserve 010xx for communication adapter specific component messages
-/* comm3705.c and commadpt.c console.c */
+/* comm3705.c, commadpt.c, console.c, con1052c.c */
 #define HHC01000 "%1d:%04X COMM: error in function %s: %s"
 #define HHC01001 "%1d:%04X COMM: connect out to %s:%d failed during initial status: %s"
 #define HHC01002 "%1d:%04X COMM: cannot obtain socket for incoming calls: %s"
@@ -896,6 +896,11 @@ Examples:
 #define HHC01082 "%1d:%04X COMM: cthread - inbound socket data"
 #define HHC01083 "%1d:%04X COMM: cthread - socket write available"
 #define HHC01084 "%1d:%04X COMM: set mode %s"
+#define HHC01085 "%1d:%04X COMM: default command prefixes exhausted"
+#define HHC01086 "%1d:%04X COMM: device %1d:%04X already using prefix %s"
+//efine HHC01087 (available)
+//efine HHC01088 (available)
+//efine HHC01089 (available)
 #define HHC01090 "%1d:%04X COMM: client %s devtype %4.4X: connection reset"
 #define HHC01091 "%1d:%04X COMM: %s has an invalid GROUP name length or format; must be a valid luname or poolname"
 #define HHC01092 "%1d:%04X COMM: Not all TCP keepalive settings honored"
@@ -903,6 +908,9 @@ Examples:
 #define HHC01094 "%1d:%04X COMM: This build of Hercules does not support TCP keepalive"
 #define HHC01095 "%1d:%04X COMM: This build of Hercules has only basic TCP keepalive support"
 #define HHC01096 "%1d:%04X COMM: This build of Hercules has only partial TCP keepalive support"
+//efine HHC01097 (available)
+//efine HHC01098 (available)
+//efine HHC01099 (available)
 
 // reserve 011xx for printer specific component messages
 #define HHC01100 "%1d:%04X Printer: client %s, ip %s disconnected from device %s"

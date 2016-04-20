@@ -2157,7 +2157,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <hr width="50%"><p>
 
 <a name="SYSG"></a>
-<dt><em>Integrated 3270 console device</em>
+<dt><em>Integrated 3270 console device</em> &nbsp; (SYSG)
 <dd><p>
 
     The integrated 3270 (SYSG) console is similar to a <a href="#loc3270">local non-SNA
@@ -2185,21 +2185,66 @@ a real System/390.  The configuration file is an ASCII text file.
 <hr width="50%"><p>
 
 <a name="consysc"></a>
-<dt><em>Integrated Console printer-keyboard devices</em>
+<dt><em>Integrated Console printer-keyboard devices</em> &nbsp; (-C)
 <dd><p>
 
-    There is one optional argument which is the command prefix
-    for sending input to the device. The default command prefix is '/'.
-    <p><em>
-    <b>Note:</b> There is no restriction on the character you can select.
-    If you select a command character that is the first character of a panel
-    command, you will not be able to use that command.
-    </em>
+    There are two optional arguments: the command prefix argument and the
+    optional <code>noprompt</code> argument.
     <p>
+    Since integrated console printer-keyboard devices use the Hercules HMC
+    panel (Hardware Management Console) for all input and output, the command
+    prefix is needed so Hercules can distinguish between input meant for the
+    device and normal Hercules panel command input.
+    <p>
+    All integrated console devices must use a different command prefix and
+    must not be a subset or superset of any other device's command prefix.
+    if one is not specified then the next available default is chosen from
+    the following list:
+    <p>
+    <pre>
+        Hex     Glyph    Description
 
-    To send a logon command to a 1052-C or 3215-C enter /logon on the Hercules console.
+        0x2F      /       slash (default)
+        0x5C      \       backslash
+        0x60      `       backtick
+        0x3D      =       equals
+        0x7E      ~       tilde
+        0x40      @       at sign
+        0x24      $       dollar
+        0x25      %       percent
+        0x5E      ^       caret
+        0x26      &       ampersand
+        0x5F      _       underline
+        0x3A      :       colon
+        0x3F      ?       question
+        0x30      0       zero
+        0x31      1       one
+        0x32      2       two
+        0x33      3       three
+        0x34      4       four
+        0x35      5       five
+        0x36      6       six
+        0x37      7       seven
+        0x38      8       eight
+        0x39      9       nine</pre>
+
     <p>
-    All integrated devices must use a different command prefix.
+    If your command prefix was the '/' slash character for example, then to send
+    a logon command to a 1052-C or 3215-C device, you would enter "/logon" on the
+    Hercules console. Or, if your command prefix was "foo=" then you would enter
+    "foo=logon", etc.
+    <p>
+    When your guest operating system writes a message to an integrated console
+    printer-keyboard device, the message displayed on the Hercules console is
+    always prefixed with the device's command prefix string so you can distinguish
+    it from messages written by other integrated console devices and/or Hercules
+    itself.
+    <p>
+    The second optional argument for integrated console printer-keyboard devices
+    is the <code>noprompt</code> keyword. If not specified, then whenever the
+    system is awaiting input on that device, the prompting message "Enter input
+    for console device nnnn" is displayed on the Hercules console. The
+    <code>noprompt</code> option suppresses this prompting message.
     <p>
 
 <hr width="50%"><p>

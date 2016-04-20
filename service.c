@@ -1575,9 +1575,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         }
                         message[i] = '\0';
     #ifdef OPTION_SCP_MSG_PREFIX
-                        WRMSG(HHC00001, "I", message);
+                        WRMSG(HHC00001, "I", "", message);
     #else
-                        logmsg("%s\n",message);
+                        LOGMSG("%s\n",message);
     #endif /* OPTION_SCP_MSG_PREFIX */
                     }
                 }

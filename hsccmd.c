@@ -138,7 +138,7 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 
     if (sysblk.scrtest)
     {
-        WRMSG( HHC00001, "E", "WRONG! Perhaps you meant 'runtest' instead?");
+        WRMSG( HHC00001, "E", "", "WRONG! Perhaps you meant 'runtest' instead?");
         return -1;
     }
 
@@ -7842,6 +7842,8 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
+    // #define HHC02257 "%s%7d"
+
     WRMSG(HHC02257, "I", "(unsigned short) ..",(int)sizeof(unsigned short));
     WRMSG(HHC02257, "I", "(void *) ..........",(int)sizeof(void *));
     WRMSG(HHC02257, "I", "(unsigned int) ....",(int)sizeof(unsigned int));
@@ -7862,8 +7864,8 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     WRMSG(HHC02257, "I", "STFL_BYTESIZE .....",STFL_BYTESIZE);
     WRMSG(HHC02257, "I", "FD_SETSIZE ........",FD_SETSIZE);
     WRMSG(HHC02257, "I", "TID ...............",(int)sizeof(TID));
-    WRMSG(HHC00001, "I", "TIDPAT ............ " TIDPAT );
-    WRMSG(HHC00001, "I", "SCN_TIDPAT ........ " SCN_TIDPAT );
+    WRMSG(HHC00001, "I", "", "TIDPAT ............ " TIDPAT );
+    WRMSG(HHC00001, "I", "", "SCN_TIDPAT ........ " SCN_TIDPAT );
     return 0;
 }
 

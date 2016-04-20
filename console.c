@@ -3647,12 +3647,12 @@ BYTE    stat;                           /* Unit status               */
 
     case 0x01:
     /*---------------------------------------------------------------*/
-    /* WRITE NO CARRIER RETURN                                       */
+    /* WRITE, NO CARRIER RETURN                                      */
     /*---------------------------------------------------------------*/
 
     case 0x09:
     /*---------------------------------------------------------------*/
-    /* WRITE AUTO CARRIER RETURN                                     */
+    /* WRITE, AUTO CARRIER RETURN                                    */
     /*---------------------------------------------------------------*/
 
         /* Calculate number of bytes to write and set residual count */
