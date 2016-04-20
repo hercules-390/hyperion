@@ -134,11 +134,11 @@ int             nmem = 0;               /* Number of array entries   */
     else sfname = NULL;
 
     /* Obtain storage for the member information array */
-    memtab = (MEMINFO*) malloc (sizeof(MEMINFO) * MAX_MEMBERS);
+    memtab = (MEMINFO*) calloc( MAX_MEMBERS, sizeof(MEMINFO) );
     if (memtab == NULL)
     {
         char buf[80];
-        MSGBUF( buf, "malloc(%d)", (int)(sizeof(MEMINFO) * MAX_MEMBERS));
+        MSGBUF( buf, "calloc(%d,%d)", MAX_MEMBERS, (int)(sizeof( MEMINFO )));
         // "Error in function %s: %s"
         FWRMSG( stderr, HHC02412, "E", buf, strerror( errno ));
         return -1;
