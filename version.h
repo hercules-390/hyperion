@@ -38,10 +38,22 @@
   Some modules, such as dyngui, might need these values,
   since they are ALWAYS numeric whereas VERSION is not.
 */
-#if defined( _MSVC_ ) && (!defined(V1) || !defined(V2) || !defined(V3) || !defined(V4))
-  // MSVC version 19.00 uses V1-V2-V3-V4; this will need to be revised.
-  #if ( _MSC_VER < 1600 )
+#if defined( _MSVC_ )
+  #if (!defined(V1) || !defined(V2) || !defined(V3) || !defined(V4))
+
+
+
+    #if ( _MSC_VER >= VS2015 )
+      FIXME( "VS2015 (MSVC version 19.00) uses V1-V2-V3-V4?!" )
+      FIXME( "This needs confirmed/resolved!" )
+    #endif
+
+
+
     #error "VERSION not defined properly"
+
+
+
   #endif
 #endif
 
