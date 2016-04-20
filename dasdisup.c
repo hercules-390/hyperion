@@ -467,8 +467,8 @@ char            memnama[9];             /* Member name (ASCIIZ)      */
                                                                 1 : 0;
 
         /* Check that the member has a single text record */
-		memtab[n].multitxt = ((dirent->pds2usrd[8] & 0x01) == 0 || totlen != txtlen) ? 1 : 0;
-		if (memtab[n].multitxt)
+        memtab[n].multitxt = ((dirent->pds2usrd[8] & 0x01) == 0 || totlen != txtlen) ? 1 : 0;
+        if (memtab[n].multitxt)
         {
             // "Member %s is not a single text record"
             FWRMSG( stderr, HHC02453, "W", memnama );
