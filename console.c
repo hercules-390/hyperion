@@ -2724,7 +2724,7 @@ size_t                  len;            /* Data length               */
 struct sockaddr_in      client;         /* Client address structure  */
 socklen_t               namelen;        /* Length of client structure*/
 char                   *clientip;       /* Addr of client ip address */
-BYTE                    buf[1920];      /* Work buffer               */
+char                    buf[1920];      /* Work buffer               */
 char                    orig_cid[32];   /* e.g. "client 123"         */
 
 char                    hvermsg[256];   /* "Hercules version ..."    */
@@ -2813,7 +2813,7 @@ size_t                  logoheight;     /* Logo file number of lines */
         if ((rc = recv( csock, buf, sizeof( buf ), 0 )) > 0)
         {
             /* Pass data to libtelnet to pass to our event handler */
-            telnet_recv( ctl, buf, rc );
+            telnet_recv( ctl, (BYTE*) buf, rc );
         }
         else /* recv() error or connection closed */
         {
@@ -2977,7 +2977,7 @@ size_t                  logoheight;     /* Logo file number of lines */
         {
             len = MSGBUF
             (
-                (char*) buf,
+                buf,
 
                 "\xF5\x40"
                 "\x11\x40\x40\x1D\x60%s"        /* First line   */
@@ -2993,7 +2993,7 @@ size_t                  logoheight;     /* Logo file number of lines */
         {
             len = MSGBUF
             (
-                (char*) buf,
+                buf,
 
                 "%s\n"          /* First line   */
                 "%s\n"          /* Second line  */
@@ -3007,7 +3007,7 @@ size_t                  logoheight;     /* Logo file number of lines */
 
         /* Send the connection rejection message back to the client */
         if (tn->devclass != 'P')
-            sendto_client( tn, buf, len );
+            sendto_client( tn, (BYTE*) buf, len );
 
         /* Give them time to read the message before disconnecting */
         SLEEP(10);
@@ -3045,11 +3045,11 @@ size_t                  logoheight;     /* Logo file number of lines */
             strncpy( (char*) buf, "SYSG", sizeof( buf ));
         else
 #endif
-        MSGBUF( (char*) buf, "%4.4X", dev->devnum );           set_symbol( "DEVN",    (char*) buf );
-                                                               set_symbol( "CCUU",    (char*) buf );
-        MSGBUF( (char*) buf, "%3.3X", dev->devnum );           set_symbol( "CUU",     (char*) buf );
-        MSGBUF( (char*) buf, "%4.4X", dev->subchan );          set_symbol( "SUBCHAN", (char*) buf );
-        MSGBUF( (char*) buf, "%d", SSID_TO_LCSS( dev->ssid )); set_symbol( "CSS",     (char*) buf );
+        MSGBUF( buf, "%4.4X", dev->devnum );           set_symbol( "DEVN",    buf );
+                                                       set_symbol( "CCUU",    buf );
+        MSGBUF( buf, "%3.3X", dev->devnum );           set_symbol( "CUU",     buf );
+        MSGBUF( buf, "%4.4X", dev->subchan );          set_symbol( "SUBCHAN", buf );
+        MSGBUF( buf, "%d", SSID_TO_LCSS( dev->ssid )); set_symbol( "CSS",     buf );
 
 #endif /* defined( ENABLE_BUILTIN_SYMBOLS ) */
 
@@ -3069,7 +3069,7 @@ size_t                  logoheight;     /* Logo file number of lines */
 
         len = MSGBUF
         (
-            (char*) buf,        /* (just a convenient buffer) */
+            buf,                /* (just a convenient buffer) */
 
             "%s\n"              /* First line   */
             "%s\n"              /* Second line  */
@@ -3079,14 +3079,14 @@ size_t                  logoheight;     /* Logo file number of lines */
             hostmsg,
             devmsg
         );
-        logobfr = buf;
+        logobfr = (BYTE*) buf;
     }
 
     /* Send the Hercules logo or connected message to the client */
     if (tn->devclass != 'P' && logobfr)
         sendto_client( tn, logobfr, len );
 
-    if (logobfr && logobfr != buf)
+    if (logobfr && logobfr != (BYTE*) buf)
         free( logobfr );
 
     if (clientip)

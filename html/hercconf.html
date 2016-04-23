@@ -444,14 +444,17 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CNSLPORT"></a>
-<dt><code>CNSLPORT &nbsp; <i>nnnn</i></code>
+<dt><code>CNSLPORT &nbsp; <i>nnnn</i></code> &nbsp; &nbsp; <i>-or-</i> &nbsp; &nbsp;<code><i>host:port</i></code>
 <dd><p>
-    Specifies the port number (in decimal) to which tn3270 and
-    telnet clients will connect.
+    Specifies (typically) the port number (in decimal) to which tn3270
+    and telnet clients should connect. If an invalid value is specified
+    Hercules defaults to port 3270.
     <p>
-
-    The CNSLPORT statement may also have the form of host:port, where
-    the telnet console server will bind to the specified address.
+    The <code>CNSLPORT</code> statement may also be specified as
+    <code>host:port</code>, where <code>host</code> identifies the
+    IP address of the host interface the telnet console server should
+    bind to (listen for connections on). If not specified the server
+    will accept connections from any host interface.
     <p>
 
 <a name="CONKPALV"></a>

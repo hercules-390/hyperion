@@ -3985,18 +3985,19 @@ BYTE c;
 /*-------------------------------------------------------------------*/
 int cnslport_cmd(int argc, char *argv[], char *cmdline)
 {
-    char *def_port = "3270";
+    static char const* def_port = "3270";
     int rc = 0;
     int i;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    if ( argc > 2 )
+    if (argc > 2)
     {
+        // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
         rc = -1;
     }
-    else if ( argc == 1 )
+    else if (argc == 1)
     {
         char buf[128];
 
@@ -4013,12 +4014,15 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
             if ((serv = strchr(port,':')))
             {
                 *serv++ = '\0';
+
                 if (*port)
                     host = port;
             }
+
             MSGBUF( buf, "for host %s on port %s", host, serv);
             free( port );
         }
+
         // "%s server listening %s"
         WRMSG( HHC17001, "I", "Console", buf);
         rc = 0;
@@ -4033,41 +4037,49 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
         else
             *port++ = '\0';
 
-        for ( i = 0; i < (int)strlen(port); i++ )
+        for (i=0; i < (int) strlen( port ); i++)
         {
-            if ( !isdigit(port[i]) )
+            if (!isdigit(port[i]))
             {
+                // "Invalid value %s specified for %s"
                 WRMSG( HHC01451, "E", port, argv[0] );
                 rc = -1;
+                break;
             }
         }
 
-        i = atoi ( port );
-
-        if (i < 0 || i > 65535)
+        if (rc != -1)
         {
-            WRMSG( HHC01451, "E", port, argv[0] );
-            rc = -1;
+            i = atoi( port );
+
+            if (i < 0 || i > 65535)
+            {
+                // "Invalid value %s specified for %s"
+                WRMSG( HHC01451, "E", port, argv[0] );
+                rc = -1;
+            }
+            else
+                rc = 1;
         }
 
-        free(host);
-        rc = 1;
+        free( host );
     }
 
-    if ( rc != 0 )
+    if (rc != 0)
     {
         if (sysblk.cnslport != NULL)
-            free(sysblk.cnslport);
+            free( sysblk.cnslport );
 
-        if ( rc == -1 )
+        if (rc == -1)
         {
+            // "Default port %s being used for %s"
             WRMSG( HHC01452, "W", def_port, argv[0] );
-            sysblk.cnslport = strdup(def_port);
+            sysblk.cnslport = strdup( def_port );
             rc = 1;
         }
         else
         {
-            sysblk.cnslport = strdup(argv[1]);
+            sysblk.cnslport = strdup( argv[1] );
             rc = 0;
         }
     }
