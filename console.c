@@ -879,25 +879,6 @@ int     woff;                           /* Current offset in buffer  */
 
 
 /*-------------------------------------------------------------------*/
-/* SUBROUTINE TO TRANSLATE A NULL-TERMINATED STRING TO EBCDIC        */
-/*-------------------------------------------------------------------*/
-static BYTE *
-translate_to_ebcdic (char *str)
-{
-int     i;                              /* Array subscript           */
-BYTE    c;                              /* Character work area       */
-
-    for (i = 0; str[i] != '\0'; i++)
-    {
-        c = str[i];
-        str[i] = (isprint(c) ? host_to_guest(c) : SPACE);
-    }
-
-    return (BYTE *)str;
-} /* end function translate_to_ebcdic */
-
-
-/*-------------------------------------------------------------------*/
 /* Telnet command definitions                                        */
 /*-------------------------------------------------------------------*/
 #define BINARY          0       /* Binary Transmission */
@@ -1052,7 +1033,8 @@ static char *build_logo(char **logodata,size_t logosize,size_t *blen)
                     xpos++;
                     ypos=0;
                 }
-                bfr=buffer_addstring(bfr,&len,&alen,(char *)translate_to_ebcdic(cline));
+                bfr=buffer_addstring(bfr,&len,&alen,(char *)
+                    prt_host_to_guest( (BYTE*) cline, (BYTE*) cline, strlen( cline )));
                 break;
             }
             verb=strtok_r(cline," \t", &strtok_str);
@@ -2582,9 +2564,9 @@ char                    *logoout;
                         "\xF5\x40\x11\x40\x40\x1D\x60%s"
                         "\x11\xC1\x50\x1D\x60%s"
                         "\x11\xC2\x60\x1D\x60%s",
-                        translate_to_ebcdic(conmsg),
-                        translate_to_ebcdic(hostmsg),
-                        translate_to_ebcdic(rejmsg));
+                        prt_host_to_guest( (BYTE*) conmsg,  (BYTE*) conmsg,  strlen( conmsg  )),
+                        prt_host_to_guest( (BYTE*) hostmsg, (BYTE*) hostmsg, strlen( hostmsg )),
+                        prt_host_to_guest( (BYTE*) rejmsg,  (BYTE*) rejmsg,  strlen( rejmsg  )));
 
             if (len < sizeof(buf))
             {

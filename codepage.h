@@ -30,10 +30,11 @@ COD_DLL_IMPORT unsigned char *h2g_tab();
 COD_DLL_IMPORT unsigned char *g2h_tab();
 
 /* helper functions for codepage */
-COD_DLL_IMPORT void buf_guest_to_host( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
-COD_DLL_IMPORT void str_guest_to_host( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
-COD_DLL_IMPORT void buf_host_to_guest( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
-COD_DLL_IMPORT void str_host_to_guest( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
-COD_DLL_IMPORT void prt_guest_to_host( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
+COD_DLL_IMPORT BYTE* buf_guest_to_host( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
+COD_DLL_IMPORT BYTE* str_guest_to_host( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
+COD_DLL_IMPORT BYTE* buf_host_to_guest( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
+COD_DLL_IMPORT BYTE* str_host_to_guest( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
+COD_DLL_IMPORT BYTE* prt_guest_to_host( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
+COD_DLL_IMPORT BYTE* prt_host_to_guest( const BYTE *psinbuf, BYTE *psoutbuf, const u_int ilength );
 
 #endif /* _HERCULES_CODEPAGE_H */

@@ -349,25 +349,6 @@ int     m, n, x, newlen;
 
 
 /*-------------------------------------------------------------------*/
-/* SUBROUTINE TO TRANSLATE A NULL-TERMINATED STRING TO EBCDIC        */
-/*-------------------------------------------------------------------*/
-static BYTE *
-translate_to_ebcdic (char *str)
-{
-int     i;                              /* Array subscript           */
-BYTE    c;                              /* Character work area       */
-
-    for (i = 0; str[i] != '\0'; i++)
-    {
-        c = str[i];
-        str[i] = (isprint(c) ? host_to_guest(c) : SPACE);
-    }
-
-    return (BYTE *)str;
-} /* end function translate_to_ebcdic */
-
-
-/*-------------------------------------------------------------------*/
 /* SUBROUTINE TO SEND A DATA PACKET TO THE CLIENT                    */
 /*-------------------------------------------------------------------*/
 static int
@@ -808,9 +789,9 @@ char                    group[16];      /* Console group             */
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
                     "\x11\xC1\x50\x1D\x60%s"
                     "\x11\xC2\x60\x1D\x60%s",
-                    translate_to_ebcdic(conmsg),
-                    translate_to_ebcdic(hostmsg),
-                    translate_to_ebcdic(devmsg));
+                    prt_host_to_guest( (BYTE*) conmsg,  (BYTE*) conmsg,  strlen( conmsg  )),
+                    prt_host_to_guest( (BYTE*) hostmsg, (BYTE*) hostmsg, strlen( hostmsg )),
+                    prt_host_to_guest( (BYTE*) devmsg,  (BYTE*) devmsg,  strlen( devmsg  )));
 
         if (len < sizeof(buf))
         {
