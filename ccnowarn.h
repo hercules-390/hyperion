@@ -7,8 +7,10 @@
 /*-------------------------------------------------------------------*/
 /* The "DISABLE_xxx_WARNING" and "ENABLE_xxx_WARNING" macros allow   */
 /* you to temporarily suppress certain harmless compiler warnings.   */
+/* Sample usage: DISABLE_GCC_WARNING( "-Wpointer-to-int-cast" )      */
+/* DISABLE_MSVC_WARNING( 4142 ) // "benign redefinition of type"     */
 /* Use the "_DISABLE" macro before the source statement which is     */
-/* causing the problem and the "_ENABLE" macro shortly afterwards.   */
+/* causing the problem and the "ENABLE" macro shortly afterwards.    */
 /* PLEASE DO NOT GO OVERBOARD (overdo or overuse) THE SUPPRESSION    */
 /* OF WARNINGS! Most warnings are actually bugs waiting to happen.   */
 /* The "DISABLE_xxx_WARNING" and "ENABLE_xxx_WARNING" macros are     */

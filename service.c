@@ -716,8 +716,7 @@ U32             residual;               /* Residual data count       */
 /* SCP to issue a SCLP_READ_EVENT_DATA service call to retrieve      */
 /* the input data.                                                   */
 /*-------------------------------------------------------------------*/
-SERV_DLL_IMPORT
-void sclp_sysg_attention()
+DLL_EXPORT void sclp_sysg_attention()
 {
 
     OBTAIN_INTLOCK(NULL);

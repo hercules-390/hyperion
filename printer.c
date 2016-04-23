@@ -19,16 +19,20 @@
 
 /*-------------------------------------------------------------------*/
 /* Ivan Warren 20040227                                              */
-/* This table is used by channel.c to determine if a CCW code is an  */
-/* immediate command or not                                          */
-/* The tape is addressed in the DEVHND structure as 'DEVIMM immed'   */
-/* 0 : Command is NOT an immediate command                           */
-/* 1 : Command is an immediate command                               */
-/* Note : An immediate command is defined as a command which returns */
-/* CE (channel end) during initialisation (that is, no data is       */
-/* actually transfered. In this case, IL is not indicated for a CCW  */
-/* Format 0 or for a CCW Format 1 when IL Suppression Mode is in     */
-/* effect                                                            */
+/*                                                                   */
+/* This table is used by channel.c to determine if a CCW code        */
+/* is an immediate command or not.                                   */
+/*                                                                   */
+/* The table is addressed in the DEVHND structure as 'DEVIMM immed'  */
+/*                                                                   */
+/*     0:  ("false")  Command is *NOT* an immediate command          */
+/*     1:  ("true")   Command *IS* an immediate command              */
+/*                                                                   */
+/* Note: An immediate command is defined as a command which returns  */
+/* CE (channel end) during initialization (that is, no data is       */
+/* actually transfered). In this case, IL is not indicated for a     */
+/* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 /* Printer Specific : 1403 */

@@ -323,7 +323,7 @@ BYTE  TapeCommands9347 [256] =
 /* This table is used by channel.c to determine if a CCW code        */
 /* is an immediate command or not.                                   */
 /*                                                                   */
-/* The tape is addressed in the DEVHND structure as 'DEVIMM immed'   */
+/* The table is addressed in the DEVHND structure as 'DEVIMM immed'  */
 /*                                                                   */
 /*     0:  ("false")  Command is *NOT* an immediate command          */
 /*     1:  ("true")   Command *IS* an immediate command              */

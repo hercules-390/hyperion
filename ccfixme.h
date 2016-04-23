@@ -7,6 +7,7 @@
 /*-------------------------------------------------------------------*/
 /*  This header file #defines a generic "FIXME" macro used to mark   */
 /*  suspicious code needing fixed or at least further investigated.  */
+/*  Sample usage: TODO( "Figure out a better way to calculate foo" ) */
 /*  It is designed to work identically for GCC as well as MSVC. The  */
 /*  only argument is the "fixme" message you wish to be issued. To   */
 /*  suppress a compiler warning, use the "DISABLE_xxx_WARNING" and   */
@@ -53,7 +54,7 @@
 #if defined( _MSVC_ )
   #define FIXME( _str )         __pragma( message( FIXME_LINE  _str ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define FIXME( _str )         QPRAGMA( message( _str ))
+  #define FIXME( _str )         QPRAGMA( message(  FIXME_LINE  _str ))
 #endif
 
 #ifndef   FIXME
@@ -67,7 +68,7 @@
 #if defined( _MSVC_ )
   #define TODO( _str )          __pragma( message( TODO_LINE  _str ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define TODO( _str )          QPRAGMA( message( _str ))
+  #define TODO( _str )          QPRAGMA( message(  TODO_LINE  _str ))
 #endif
 
 #ifndef   TODO
@@ -81,7 +82,7 @@
 #if defined( _MSVC_ )
   #define WARNING( _str )       __pragma( message( WARN_LINE  _str ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define WARNING( _str )       QPRAGMA( message( _str ))
+  #define WARNING( _str )       QPRAGMA( message(  WARN_LINE  _str ))
 #endif
 
 #ifndef   WARNING
@@ -95,7 +96,7 @@
 #if defined( _MSVC_ )
   #define NOTE( _str )          __pragma( message( NOTE_LINE  _str ))
 #elif defined( __GNUC__ ) && defined( HAVE_GCC_DIAG_PRAGMA )
-  #define NOTE( _str )          QPRAGMA( message( _str ))
+  #define NOTE( _str )          QPRAGMA( message(  NOTE_LINE  _str ))
 #endif
 
 #ifndef   NOTE
