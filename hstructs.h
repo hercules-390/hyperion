@@ -16,6 +16,7 @@
 
 #include "hercules.h"
 #include "opcode.h"
+#include "telnet.h"         // Need telnet_t
 
 /*-------------------------------------------------------------------*/
 /* Typedefs for CPU bitmap fields                                    */
@@ -840,9 +841,9 @@ struct SYSBLK {
 #endif
 
         char    *cnslport;              /* console port string       */
-        char    *logofile;              /* Fancy 3270 logo box       */
-        char    **herclogo;             /* 3270 Logo data            */
-        size_t  logolines;              /* Number of lines in logo   */
+        char    **herclogo;             /* Constructed logo screen   */
+        char    *logofile;              /* File name of logo file    */
+        size_t  logolines;              /* Logo file number of lines */
 #if defined(OPTION_MIPS_COUNTING)
         /* Merged Counters for all CPUs                              */
         U64     instcount;              /* Instruction counter       */
@@ -966,6 +967,41 @@ struct CHPBLK {
         BYTE    css;
         BYTE    chpid;
         BYTE    chptype;
+};
+
+
+/*-------------------------------------------------------------------*/
+/* Telnet Control Block                                              */
+/*-------------------------------------------------------------------*/
+#define TTYPE_LEN TELNET_MAX_TTYPE_LEN  /* (just a shorter name)     */
+struct TELNET {
+
+        char    ttype[TTYPE_LEN+1];     /* Client terminal type      */
+        char    tgroup[16];             /* Terminal group name       */
+        char    clientid[32];           /* Client Id string          */
+        int     csock;                  /* Client socket             */
+
+        telnet_t  *ctl;                 /* Ptr to libtelnet control  */
+        DEVBLK    *dev;                 /* Device Block ptr or NULL  */
+        U16        devnum;              /* Requested device number,  */
+                                        /* or FFFF=any device number */
+        BYTE       devclass;            /* 'D' = 3270 Display,       */
+                                        /* 'K' = Keyboard console,   */
+                                        /* 'P' = 3287 Printer        */
+        BYTE       model;               /* 3270 model (2,3,4,5,X)    */
+
+                                        /* ----- Boolean flags ----- */
+        BYTE    do_tn3270;              /* TN3270 mode enabled       */
+        BYTE    do_bin;                 /* Binary mode enabled       */
+        BYTE    do_eor;                 /* End-of-record enabled     */
+        BYTE    got_eor;                /* End-of-record received    */
+        BYTE    got_break;              /* Break type code received  */
+        BYTE    extatr;                 /* 3270 extended attributes  */
+        BYTE    neg_done;               /* Negotiations complete     */
+        BYTE    neg_fail;               /* Negotiations failure      */
+        BYTE    send_err;               /* Socket send() failure     */
+        BYTE    overflow;               /* Too much data accumulated */
+        BYTE    overrun;                /* Unexpected extra data     */
 };
 
 
@@ -1222,6 +1258,9 @@ struct DEVBLK {                         /* Device configuration block*/
         struct in_addr ipaddr;          /* Client IP address         */
         in_addr_t  acc_ipaddr;          /* Allowable clients IP addr */
         in_addr_t  acc_ipmask;          /* Allowable clients IP mask */
+
+        TELNET  *tn;                    /* Telnet Control Block Ptr  */
+
         U32     rlen3270;               /* Length of data in buffer  */
         int     pos3270;                /* Current screen position   */
         int     keybdrem;               /* Number of bytes remaining

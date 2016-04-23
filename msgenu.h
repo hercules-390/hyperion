@@ -1929,7 +1929,7 @@ Examples:
 #define HHC02760 "%s"
 #define HHC02761 "DCB Attributes used:  RECFM=%-4.4s  LRECL=%-5.5d  BLKSIZE=%d"
 
-
+// mt_cmd
 #define HHC02800 "%1d:%04X %s complete"
 #define HHC02801 "%1d:%04X %s failed; %s"
 #define HHC02802 "%1d:%04X Current file number %d"
@@ -1938,8 +1938,26 @@ Examples:
 #define HHC02805 "%1d:%04X Volser = %s"
 #define HHC02806 "%1d:%04X Unlabeled tape"
 
-// range 02900 - 02999 available
+// range 029nn - 02949 console.c
+#define HHC02900 "%s COMM: Send() failed: %s"
+#define HHC02901 "%s COMM: Refusing client demand to %s %s"
+#define HHC02902 "%s COMM: Client refused to %s %s"
+#define HHC02903 "%s COMM: Libtelnet error"
+#define HHC02904 "%s COMM: Libtelnet FATAL error"
+#define HHC02905 "%s COMM: Libtelnet negotiation error"
+#define HHC02906 "%s COMM: Unsupported libtelnet event '%s'"
+#define HHC02907 "%s COMM: Libtelnet %s: %s in %s() at %s(%d): %s"
+#define HHC02908 "%s COMM: Connection closed during negotiations"
+#define HHC02909 "%s COMM: Recv() error during negotiations: %s"
+#define HHC02910 "%s COMM: Unsupported terminal type: %s"
+#define HHC02911 "%s COMM: Discarding premature data"
+#define HHC02912 "%s COMM: Buffer overflow"
+#define HHC02913 "%s COMM: Buffer overrun"
+#define HHC02914 "%s COMM: %s negotiations complete; ttype = '%s'"
+#define HHC02915 "%s COMM: Connection received"
+//efine HHC02916 - HHC02949 (available)
 
+// range 02950 - 02999 available
 // range 03000 - 03099 available
 // range 03100 - 03199 available
 // range 03200 - 03299 available
@@ -2250,7 +2268,26 @@ Examples:
 #define HHC90406 "OFFTIFY dec string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."
 #define HHC90407 "%s device has %d heads/cylinder"
 
-// range 90500 - 90599 available
+// range 90500 - 90549 console.c DEBUGGING messages
+#define HHC90500 "%s COMM: Sending %d bytes"
+#define HHC90501 "%s COMM: Received %d bytes"
+#define HHC90502 "%s COMM: recv_3270_data: %d bytes received"
+//efine HHC90503            (available)
+#define HHC90504 "%s COMM: Disconnected"
+#define HHC90505 "%s COMM: Received connection from %s"
+#define HHC90506 "%s COMM: Device attention %s; rc=%d"
+#define HHC90507 "%s COMM: recv() failed: %s"
+#define HHC90508 "COMM: pselect() failed: %s"
+#define HHC90509 "COMM: accept() failed: %s"
+#define HHC90510 "%s COMM: setsockopt() failed: %s"
+#define HHC90511 "%s COMM: Negotiating %-14s %s"
+#define HHC90512 "%s COMM: Received IAC %s"
+//efine HHC90513            (available)
+//efine HHC90514            (available)
+//efine HHC90515            (available)
+//efine HHC90516 - HHC90549 (available)
+
+// range 90550 - 90599 available
 // range 90600 - 90699 available
 // range 90700 - 90799 available
 // range 90800 - 90899 available

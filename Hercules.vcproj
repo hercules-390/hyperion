@@ -504,6 +504,14 @@
 					<Filter
 						Name="Con/Disp/Term"
 						>
+						<File
+							RelativePath=".\telnet.c"
+							>
+						</File>
+						<File
+							RelativePath=".\telnet.h"
+							>
+						</File>
 						<Filter
 							Name="Header Files"
 							>
@@ -1793,6 +1801,10 @@
 					</File>
 					<File
 						RelativePath=".\README.TAPE"
+						>
+					</File>
+					<File
+						RelativePath=".\README.TELNET"
 						>
 					</File>
 					<File

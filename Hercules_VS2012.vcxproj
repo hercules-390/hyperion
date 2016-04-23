@@ -308,6 +308,7 @@
     <ClCompile Include="decNumber\decPacked.c" />
     <ClCompile Include="con1052c.c" />
     <ClCompile Include="console.c" />
+    <ClCompile Include="telnet.c" />
     <ClCompile Include="commadpt.c" />
     <ClCompile Include="ctc_ctci.c" />
     <ClCompile Include="ctc_lcs.c" />
@@ -665,6 +666,7 @@
     <ClInclude Include="cmpsctst.h" />
     <ClInclude Include="cmpsctst_stdinc.h" />
     <ClInclude Include="cnsllogo.h" />
+    <ClInclude Include="telnet.h" />
     <ClInclude Include="crypto\aes.h" />
     <ClInclude Include="crypto\des.h" />
     <ClInclude Include="crypto\sha1.h" />

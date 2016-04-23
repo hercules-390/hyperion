@@ -56,6 +56,7 @@ dynamic_SRC 		 = dyngui.c	 \
 dyndev_SRC			 = commadpt.c	\
 							comm3705.c	\
 							console.c	\
+							telnet.c	\
 							cardpch.c	\
 							cardrdr.c	\
 							sockdev.c	\
@@ -229,7 +230,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3088_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3088_la_LIBADD	= $(DYNMOD_LD_ADD)
 
-  hdt3270_la_SOURCES = console.c
+  hdt3270_la_SOURCES = console.c telnet.c
   hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3270_la_LIBADD	= $(DYNMOD_LD_ADD)
 
@@ -757,6 +758,7 @@ noinst_HEADERS = hostinfo.h		\
 					  commadpt.h	  \
 					  comm3705.h	  \
 					  cnsllogo.h	  \
+					  telnet.h		  \
 					  cache.h			\
 					  ecpsvm.h		  \
 					  memrchr.h 	  \

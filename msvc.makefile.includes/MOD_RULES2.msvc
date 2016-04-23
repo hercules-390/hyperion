@@ -78,7 +78,7 @@ $(X)hdt3525.dll:  $(O)cardpch.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
 
-$(X)hdt3270.dll:  $(O)console.obj \
+$(X)hdt3270.dll:  $(O)console.obj $(O)telnet.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
 

@@ -120,6 +120,7 @@ typedef struct SYSBLK    SYSBLK;    // System configuration block
 typedef struct REGS      REGS;      // CPU register context
 typedef struct VFREGS    VFREGS;    // Vector Facility Registers
 typedef struct ZPBLK     ZPBLK;     // Zone Parameter Block
+typedef struct TELNET    TELNET;    // Telnet Control Block
 typedef struct DEVBLK    DEVBLK;    // Device configuration block
 typedef struct CHPBLK    CHPBLK;    // Channel Path config block
 typedef struct IOINT     IOINT;     // I/O interrupt queue

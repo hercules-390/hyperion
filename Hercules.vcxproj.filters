@@ -252,6 +252,9 @@
     <ClCompile Include="console.c">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="telnet.c">
+      <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="commadpt.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
@@ -1610,6 +1613,9 @@
       <Filter>Source Files\Hercules\Rexx\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cnsllogo.h">
+      <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="telnet.h">
       <Filter>Source Files\Hercules\Devices\Con/Disp/Term\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
