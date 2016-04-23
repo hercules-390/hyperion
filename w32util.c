@@ -3494,6 +3494,41 @@ static void SelectSet
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// The below emulates pselect for Windows but does not use sigmask.
+
+DLL_EXPORT int w32_pselect
+(
+    int                    nfds,
+    fd_set*                pReadSet,
+    fd_set*                pWriteSet,
+    fd_set*                pExceptSet,
+    const struct timespec* pTimeout,
+    const sigset_t*        pSigmask,
+    const char*            pszSourceFile,
+    int                    nLineNumber
+)
+{
+    struct timeval  select_timeout;
+    int             rc;
+
+    UNREFERENCED( pSigmask );
+
+    if (!pTimeout)
+        rc = w32_select( nfds, pReadSet, pWriteSet, pExceptSet, NULL,
+                         pszSourceFile, nLineNumber );
+    else
+    {
+        select_timeout.tv_sec  = pTimeout->tv_sec;
+        select_timeout.tv_usec = pTimeout->tv_nsec / 1000;
+
+        rc = w32_select( nfds, pReadSet, pWriteSet, pExceptSet, &select_timeout,
+                         pszSourceFile, nLineNumber );
+    }
+
+    return rc;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // (global variables)
 
 typedef NET_IFINDEX (WINAPI *PIF_NAMETOINDEX)( LPCSTR pszInterfaceName );
@@ -3753,6 +3788,44 @@ DLL_EXPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, FILE
         return -1;
     }
     return ( rc / size );
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// vsnprintf
+//
+// The Windows version of vsnprintf doesn't always terminate the buffer
+// and returns -1 if count is too small. The following compensates for
+// such behavior in order to match the POSIX behavior of: 1) returning
+// the number of bytes (excluding the terminating null byte) that would
+// be written had count been sufficiently large, 2) ALWAYS appending a
+// terminating null byte REGARDLESS of whether count is large enough.
+
+DLL_EXPORT int w32_vsnprintf( char* bfr, size_t cnt, const char* fmt, va_list vargs )
+{
+    int rc = _vsnprintf_s( bfr, cnt, _TRUNCATE, fmt, vargs );
+    if (rc < 0)
+        rc = _vscprintf( fmt, vargs );
+    return rc;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// snprintf
+//
+// The Windows version of snprintf doesn't always terminate the buffer
+// and returns -1 if count is too small. The following compensates for
+// such behavior in order to match the POSIX behavior of: 1) returning
+// the number of bytes (excluding the terminating null byte) that would
+// be written had count been sufficiently large, 2) ALWAYS appending a
+// terminating null byte REGARDLESS of whether count is large enough.
+
+DLL_EXPORT int w32_snprintf( char* bfr, size_t cnt, const char* fmt, ... )
+{
+    int       rc;
+    va_list   vargs;
+    va_start( vargs, fmt );
+    rc = w32_vsnprintf( bfr, cnt, fmt, vargs );
+    va_end( vargs);
+    return rc;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

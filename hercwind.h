@@ -82,9 +82,9 @@ typedef u_int32_t           in_addr_t;
 #include <signal.h>
 #include <direct.h>
 
-#define STDIN_FILENO    fileno(stdin)
-#define STDOUT_FILENO   fileno(stdout)
-#define STDERR_FILENO   fileno(stderr)
+#define STDIN_FILENO    0
+#define STDOUT_FILENO   1
+#define STDERR_FILENO   2
 
 /* Bit settings for open() and stat() functions */
 #define S_IRUSR         _S_IREAD
@@ -101,16 +101,16 @@ typedef u_int32_t           in_addr_t;
 #define W_OK            2
 #define R_OK            4
 
-#define strcasecmp      stricmp
-#define strncasecmp     strnicmp
+#define strcasecmp      _stricmp
+#define strncasecmp     _strnicmp
 
 #if !defined(_TRUNCATE)
 #define _TRUNCATE ((size_t)-1)      // normally #defined in <crtdefs.h>
 #endif
-// Using _snprintf_s(,,_TRUNCATE,...) ensures the buffer will ALWAYS be null terminated */
-#define snprintf(_buf, _size, ...)  _snprintf_s((_buf), (_size), _TRUNCATE, ## __VA_ARGS__ )
 
-#define vsnprintf       _vsnprintf
+#define snprintf        w32_snprintf
+#define vsnprintf       w32_vsnprintf
+
 #define strerror        w32_strerror
 #define strerror_r      w32_strerror_r
 

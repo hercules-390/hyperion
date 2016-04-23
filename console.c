@@ -57,19 +57,91 @@
 #include "hstdinc.h"
 #include "hercules.h"
 #include "hexterns.h"
-
 #include "devtype.h"
-
 #include "opcode.h"
-
 #include "sr.h"
-
-/* Include file for the logo */
 #include "cnsllogo.h"
 
-#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
-  SYSBLK *psysblk;
-  #define sysblk (*psysblk)
+/*-------------------------------------------------------------------*/
+/*                 Tweakable build constants                         */
+/*-------------------------------------------------------------------*/
+#define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
+#define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
+#undef  FIX_QWS_BUG_FOR_MCS_CONSOLES
+
+/*-------------------------------------------------------------------*/
+/* Internal macro definitions                                        */
+/*-------------------------------------------------------------------*/
+
+/* DEBUG_LVL: 0 = none
+              1 = status
+              2 = headers
+              3 = buffers
+*/
+#define DEBUG_LVL        0
+
+#if DEBUG_LVL == 0
+  #define TNSDEBUG1      1 ? ((void)0) : logmsg
+  #define TNSDEBUG2      1 ? ((void)0) : logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+#endif
+#if DEBUG_LVL == 1
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      1 ? ((void)0) : logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+#endif
+#if DEBUG_LVL == 2
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      logmsg
+  #define TNSDEBUG3      1 ? ((void)0) : logmsg
+#endif
+#if DEBUG_LVL == 3
+  #define TNSDEBUG1      logmsg
+  #define TNSDEBUG2      logmsg
+  #define TNSDEBUG3      logmsg
+#endif
+
+#define TNSERROR        logmsg
+
+/*-------------------------------------------------------------------*/
+/* SUBROUTINE TO TRACE THE CONTENTS OF AN ASCII MESSAGE PACKET       */
+/*-------------------------------------------------------------------*/
+#if DEBUG_LVL == 3
+static void
+packet_trace(BYTE *addr, int len)
+{
+int  i, offset;
+BYTE c;
+BYTE print_chars[17];
+
+    for (offset=0; offset < len; )
+    {
+        memset(print_chars, 0, sizeof(print_chars));
+        logmsg("+%4.4X  ", offset);
+        for (i=0; i < 16; i++)
+        {
+            c = *addr++;
+            if (offset < len) {
+                logmsg("%2.2X", c);
+                print_chars[i] = '.';
+                if (isprint(c)) print_chars[i] = c;
+                c = guest_to_host(c);
+                if (isprint(c)) print_chars[i] = c;
+            }
+            else {
+                logmsg("  ");
+            }
+            offset++;
+            if ((offset & 3) == 0) {
+                logmsg(" ");
+            }
+        } /* end for(i) */
+        logmsg(" %s\n", print_chars);
+    } /* end for(offset) */
+
+} /* end function packet_trace */
+#else
+ #define packet_trace( _addr, _len)
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -122,223 +194,383 @@ static BYTE loc3270_immed[256]=
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* D0 */
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* E0 */
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; /* F0 */
-/*-------------------------------------------------------------------*/
-/* Telnet command definitions                                        */
-/*-------------------------------------------------------------------*/
-#define BINARY          0       /* Binary Transmission */
-#define IS              0       /* Used by terminal-type negotiation */
-#define SEND            1       /* Used by terminal-type negotiation */
-#define ECHO_OPTION     1       /* Echo option */
-#define SUPPRESS_GA     3       /* Suppress go-ahead option */
-#define TIMING_MARK     6       /* Timing mark option */
-#define TERMINAL_TYPE   24      /* Terminal type option */
-#define NAWS            31      /* Negotiate About Window Size */
-#define EOR             25      /* End of record option */
-#define EOR_MARK        239     /* End of record marker */
-#define SE              240     /* End of subnegotiation parameters */
-#define NOP             241     /* No operation */
-#define DATA_MARK       242     /* The data stream portion of a Synch.
-                                   This should always be accompanied
-                                   by a TCP Urgent notification */
-#define BRK             243     /* Break character */
-#define IP              244     /* Interrupt Process */
-#define AO              245     /* Abort Output */
-#define AYT             246     /* Are You There */
-#define EC              247     /* Erase character */
-#define EL              248     /* Erase Line */
-#define GA              249     /* Go ahead */
-#define SB              250     /* Subnegotiation of indicated option */
-#define WILL            251     /* Indicates the desire to begin
-                                   performing, or confirmation that
-                                   you are now performing, the
-                                   indicated option */
-#define WONT            252     /* Indicates the refusal to perform,
-                                   or continue performing, the
-                                   indicated option */
-#define DO              253     /* Indicates the request that the
-                                   other party perform, or
-                                   confirmation that you are expecting
-                                   the other party to perform, the
-                                   indicated option */
-#define DONT            254     /* Indicates the demand that the
-                                   other party stop performing,
-                                   or confirmation that you are no
-                                   longer expecting the other party
-                                   to perform, the indicated option */
-#define IAC             255     /* Interpret as Command */
 
 /*-------------------------------------------------------------------*/
-/* 3270 definitions                                                  */
+/*          Static variables and forward references                  */
 /*-------------------------------------------------------------------*/
-
-/* 3270 local commands (CCWs) */
-#define L3270_EAU       0x0F            /* Erase All Unprotected     */
-#define L3270_EW        0x05            /* Erase/Write               */
-#define L3270_EWA       0x0D            /* Erase/Write Alternate     */
-#define L3270_RB        0x02            /* Read Buffer               */
-#define L3270_RM        0x06            /* Read Modified             */
-#define L3270_WRT       0x01            /* Write                     */
-#define L3270_WSF       0x11            /* Write Structured Field    */
-
-#define L3270_NOP       0x03            /* No Operation              */
-#define L3270_SELRM     0x0B            /* Select RM                 */
-#define L3270_SELRB     0x1B            /* Select RB                 */
-#define L3270_SELRMP    0x2B            /* Select RMP                */
-#define L3270_SELRBP    0x3B            /* Select RBP                */
-#define L3270_SELWRT    0x4B            /* Select WRT                */
-#define L3270_SENSE     0x04            /* Sense                     */
-#define L3270_SENSEID   0xE4            /* Sense ID                  */
-
-/* 3270 remote commands */
-#define R3270_EAU       0x6F            /* Erase All Unprotected     */
-#define R3270_EW        0xF5            /* Erase/Write               */
-#define R3270_EWA       0x7E            /* Erase/Write Alternate     */
-#define R3270_RB        0xF2            /* Read Buffer               */
-#define R3270_RM        0xF6            /* Read Modified             */
-#define R3270_RMA       0x6E            /* Read Modified All         */
-#define R3270_WRT       0xF1            /* Write                     */
-#define R3270_WSF       0xF3            /* Write Structured Field    */
-
-/* 3270 orders */
-#define O3270_SBA       0x11            /* Set Buffer Address        */
-#define O3270_SF        0x1D            /* Start Field               */
-#define O3270_SFE       0x29            /* Start Field Extended      */
-#define O3270_SA        0x28            /* Set Attribute             */
-#define O3270_IC        0x13            /* Insert Cursor             */
-#define O3270_MF        0x2C            /* Modify Field              */
-#define O3270_PT        0x05            /* Program Tab               */
-#define O3270_RA        0x3C            /* Repeat to Address         */
-#define O3270_EUA       0x12            /* Erase Unprotected to Addr */
-#define O3270_GE        0x08            /* Graphic Escape            */
-
-/* Inbound structured fields */
-#define SF3270_AID      0x88            /* Aid value of inbound SF   */
-#define SF3270_3270DS   0x80            /* SFID of 3270 datastream SF*/
-
-/* 12 bit 3270 buffer address code conversion table                  */
-static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
-                           "\xC8\xC9\x4A\x4B\x4C\x4D\x4E\x4F"
-                           "\x50\xD1\xD2\xD3\xD4\xD5\xD6\xD7"
-                           "\xD8\xD9\x5A\x5B\x5C\x5D\x5E\x5F"
-                           "\x60\x61\xE2\xE3\xE4\xE5\xE6\xE7"
-                           "\xE8\xE9\x6A\x6B\x6C\x6D\x6E\x6F"
-                           "\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7"
-                           "\xF8\xF9\x7A\x7B\x7C\x7D\x7E\x7F" };
+static int   console_cnslcnt = 0;
+static void* console_connection_handler( void* arg );
+static BYTE  solicit_3270_data( DEVBLK* dev, BYTE cmd );
 
 /*-------------------------------------------------------------------*/
-/* Internal macro definitions                                        */
+/* SUBROUTINE TO SEND A DATA PACKET TO THE CLIENT                    */
 /*-------------------------------------------------------------------*/
-
-/* DEBUG_LVL: 0 = none
-              1 = status
-              2 = headers
-              3 = buffers
-*/
-#define DEBUG_LVL        0
-
-#if DEBUG_LVL == 0
-  #define TNSDEBUG1      1 ? ((void)0) : logmsg
-  #define TNSDEBUG2      1 ? ((void)0) : logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
-#endif
-#if DEBUG_LVL == 1
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      1 ? ((void)0) : logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
-#endif
-#if DEBUG_LVL == 2
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      logmsg
-  #define TNSDEBUG3      1 ? ((void)0) : logmsg
-#endif
-#if DEBUG_LVL == 3
-  #define TNSDEBUG1      logmsg
-  #define TNSDEBUG2      logmsg
-  #define TNSDEBUG3      logmsg
-#endif
-
-#define TNSERROR        logmsg
-
-#define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
-#define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
-
-
-#undef  FIX_QWS_BUG_FOR_MCS_CONSOLES
-
-#if defined(_MSVC_)
-/* FIXME: pselect is required to eliminate a documented timing hole with
- *        select that can yield a deadlock. This version somewhat
- *        emulates pselect locally for Windows, but does not use
- *        sigmask.
- */
-
-typedef unsigned long sigset_t;
-
-static INLINE
-int pselect(int nfds, fd_set *readfds, fd_set *writefds,
-            fd_set *exceptfds, const struct timespec *timeout,
-            const sigset_t *sigmask)
+static int
+send_packet (int csock, BYTE *buf, int len, char *caption)
 {
-    struct timeval  select_timeout;
-    int             result;
+int     rc;                             /* Return code               */
 
-    UNREFERENCED(sigmask);
+    if (caption != NULL) {
+        TNSDEBUG2("console: DBG003: Sending %s\n", caption);
+        packet_trace (buf, len);
+    }
 
-    /* Convert timeout value, if specified */
-    if (timeout != NULL)
+    rc = send (csock, buf, len, 0);
+
+    if (rc < 0) {
+        TNSERROR("console: DBG021: send: %s\n", strerror(HSO_errno));
+        return -1;
+    } /* end if(rc) */
+
+    return 0;
+
+} /* end function send_packet */
+
+
+#if defined(WIN32) && defined(OPTION_DYNAMIC_LOAD) && !defined(HDL_USE_LIBTOOL) && !defined(_MSVC_)
+  SYSBLK *psysblk;
+  #define sysblk (*psysblk)
+#endif
+
+
+static int
+console_initialise()
+{
+    if(!console_cnslcnt && !sysblk.cnsltid)
     {
-        select_timeout.tv_sec  = timeout->tv_sec;
-        select_timeout.tv_usec = timeout->tv_nsec / 1000;
-        result = select (nfds, readfds, writefds, exceptfds,
-                         &select_timeout);
+    int rc;
+
+        console_cnslcnt++; // No serialisation needed just yet, as the console thread is not yet active
+
+        if((rc = create_thread (&sysblk.cnsltid, JOINABLE,
+                                console_connection_handler, NULL,
+                                "console_connection_handler")))
+        {
+            WRMSG(HHC00102, "E", strerror(rc));
+            return 1;
+        }
     }
     else
-        result = select (nfds, readfds, writefds, exceptfds, NULL);
+        console_cnslcnt++;
 
-    return (result);
+    return 0;
 }
-#endif /*defined(_MSVC_)*/
 
-/*-------------------------------------------------------------------*/
-/* SUBROUTINE TO TRACE THE CONTENTS OF AN ASCII MESSAGE PACKET       */
-/*-------------------------------------------------------------------*/
-#if DEBUG_LVL == 3
+
 static void
-packet_trace(BYTE *addr, int len)
+console_remove(DEVBLK *dev)
 {
-int  i, offset;
-BYTE c;
-BYTE print_chars[17];
+    dev->connected = 0;
+    dev->console = 0;
+    dev->fd = -1;
 
-    for (offset=0; offset < len; )
+    console_cnslcnt--;
+
+    SIGNAL_CONSOLE_THREAD();
+
+    if(!console_cnslcnt)
     {
-        memset(print_chars, 0, sizeof(print_chars));
-        logmsg("+%4.4X  ", offset);
-        for (i=0; i < 16; i++)
-        {
-            c = *addr++;
-            if (offset < len) {
-                logmsg("%2.2X", c);
-                print_chars[i] = '.';
-                if (isprint(c)) print_chars[i] = c;
-                c = guest_to_host(c);
-                if (isprint(c)) print_chars[i] = c;
-            }
-            else {
-                logmsg("  ");
-            }
-            offset++;
-            if ((offset & 3) == 0) {
-                logmsg(" ");
-            }
-        } /* end for(i) */
-        logmsg(" %s\n", print_chars);
-    } /* end for(offset) */
+        release_lock(&dev->lock);
+        join_thread( sysblk.cnsltid, NULL);
+        obtain_lock(&dev->lock);
+        sysblk.cnsltid = 0;
+    }
+}
 
-} /* end function packet_trace */
-#else
- #define packet_trace( _addr, _len)
-#endif
+
+/*-------------------------------------------------------------------*/
+/* CLOSE THE 3270 DEVICE HANDLER                                     */
+/*-------------------------------------------------------------------*/
+static int
+loc3270_close_device ( DEVBLK *dev )
+{
+
+  #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+    /* Clear the pointer to the SYSG console */
+    if (dev == sysblk.sysgdev)
+    {
+        sysblk.sysgdev = NULL;
+    }
+  #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
+
+    console_remove(dev);
+
+    return 0;
+} /* end function loc3270_close_device */
+
+
+/*-------------------------------------------------------------------*/
+/* CLOSE THE 1052/3215 DEVICE HANDLER                                */
+/*-------------------------------------------------------------------*/
+static int
+constty_close_device ( DEVBLK *dev )
+{
+    console_remove(dev);
+
+    return 0;
+} /* end function constty_close_device */
+
+
+/*-------------------------------------------------------------------*/
+/* INITIALIZE THE 3270 DEVICE HANDLER                                */
+/*-------------------------------------------------------------------*/
+static int
+loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
+{
+    int ac = 0;
+
+    /* For re-initialisation, close the existing file, if any */
+    if (dev->fd >= 0)
+        (dev->hnd->close)(dev);
+
+    /* reset excp count */
+    dev->excps = 0;
+
+    /* Indicate that this is a console device */
+    dev->console = 1;
+
+    /* Reset device dependent flags */
+    dev->connected = 0;
+
+    /* Set number of sense bytes */
+    dev->numsense = 1;
+
+    /* Set the size of the device buffer */
+    dev->bufsize = BUFLEN_3270;
+
+    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = 0x3270;
+
+  #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+    /* Extra initialisation for the SYSG console */
+    if (strcasecmp(dev->typname,"SYSG") == 0)
+    {
+        dev->pmcw.flag5 &= ~PMCW5_V; // Not a regular device
+        if (sysblk.sysgdev != NULL)
+        {
+            WRMSG(HHC01025, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
+            return -1;
+        }
+    }
+  #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
+
+    /* Initialize the device identifier bytes */
+    dev->devid[0] = 0xFF;
+    dev->devid[1] = 0x32; /* Control unit type is 3274-1D */
+    dev->devid[2] = 0x74;
+    dev->devid[3] = 0x1D;
+    dev->devid[4] = 0x32; /* Device type is 3278-2 */
+    if ((dev->devtype & 0xFF)==0x70)
+    {
+        dev->devid[5] = 0x78;
+        dev->devid[6] = 0x02;
+    }
+    else
+    {
+        dev->devid[5] = dev->devtype & 0xFF; /* device type is 3287-1 */
+        dev->devid[6] = 0x01;
+    }
+    dev->numdevid = 7;
+
+    dev->filename[0] = 0;
+    dev->acc_ipaddr = 0;
+    dev->acc_ipmask = 0;
+
+    if (argc > 0)   // group name?
+    {
+        if ('*' == argv[ac][0] && '\0' == argv[ac][1])
+            ;   // NOP (not really a group name; an '*' is
+                // simply used as an argument place holder)
+        else
+        {
+            if ( strlen(argv[ac]) < 9 && strlen(argv[ac]) > 0 )
+            {
+                char r[9];
+                int  i;
+                int  rc = 0;
+
+                strupper(r, argv[ac]);
+
+                for (i = 1; i < (int)strlen(r) && rc == 0; i++ )
+                {
+                    if ( !isalnum( r[i] ) )
+                    {
+                        rc = -1;
+                    }
+                }
+
+                if ( rc == 0 && isalpha( r[0] ))
+                {
+                    strlcpy(dev->filename,r,sizeof(dev->filename));
+                }
+                else
+                {
+                    WRMSG(HHC01091, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
+                    return -1;
+                }
+            }
+            else
+            {
+                WRMSG(HHC01091, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
+                return -1;
+            }
+        }
+
+        argc--; ac++;
+        if (argc > 0)   // ip address?
+        {
+            if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
+            {
+                WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                      "IP address", argv[ac]);
+                return -1;
+            }
+            else
+            {
+                argc--; ac++;
+                if (argc > 0)   // ip addr mask?
+                {
+                    if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
+                    {
+                        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                              "mask value", argv[ac]);
+                        return -1;
+                    }
+                    else
+                    {
+                        argc--; ac++;
+                        if (argc > 0)   // too many args?
+                        {
+                            WRMSG(HHC01019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                                  argv[ac] );
+                            return -1;
+                        }
+                    }
+                }
+                else
+                {
+                    dev->acc_ipmask = (in_addr_t)(-1);
+                }
+            }
+        }
+    }
+
+  #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
+    /* Extra initialisation for the SYSG console */
+    if (strcasecmp(dev->typname,"SYSG") == 0)
+    {
+        /* Save the address of the SYSG console devblk */
+        sysblk.sysgdev = dev;
+    }
+  #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
+
+    return console_initialise();
+} /* end function loc3270_init_handler */
+
+
+/*-------------------------------------------------------------------*/
+/* INITIALIZE THE 1052/3215 DEVICE HANDLER                           */
+/*-------------------------------------------------------------------*/
+static int
+constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
+{
+    int ac=0;
+
+    /* For re-initialisation, close the existing file, if any */
+    if (dev->fd >= 0)
+        (dev->hnd->close)(dev);
+
+    /* reset excp count */
+    dev->excps = 0;
+
+    /* Indicate that this is a console device */
+    dev->console = 1;
+
+    /* Set number of sense bytes */
+    dev->numsense = 1;
+
+    /* Initialize device dependent fields */
+    dev->keybdrem = 0;
+
+    /* Set length of print buffer */
+    dev->bufsize = BUFLEN_1052;
+
+    /* Assume we want to prompt */
+    dev->prompt1052 = 1;
+
+    /* Is there an argument? */
+    if (argc > 0)
+    {
+        /* Look at the argument and set noprompt flag if specified. */
+        if (strcasecmp(argv[ac], "noprompt") == 0)
+        {
+            dev->prompt1052 = 0;
+            ac++; argc--;
+        }
+        // (else it's a group name...)
+    }
+
+    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = 0x1052;
+
+    /* Initialize the device identifier bytes */
+    dev->devid[0] = 0xFF;
+    dev->devid[1] = dev->devtype >> 8;
+    dev->devid[2] = dev->devtype & 0xFF;
+    dev->devid[3] = 0x00;
+    dev->devid[4] = dev->devtype >> 8;
+    dev->devid[5] = dev->devtype & 0xFF;
+    dev->devid[6] = 0x00;
+    dev->numdevid = 7;
+
+    dev->filename[0] = 0;
+    dev->acc_ipaddr = 0;
+    dev->acc_ipmask = 0;
+
+    if (argc > 0)   // group name?
+    {
+        if ('*' == argv[ac][0] && '\0' == argv[ac][1])
+            ;   // NOP (not really a group name; an '*' is
+                // simply used as an argument place holder)
+        else
+            strlcpy(dev->filename,argv[ac],sizeof(dev->filename));
+
+        argc--; ac++;
+        if (argc > 0)   // ip address?
+        {
+            if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
+            {
+                WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "IP address", argv[ac]);
+                return -1;
+            }
+            else
+            {
+                argc--; ac++;
+                if (argc > 0)   // ip addr mask?
+                {
+                    if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
+                    {
+                        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "mask value", argv[ac]);
+                        return -1;
+                    }
+                    else
+                    {
+                        argc--; ac++;
+                        if (argc > 0)   // too many args?
+                        {
+                            WRMSG(HHC01019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
+                            return -1;
+                        }
+                    }
+                }
+                else
+                    dev->acc_ipmask = (in_addr_t)(-1);
+            }
+        }
+    }
+
+    return console_initialise();
+} /* end function constty_init_handler */
 
 
 static struct sockaddr_in * get_inet_socket(const char *host_serv)
@@ -419,6 +651,652 @@ char *h_serv;
     return sin;
 
 }
+
+
+/*-------------------------------------------------------------------*/
+/* 3270 definitions                                                  */
+/*-------------------------------------------------------------------*/
+
+/* 3270 local commands (CCWs) */
+#define L3270_EAU       0x0F            /* Erase All Unprotected     */
+#define L3270_EW        0x05            /* Erase/Write               */
+#define L3270_EWA       0x0D            /* Erase/Write Alternate     */
+#define L3270_RB        0x02            /* Read Buffer               */
+#define L3270_RM        0x06            /* Read Modified             */
+#define L3270_WRT       0x01            /* Write                     */
+#define L3270_WSF       0x11            /* Write Structured Field    */
+
+#define L3270_NOP       0x03            /* No Operation              */
+#define L3270_SELRM     0x0B            /* Select RM                 */
+#define L3270_SELRB     0x1B            /* Select RB                 */
+#define L3270_SELRMP    0x2B            /* Select RMP                */
+#define L3270_SELRBP    0x3B            /* Select RBP                */
+#define L3270_SELWRT    0x4B            /* Select WRT                */
+#define L3270_SENSE     0x04            /* Sense                     */
+#define L3270_SENSEID   0xE4            /* Sense ID                  */
+
+/* 3270 remote commands */
+#define R3270_EAU       0x6F            /* Erase All Unprotected     */
+#define R3270_EW        0xF5            /* Erase/Write               */
+#define R3270_EWA       0x7E            /* Erase/Write Alternate     */
+#define R3270_RB        0xF2            /* Read Buffer               */
+#define R3270_RM        0xF6            /* Read Modified             */
+#define R3270_RMA       0x6E            /* Read Modified All         */
+#define R3270_WRT       0xF1            /* Write                     */
+#define R3270_WSF       0xF3            /* Write Structured Field    */
+
+/* 3270 orders */
+#define O3270_SBA       0x11            /* Set Buffer Address        */
+#define O3270_SF        0x1D            /* Start Field               */
+#define O3270_SFE       0x29            /* Start Field Extended      */
+#define O3270_SA        0x28            /* Set Attribute             */
+#define O3270_IC        0x13            /* Insert Cursor             */
+#define O3270_MF        0x2C            /* Modify Field              */
+#define O3270_PT        0x05            /* Program Tab               */
+#define O3270_RA        0x3C            /* Repeat to Address         */
+#define O3270_EUA       0x12            /* Erase Unprotected to Addr */
+#define O3270_GE        0x08            /* Graphic Escape            */
+
+/* Inbound structured fields */
+#define SF3270_AID      0x88            /* Aid value of inbound SF   */
+#define SF3270_3270DS   0x80            /* SFID of 3270 datastream SF*/
+
+
+/*-------------------------------------------------------------------*/
+/* SUBROUTINE TO ADVANCE TO NEXT CHAR OR ORDER IN A 3270 DATA STREAM */
+/* Input:                                                            */
+/*      buf     Buffer containing 3270 data stream                   */
+/*      off     Offset in buffer of current character or order       */
+/*      pos     Position on screen of current character or order     */
+/* Output:                                                           */
+/*      off     Offset in buffer of next character or order          */
+/*      pos     Position on screen of next character or order        */
+/*-------------------------------------------------------------------*/
+static void
+next_3270_pos (BYTE *buf, int *off, int *pos)
+{
+int     i;
+
+    /* Copy the offset and advance the offset by 1 byte */
+    i = (*off)++;
+
+    /* Advance the offset past the argument bytes and set position */
+    switch (buf[i]) {
+
+    /* The Repeat to Address order has 3 argument bytes (or in case
+       of a Graphics Escape 4 bytes) and sets the screen position */
+            case O3270_RA:
+
+        *off += (buf[i+3] == O3270_GE) ? 4 : 3;
+                if ((buf[i+1] & 0xC0) == 0x00)
+                    *pos = (buf[i+1] << 8) | buf[i+2];
+                else
+                    *pos = ((buf[i+1] & 0x3F) << 6)
+                                 | (buf[i+2] & 0x3F);
+        break;
+
+    /* The Start Field Extended and Modify Field orders have
+       a count byte followed by a variable number of type-
+       attribute pairs, and advance the screen position by 1 */
+            case O3270_SFE:
+            case O3270_MF:
+
+        *off += (1 + 2*buf[i+1]);
+        (*pos)++;
+                break;
+
+    /* The Set Buffer Address and Erase Unprotected to Address
+       orders have 2 argument bytes and set the screen position */
+            case O3270_SBA:
+            case O3270_EUA:
+
+        *off += 2;
+                if ((buf[i+1] & 0xC0) == 0x00)
+                    *pos = (buf[i+1] << 8) | buf[i+2];
+                else
+                    *pos = ((buf[i+1] & 0x3F) << 6)
+                                 | (buf[i+2] & 0x3F);
+        break;
+
+    /* The Set Attribute order has 2 argument bytes and
+       does not change the screen position */
+            case O3270_SA:
+
+        *off += 2;
+                break;
+
+    /* Insert Cursor and Program Tab have no argument
+       bytes and do not change the screen position */
+            case O3270_IC:
+            case O3270_PT:
+
+                break;
+
+    /* The Start Field and Graphics Escape orders have one
+       argument byte, and advance the screen position by 1 */
+            case O3270_SF:
+            case O3270_GE:
+
+        (*off)++;
+        (*pos)++;
+        break;
+
+    /* All other characters advance the screen position by 1 */
+            default:
+
+                (*pos)++;
+                break;
+
+    } /* end switch */
+
+} /* end function next_3270_pos */
+
+
+/*-------------------------------------------------------------------*/
+/* SUBROUTINE TO UPDATE THE CURRENT SCREEN POSITION                  */
+/* Input:                                                            */
+/*      pos     Current screen position                              */
+/*      buf     Pointer to the byte in the 3270 data stream          */
+/*              corresponding to the current screen position         */
+/*      size    Number of bytes remaining in buffer                  */
+/* Output:                                                           */
+/*      pos     Updated screen position after end of buffer          */
+/*-------------------------------------------------------------------*/
+static void
+get_screen_pos (int *pos, BYTE *buf, int size)
+{
+int     woff = 0;                       /* Current offset in buffer  */
+
+    while (woff < size)
+    {
+        /* Process next character or order, update screen position */
+        next_3270_pos (buf, &woff, pos);
+
+    } /* end while */
+
+} /* end function get_screen_pos */
+
+
+/*-------------------------------------------------------------------*/
+/* SUBROUTINE TO FIND A GIVEN SCREEN POSITION IN A 3270 READ BUFFER  */
+/* Input:                                                            */
+/*      buf     Buffer containing an inbound 3270 data stream        */
+/*      size    Number of bytes in buffer                            */
+/*      pos     Screen position whose offset in buffer is desired    */
+/* Return value:                                                     */
+/*      Offset in buffer of the character or order corresponding to  */
+/*      the given screen position, or zero if position not found.    */
+/*-------------------------------------------------------------------*/
+static int
+find_buffer_pos (BYTE *buf, int size, int pos)
+{
+int     wpos;                           /* Current screen position   */
+int     woff;                           /* Current offset in buffer  */
+
+    /* Screen position 0 is at offset 3 in the device buffer,
+       following the AID and cursor address bytes */
+    wpos = 0;
+    woff = 3;
+
+    while (woff < size)
+    {
+        /* Exit if desired screen position has been reached */
+        if (wpos >= pos)
+        {
+//          logmsg (_("console: Pos %4.4X reached at %4.4X\n"),
+//                  wpos, woff);
+
+#ifdef FIX_QWS_BUG_FOR_MCS_CONSOLES
+            /* There is a bug in QWS3270 when used to emulate an
+               MCS console with EAB.  At position 1680 the Read
+               Buffer contains two 6-byte SFE orders (12 bytes)
+               preceding the entry area, whereas MCS expects the
+               entry area to start 4 bytes after screen position
+               1680 in the buffer.  The bypass is to add 8 to the
+               calculated buffer offset if this appears to be an
+               MCS console read buffer command */
+            if (pos == 0x0690 && buf[woff] == O3270_SFE
+                && buf[woff+6] == O3270_SFE)
+            {
+                woff += 8;
+//              logmsg (_("console: Pos %4.4X adjusted to %4.4X\n"),
+//                      wpos, woff);
+        }
+#endif /*FIX_QWS_BUG_FOR_MCS_CONSOLES*/
+
+            return woff;
+        }
+
+        /* Process next character or order, update screen position */
+        next_3270_pos (buf, &woff, &wpos);
+
+    } /* end while */
+
+    /* Return offset zero if the position cannot be determined */
+    return 0;
+
+} /* end function find_buffer_pos */
+
+
+/*-------------------------------------------------------------------*/
+/* SUBROUTINE TO TRANSLATE A NULL-TERMINATED STRING TO EBCDIC        */
+/*-------------------------------------------------------------------*/
+static BYTE *
+translate_to_ebcdic (char *str)
+{
+int     i;                              /* Array subscript           */
+BYTE    c;                              /* Character work area       */
+
+    for (i = 0; str[i] != '\0'; i++)
+    {
+        c = str[i];
+        str[i] = (isprint(c) ? host_to_guest(c) : SPACE);
+    }
+
+    return (BYTE *)str;
+} /* end function translate_to_ebcdic */
+
+
+/*-------------------------------------------------------------------*/
+/* Telnet command definitions                                        */
+/*-------------------------------------------------------------------*/
+#define BINARY          0       /* Binary Transmission */
+#define IS              0       /* Used by terminal-type negotiation */
+#define SEND            1       /* Used by terminal-type negotiation */
+#define ECHO_OPTION     1       /* Echo option */
+#define SUPPRESS_GA     3       /* Suppress go-ahead option */
+#define TIMING_MARK     6       /* Timing mark option */
+#define TERMINAL_TYPE   24      /* Terminal type option */
+#define NAWS            31      /* Negotiate About Window Size */
+#define EOR             25      /* End of record option */
+#define EOR_MARK        239     /* End of record marker */
+#define SE              240     /* End of subnegotiation parameters */
+#define NOP             241     /* No operation */
+#define DATA_MARK       242     /* The data stream portion of a Synch.
+                                   This should always be accompanied
+                                   by a TCP Urgent notification */
+#define BRK             243     /* Break character */
+#define IP              244     /* Interrupt Process */
+#define AO              245     /* Abort Output */
+#define AYT             246     /* Are You There */
+#define EC              247     /* Erase character */
+#define EL              248     /* Erase Line */
+#define GA              249     /* Go ahead */
+#define SB              250     /* Subnegotiation of indicated option */
+#define WILL            251     /* Indicates the desire to begin
+                                   performing, or confirmation that
+                                   you are now performing, the
+                                   indicated option */
+#define WONT            252     /* Indicates the refusal to perform,
+                                   or continue performing, the
+                                   indicated option */
+#define DO              253     /* Indicates the request that the
+                                   other party perform, or
+                                   confirmation that you are expecting
+                                   the other party to perform, the
+                                   indicated option */
+#define DONT            254     /* Indicates the demand that the
+                                   other party stop performing,
+                                   or confirmation that you are no
+                                   longer expecting the other party
+                                   to perform, the indicated option */
+#define IAC             255     /* Interpret as Command */
+
+
+/* The following code and functions are here
+ * to build a more fancy logo
+ */
+#define SF_ATTR_PROTECTED   0x20
+#define SF_ATTR_NUMERIC     0x10
+/* One of */
+#define SF_ATTR_WDISPNSEL   0x00
+#define SF_ATTR_WDISPSEL    0x04
+#define SF_ATTR_HIGHLIGHT   0x08
+#define SF_ATTR_INVISIBLE   0x0C
+#define SF_ATTR_MDT         0x01
+
+#define ALIGN_NONE 0
+#define ALIGN_CENTER 1
+#define ALIGN_LEFT 2
+#define ALIGN_RIGHT 3
+
+#define LOGO_BUFFERSIZE 256;
+
+/* build_logo helper functions */
+
+static char *buffer_addchar(char *b,size_t *l,size_t *al,char c);
+static char *buffer_addstring(char *b,size_t *l,size_t *al,char *s);
+static char *buffer_addsba(char *b,size_t *l,size_t *al,int x, int y);
+static char *buffer_addsf(char *b,size_t *l,size_t *al,int a);
+
+static char *build_logo(char **logodata,size_t logosize,size_t *blen)
+{
+    size_t  len;
+    size_t  alen;
+    char *bfr;
+    char    *cline;
+    size_t i,j;
+    char    *verb;
+    char    *rest;
+    int     xpos,ypos;
+    int     attr;
+    int     align;
+    char    *wrk;
+    char    *strtok_str = NULL;
+    size_t  tsize;
+
+    bfr=NULL;
+    len=0;
+    alen=0;
+    bfr=buffer_addchar(bfr,&len,&alen,0xf5);
+    bfr=buffer_addchar(bfr,&len,&alen,0x42);
+    if(bfr==NULL)
+    {
+        return NULL;
+    }
+    align=ALIGN_NONE;
+    xpos=0;
+    ypos=0;
+    attr=SF_ATTR_PROTECTED;
+    for(i=0;i<logosize;i++)
+    {
+        tsize = strlen(logodata[i])+1;
+        cline=malloc(tsize);
+        strlcpy(cline,logodata[i],tsize);
+        while(1)
+        {
+            if(cline[0]!='@')
+            {
+
+#if defined(ENABLE_SYSTEM_SYMBOLS)
+                wrk=resolve_symbol_string(cline);
+                free(cline);
+                cline=wrk;
+#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
+
+                switch(align)
+                {
+                    case ALIGN_RIGHT:
+                        ypos=(int)strlen(cline);
+                        if(ypos<80)
+                        {
+                            ypos=80-ypos;
+                        }
+                        else
+                        {
+                            ypos=0;
+                        }
+                        break;
+                    case ALIGN_CENTER:
+                        ypos=(int)strlen(cline);
+                        if(ypos<80)
+                        {
+                            ypos=(80-ypos)/2;
+                        }
+                        break;
+                    case ALIGN_LEFT:
+                        ypos=0;
+                        break;
+                    default:
+                        break;
+                }
+                bfr=buffer_addsba(bfr,&len,&alen,xpos,ypos);
+                bfr=buffer_addsf(bfr,&len,&alen,attr);
+                if(align==ALIGN_NONE)
+                {
+                    ypos+=(int)strlen(cline);
+                    ypos++;
+                }
+                else
+                {
+                    xpos++;
+                    ypos=0;
+                }
+                bfr=buffer_addstring(bfr,&len,&alen,(char *)translate_to_ebcdic(cline));
+                break;
+            }
+            verb=strtok_r(cline," \t", &strtok_str);
+            if(verb==NULL)
+            {
+                break;
+            }
+            rest=strtok_r(NULL," \t", &strtok_str);
+            if(strcasecmp(verb,"@sba")==0)
+            {
+                if(rest==NULL)
+                {
+                    break;
+                }
+                wrk=strtok_r(rest,",", &strtok_str);
+                if(wrk!=NULL)
+                {
+                    xpos=atoi(wrk);
+                }
+                wrk=strtok_r(NULL,",", &strtok_str);
+                if(wrk!=NULL)
+                {
+                    ypos=atoi(wrk);
+                }
+                break;
+            }
+            if(strcasecmp(verb,"@sf")==0)
+            {
+                attr=SF_ATTR_PROTECTED;
+                if(rest==NULL)
+                {
+                    break;
+                }
+                for(j=0;rest[j]!=0;j++)
+                {
+                    switch(rest[j])
+                    {
+                        case 'h':
+                        case 'H':
+                            attr|=SF_ATTR_HIGHLIGHT;
+                            break;
+                        case 'i':
+                        case 'I':
+                            attr&=~SF_ATTR_PROTECTED;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                break;
+            }
+            if(strcasecmp(verb,"@nl")==0)
+            {
+                xpos++;
+                ypos=0;
+                break;
+            }
+            if(strcasecmp(verb,"@align")==0)
+            {
+                align=ALIGN_NONE;
+                if(rest==NULL)
+                {
+                    break;
+                }
+                while(1)
+                {
+                    if(strcasecmp(rest,"center")==0)
+                    {
+                        align=ALIGN_CENTER;
+                        break;
+                    }
+                    if(strcasecmp(rest,"right")==0)
+                    {
+                        align=ALIGN_RIGHT;
+                        break;
+                    }
+                    if(strcasecmp(rest,"none")==0)
+                    {
+                        align=ALIGN_NONE;
+                        break;
+                    }
+                    if(strcasecmp(rest,"left")==0)
+                    {
+                        align=ALIGN_LEFT;
+                        break;
+                    }
+                    break;
+                }
+                break;
+            }
+            break;
+        }
+        free(cline);
+    }
+    bfr=buffer_addchar(bfr,&len,&alen,IAC);
+    bfr=buffer_addchar(bfr,&len,&alen,EOR_MARK);
+    *blen=len;
+    return bfr;
+}
+
+
+static char *buffer_addchar(char *b,size_t *l,size_t *al,char c)
+{
+    size_t len;
+    size_t alen;
+    len=*l;
+    alen=*al;
+    if(len>=alen)
+    {
+        if(!alen)
+        {
+            alen=LOGO_BUFFERSIZE;
+            b=malloc(alen);
+            if(!b)
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            alen+=LOGO_BUFFERSIZE;
+            b=realloc(b,alen);
+            if(!b)
+            {
+                return NULL;
+            }
+        }
+    }
+    b[len++]=c;
+    *al=alen;
+    *l=len;
+    return b;
+}
+
+
+static char *buffer_addstring(char *b,size_t *l,size_t *al,char *s)
+{
+    size_t i;
+    for(i=0;s[i]!=0;i++)
+    {
+        b=buffer_addchar(b,l,al,s[i]);
+        if(!b)
+        {
+            return NULL;
+        }
+    }
+    return b;
+}
+
+
+/* 12 bit 3270 buffer address code conversion table                  */
+static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
+                           "\xC8\xC9\x4A\x4B\x4C\x4D\x4E\x4F"
+                           "\x50\xD1\xD2\xD3\xD4\xD5\xD6\xD7"
+                           "\xD8\xD9\x5A\x5B\x5C\x5D\x5E\x5F"
+                           "\x60\x61\xE2\xE3\xE4\xE5\xE6\xE7"
+                           "\xE8\xE9\x6A\x6B\x6C\x6D\x6E\x6F"
+                           "\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7"
+                           "\xF8\xF9\x7A\x7B\x7C\x7D\x7E\x7F" };
+
+
+static char *buffer_addsba(char *b,size_t *l,size_t *al,int x, int y)
+{
+    int pos;
+    pos=x*80+y;
+    b=buffer_addchar(b,l,al,0x11);
+    if(!b) return NULL;
+    b=buffer_addchar(b,l,al,sba_code[pos>>6]);
+    if(!b) return NULL;
+    b=buffer_addchar(b,l,al,sba_code[pos & 0x3f]);
+    return b;
+}
+
+
+static char *buffer_addsf(char *b,size_t *l,size_t *al,int a)
+{
+    b=buffer_addchar(b,l,al,0x1d);
+    if(!b) return NULL;
+    b=buffer_addchar(b,l,al,sba_code[a & 0x3f]);
+    return b;
+}
+
+
+/* Read the logofile */
+static void init_logo()
+{
+char   *p;            /* pointer logo filename */
+int     rc = 0;
+char    fn[FILENAME_MAX] = { 0 };
+
+    if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
+    {
+        p = getenv("HERCLOGO");
+
+        if ( p == NULL)
+            p = "herclogo.txt";
+    }
+    else
+        p = sysblk.logofile;
+
+    hostpath( fn, p, sizeof(fn) );
+
+    rc = readlogo(fn);
+
+    if ( rc == -1 && strcasecmp(fn,basename(fn)) == 0
+               && strlen(sysblk.hercules_pgmpath) > 0 )
+    {
+        char altfn[FILENAME_MAX];
+        char pathname[MAX_PATH];
+
+        memset(altfn, 0, sizeof(altfn));
+
+        MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
+
+        hostpath( pathname, altfn, sizeof(pathname));
+
+        rc = readlogo(pathname);
+    }
+} /* end of logo initialisation */
+
+
+/*-------------------------------------------------------------------*/
+/* Redrive console select                                            */
+/*-------------------------------------------------------------------*/
+static void
+redrive_console_select ( DEVBLK *dev )
+{
+    UNREFERENCED(dev);
+
+    SIGNAL_CONSOLE_THREAD();
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Redrive clear 3270 read buffer                                    */
+/*-------------------------------------------------------------------*/
+static void
+redrive_clear3270_read ( DEVBLK *dev )
+{
+    dev->readpending = 0;
+    dev->rlen3270 = 0;
+    SIGNAL_CONSOLE_THREAD();
+}
+
 
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO REMOVE ANY IAC SEQUENCES FROM THE DATA STREAM       */
@@ -504,50 +1382,6 @@ int     m, n, x, newlen;
     return newlen;
 
 } /* end function double_up_iac */
-
-
-/*-------------------------------------------------------------------*/
-/* SUBROUTINE TO TRANSLATE A NULL-TERMINATED STRING TO EBCDIC        */
-/*-------------------------------------------------------------------*/
-static BYTE *
-translate_to_ebcdic (char *str)
-{
-int     i;                              /* Array subscript           */
-BYTE    c;                              /* Character work area       */
-
-    for (i = 0; str[i] != '\0'; i++)
-    {
-        c = str[i];
-        str[i] = (isprint(c) ? host_to_guest(c) : SPACE);
-    }
-
-    return (BYTE *)str;
-} /* end function translate_to_ebcdic */
-
-
-/*-------------------------------------------------------------------*/
-/* SUBROUTINE TO SEND A DATA PACKET TO THE CLIENT                    */
-/*-------------------------------------------------------------------*/
-static int
-send_packet (int csock, BYTE *buf, int len, char *caption)
-{
-int     rc;                             /* Return code               */
-
-    if (caption != NULL) {
-        TNSDEBUG2("console: DBG003: Sending %s\n", caption);
-        packet_trace (buf, len);
-    }
-
-    rc = send (csock, buf, len, 0);
-
-    if (rc < 0) {
-        TNSERROR("console: DBG021: send: %s\n", strerror(HSO_errno));
-        return -1;
-    } /* end if(rc) */
-
-    return 0;
-
-} /* end function send_packet */
 
 
 /*-------------------------------------------------------------------*/
@@ -647,6 +1481,271 @@ BYTE    buf[512];                       /* Receive buffer            */
     return 0;
 
 } /* end function expect */
+
+
+/*-------------------------------------------------------------------*/
+/* 3270 Hercules Suspend/Resume text units                           */
+/*-------------------------------------------------------------------*/
+#define SR_DEV_3270_BUF          ( SR_DEV_3270 | 0x001 )
+#define SR_DEV_3270_EWA          ( SR_DEV_3270 | 0x002 )
+#define SR_DEV_3270_POS          ( SR_DEV_3270 | 0x003 )
+
+
+/*-------------------------------------------------------------------*/
+/* 3270 Hercules Suspend Routine                                     */
+/*-------------------------------------------------------------------*/
+static int
+loc3270_hsuspend(DEVBLK *dev, void *file)
+{
+    size_t rc, len;
+    BYTE buf[BUFLEN_3270];
+
+    if (!dev->connected) return 0;
+    SR_WRITE_VALUE(file, SR_DEV_3270_POS, dev->pos3270, sizeof(dev->pos3270));
+    SR_WRITE_VALUE(file, SR_DEV_3270_EWA, dev->ewa3270, 1);
+    obtain_lock(&dev->lock);
+    rc = solicit_3270_data (dev, R3270_RB);
+    if (rc == 0 && dev->rlen3270 > 0 && dev->rlen3270 <= BUFLEN_3270)
+    {
+        len = dev->rlen3270;
+        memcpy (buf, dev->buf, len);
+    }
+    else
+        len = 0;
+    release_lock(&dev->lock);
+    if (len)
+        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, (int)len);
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* 3270 Hercules Resume Routine                                      */
+/*-------------------------------------------------------------------*/
+static int
+loc3270_hresume(DEVBLK *dev, void *file)
+{
+    size_t rc, key, len, rbuflen = 0, pos = 0;
+    BYTE *rbuf = NULL, buf[BUFLEN_3270];
+
+    do {
+        SR_READ_HDR(file, key, len);
+        switch (key) {
+        case SR_DEV_3270_POS:
+            SR_READ_VALUE(file, len, &pos, sizeof(pos));
+            break;
+        case SR_DEV_3270_EWA:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ewa3270 = (u_int)rc;
+            break;
+        case SR_DEV_3270_BUF:
+            rbuflen = len;
+            rbuf = malloc(len);
+            if (rbuf == NULL)
+            {
+                char buf[40];
+                MSGBUF( buf, "malloc(%d)", (int)len);
+                WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf,
+                      strerror(errno));
+                return 0;
+            }
+            SR_READ_BUF(file, rbuf, rbuflen);
+            break;
+        default:
+            SR_READ_SKIP(file, len);
+            break;
+        } /* switch (key) */
+    } while ((key & SR_DEV_MASK) == SR_DEV_3270);
+
+    /* Dequeue any I/O interrupts for this device */
+    DEQUEUE_IO_INTERRUPT(&dev->ioint);
+    DEQUEUE_IO_INTERRUPT(&dev->pciioint);
+    DEQUEUE_IO_INTERRUPT(&dev->attnioint);
+
+    /* Restore the 3270 screen image if connected and buf was provided */
+    if (dev->connected && rbuf && rbuflen > 3)
+    {
+        obtain_lock(&dev->lock);
+
+        /* Construct buffer to send to the 3270 */
+        len = 0;
+        buf[len++] = dev->ewa3270 ? R3270_EWA : R3270_EW;
+        buf[len++] = 0xC2;
+        memcpy (&buf[len], &rbuf[3], rbuflen - 3);
+        len += rbuflen - 3;
+        buf[len++] = O3270_SBA;
+        buf[len++] = rbuf[1];
+        buf[len++] = rbuf[2];
+        buf[len++] = O3270_IC;
+
+        /* Double up any IAC's in the data */
+        len = double_up_iac (buf, (int)len);
+
+        /* Append telnet EOR marker */
+        buf[len++] = IAC;
+        buf[len++] = EOR_MARK;
+
+        /* Restore the 3270 screen */
+        rc = send_packet(dev->fd, buf, (int)len, "3270 data");
+
+        dev->pos3270 = (int)pos;
+
+        release_lock(&dev->lock);
+    }
+
+    if (rbuf) free(rbuf);
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* QUERY THE 1052/3215 DEVICE DEFINITION                             */
+/*-------------------------------------------------------------------*/
+static void
+constty_query_device (DEVBLK *dev, char **devclass,
+                int buflen, char *buffer)
+{
+    BEGIN_DEVICE_CLASS_QUERY( "CON", dev, devclass, buflen, buffer );
+
+    if (dev->connected)
+    {
+        snprintf (buffer, buflen, "%s%s IO[%"PRIu64"]",
+            inet_ntoa(dev->ipaddr),
+            dev->prompt1052 ? "" : " noprompt",
+            dev->excps );
+        buffer[buflen-1] = '\0';
+    }
+    else
+    {
+        char  acc[64];
+
+        if (dev->acc_ipaddr || dev->acc_ipmask)
+        {
+            char  ip   [32];
+            char  mask [32];
+            struct in_addr  xxxx;
+
+            xxxx.s_addr = dev->acc_ipaddr;
+
+            MSGBUF( ip, "%s", inet_ntoa( xxxx ));
+
+            xxxx.s_addr = dev->acc_ipmask;
+
+            MSGBUF( mask, "%s", inet_ntoa( xxxx ));
+
+            MSGBUF( acc, "%s mask %s", ip, mask );
+        }
+        else
+            acc[0] = 0;
+
+        if (dev->filename[0])
+        {
+            snprintf(buffer, buflen,
+                "GROUP=%s%s%s%s IO[%"PRIu64"]",
+                dev->filename,
+                !dev->prompt1052 ? " noprompt" : "",
+                acc[0] ? " " : "", acc,
+                dev->excps );
+            buffer[buflen-1] = '\0';
+        }
+        else
+        {
+            if (acc[0])
+            {
+                if (!dev->prompt1052)
+                {
+                    snprintf(buffer, buflen, "noprompt %s IO[%"PRIu64"]",
+                                             acc, dev->excps );
+                    buffer[buflen-1] = '\0';
+                }
+                else
+                {
+                    snprintf(buffer, buflen, "* %s", acc);
+                    buffer[buflen-1] = '\0';
+                }
+            }
+            else
+            {
+                if (!dev->prompt1052)
+                {
+                    snprintf( buffer, buflen, "noprompt IO[%"PRIu64"]", dev->excps );
+                    buffer[buflen-1] = '\0';
+                }
+                else
+                {
+                    snprintf( buffer, buflen, "IO[%"PRIu64"]", dev->excps );
+                    buffer[buflen-1] = '\0';
+                }
+            }
+        }
+    }
+} /* end function constty_query_device */
+
+
+/*-------------------------------------------------------------------*/
+/* QUERY THE 3270 DEVICE DEFINITION                                  */
+/*-------------------------------------------------------------------*/
+static void
+loc3270_query_device (DEVBLK *dev, char **devclass,
+                int buflen, char *buffer)
+{
+    BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, devclass, buflen, buffer );
+
+    if (dev->connected)
+    {
+        snprintf (buffer, buflen, "%s IO[%"PRIu64"]",
+            inet_ntoa(dev->ipaddr), dev->excps );
+        buffer[buflen-1] = '\0';
+    }
+    else
+    {
+        char  acc[64];
+
+        if (dev->acc_ipaddr || dev->acc_ipmask)
+        {
+            char  ip   [32];
+            char  mask [32];
+            struct in_addr  xxxx;
+
+            xxxx.s_addr = dev->acc_ipaddr;
+
+            MSGBUF( ip, "%s", inet_ntoa( xxxx ));
+
+            xxxx.s_addr = dev->acc_ipmask;
+
+            MSGBUF( mask, "%s", inet_ntoa( xxxx ));
+
+            MSGBUF( acc, "%s mask %s", ip, mask );
+        }
+        else
+            acc[0] = 0;
+
+        if (dev->filename[0])
+        {
+            snprintf(buffer, buflen,
+                "GROUP=%s%s%s IO[%"PRIu64"]",
+                dev->filename, acc[0] ? " " : "", acc, dev->excps );
+            buffer[buflen-1] = '\0';
+        }
+        else
+        {
+            if (acc[0])
+            {
+                snprintf(buffer, buflen,
+                    "* %s IO[%"PRIu64"]", acc, dev->excps );
+                buffer[buflen-1] = '\0';
+            }
+            else
+            {
+                snprintf(buffer, buflen,
+                    "* IO[%"PRIu64"]", dev->excps );
+                buffer[buflen-1] = '\0';
+            }
+        }
+    }
+
+} /* end function loc3270_query_device */
 
 
 /*-------------------------------------------------------------------*/
@@ -1262,274 +2361,6 @@ BYTE    c;                              /* Character work area       */
 
 } /* end function recv_1052_data */
 
-/* The following code and functions are here
- * to build a more fancy logo
- */
-#define SF_ATTR_PROTECTED   0x20
-#define SF_ATTR_NUMERIC     0x10
-/* One of */
-#define SF_ATTR_WDISPNSEL   0x00
-#define SF_ATTR_WDISPSEL    0x04
-#define SF_ATTR_HIGHLIGHT   0x08
-#define SF_ATTR_INVISIBLE   0x0C
-
-#define SF_ATTR_MDT         0x01
-
-#define LOGO_BUFFERSIZE 256;
-
-static char *buffer_addchar(char *b,size_t *l,size_t *al,char c)
-{
-    size_t len;
-    size_t alen;
-    len=*l;
-    alen=*al;
-    if(len>=alen)
-    {
-        if(!alen)
-        {
-            alen=LOGO_BUFFERSIZE;
-            b=malloc(alen);
-            if(!b)
-            {
-                return NULL;
-            }
-        }
-        else
-        {
-            alen+=LOGO_BUFFERSIZE;
-            b=realloc(b,alen);
-            if(!b)
-            {
-                return NULL;
-            }
-        }
-    }
-    b[len++]=c;
-    *al=alen;
-    *l=len;
-    return b;
-}
-
-static char *buffer_addstring(char *b,size_t *l,size_t *al,char *s)
-{
-    size_t i;
-    for(i=0;s[i]!=0;i++)
-    {
-        b=buffer_addchar(b,l,al,s[i]);
-        if(!b)
-        {
-            return NULL;
-        }
-    }
-    return b;
-}
-
-static char *buffer_addsba(char *b,size_t *l,size_t *al,int x, int y)
-{
-    int pos;
-    pos=x*80+y;
-    b=buffer_addchar(b,l,al,0x11);
-    if(!b) return NULL;
-    b=buffer_addchar(b,l,al,sba_code[pos>>6]);
-    if(!b) return NULL;
-    b=buffer_addchar(b,l,al,sba_code[pos & 0x3f]);
-    return b;
-}
-static char *buffer_addsf(char *b,size_t *l,size_t *al,int a)
-{
-    b=buffer_addchar(b,l,al,0x1d);
-    if(!b) return NULL;
-    b=buffer_addchar(b,l,al,sba_code[a & 0x3f]);
-    return b;
-}
-
-#define ALIGN_NONE 0
-#define ALIGN_CENTER 1
-#define ALIGN_LEFT 2
-#define ALIGN_RIGHT 3
-static char *build_logo(char **logodata,size_t logosize,size_t *blen)
-{
-    size_t  len;
-    size_t  alen;
-    char *bfr;
-    char    *cline;
-    size_t i,j;
-    char    *verb;
-    char    *rest;
-    int     xpos,ypos;
-    int     attr;
-    int     align;
-    char    *wrk;
-    char    *strtok_str = NULL;
-    size_t  tsize;
-
-    bfr=NULL;
-    len=0;
-    alen=0;
-    bfr=buffer_addchar(bfr,&len,&alen,0xf5);
-    bfr=buffer_addchar(bfr,&len,&alen,0x42);
-    if(bfr==NULL)
-    {
-        return NULL;
-    }
-    align=ALIGN_NONE;
-    xpos=0;
-    ypos=0;
-    attr=SF_ATTR_PROTECTED;
-    for(i=0;i<logosize;i++)
-    {
-        tsize = strlen(logodata[i])+1;
-        cline=malloc(tsize);
-        strlcpy(cline,logodata[i],tsize);
-        while(1)
-        {
-            if(cline[0]!='@')
-            {
-
-#if defined(ENABLE_SYSTEM_SYMBOLS)
-                wrk=resolve_symbol_string(cline);
-                free(cline);
-                cline=wrk;
-#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
-
-                switch(align)
-                {
-                    case ALIGN_RIGHT:
-                        ypos=(int)strlen(cline);
-                        if(ypos<80)
-                        {
-                            ypos=80-ypos;
-                        }
-                        else
-                        {
-                            ypos=0;
-                        }
-                        break;
-                    case ALIGN_CENTER:
-                        ypos=(int)strlen(cline);
-                        if(ypos<80)
-                        {
-                            ypos=(80-ypos)/2;
-                        }
-                        break;
-                    case ALIGN_LEFT:
-                        ypos=0;
-                        break;
-                    default:
-                        break;
-                }
-                bfr=buffer_addsba(bfr,&len,&alen,xpos,ypos);
-                bfr=buffer_addsf(bfr,&len,&alen,attr);
-                if(align==ALIGN_NONE)
-                {
-                    ypos+=(int)strlen(cline);
-                    ypos++;
-                }
-                else
-                {
-                    xpos++;
-                    ypos=0;
-                }
-                bfr=buffer_addstring(bfr,&len,&alen,(char *)translate_to_ebcdic(cline));
-                break;
-            }
-            verb=strtok_r(cline," \t", &strtok_str);
-            if(verb==NULL)
-            {
-                break;
-            }
-            rest=strtok_r(NULL," \t", &strtok_str);
-            if(strcasecmp(verb,"@sba")==0)
-            {
-                if(rest==NULL)
-                {
-                    break;
-                }
-                wrk=strtok_r(rest,",", &strtok_str);
-                if(wrk!=NULL)
-                {
-                    xpos=atoi(wrk);
-                }
-                wrk=strtok_r(NULL,",", &strtok_str);
-                if(wrk!=NULL)
-                {
-                    ypos=atoi(wrk);
-                }
-                break;
-            }
-            if(strcasecmp(verb,"@sf")==0)
-            {
-                attr=SF_ATTR_PROTECTED;
-                if(rest==NULL)
-                {
-                    break;
-                }
-                for(j=0;rest[j]!=0;j++)
-                {
-                    switch(rest[j])
-                    {
-                        case 'h':
-                        case 'H':
-                            attr|=SF_ATTR_HIGHLIGHT;
-                            break;
-                        case 'i':
-                        case 'I':
-                            attr&=~SF_ATTR_PROTECTED;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                break;
-            }
-            if(strcasecmp(verb,"@nl")==0)
-            {
-                xpos++;
-                ypos=0;
-                break;
-            }
-            if(strcasecmp(verb,"@align")==0)
-            {
-                align=ALIGN_NONE;
-                if(rest==NULL)
-                {
-                    break;
-                }
-                while(1)
-                {
-                    if(strcasecmp(rest,"center")==0)
-                    {
-                        align=ALIGN_CENTER;
-                        break;
-                    }
-                    if(strcasecmp(rest,"right")==0)
-                    {
-                        align=ALIGN_RIGHT;
-                        break;
-                    }
-                    if(strcasecmp(rest,"none")==0)
-                    {
-                        align=ALIGN_NONE;
-                        break;
-                    }
-                    if(strcasecmp(rest,"left")==0)
-                    {
-                        align=ALIGN_LEFT;
-                        break;
-                    }
-                    break;
-                }
-                break;
-            }
-            break;
-        }
-        free(cline);
-    }
-    bfr=buffer_addchar(bfr,&len,&alen,IAC);
-    bfr=buffer_addchar(bfr,&len,&alen,EOR_MARK);
-    *blen=len;
-    return bfr;
-}
 
 /*-------------------------------------------------------------------*/
 /* NEW CLIENT CONNECTION THREAD                                      */
@@ -1871,51 +2702,9 @@ char                    *logoout;
 } /* end function connect_client */
 
 
-
-/* Read the logofile */
-static void init_logo()
-{
-char   *p;            /* pointer logo filename */
-int     rc = 0;
-char    fn[FILENAME_MAX] = { 0 };
-
-    if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
-    {
-        p = getenv("HERCLOGO");
-
-        if ( p == NULL)
-            p = "herclogo.txt";
-    }
-    else
-        p = sysblk.logofile;
-
-    hostpath( fn, p, sizeof(fn) );
-
-    rc = readlogo(fn);
-
-    if ( rc == -1 && strcasecmp(fn,basename(fn)) == 0
-               && strlen(sysblk.hercules_pgmpath) > 0 )
-    {
-        char altfn[FILENAME_MAX];
-        char pathname[MAX_PATH];
-
-        memset(altfn, 0, sizeof(altfn));
-
-        MSGBUF(altfn,"%s%c%s", sysblk.hercules_pgmpath, PATHSEPC, fn);
-
-        hostpath( pathname, altfn, sizeof(pathname));
-
-        rc = readlogo(pathname);
-    }
-} /* end of logo initialisation */
-
-
 /*-------------------------------------------------------------------*/
 /* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
 /*-------------------------------------------------------------------*/
-
-static int     console_cnslcnt  = 0;    /* count of connected terms  */
-
 static void *
 console_connection_handler (void *arg)
 {
@@ -2404,786 +3193,6 @@ BYTE                   unitstat;        /* Status after receive data */
     return NULL;
 
 } /* end function console_connection_handler */
-
-
-static int
-console_initialise()
-{
-
-    if(!console_cnslcnt && !sysblk.cnsltid)
-    {
-    int rc;
-
-        console_cnslcnt++; // No serialisation needed just yet, as the console thread is not yet active
-
-        if((rc = create_thread (&sysblk.cnsltid, JOINABLE,
-                                console_connection_handler, NULL,
-                                "console_connection_handler")))
-        {
-            WRMSG(HHC00102, "E", strerror(rc));
-            return 1;
-        }
-    }
-    else
-        console_cnslcnt++;
-
-    return 0;
-}
-
-
-static void
-console_remove(DEVBLK *dev)
-{
-    dev->connected = 0;
-    dev->console = 0;
-    dev->fd = -1;
-
-    console_cnslcnt--;
-
-    SIGNAL_CONSOLE_THREAD();
-
-    if(!console_cnslcnt)
-    {
-        release_lock(&dev->lock);
-        join_thread( sysblk.cnsltid, NULL);
-        obtain_lock(&dev->lock);
-        sysblk.cnsltid = 0;
-    }
-}
-
-
-/*-------------------------------------------------------------------*/
-/* INITIALIZE THE 3270 DEVICE HANDLER                                */
-/*-------------------------------------------------------------------*/
-static int
-loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
-{
-    int ac = 0;
-
-    /* For re-initialisation, close the existing file, if any */
-    if (dev->fd >= 0)
-        (dev->hnd->close)(dev);
-
-    /* reset excp count */
-    dev->excps = 0;
-
-    /* Indicate that this is a console device */
-    dev->console = 1;
-
-    /* Reset device dependent flags */
-    dev->connected = 0;
-
-    /* Set number of sense bytes */
-    dev->numsense = 1;
-
-    /* Set the size of the device buffer */
-    dev->bufsize = BUFLEN_3270;
-
-    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
-        dev->devtype = 0x3270;
-
-  #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-    /* Extra initialisation for the SYSG console */
-    if (strcasecmp(dev->typname,"SYSG") == 0)
-    {
-        dev->pmcw.flag5 &= ~PMCW5_V; // Not a regular device
-        if (sysblk.sysgdev != NULL)
-        {
-            WRMSG(HHC01025, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
-            return -1;
-        }
-    }
-  #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
-
-    /* Initialize the device identifier bytes */
-    dev->devid[0] = 0xFF;
-    dev->devid[1] = 0x32; /* Control unit type is 3274-1D */
-    dev->devid[2] = 0x74;
-    dev->devid[3] = 0x1D;
-    dev->devid[4] = 0x32; /* Device type is 3278-2 */
-    if ((dev->devtype & 0xFF)==0x70)
-    {
-        dev->devid[5] = 0x78;
-        dev->devid[6] = 0x02;
-    }
-    else
-    {
-        dev->devid[5] = dev->devtype & 0xFF; /* device type is 3287-1 */
-        dev->devid[6] = 0x01;
-    }
-    dev->numdevid = 7;
-
-    dev->filename[0] = 0;
-    dev->acc_ipaddr = 0;
-    dev->acc_ipmask = 0;
-
-    if (argc > 0)   // group name?
-    {
-        if ('*' == argv[ac][0] && '\0' == argv[ac][1])
-            ;   // NOP (not really a group name; an '*' is
-                // simply used as an argument place holder)
-        else
-        {
-            if ( strlen(argv[ac]) < 9 && strlen(argv[ac]) > 0 )
-            {
-                char r[9];
-                int  i;
-                int  rc = 0;
-
-                strupper(r, argv[ac]);
-
-                for (i = 1; i < (int)strlen(r) && rc == 0; i++ )
-                {
-                    if ( !isalnum( r[i] ) )
-                    {
-                        rc = -1;
-                    }
-                }
-
-                if ( rc == 0 && isalpha( r[0] ))
-                {
-                    strlcpy(dev->filename,r,sizeof(dev->filename));
-                }
-                else
-                {
-                    WRMSG(HHC01091, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
-                    return -1;
-                }
-            }
-            else
-            {
-                WRMSG(HHC01091, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
-                return -1;
-            }
-        }
-
-        argc--; ac++;
-        if (argc > 0)   // ip address?
-        {
-            if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
-            {
-                WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                      "IP address", argv[ac]);
-                return -1;
-            }
-            else
-            {
-                argc--; ac++;
-                if (argc > 0)   // ip addr mask?
-                {
-                    if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
-                    {
-                        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                              "mask value", argv[ac]);
-                        return -1;
-                    }
-                    else
-                    {
-                        argc--; ac++;
-                        if (argc > 0)   // too many args?
-                        {
-                            WRMSG(HHC01019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                                  argv[ac] );
-                            return -1;
-                        }
-                    }
-                }
-                else
-                {
-                    dev->acc_ipmask = (in_addr_t)(-1);
-                }
-            }
-        }
-    }
-
-  #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-    /* Extra initialisation for the SYSG console */
-    if (strcasecmp(dev->typname,"SYSG") == 0)
-    {
-        /* Save the address of the SYSG console devblk */
-        sysblk.sysgdev = dev;
-    }
-  #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
-
-    return console_initialise();
-} /* end function loc3270_init_handler */
-
-
-/*-------------------------------------------------------------------*/
-/* QUERY THE 3270 DEVICE DEFINITION                                  */
-/*-------------------------------------------------------------------*/
-static void
-loc3270_query_device (DEVBLK *dev, char **devclass,
-                int buflen, char *buffer)
-{
-    BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, devclass, buflen, buffer );
-
-    if (dev->connected)
-    {
-        snprintf (buffer, buflen, "%s IO[%"PRIu64"]",
-            inet_ntoa(dev->ipaddr), dev->excps );
-        buffer[buflen-1] = '\0';
-    }
-    else
-    {
-        char  acc[64];
-
-        if (dev->acc_ipaddr || dev->acc_ipmask)
-        {
-            char  ip   [32];
-            char  mask [32];
-            struct in_addr  xxxx;
-
-            xxxx.s_addr = dev->acc_ipaddr;
-
-            MSGBUF( ip, "%s", inet_ntoa( xxxx ));
-
-            xxxx.s_addr = dev->acc_ipmask;
-
-            MSGBUF( mask, "%s", inet_ntoa( xxxx ));
-
-            MSGBUF( acc, "%s mask %s", ip, mask );
-        }
-        else
-            acc[0] = 0;
-
-        if (dev->filename[0])
-        {
-            snprintf(buffer, buflen,
-                "GROUP=%s%s%s IO[%"PRIu64"]",
-                dev->filename, acc[0] ? " " : "", acc, dev->excps );
-            buffer[buflen-1] = '\0';
-        }
-        else
-        {
-            if (acc[0])
-            {
-                snprintf(buffer, buflen,
-                    "* %s IO[%"PRIu64"]", acc, dev->excps );
-                buffer[buflen-1] = '\0';
-            }
-            else
-            {
-                snprintf(buffer, buflen,
-                    "* IO[%"PRIu64"]", dev->excps );
-                buffer[buflen-1] = '\0';
-            }
-        }
-    }
-
-} /* end function loc3270_query_device */
-
-
-/*-------------------------------------------------------------------*/
-/* CLOSE THE 3270 DEVICE HANDLER                                     */
-/*-------------------------------------------------------------------*/
-static int
-loc3270_close_device ( DEVBLK *dev )
-{
-
-  #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
-    /* Clear the pointer to the SYSG console */
-    if (dev == sysblk.sysgdev)
-    {
-        sysblk.sysgdev = NULL;
-    }
-  #endif /*defined(_FEATURE_INTEGRATED_3270_CONSOLE)*/
-
-    console_remove(dev);
-
-    return 0;
-} /* end function loc3270_close_device */
-
-
-/*-------------------------------------------------------------------*/
-/* 3270 Hercules Suspend/Resume text units                           */
-/*-------------------------------------------------------------------*/
-#define SR_DEV_3270_BUF          ( SR_DEV_3270 | 0x001 )
-#define SR_DEV_3270_EWA          ( SR_DEV_3270 | 0x002 )
-#define SR_DEV_3270_POS          ( SR_DEV_3270 | 0x003 )
-
-/*-------------------------------------------------------------------*/
-/* 3270 Hercules Suspend Routine                                     */
-/*-------------------------------------------------------------------*/
-static int
-loc3270_hsuspend(DEVBLK *dev, void *file)
-{
-    size_t rc, len;
-    BYTE buf[BUFLEN_3270];
-
-    if (!dev->connected) return 0;
-    SR_WRITE_VALUE(file, SR_DEV_3270_POS, dev->pos3270, sizeof(dev->pos3270));
-    SR_WRITE_VALUE(file, SR_DEV_3270_EWA, dev->ewa3270, 1);
-    obtain_lock(&dev->lock);
-    rc = solicit_3270_data (dev, R3270_RB);
-    if (rc == 0 && dev->rlen3270 > 0 && dev->rlen3270 <= BUFLEN_3270)
-    {
-        len = dev->rlen3270;
-        memcpy (buf, dev->buf, len);
-    }
-    else
-        len = 0;
-    release_lock(&dev->lock);
-    if (len)
-        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, (int)len);
-    return 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* 3270 Hercules Resume Routine                                      */
-/*-------------------------------------------------------------------*/
-static int
-loc3270_hresume(DEVBLK *dev, void *file)
-{
-    size_t rc, key, len, rbuflen = 0, pos = 0;
-    BYTE *rbuf = NULL, buf[BUFLEN_3270];
-
-    do {
-        SR_READ_HDR(file, key, len);
-        switch (key) {
-        case SR_DEV_3270_POS:
-            SR_READ_VALUE(file, len, &pos, sizeof(pos));
-            break;
-        case SR_DEV_3270_EWA:
-            SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            dev->ewa3270 = (u_int)rc;
-            break;
-        case SR_DEV_3270_BUF:
-            rbuflen = len;
-            rbuf = malloc(len);
-            if (rbuf == NULL)
-            {
-                char buf[40];
-                MSGBUF( buf, "malloc(%d)", (int)len);
-                WRMSG(HHC01000, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, buf,
-                      strerror(errno));
-                return 0;
-            }
-            SR_READ_BUF(file, rbuf, rbuflen);
-            break;
-        default:
-            SR_READ_SKIP(file, len);
-            break;
-        } /* switch (key) */
-    } while ((key & SR_DEV_MASK) == SR_DEV_3270);
-
-    /* Dequeue any I/O interrupts for this device */
-    DEQUEUE_IO_INTERRUPT(&dev->ioint);
-    DEQUEUE_IO_INTERRUPT(&dev->pciioint);
-    DEQUEUE_IO_INTERRUPT(&dev->attnioint);
-
-    /* Restore the 3270 screen image if connected and buf was provided */
-    if (dev->connected && rbuf && rbuflen > 3)
-    {
-        obtain_lock(&dev->lock);
-
-        /* Construct buffer to send to the 3270 */
-        len = 0;
-        buf[len++] = dev->ewa3270 ? R3270_EWA : R3270_EW;
-        buf[len++] = 0xC2;
-        memcpy (&buf[len], &rbuf[3], rbuflen - 3);
-        len += rbuflen - 3;
-        buf[len++] = O3270_SBA;
-        buf[len++] = rbuf[1];
-        buf[len++] = rbuf[2];
-        buf[len++] = O3270_IC;
-
-        /* Double up any IAC's in the data */
-        len = double_up_iac (buf, (int)len);
-
-        /* Append telnet EOR marker */
-        buf[len++] = IAC;
-        buf[len++] = EOR_MARK;
-
-        /* Restore the 3270 screen */
-        rc = send_packet(dev->fd, buf, (int)len, "3270 data");
-
-        dev->pos3270 = (int)pos;
-
-        release_lock(&dev->lock);
-    }
-
-    if (rbuf) free(rbuf);
-
-    return 0;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* INITIALIZE THE 1052/3215 DEVICE HANDLER                           */
-/*-------------------------------------------------------------------*/
-static int
-constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
-{
-    int ac=0;
-
-    /* For re-initialisation, close the existing file, if any */
-    if (dev->fd >= 0)
-        (dev->hnd->close)(dev);
-
-    /* reset excp count */
-    dev->excps = 0;
-
-    /* Indicate that this is a console device */
-    dev->console = 1;
-
-    /* Set number of sense bytes */
-    dev->numsense = 1;
-
-    /* Initialize device dependent fields */
-    dev->keybdrem = 0;
-
-    /* Set length of print buffer */
-    dev->bufsize = BUFLEN_1052;
-
-    /* Assume we want to prompt */
-    dev->prompt1052 = 1;
-
-    /* Is there an argument? */
-    if (argc > 0)
-    {
-        /* Look at the argument and set noprompt flag if specified. */
-        if (strcasecmp(argv[ac], "noprompt") == 0)
-        {
-            dev->prompt1052 = 0;
-            ac++; argc--;
-        }
-        // (else it's a group name...)
-    }
-
-    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
-        dev->devtype = 0x1052;
-
-    /* Initialize the device identifier bytes */
-    dev->devid[0] = 0xFF;
-    dev->devid[1] = dev->devtype >> 8;
-    dev->devid[2] = dev->devtype & 0xFF;
-    dev->devid[3] = 0x00;
-    dev->devid[4] = dev->devtype >> 8;
-    dev->devid[5] = dev->devtype & 0xFF;
-    dev->devid[6] = 0x00;
-    dev->numdevid = 7;
-
-    dev->filename[0] = 0;
-    dev->acc_ipaddr = 0;
-    dev->acc_ipmask = 0;
-
-    if (argc > 0)   // group name?
-    {
-        if ('*' == argv[ac][0] && '\0' == argv[ac][1])
-            ;   // NOP (not really a group name; an '*' is
-                // simply used as an argument place holder)
-        else
-            strlcpy(dev->filename,argv[ac],sizeof(dev->filename));
-
-        argc--; ac++;
-        if (argc > 0)   // ip address?
-        {
-            if ((dev->acc_ipaddr = inet_addr(argv[ac])) == (in_addr_t)(-1))
-            {
-                WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "IP address", argv[ac]);
-                return -1;
-            }
-            else
-            {
-                argc--; ac++;
-                if (argc > 0)   // ip addr mask?
-                {
-                    if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
-                    {
-                        WRMSG(HHC01007, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, "mask value", argv[ac]);
-                        return -1;
-                    }
-                    else
-                    {
-                        argc--; ac++;
-                        if (argc > 0)   // too many args?
-                        {
-                            WRMSG(HHC01019, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, argv[ac] );
-                            return -1;
-                        }
-                    }
-                }
-                else
-                    dev->acc_ipmask = (in_addr_t)(-1);
-            }
-        }
-    }
-
-    return console_initialise();
-} /* end function constty_init_handler */
-
-
-/*-------------------------------------------------------------------*/
-/* QUERY THE 1052/3215 DEVICE DEFINITION                             */
-/*-------------------------------------------------------------------*/
-static void
-constty_query_device (DEVBLK *dev, char **devclass,
-                int buflen, char *buffer)
-{
-    BEGIN_DEVICE_CLASS_QUERY( "CON", dev, devclass, buflen, buffer );
-
-    if (dev->connected)
-    {
-        snprintf (buffer, buflen, "%s%s IO[%"PRIu64"]",
-            inet_ntoa(dev->ipaddr),
-            dev->prompt1052 ? "" : " noprompt",
-            dev->excps );
-        buffer[buflen-1] = '\0';
-    }
-    else
-    {
-        char  acc[64];
-
-        if (dev->acc_ipaddr || dev->acc_ipmask)
-        {
-            char  ip   [32];
-            char  mask [32];
-            struct in_addr  xxxx;
-
-            xxxx.s_addr = dev->acc_ipaddr;
-
-            MSGBUF( ip, "%s", inet_ntoa( xxxx ));
-
-            xxxx.s_addr = dev->acc_ipmask;
-
-            MSGBUF( mask, "%s", inet_ntoa( xxxx ));
-
-            MSGBUF( acc, "%s mask %s", ip, mask );
-        }
-        else
-            acc[0] = 0;
-
-        if (dev->filename[0])
-        {
-            snprintf(buffer, buflen,
-                "GROUP=%s%s%s%s IO[%"PRIu64"]",
-                dev->filename,
-                !dev->prompt1052 ? " noprompt" : "",
-                acc[0] ? " " : "", acc,
-                dev->excps );
-            buffer[buflen-1] = '\0';
-        }
-        else
-        {
-            if (acc[0])
-            {
-                if (!dev->prompt1052)
-                {
-                    snprintf(buffer, buflen, "noprompt %s IO[%"PRIu64"]",
-                                             acc, dev->excps );
-                    buffer[buflen-1] = '\0';
-                }
-                else
-                {
-                    snprintf(buffer, buflen, "* %s", acc);
-                    buffer[buflen-1] = '\0';
-                }
-            }
-            else
-            {
-                if (!dev->prompt1052)
-                {
-                    snprintf( buffer, buflen, "noprompt IO[%"PRIu64"]", dev->excps );
-                    buffer[buflen-1] = '\0';
-                }
-                else
-                {
-                    snprintf( buffer, buflen, "IO[%"PRIu64"]", dev->excps );
-                    buffer[buflen-1] = '\0';
-                }
-            }
-        }
-    }
-} /* end function constty_query_device */
-
-
-/*-------------------------------------------------------------------*/
-/* CLOSE THE 1052/3215 DEVICE HANDLER                                */
-/*-------------------------------------------------------------------*/
-static int
-constty_close_device ( DEVBLK *dev )
-{
-    console_remove(dev);
-
-    return 0;
-} /* end function constty_close_device */
-
-
-/*-------------------------------------------------------------------*/
-/* SUBROUTINE TO ADVANCE TO NEXT CHAR OR ORDER IN A 3270 DATA STREAM */
-/* Input:                                                            */
-/*      buf     Buffer containing 3270 data stream                   */
-/*      off     Offset in buffer of current character or order       */
-/*      pos     Position on screen of current character or order     */
-/* Output:                                                           */
-/*      off     Offset in buffer of next character or order          */
-/*      pos     Position on screen of next character or order        */
-/*-------------------------------------------------------------------*/
-static void
-next_3270_pos (BYTE *buf, int *off, int *pos)
-{
-int     i;
-
-    /* Copy the offset and advance the offset by 1 byte */
-    i = (*off)++;
-
-    /* Advance the offset past the argument bytes and set position */
-    switch (buf[i]) {
-
-    /* The Repeat to Address order has 3 argument bytes (or in case
-       of a Graphics Escape 4 bytes) and sets the screen position */
-            case O3270_RA:
-
-        *off += (buf[i+3] == O3270_GE) ? 4 : 3;
-                if ((buf[i+1] & 0xC0) == 0x00)
-                    *pos = (buf[i+1] << 8) | buf[i+2];
-                else
-                    *pos = ((buf[i+1] & 0x3F) << 6)
-                                 | (buf[i+2] & 0x3F);
-        break;
-
-    /* The Start Field Extended and Modify Field orders have
-       a count byte followed by a variable number of type-
-       attribute pairs, and advance the screen position by 1 */
-            case O3270_SFE:
-            case O3270_MF:
-
-        *off += (1 + 2*buf[i+1]);
-        (*pos)++;
-                break;
-
-    /* The Set Buffer Address and Erase Unprotected to Address
-       orders have 2 argument bytes and set the screen position */
-            case O3270_SBA:
-            case O3270_EUA:
-
-        *off += 2;
-                if ((buf[i+1] & 0xC0) == 0x00)
-                    *pos = (buf[i+1] << 8) | buf[i+2];
-                else
-                    *pos = ((buf[i+1] & 0x3F) << 6)
-                                 | (buf[i+2] & 0x3F);
-        break;
-
-    /* The Set Attribute order has 2 argument bytes and
-       does not change the screen position */
-            case O3270_SA:
-
-        *off += 2;
-                break;
-
-    /* Insert Cursor and Program Tab have no argument
-       bytes and do not change the screen position */
-            case O3270_IC:
-            case O3270_PT:
-
-                break;
-
-    /* The Start Field and Graphics Escape orders have one
-       argument byte, and advance the screen position by 1 */
-            case O3270_SF:
-            case O3270_GE:
-
-        (*off)++;
-        (*pos)++;
-        break;
-
-    /* All other characters advance the screen position by 1 */
-            default:
-
-                (*pos)++;
-                break;
-
-    } /* end switch */
-
-} /* end function next_3270_pos */
-
-
-/*-------------------------------------------------------------------*/
-/* SUBROUTINE TO FIND A GIVEN SCREEN POSITION IN A 3270 READ BUFFER  */
-/* Input:                                                            */
-/*      buf     Buffer containing an inbound 3270 data stream        */
-/*      size    Number of bytes in buffer                            */
-/*      pos     Screen position whose offset in buffer is desired    */
-/* Return value:                                                     */
-/*      Offset in buffer of the character or order corresponding to  */
-/*      the given screen position, or zero if position not found.    */
-/*-------------------------------------------------------------------*/
-static int
-find_buffer_pos (BYTE *buf, int size, int pos)
-{
-int     wpos;                           /* Current screen position   */
-int     woff;                           /* Current offset in buffer  */
-
-    /* Screen position 0 is at offset 3 in the device buffer,
-       following the AID and cursor address bytes */
-    wpos = 0;
-    woff = 3;
-
-    while (woff < size)
-    {
-        /* Exit if desired screen position has been reached */
-        if (wpos >= pos)
-        {
-//          logmsg (_("console: Pos %4.4X reached at %4.4X\n"),
-//                  wpos, woff);
-
-#ifdef FIX_QWS_BUG_FOR_MCS_CONSOLES
-            /* There is a bug in QWS3270 when used to emulate an
-               MCS console with EAB.  At position 1680 the Read
-               Buffer contains two 6-byte SFE orders (12 bytes)
-               preceding the entry area, whereas MCS expects the
-               entry area to start 4 bytes after screen position
-               1680 in the buffer.  The bypass is to add 8 to the
-               calculated buffer offset if this appears to be an
-               MCS console read buffer command */
-            if (pos == 0x0690 && buf[woff] == O3270_SFE
-                && buf[woff+6] == O3270_SFE)
-            {
-                woff += 8;
-//              logmsg (_("console: Pos %4.4X adjusted to %4.4X\n"),
-//                      wpos, woff);
-        }
-#endif /*FIX_QWS_BUG_FOR_MCS_CONSOLES*/
-
-            return woff;
-        }
-
-        /* Process next character or order, update screen position */
-        next_3270_pos (buf, &woff, &wpos);
-
-    } /* end while */
-
-    /* Return offset zero if the position cannot be determined */
-    return 0;
-
-} /* end function find_buffer_pos */
-
-
-/*-------------------------------------------------------------------*/
-/* SUBROUTINE TO UPDATE THE CURRENT SCREEN POSITION                  */
-/* Input:                                                            */
-/*      pos     Current screen position                              */
-/*      buf     Pointer to the byte in the 3270 data stream          */
-/*              corresponding to the current screen position         */
-/*      size    Number of bytes remaining in buffer                  */
-/* Output:                                                           */
-/*      pos     Updated screen position after end of buffer          */
-/*-------------------------------------------------------------------*/
-static void
-get_screen_pos (int *pos, BYTE *buf, int size)
-{
-int     woff = 0;                       /* Current offset in buffer  */
-
-    while (woff < size)
-    {
-        /* Process next character or order, update screen position */
-        next_3270_pos (buf, &woff, pos);
-
-    } /* end while */
-
-} /* end function get_screen_pos */
 
 
 /*-------------------------------------------------------------------*/
@@ -3832,28 +3841,15 @@ BYTE    stat;                           /* Unit status               */
 } /* end function constty_execute_ccw */
 
 
-/*-------------------------------------------------------------------*/
-/* Redrive console select                                            */
-/*-------------------------------------------------------------------*/
-static void
-redrive_console_select ( DEVBLK *dev )
-{
-    UNREFERENCED(dev);
-
-    SIGNAL_CONSOLE_THREAD();
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Redrive clear 3270 read buffer                                    */
-/*-------------------------------------------------------------------*/
-static void
-redrive_clear3270_read ( DEVBLK *dev )
-{
-    dev->readpending = 0;
-    dev->rlen3270 = 0;
-    SIGNAL_CONSOLE_THREAD();
-}
+/* Libtool static name collision resolution */
+/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
+#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#define hdl_ddev hdt3270_LTX_hdl_ddev
+#define hdl_depc hdt3270_LTX_hdl_depc
+#define hdl_reso hdt3270_LTX_hdl_reso
+#define hdl_init hdt3270_LTX_hdl_init
+#define hdl_fini hdt3270_LTX_hdl_fini
+#endif
 
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -3886,16 +3882,6 @@ DEVHND constty_device_hndinfo = {
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };
-
-/* Libtool static name collision resolution */
-/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
-#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
-#define hdl_ddev hdt3270_LTX_hdl_ddev
-#define hdl_depc hdt3270_LTX_hdl_depc
-#define hdl_reso hdt3270_LTX_hdl_reso
-#define hdl_init hdt3270_LTX_hdl_init
-#define hdl_fini hdt3270_LTX_hdl_fini
-#endif
 
 
 #if defined(OPTION_DYNAMIC_LOAD)
@@ -3936,8 +3922,6 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY(HERCULES);
      HDL_DEPENDENCY(DEVBLK);
      HDL_DEPENDENCY(SYSBLK);
-
-
 }
 END_DEPENDENCY_SECTION
 

@@ -213,14 +213,29 @@ W32_DLL_IMPORT int   w32_accept      ( int lsock, struct sockaddr* addr, int* ad
 W32_DLL_IMPORT int   w32_close_socket( int fd );
 W32_DLL_IMPORT void  w32_FD_SET      ( int fd, fd_set* pSet );
 W32_DLL_IMPORT int   w32_FD_ISSET    ( int fd, fd_set* pSet );
-W32_DLL_IMPORT int   w32_select      ( int nfds,
-                     fd_set* pReadSet,
-                     fd_set* pWriteSet,
-                     fd_set* pExceptSet,
-                     const struct timeval* pTimeVal,
-                     const char* pszSourceFile,
-                     int nLineNumber
-                   );
+
+// PROGRAMMING NOTE: w32_select can only be used with sockets, not files.
+W32_DLL_IMPORT int   w32_select      ( int                    nfds,
+                                       fd_set*                pReadSet,
+                                       fd_set*                pWriteSet,
+                                       fd_set*                pExceptSet,
+                                       const struct timeval*  pTimeVal,
+                                       const char*            pszSourceFile,
+                                       int                    nLineNumber
+                                     );
+
+// PROGRAMMING NOTE: w32_pselect can only be used with sockets, not files.
+// PROGRAMMING NOTE: w32_pselect does not support the sigmask parameter.
+typedef unsigned long sigset_t;
+W32_DLL_IMPORT int   w32_pselect     ( int                    nfds,
+                                       fd_set*                pReadSet,
+                                       fd_set*                pWriteSet,
+                                       fd_set*                pExceptSet,
+                                       const struct timespec* pTimeout,
+                                       const sigset_t*        pSigmask,
+                                       const char*            pszSourceFile,
+                                       int                    nLineNumber
+                                     );
 
 W32_DLL_IMPORT unsigned w32_if_nametoindex ( const char* ifname );
 W32_DLL_IMPORT const char* w32_inet_ntop ( int af, const void* src, char* dst, socklen_t size );
@@ -228,7 +243,11 @@ W32_DLL_IMPORT int      w32_inet_pton ( int af, const char* src, void* dst );
 
 W32_DLL_IMPORT FILE*  w32_fdopen ( int their_fd, const char* their_mode );
 W32_DLL_IMPORT size_t w32_fwrite ( const void* buff, size_t size, size_t count, FILE* stream );
-W32_DLL_IMPORT int    w32_fprintf( FILE* stream, const char* format, ... ) ATTR_PRINTF(2,3);
+
+W32_DLL_IMPORT int    w32_vsnprintf( char *bfr, size_t cnt, const char *fmt, va_list vargs ) ATTR_PRINTF(3,0);
+W32_DLL_IMPORT int    w32_snprintf ( char *bfr, size_t cnt, const char *fmt, ... )           ATTR_PRINTF(3,4);
+W32_DLL_IMPORT int    w32_fprintf( FILE* stream, const char* format, ... )                   ATTR_PRINTF(2,3);
+
 W32_DLL_IMPORT int    w32_fclose ( FILE* stream );
 W32_DLL_IMPORT int    w32_get_stdin_char ( char* pCharBuff, int wait_millisecs );
 W32_DLL_IMPORT pid_t  w32_poor_mans_fork ( char*  pszCommandLine, int* pnWriteToChildStdinFD );
