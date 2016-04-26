@@ -27,6 +27,7 @@
 #define VER_DLL_IMPORT DLL_EXPORT
 #endif /* _LOGGER_C_ */
 
+#if 0  /* pending removal of code for V1, V2, V3, & V4  */
 #if !defined(VERSION)
 #if defined(V1) && defined(V2) && defined(V3) && defined(V4)
 #define VER V1##.##V2##.##V3##.##V4
@@ -56,13 +57,14 @@
 
   #endif
 #endif
+#endif  /* #if 0  ... pending removal of code for V1, V2, V3, & V4  */
 
 /*
   The 'VERSION' string can be any value the user wants.
 */
 #if !defined(VERSION)
   WARNING("No version specified")
-  #define VERSION              "(unknown!)"
+  #define VERSION              "0.0.0.0-(unknown!)"  /* ensure a numeric unknown version  */
   #define CUSTOM_BUILD_STRING  "('VERSION' was not defined!)"
 #endif
 

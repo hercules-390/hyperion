@@ -15,12 +15,14 @@
 #include "devtype.h"
 #include "opcode.h"
 
+#if 0  /* pending removal of code for V1, V2, V3, & V4  */
 #if !defined(V1)
  #define V1 0
 #endif
 #if !defined(V2)
  #define V2 0
 #endif
+#endif  /* #if 0  ... pending removal of code for V1, V2, V3, & V4  */
 
 ///////////////////////////////////////////////////////////////////////////////
 // Some handy macros...       (feel free to add these to hercules.h)
@@ -463,7 +465,8 @@ void*  gui_panel_command (char* pszCommand)
         // future versions of HercGUI to know whether the version of Hercules
         // that it's talking to supports a given feature or not. Slick, eh? :)
 
-        // PROGRAMMING NOTE: we use 'V1' and 'V2' here (instead of 'VERSION')
+#if 0  /* pending removal of code for V1, V2, V3, & V4  */
+		// PROGRAMMING NOTE: we use 'V1' and 'V2' here (instead of 'VERSION')
         // since the 'VERSION' string can be any value the user wants and thus
         // might not be numeric nor even correspond at all to Hercules's actual
         // build version. V1 and V2 however should ALWAYS be numbers and should
@@ -478,6 +481,7 @@ void*  gui_panel_command (char* pszCommand)
         //  set in configure.ac by reasonable people it is SAFE to expect that
         //  it will always be a sequence of 2 digits numbers xx.xx.xx
         //  so instead of using %d,%d V1,V2 it is right to ....
+#endif  /* #if 0  ... pending removal of code for V1, V2, V3, & V4  */
 
         gui_fprintf(fStatusStream,"MAINSIZE=%s\n",VERSION);
 
