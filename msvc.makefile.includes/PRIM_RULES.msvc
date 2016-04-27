@@ -13,13 +13,14 @@
 # ---------------------------------------------------------------------
 
 all: allzlib alllibbz2 allpcre allrexx allHercules
-    for %I in (rebase.exe) do if exist %~$$PATH:I rebase -b 0x400000 $(X)*.dll
     if exist $(EXEDIR)\*.manifest del /f /q $(EXEDIR)\*.manifest
 
 allHercules: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) \
     $(O)build_pch.pch \
     $(MODULES) \
     $(EXECUTABLES)
+    echo.
+    echo -- Hercules build complete --
 
 clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
     if exist $(OBJDIR)\*.* rmdir /s /q $(OBJDIR)
@@ -35,6 +36,8 @@ clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
 !IFDEF fna
     if exist $(fna) del /f /q $(fna)
 !ENDIF
+    echo.
+    echo -- Hercules clean complete --
 
 MT_EXE_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;1 -manifest $@.manifest
 MT_DLL_CMD=if exist $@.manifest mt.exe -nologo -outputresource:$@;2 -manifest $@.manifest
