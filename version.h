@@ -27,40 +27,23 @@
 #define VER_DLL_IMPORT DLL_EXPORT
 #endif /* _LOGGER_C_ */
 
-#if 0  /* pending removal of code for V1, V2, V3, & V4  */
 #if !defined(VERSION)
-#if defined(V1) && defined(V2) && defined(V3) && defined(V4)
-#define VER V1##.##V2##.##V3##.##V4
-#define VERSION QSTR(VER)
-#endif
-#endif
-
-/*
-  Some modules, such as dyngui, might need these values,
-  since they are ALWAYS numeric whereas VERSION is not.
-*/
-#if defined( _MSVC_ )
-  #if (!defined(V1) || !defined(V2) || !defined(V3) || !defined(V4))
-
-
-
-    #if ( _MSC_VER >= VS2015 )
-      FIXME( "VS2015 (MSVC version 19.00) uses V1-V2-V3-V4?!" )
-      FIXME( "This needs confirmed/resolved!" )
-    #endif
-
-
-
-    #error "VERSION not defined properly"
-
-
-
+  #if defined(VERS_MAJ) && defined(VERS_INT) && defined(VERS_MIN) && defined(VERS_BLD)
+    #define VER VERS_MAJ##.##VERS_INT##.##VERS_MIN##.##VERS_BLD
+    #define VERSION QSTR(VER)
   #endif
 #endif
-#endif  /* #if 0  ... pending removal of code for V1, V2, V3, & V4  */
+
+#if defined( _MSVC_ )
+  /* Some modules, such as dyngui, might need these values,
+     since they are ALWAYS numeric whereas VERSION is not. */
+  #if !defined(VERS_MAJ) || !defined(VERS_INT) || !defined(VERS_MIN) || !defined(VERS_BLD)
+    #error "VERSION not defined properly"
+  #endif
+#endif
 
 /*
-  The 'VERSION' string can be any value the user wants.
+    The 'VERSION' string can be any value the user wants.
 */
 #if !defined(VERSION)
   WARNING("No version specified")
@@ -68,13 +51,13 @@
   #define CUSTOM_BUILD_STRING  "('VERSION' was not defined!)"
 #endif
 
-#define HDL_VERS_HERCULES VERSION
-#define HDL_SIZE_HERCULES sizeof(VERSION)
+#define HDL_VERS_HERCULES          VERSION
+#define HDL_SIZE_HERCULES   sizeof(VERSION)
 
 VER_DLL_IMPORT void display_version       ( FILE* f, int httpfd, char* prog );
 VER_DLL_IMPORT void display_build_options ( FILE* f, int httpfd );
-VER_DLL_IMPORT int get_buildinfo_strings  ( const char*** pppszBldInfoStr );
+VER_DLL_IMPORT int  get_buildinfo_strings ( const char*** pppszBldInfoStr );
 
 #define HERCULES_COPYRIGHT \
-       "(c) Copyright 1999-2015 by Roger Bowler, Jan Jaeger, and others"
+       "(C) Copyright 1999-2015 by Roger Bowler, Jan Jaeger, and others"
 #endif // _HERCULES_H_

@@ -4,122 +4,30 @@
 # (c) Copyright Roger Bowler, 2005-2007
 # --------------------------------------------------------------------------
 #
-#  Handles defining the product VERSION strings
+#  Verify and report whether the product's VERSION is defined properly
 #
 # ***************************************************************************
 
-!UNDEF fna
-!IFNDEF VERSION
+# NOTE: 'makefile.bat' is responsible for properly setting the below
+# variables so there's no need for us to duplicate its effort here.
 
-# The following logic determines the Hercules version number and SVN 
-# revision number and sets variables VERSION,V1,V2,V3,V4 when VERSION
-# is not already set by makefile.bat
+# IMPORTANT! If you wish to build Hercules manually by calling nmake
+# directly yourself (by not using makefile.bat) then you need to ensure
+# that the below variables are defined properly. Both the VERS_MAJ and
+# VERS_INT variables for example must be numeric and must not contain
+# any leading zeroes (otherwise they'd be interpreted as octal numbers).
+# The VERS_MIN, VERS_BLD and VERSION variables can be anything you want.
+# Finally, the VERSION variable must be a string surrounded with escaped
+# double quotes so that is gets passed properly on the command line by
+# HERC_FLAGS.msvc (refer to where rcflags and cflags are being defined)
 
-# First extract the Hercules version number from the configure.ac file.
-# We scan the file looking for AM_INIT_AUTOMAKE=(hercules,x.y[.z]) # 
-# and we create a temporary file containing statements V1=x V2=y V3=z
-# Finally we include the temporary file to set the variables V1,V2,V3
-opt = "tokens=1-5 delims=(),. "
-fna = $(TEMP)\hercver$(BUILD_TYPE).txt
-cmd = @echo V1=%c >$(fna) && @echo V2=%d >>$(fna) && @echo V3=%e >>$(fna)
-!IF ["for /f $(opt) %a in (configure.ac) do @if %a==AM_INIT_AUTOMAKE $(cmd)"] == 0
-!INCLUDE $(fna)
-!ELSE
-V1 = 0
-V2 = 0
+!IF !DEFINED(VERSION) || !DEFINED(VERS_MAJ) || !DEFINED(VERS_INT) || !DEFINED(VERS_MIN) || !DEFINED(VERS_BLD)
+!  ERROR 'VERSION=', 'VERS_MAJ=', 'VERS_INT=', 'VERS_MIN=', and/or VERS_BLD=' are undefined. Either build Hercules using the supplied 'makefile.bat' or set these variables manually yourself before invoking nmake.
 !ENDIF
 
-# If svn.exe exists in the path, use the 'svn info' command to find the
-# subversion revision number, and write V4=nnnn to the temporary file.
-# Then include the temporary file to set the variable V4
-opt="tokens=1-2 usebackq"
-cmd = for /f $(opt) %a in (`svn info`) do @if %a==Revision: @echo V4=%b>$(fna)
-!IF ["for %I in (svn.exe) do @if exist %~$$PATH:I $(cmd)"] == 0
-!INCLUDE $(fna)
-!ENDIF
-
-# If V4 is not set, use the TortoiseSVN program subwcrev (if it exists in the path)
-# to find the subversion revision number, and write V4=nnnn to the temporary file.
-# Then include the temporary file to set the variable V4
-!IF !DEFINED(V4) || "$(V4)" == ""
-opt="tokens=1-5 usebackq"
-cmd = for /f $(opt) %a in (`subwcrev .`) do @if %a%b==Lastcommitted @echo V4=%e>$(fna)
-!IF ["for %I in (subwcrev.exe) do @if exist %~$$PATH:I $(cmd)"] == 0
-!INCLUDE $(fna)
-!ENDIF
-!ENDIF
-
-# If V4 is still not set, then set it to zero 
-!IF !DEFINED(V4) || "$(V4)" == ""
-V4 = 0
-!ENDIF
-
-# Set the version string x.y or x.y.z
-sharp = ^#
-!IF !DEFINED(V3) || "$(V3)" == "" || "$(V3)" == "$(sharp)"
-VERSION = $(V1).$(V2)
-V3 = 0
-!ELSE
-VERSION = $(V1).$(V2).$(V3)
-!ENDIF
-
-# Append the subversion revision number to the version string
-!IF "$(V4)" != "0"
-VERSION = $(VERSION)-svn-$(V4)
-!ENDIF
-
-!MESSAGE Hercules version number is $(VERSION) ($(V1).$(V2).$(V3).$(V4))
-VERSION = \"$(VERSION)\"
-
-!ELSE
-
-!IF !DEFINED(VERSION) || !DEFINED(V1) || !DEFINED(V2) || !DEFINED(V3) || !DEFINED(V4)
-!  ERROR 'VERSION=', 'V1=', 'V2=', 'V3=', and/or V4=' are undefined. Either build Hercules using the supplied 'makefile.bat' or set the variables manually yourself before invoking nmake.
-!ENDIF
-
-!MESSAGE VERSION = $(VERSION) ($(V1).$(V2).$(V3).$(V4))
-
-!ENDIF
+UNQUOTED_VERSION = $(VERSION:\"=)
+!MESSAGE Hercules VERSION = "$(UNQUOTED_VERSION)" ($(VERS_MAJ).$(VERS_INT).$(VERS_MIN).$(VERS_BLD))
 
 !IF DEFINED(CUSTOM_BUILD_STRING)
 !MESSAGE CUSTOM_BUILD_STRING = $(CUSTOM_BUILD_STRING)
-!ENDIF
-
-!MESSAGE
-
-###############################################################################
-#
-#                                TargetVer
-#
-#  The following defines determines the minimum Windows platform on which
-#  the application can run. Set APPVER and TARGETOS as needed and win32.mak
-#  will then define '_WIN32_WINNT' and other values accordingly.
-#
-#  Note that Hyperion NO LONGER SUPPORTS Win9x or any version of Windows NT
-#  less than or equal to 32-bit Windows XP, or any version of Visual Studio
-#  less than or equal to Visual Studio 2005.
-#
-#  The Hyperion minimum supported Windows platform is now Windows XP x64
-#  or Windows Server 2003 or greater, and Visual Studio 2008 (MSVC 9.0)
-#  or greater is required to build Hercules.
-#
-#  ALSO PLEASE NOTE that since neither Windows XP x64 nor Windows Server
-#  2003 are supported any longer by Microsoft either (extended support for
-#  both ended on April 2014 and July 2015 respectively), Hyperion support
-#  for them will be dropped in the very near future as well.
-#
-#  All Hercules users running either of these operating systems are STRONGLY
-#  encouraged to upgrade as soon as possible to Windows Vista or Windows 7
-#  Professional SP1 x64 or greater.
-#
-###############################################################################
-
-# VS <  9.0 : unsupported
-# VS >= 9.0 : required (VS2008 or greater)
-
-!IF $(vsversion) < $(vers_vs2008)
-!ERROR Hercules requires Visual Studio 9 (VS2008 Express) or later.
-!ELSE
-APPVER   = 5.02     # Windows Server 2003 (or Windows XP 64-Bit) or greater
-TARGETOS = WINNT
 !ENDIF

@@ -6,7 +6,7 @@
 /*   Hercules.                                                       */
 
 #include "hstdinc.h"
-#include "hercules.h"       // (#includes "config." w/#define for VERSION)
+#include "hercules.h"   // (#includes "config." w/#define for VERSION)
 
 #ifdef EXTERNALGUI
 
@@ -14,15 +14,6 @@
 
 #include "devtype.h"
 #include "opcode.h"
-
-#if 0  /* pending removal of code for V1, V2, V3, & V4  */
-#if !defined(V1)
- #define V1 0
-#endif
-#if !defined(V2)
- #define V2 0
-#endif
-#endif  /* #if 0  ... pending removal of code for V1, V2, V3, & V4  */
 
 ///////////////////////////////////////////////////////////////////////////////
 // Some handy macros...       (feel free to add these to hercules.h)
@@ -452,9 +443,10 @@ void*  gui_panel_command (char* pszCommand)
         return NULL;
     }
 
-    if (strncasecmp(pszCommand,"MAINSTOR=",9) == 0)
+    if (strncasecmp( pszCommand, "MAINSTOR=", 9 ) == 0)
     {
-        gui_fprintf(fStatusStream,"MAINSTOR=%"PRId64"\n",(uintptr_t)pTargetCPU_REGS->mainstor);
+        gui_fprintf( fStatusStream, "MAINSTOR=%"PRId64"\n",
+            (uintptr_t) pTargetCPU_REGS->mainstor );
 
         // Here's a trick! Hercules reports its version number to the GUI
         // by means of the MAINSIZE value! Later releases of HercGUI know
@@ -462,33 +454,46 @@ void*  gui_panel_command (char* pszCommand)
         // Earlier versions of HercGUI will simply try to interpret it as
         // the actual mainsize, but no real harm is done since we immediately
         // send it the CORRECT mainsize immediately afterwards. This allows
-        // future versions of HercGUI to know whether the version of Hercules
-        // that it's talking to supports a given feature or not. Slick, eh? :)
+        // future versions of HercGUI to know which version of Hercules they
+        // are talking to and thus whether it supports a given feature or not.
 
-#if 0  /* pending removal of code for V1, V2, V3, & V4  */
-		// PROGRAMMING NOTE: we use 'V1' and 'V2' here (instead of 'VERSION')
-        // since the 'VERSION' string can be any value the user wants and thus
-        // might not be numeric nor even correspond at all to Hercules's actual
-        // build version. V1 and V2 however should ALWAYS be numbers and should
-        // ALWAYS equal Hercules's actual build version...
+#if defined( _MSVC_ )
 
-        //  VERSION is set in configure.ac as x.xx
-        //  version is (char) parsed in makefile.bat to get (char) V1 V2 V3 V4
-        //  printing V2 with a %d format worked well until 3.07
-        //  when bumping to 3.08 the stupid C complained about a wrong octal
-        //  constant
-        //  since Fish asked for numbers only and the VERSION string is
-        //  set in configure.ac by reasonable people it is SAFE to expect that
-        //  it will always be a sequence of 2 digits numbers xx.xx.xx
-        //  so instead of using %d,%d V1,V2 it is right to ....
-#endif  /* #if 0  ... pending removal of code for V1, V2, V3, & V4  */
+        // PROGRAMMING NOTE: we use 'VERS_MAJ' and 'VERS_INT' here and NOT
+        // the VERSION string since the 'VERSION' string can be any value
+        // the user wants and thus might not be numeric nor even correspond
+        // at all to Hercules's actual build version.
+        //
+        // The VERS_MAJ and VERS_INT variables however are ALWAYS be numbers
+        // and thus should ALWAYS equal Hercules's actual build version. The
+        // makefile.bat file on Windows guarantees this and ensures neither
+        // has any leading zeroes (which would cause them to be intrepreted
+        // by the C compiler as invalid octal numbers for e.g. 3.08, etc).
 
-        gui_fprintf(fStatusStream,"MAINSIZE=%s\n",VERSION);
+        gui_fprintf( fStatusStream, "MAINSIZE=%d.%d\n", VERS_MAJ, VERS_INT );
+#else
+        //  VERSION is set in configure.ac as x.xx. (why we insist on using
+        //  two digits for the second part is unclear) However, if 'xx' is
+        //  greater than '07' (as it would be for Hercules versions 3.08 and
+        //  3.09 for example) then printing VERS_INT with a %d format fails
+        //  with a compiler error about it being an invalid octal constant.
+        //
+        //  On Windows the makefile.bat build script used to build Hercules
+        //  with ensures this will never happen. On non-Windows platforms
+        //  however it could conceivably still happen, so for the time being
+        //  we have no choice but to use the full VERSION string instead and
+        //  hope all non-Windows GUIs will be able to properly parse it.
+
+        gui_fprintf( fStatusStream, "MAINSIZE=%s\n", VERSION );
+#endif
 
         if (gui_version < 1.12)
-            gui_fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
+            gui_fprintf( fStatusStream, "MAINSIZE=%d\n",
+                (U32) sysblk.mainsize );
         else
-            gui_fprintf(fStatusStream,"MAINSIZE=%"PRId64"\n",(uintptr_t)sysblk.mainsize);
+            gui_fprintf( fStatusStream, "MAINSIZE=%"PRId64"\n",
+                (uintptr_t) sysblk.mainsize );
+
         return NULL;
     }
 

@@ -35,13 +35,13 @@
 #endif
 
 #if !defined(VERSION)
-#if defined(V1) && defined(V2) && defined(V3) & defined(V4)
-#define VER             V1##.##V2##.##V3##.##V4
+#if defined(VERS_MAJ) && defined(VERS_INT) && defined(VERS_MIN) & defined(VERS_BLD)
+#define VER             VERS_MAJ##.##VERS_INT##.##VERS_MIN##.##VERS_BLD
 #define VERSION         QSTR(VER)
 #endif
 #endif
 
-#if !defined(VERSION) || !defined(V1) || !defined(V2) || !defined(V3) || !defined(V4)
+#if !defined(VERSION) || !defined(VERS_MAJ) || !defined(VERS_INT) || !defined(VERS_MIN) || !defined(VERS_BLD)
   #error VERSION not defined properly
 #endif
 
@@ -49,8 +49,8 @@
 
 1 VERSIONINFO
 
-FILEVERSION             V1, V2, V3, V4
-PRODUCTVERSION          V1, V2, V3, V4
+FILEVERSION             VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD
+PRODUCTVERSION          VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD
 
 FILEOS                  VOS_NT_WINDOWS32
 FILETYPE                VFT_APP
