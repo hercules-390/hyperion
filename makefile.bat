@@ -1132,7 +1132,6 @@
   @REM  Format the PATH, LIB and INCLUDE variables for easier reading
   echo.
   echo -------------------------- PATH, LIB, INCLUDE --------------------------
-  echo.
   call :fxxx PATH
   call :fxxx LIB
   call :fxxx INCLUDE
