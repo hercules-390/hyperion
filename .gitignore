@@ -127,7 +127,10 @@ autoconf/compile
 *.app
 
 # Eclipse
+.project
+.cproject
 /.metadata
+/.settings
 
 # Visual Studio
 /*.aps
@@ -145,3 +148,6 @@ autoconf/compile
 *.aus
 *.bak
 *~
+
+# QA Testing
+allTests.testin
