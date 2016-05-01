@@ -298,17 +298,18 @@ struct mtftformat {
 #define GMT_SM(x)               ((x) & 0x10000000)  /* DDS setmark */
 #define GMT_EOD(x)              ((x) & 0x08000000)  /* DDS EOD */
 #define GMT_WR_PROT(x)          ((x) & 0x04000000)
-/* #define GMT_ ?               ((x) & 0x02000000) */
+/* #define GMT_ ?               ((x) & 0x02000000)  */
 #define GMT_ONLINE(x)           ((x) & 0x01000000)
 #define GMT_D_6250(x)           ((x) & 0x00800000)
 #define GMT_D_1600(x)           ((x) & 0x00400000)
 #define GMT_D_800(x)            ((x) & 0x00200000)
-/* #define GMT_ ?               ((x) & 0x00100000) */
-/* #define GMT_ ?               ((x) & 0x00080000) */
+#define GMT_PADDING(x)          ((x) & 0x00100000)  /* data padding */
+#define GMT_HW_ECC(x)           ((x) & 0x00080000)  /* HW error correction */
 #define GMT_DR_OPEN(x)          ((x) & 0x00040000)  /* door open (no tape) */
-/* #define GMT_ ?               ((x) & 0x00020000) */
+/* #define GMT_ ?               ((x) & 0x00020000)  */
 #define GMT_IM_REP_EN(x)        ((x) & 0x00010000)  /* immediate report mode */
-/* 16 generic status bits unused */
+#define GMT_CLN(x)              ((x) & 0x00008000)  /* cleaning requested */
+/* #define GMT_ ?               ((x) & 0x00007FFF)  */
 
 /* SCSI-tape specific definitions */
 /* Bitfield shifts in the status  */

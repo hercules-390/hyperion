@@ -142,19 +142,11 @@ static void delayed_exit (int exit_code)
 /*-------------------------------------------------------------------*/
 static void print_status (char *devname, long stat)
 {
-    // "Tape %s: Status %8.8lX%s%s%s%s%s%s%s%s%s%s%s"
-    WRMSG( HHC02702, "I", devname, stat,
-        (GMT_EOF    ( stat )) ? " EOF"     : "",
-        (GMT_BOT    ( stat )) ? " BOT"     : "",
-        (GMT_EOT    ( stat )) ? " EOT"     : "",
-        (GMT_SM     ( stat )) ? " SETMARK" : "",
-        (GMT_EOD    ( stat )) ? " EOD"     : "",
-        (GMT_WR_PROT( stat )) ? " WRPROT"  : "",
-        (GMT_ONLINE ( stat )) ? " ONLINE"  : "",
-        (GMT_D_6250 ( stat )) ? " 6250"    : "",
-        (GMT_D_1600 ( stat )) ? " 1600"    : "",
-        (GMT_D_800  ( stat )) ? " 800"     : "",
-        (GMT_DR_OPEN( stat )) ? " NOTAPE"  : ""  );
+    char buffer[ 384 ] = {0};
+
+    // "Tape %s: %smt_gstat 0x%8.8"PRIX32" %s"
+    WRMSG( HHC02702, "I", devname, "",
+        (U32) stat, gstat2str( (U32) stat, buffer, sizeof( buffer )));
 
 } /* end function print_status */
 

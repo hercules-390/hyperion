@@ -31,10 +31,11 @@ hdt3420_OBJ = \
     $(O)tapedev.obj  \
     $(O)tapeccws.obj \
     $(O)awstape.obj  \
-    $(O)faketape.obj  \
+    $(O)faketape.obj \
     $(O)hettape.obj  \
     $(O)omatape.obj  \
-    $(O)scsitape.obj
+    $(O)scsitape.obj \
+    $(O)scsiutil.obj
 
 tuntap_OBJ = \
     $(O)tuntap.obj  \

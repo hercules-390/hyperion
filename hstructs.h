@@ -1182,8 +1182,9 @@ struct DEVBLK {                         /* Device configuration block*/
                 oslinux:1,              /* 1=Linux                   */
                 ccwtrace:1,             /* 1=CCW trace               */
                 ccwstep:1,              /* 1=CCW single step         */
-                cdwmerge:1;             /* 1=Channel will merge data
+                cdwmerge:1,             /* 1=Channel will merge data
                                              chained write CCWs      */
+                debug:1;                /* 1=generic debug flag      */
 
         unsigned int                    /* Device state - serialized
                                             by dev->lock             */
@@ -1434,6 +1435,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   stape_close_rewinds:1;  /* 1=Rewind at close         */
         u_int   stape_blkid_32:1;       /* 1=block-ids are 32 bits   */
         u_int   stape_no_erg:1;         /* 1=ignore Erase Gap CCWs   */
+        u_int   stape_online:1;         /* 1=GMT_ONLINE is mounted   */
         /* Access to SCSI fields controlled via sysblk.stape_lock    */
         COND      stape_sstat_cond;     /* Tape-status updated COND  */
         STSTATRQ  stape_statrq;         /* Status request structure  */

@@ -1828,7 +1828,7 @@ Examples:
 
 #define HHC02700 "SCSI tapes are not supported with this build"
 #define HHC02701 "Abnormal termination"
-#define HHC02702 "Tape %s: Status %8.8lX%s%s%s%s%s%s%s%s%s%s%s"
+#define HHC02702 "Tape %s: %smt_gstat 0x%8.8"PRIX32" %s"
 #define HHC02703 "Tape %s: Error reading status: rc=%d, errno=%d: %s"
 #define HHC02704 "End of tape"
 #define HHC02705 "Tape %s: Error reading tape: errno=%d: %s"
@@ -2187,7 +2187,8 @@ Examples:
 /* from crypto.c when compiled with debug on */
 #define HHC90190 "%s"
 
-/* from scsitape.c trace */
+/* from scsitape.c */
+// (same as HHC00205 but 9xxxx debugging range)
 #define HHC90205 "%1d:%04X Tape file %s, type %s: error in function %s: %s"
 
 /* from cmpsc.c when compiled with debug on */
@@ -2296,26 +2297,14 @@ Examples:
 //               90999 dbgtrace.h
 
 // range 91000 - 91999 available
-// range 92000 - 92999 available
 
-// range 93000 - 93099 available
-// range 93100 - 93199 available
-// range 93200 - 93299 available
-// range 93300 - 93399 available
+// range 92000 - 92701 available
+/* from scsitape.c */
+// (same as HHC02702 but 9xxxx debugging range)
+#define HHC92702 "Tape %s: %smt_gstat 0x%8.8"PRIX32" %s"
+// range 92703 - 92999 available
 
-// range 93400 - 93479  (unused; reason unknown)
-
-/* tapeccws tapedev */
-#define HHC93480 "%1d:%04X TDSPSTAT[%02X] msg1[%-8s] msg2[%-8s] msg[%-8s] mnt[%s] unmnt[%s] TDSPFLAG[%02X]"
-
-/* tape general     */
-#define HHC93590 "DBG: TAPE: %s"
-
-// range 93600 - 93699 available
-// range 93700 - 93799 available
-// range 93800 - 93899 available
-// range 93900 - 93999 available
-
+// range 93000 - 93999 available
 // range 94000 - 94999 available
 // range 95000 - 95999 available
 // range 96000 - 96999 available

@@ -1244,6 +1244,7 @@ int gettapetype (DEVBLK *dev, char **short_descr)
 
 PARSER  ptab  [] =
 {
+    { "-d",         NULL },
     { "awstape",    NULL },
     { "idrc",       "%d" },
     { "compress",   "%d" },
@@ -1266,6 +1267,7 @@ PARSER  ptab  [] =
     { "--blkid-24", NULL },   /* (synonym for --blkid-22) */
     { "--blkid-32", NULL },
     { "--no-erg",   NULL },
+    { "--online",   NULL },
     { NULL,         NULL },   /* (end of table) */
 };
 
@@ -1277,6 +1279,7 @@ PARSER  ptab  [] =
 enum
 {
     TDPARM_NONE,
+    TDPARM_DEBUG,
     TDPARM_AWSTAPE,
     TDPARM_IDRC,
     TDPARM_COMPRESS,
@@ -1298,7 +1301,8 @@ enum
     TDPARM_BLKID22,
     TDPARM_BLKID24,
     TDPARM_BLKID32,
-    TDPARM_NOERG
+    TDPARM_NOERG,
+    TDPARM_ONLINE
 };
 
 /*-------------------------------------------------------------------*/
@@ -1412,6 +1416,10 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
             // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
             WRMSG(HHC00223, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->filename, TTYPSTR(dev->tapedevt), argv[i], "unrecognized");
             optrc = -1;
+            break;
+
+        case TDPARM_DEBUG:
+            dev->debug = 1;
             break;
 
         case TDPARM_AWSTAPE:
@@ -1694,6 +1702,15 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 _HHC00223E(); optrc = -1; break;
             }
             dev->stape_no_erg = 1;
+            break;
+
+        case TDPARM_ONLINE:
+            if (TAPEDEVT_SCSITAPE != dev->tapedevt)
+            {
+                // "%1d:%04X Tape file '%s', type '%s': option '%s' rejected: '%s'"
+                _HHC00223E(); optrc = -1; break;
+            }
+            dev->stape_online = 1;
             break;
 #endif /* defined(OPTION_SCSI_TAPE) */
 

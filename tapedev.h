@@ -185,7 +185,7 @@
 #define STS_EOD(dev)            GMT_EOD     ( (dev)->sstat )
 #define STS_WR_PROT(dev)        GMT_WR_PROT ( (dev)->sstat )
 #define STS_ONLINE(dev)         GMT_ONLINE  ( (dev)->sstat )
-#define STS_MOUNTED(dev)        ((dev)->fd >= 0 && !GMT_DR_OPEN( (dev)->sstat ))
+#define STS_MOUNTED(dev)        int_scsi_status_mounted((dev),0)
 #define STS_NOT_MOUNTED(dev)    (!STS_MOUNTED(dev))
 #endif
 

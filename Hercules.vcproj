@@ -700,6 +700,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\scsiutil.h"
+								>
+							</File>
+							<File
 								RelativePath=".\sllib.h"
 								>
 							</File>
@@ -745,6 +749,10 @@
 							</File>
 							<File
 								RelativePath=".\scsitape.c"
+								>
+							</File>
+							<File
+								RelativePath=".\scsiutil.c"
 								>
 							</File>
 							<File

@@ -331,6 +331,7 @@
     <ClCompile Include="hettape.c" />
     <ClCompile Include="omatape.c" />
     <ClCompile Include="scsitape.c" />
+    <ClCompile Include="scsiutil.c" />
     <ClCompile Include="sllib.c" />
     <ClCompile Include="tapeccws.c" />
     <ClCompile Include="tapedev.c" />
@@ -696,6 +697,7 @@
     <ClInclude Include="ftlib.h" />
     <ClInclude Include="hetlib.h" />
     <ClInclude Include="scsitape.h" />
+    <ClInclude Include="scsiutil.h" />
     <ClInclude Include="sllib.h" />
     <ClInclude Include="tapedev.h" />
     <ClInclude Include="w32mtio.h" />

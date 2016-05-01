@@ -234,7 +234,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3270_la_LIBADD	= $(DYNMOD_LD_ADD)
 
-  hdt3420_la_SOURCES = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c w32stape.c
+  hdt3420_la_SOURCES = tapedev.c tapeccws.c awstape.c faketape.c hettape.c omatape.c scsitape.c scsiutil.c w32stape.c
   hdt3420_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3420_la_LIBADD	= $(DYNMOD_LD_ADD) libherct.la
 
@@ -555,9 +555,10 @@ dasdseq_SOURCES		 = dasdseq.c
 dasdseq_LDADD			 = $(tools_ADDLIBS)
 dasdseq_LDFLAGS		 = $(tools_LD_FLAGS)
 
-tapecopy_SOURCES		 = tapecopy.c
+tapecopy_SOURCES		 = tapecopy.c scsiutil.c
 tapecopy_LDADD 		 = $(tools_ADDLIBS)
 tapecopy_LDFLAGS		 = $(tools_LD_FLAGS)
+tapecopy_CFLAGS		= $(AM_CFLAGS)
 
 tapemap_SOURCES		 = tapemap.c
 tapemap_LDADD			 = $(tools_ADDLIBS)
@@ -754,6 +755,7 @@ noinst_HEADERS = hostinfo.h		\
 					  tuntap.h		  \
 					  tapedev.h 	  \
 					  scsitape.h	  \
+					  scsiutil.h	  \
 					  logger.h		  \
 					  commadpt.h	  \
 					  comm3705.h	  \

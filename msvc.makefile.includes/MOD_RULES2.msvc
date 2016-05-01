@@ -187,7 +187,8 @@ $(X)hetmap.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)her
 
 $(X)hetupd.exe:   $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)tapecopy.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
+$(X)tapecopy.exe: $(O)$(@B).obj $(O)scsiutil.obj \
+                                $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
 $(X)tapemap.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 

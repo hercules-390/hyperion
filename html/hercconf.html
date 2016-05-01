@@ -2954,6 +2954,35 @@ a real System/390.  The configuration file is an ASCII text file.
         device type emulation. These special options are:
         <p>
         <dl>
+        <dt><code>--blkid-22</code>
+        <dd><p>
+            The complete opposite of the below <code>--blkid-32</code> option.
+            Use this option if your real SCSI tape drive behaves as a 3480/3490
+            and expects 22-bit block-ids, but you wish to define the drive to
+            Hercules as a 3590 tape drive (which uses 32-bit block-ids).
+            <p>
+        <dt><code>--blkid-32</code>
+        <dd><p>
+            This option indicates that your SCSI attached tape drive only
+            supports 32-bit block-ids (as used by 3590 drives) and not the 22-bit
+            format used by 3480/3490 drives. You should only specify this option
+            if you intend to define the drive as a model 3480 or 3490 device
+            to Hercules, and then only if your actual real SCSI drive uses 32-bit
+            block-ids.
+            <p>
+            If you define your Hercules tape drive as a model 3590 device however,
+            then this option is not needed since model 3590 drives are already
+            presumed to use 32-bit block-ids.
+            <p>
+            Specifying this option on a 3480/3490 device statement will cause
+            Hercules device emulation logic to automatically translate the actual
+            SCSI tape drive's 32-bit block-id into 22-bit format before returning
+            it back to the guest operating system (since that is the format the
+            guest operating system expects it to be in for a model 3480/3490 drive),
+            and to translate the guest's 22-bit format block-id into 32-bit format
+            before sending it to the actual SCSI hardware (since that is the format
+            that the actual hardware requires it to be in).
+            <p>
         <dt><code>--no-erg</code>
         <dd><p>
             This option is intended to prevent issuance of the Erase Gap
@@ -2977,29 +3006,18 @@ a real System/390.  The configuration file is an ASCII text file.
             to determine whether or not this option is needed for your
             particular drive.
             <p>
-        <dt><code>--blkid-32</code>
+        <dt><code>--online</code>
         <dd><p>
-            This option indicates that your SCSI attached tape drive only
-            supports 32-bit block-ids (as used by 3590 drives) and not the 22-bit
-            format used by 3480/3490 drives. You should only specify this option
-            if you intend to define the drive as a model 3480 or 3490 device, and
-            then only if your actual SCSI drive uses 32-bit block-ids of course.
-            If you define your Hercules tape drive as a model 3590 device however,
-            then this option is of course not needed since model 3590 drives
-            are already presumed to use 32-bit block-ids.
+            Use this option if your host's magtape device driver sets the
+            GMT_ONLINE status flag to report when a tape is mounted instead
+            of the more common behavior of clearing the GMT_DR_OPEN flag.
             <p>
-            Specifying this option on a 3480/3490 device statement will cause
-            Hercules device emulation logic to automatically translate the actual
-            SCSI tape drive's 32-bit block-id into 22-bit format before returning
-            it back to the guest operating system (since that is the format it
-            expects it to be in for a model 3480/3490 drive), and to translate the
-            guest's 22-bit format block-id into 32-bit format before sending it
-            to the actual SCSI hardware (since that is the format that the actual
-            hardware requires it to be in).
-            <p>
-        <dt><code>--blkid-22</code>
-        <dd><p>
-            The complete opposite of the above <code>--blkid-32</code> option.
+            Debian 8.3 Linux systems running on HP (Hewlett Packard) hardware
+            using StorageTek 9840 fiber channel drives or DEC TSZ07 9-track
+            drives (via a fc/SCSI bridge) for example, are known to <i>not</i>
+            use the GMT_DR_OPEN flag <i>at all</i>. Rather, they set the GMT_ONLINE
+            status flag to indicate when a tape is mounted, thus requiring the
+            <code>--online</code> option to work properly with Hercules.
         </dl>
 
     <p>
