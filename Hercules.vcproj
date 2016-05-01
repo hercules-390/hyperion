@@ -1788,6 +1788,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\README.RUNTEST"
+						>
+					</File>
+					<File
 						RelativePath=".\README.RXVT4APL"
 						>
 					</File>
