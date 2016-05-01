@@ -445,8 +445,11 @@ void*  gui_panel_command (char* pszCommand)
 
     if (strncasecmp( pszCommand, "MAINSTOR=", 9 ) == 0)
     {
-        gui_fprintf( fStatusStream, "MAINSTOR=%"PRId64"\n",
-            (uintptr_t) pTargetCPU_REGS->mainstor );
+        char buffer[64] = {0};
+
+        MSGBUF( buffer, "%"PRIu64, (U64) pTargetCPU_REGS->mainstor );
+        TRACE("**** sending: \"MAINSTOR=%s\"\n", buffer );
+        gui_fprintf( fStatusStream, "MAINSTOR=%s\n", buffer );
 
         // Here's a trick! Hercules reports its version number to the GUI
         // by means of the MAINSIZE value! Later releases of HercGUI know
@@ -470,7 +473,7 @@ void*  gui_panel_command (char* pszCommand)
         // has any leading zeroes (which would cause them to be intrepreted
         // by the C compiler as invalid octal numbers for e.g. 3.08, etc).
 
-        gui_fprintf( fStatusStream, "MAINSIZE=%d.%d\n", VERS_MAJ, VERS_INT );
+        MSGBUF( buffer, "%u.%u", VERS_MAJ, VERS_INT );
 #else
         //  VERSION is set in configure.ac as x.xx. (why we insist on using
         //  two digits for the second part is unclear) However, if 'xx' is
@@ -484,16 +487,29 @@ void*  gui_panel_command (char* pszCommand)
         //  we have no choice but to use the full VERSION string instead and
         //  hope all non-Windows GUIs will be able to properly parse it.
 
-        gui_fprintf( fStatusStream, "MAINSIZE=%s\n", VERSION );
+        MSGBUF( buffer, "%s", VERSION );
 #endif
+        TRACE("**** sending: \"MAINSIZE=%s\"\n", buffer );
+        gui_fprintf( fStatusStream, "MAINSIZE=%s\n", buffer );
 
         if (gui_version < 1.12)
-            gui_fprintf( fStatusStream, "MAINSIZE=%d\n",
-                (U32) sysblk.mainsize );
-        else
-            gui_fprintf( fStatusStream, "MAINSIZE=%"PRId64"\n",
-                (uintptr_t) sysblk.mainsize );
+        {
+            // Older versions of HercGUI only support
+            // maximum 32-bit (4GB) mainsize values
 
+            MSGBUF( buffer, "%"PRIu32, (U32) sysblk.mainsize );
+            TRACE("**** (gui_version < 1.12): sending: \"MAINSIZE=%s\"\n", buffer );
+        }
+        else
+        {
+            // Newer versions of HercGUI now support
+            // up to 64-bit (8M TB) mainsize values
+
+            MSGBUF( buffer, "%"PRIu64, (U64) sysblk.mainsize );
+            TRACE("**** (gui_version >= 1.12): sending: \"MAINSIZE=%s\"\n", buffer );
+        }
+
+        gui_fprintf( fStatusStream, "MAINSIZE=%s\n", buffer );
         return NULL;
     }
 
