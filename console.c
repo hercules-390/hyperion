@@ -719,6 +719,12 @@ static int  finish_console_init( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 static void  disconnect_telnet_client( TELNET* tn )
 {
+    /* PROGRAMMING NOTE: do not call this function once a DEVBLK
+       has been chosen. Only use it to disconnect a client before
+       negotiations have been completed (before a DEVBLK has been
+       chosen). Once a DEVBLK has been chosen, you should use the
+       disconnect_console_device function instead.
+    */
     if (tn)
     {
         telnet_closesocket( tn->csock );
@@ -736,6 +742,11 @@ static void  disconnect_telnet_client( TELNET* tn )
 /*-------------------------------------------------------------------*/
 static void  disconnect_console_device( DEVBLK* dev )
 {
+    /* PROGRAMMING NOTE: this function should only be called to
+       disconnect a 3270/TTY console device from a telnet client
+       such as when a serious I/O error occurs. It physically
+       closes the device and marks it available for reuse.
+    */
     dev->connected =  0;
     dev->console   =  0;
     dev->fd        = -1;
@@ -750,6 +761,10 @@ static void  disconnect_console_device( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 static void  finish_console_close( DEVBLK* dev )
 {
+    /* PROGRAMMING NOTE: this function should never be called
+       directly. It is a helper function for the device handler
+       close function.
+    */
     disconnect_console_device( dev );
 
     console_cnslcnt--;
@@ -773,6 +788,12 @@ static void  finish_console_close( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 static int loc3270_close_device( DEVBLK* dev )
 {
+    /* PROGRAMMING NOTE: this function is the device handler's
+       close function. It should only be called when detaching
+       a 3270 console device. To disconnect a 3270 console from
+       whatever telnet client is connected to it, you should use
+       the disconnect_console_device function instead.
+    */
 #if defined(_FEATURE_INTEGRATED_3270_CONSOLE)
 
     if (dev == sysblk.sysgdev)
@@ -789,6 +810,12 @@ static int loc3270_close_device( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 static int constty_close_device( DEVBLK* dev )
 {
+    /* PROGRAMMING NOTE: this function is the device handler's
+       close function. It should only be called when detaching
+       a TTY console device. To disconnect a TTY console from
+       whatever telnet client is connected to it, you should use
+       the disconnect_console_device function instead.
+    */
     finish_console_close (dev );
     return 0;
 }
@@ -1741,7 +1768,7 @@ error_exit:
 } /* end function build_logo */
 
 /*-------------------------------------------------------------------*/
-/* build_logo helper functions...                                    */
+/*                build_logo helper functions...                     */
 /*-------------------------------------------------------------------*/
 
 static BYTE *buffer_addchar( BYTE* bfr, size_t* buflen, size_t* alloc_len, BYTE c )
@@ -1834,7 +1861,7 @@ static BYTE* buffer_addsf( BYTE* bfr, size_t* buflen, size_t* alloc_len, BYTE at
 }
 
 /*-------------------------------------------------------------------*/
-/* SUBROUTINE TO READ/SAVE THE HECULES LOGO DEFINITION STATEMENTS    */
+/*  SUBROUTINE TO READ/SAVE THE HECULES LOGO DEFINITION STATEMENTS   */
 /*-------------------------------------------------------------------*/
 static void init_logo()
 {
@@ -1873,7 +1900,7 @@ char    fn[FILENAME_MAX] = { 0 };
 }
 
 /*-------------------------------------------------------------------*/
-/* REDRIVE CONSOLE PSELECT                                           */
+/*                 REDRIVE CONSOLE PSELECT                           */
 /*-------------------------------------------------------------------*/
 static void  constty_redrive_pselect( DEVBLK* dev )
 {
@@ -1888,14 +1915,14 @@ static void  loc3270_redrive_pselect( DEVBLK* dev )
 }
 
 /*-------------------------------------------------------------------*/
-/* Hercules Suspend/Resume text units for 3270 devices               */
+/*      Hercules Suspend/Resume text units for 3270 devices          */
 /*-------------------------------------------------------------------*/
 #define SR_DEV_3270_BUF          ( SR_DEV_3270 | 0x001 )
 #define SR_DEV_3270_EWA          ( SR_DEV_3270 | 0x002 )
 #define SR_DEV_3270_POS          ( SR_DEV_3270 | 0x003 )
 
 /*-------------------------------------------------------------------*/
-/* Hercules Suspend Routine for 3270 devices                         */
+/*          Hercules Suspend Routine for 3270 devices                */
 /*-------------------------------------------------------------------*/
 static int  loc3270_hsuspend( DEVBLK* dev, void* file )
 {
@@ -1932,8 +1959,8 @@ static int  loc3270_hsuspend( DEVBLK* dev, void* file )
     return 0;
 }
 
-/*-------------------------------------------------------------------*/
-/* Hercules Resume Routine for 3270 devices                          */
+/*------------------------------------------------------------------ -*/
+/*          Hercules Resume Routine for 3270 devices                */
 /*-------------------------------------------------------------------*/
 static int  loc3270_hresume( DEVBLK* dev, void* file )
 {
@@ -2028,7 +2055,7 @@ static int  loc3270_hresume( DEVBLK* dev, void* file )
 } /* end function loc3270_hresume */
 
 /*-------------------------------------------------------------------*/
-/* QUERY THE 1052/3215 DEVICE DEFINITION                             */
+/*            QUERY THE 1052/3215 DEVICE DEFINITION                  */
 /*-------------------------------------------------------------------*/
 static void constty_query_device( DEVBLK* dev, char** devclass,
                                   int buflen, char* buffer )
@@ -2111,7 +2138,7 @@ static void constty_query_device( DEVBLK* dev, char** devclass,
 } /* end function constty_query_device */
 
 /*-------------------------------------------------------------------*/
-/* QUERY THE 3270 DEVICE DEFINITION                                  */
+/*             QUERY THE 3270 DEVICE DEFINITION                      */
 /*-------------------------------------------------------------------*/
 static void loc3270_query_device( DEVBLK* dev, char** devclass,
                                   int buflen, char* buffer )
@@ -2599,7 +2626,7 @@ static BYTE  solicit_3270_data( DEVBLK* dev, BYTE cmd )
 } /* end function solicit_3270_data */
 
 /*-------------------------------------------------------------------*/
-/* SUBROUTINE TO RECEIVE 1052/3215 DATA FROM THE CLIENT              */
+/*     SUBROUTINE TO RECEIVE 1052/3215 DATA FROM THE CLIENT          */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* This subroutine receives keyboard input characters from the       */
@@ -2709,7 +2736,7 @@ BYTE    buf[BUFLEN_1052];               /* Receive buffer            */
 } /* end function recv_1052_data */
 
 /*-------------------------------------------------------------------*/
-/* NEW CLIENT CONNECTION THREAD                                      */
+/*               NEW CLIENT CONNECTION THREAD                        */
 /*-------------------------------------------------------------------*/
 static void* connect_client (void* pArg)
 {
@@ -3103,7 +3130,7 @@ size_t                  logoheight;     /* Logo file number of lines */
 } /* end function connect_client */
 
 /*-------------------------------------------------------------------*/
-/* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
+/*        CONSOLE CONNECTION AND ATTENTION HANDLER THREAD            */
 /*-------------------------------------------------------------------*/
 static void* console_connection_handler( void* arg )
 {
