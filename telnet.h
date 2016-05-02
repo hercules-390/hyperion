@@ -99,17 +99,6 @@ extern "C" {
 #endif
 
 /*-------------------------------------------------------------------*/
-/*   printf type checking feature in GCC and some other compilers    */
-/*-------------------------------------------------------------------*/
-#if __GNUC__
-# define ATTR_GNU_PRINTF(f,a) __attribute__((format(printf, f, a))) /* internal helper */
-# define ATTR_GNU_SENTINEL    __attribute__((sentinel))             /* internal helper */
-#else
-# define ATTR_GNU_PRINTF(f,a)     /* internal helper */
-# define ATTR_GNU_SENTINEL        /* internal helper */
-#endif
-
-/*-------------------------------------------------------------------*/
 /*                       Telnet state codes                          */
 /*-------------------------------------------------------------------*/
 enum telnet_state_t
@@ -631,8 +620,8 @@ extern void telnet_subnegotiation
  *
  * Returns:  Number of bytes sent.
  */
-extern int telnet_printf ( telnet_t* telnet, const char* fmt, ...)         ATTR_GNU_PRINTF( 2, 3 );
-extern int telnet_vprintf( telnet_t* telnet, const char* fmt, va_list va ) ATTR_GNU_PRINTF( 2, 0 );
+extern int telnet_printf ( telnet_t* telnet, const char* fmt, ...)         ATTR_PRINTF( 2, 3 );
+extern int telnet_vprintf( telnet_t* telnet, const char* fmt, va_list va ) ATTR_PRINTF( 2, 0 );
 
 /*-------------------------------------------------------------------*/
 /*                     Send formatted data                           */
@@ -647,8 +636,8 @@ extern int telnet_vprintf( telnet_t* telnet, const char* fmt, va_list va ) ATTR_
  *
  * Returns:  Number of bytes sent.
  */
-extern int telnet_raw_printf ( telnet_t* telnet, const char* fmt, ... )        ATTR_GNU_PRINTF( 2, 3 );
-extern int telnet_raw_vprintf( telnet_t* telnet, const char* fmt, va_list va ) ATTR_GNU_PRINTF( 2, 0 );
+extern int telnet_raw_printf ( telnet_t* telnet, const char* fmt, ... )        ATTR_PRINTF( 2, 3 );
+extern int telnet_raw_vprintf( telnet_t* telnet, const char* fmt, va_list va ) ATTR_PRINTF( 2, 0 );
 
 /*-------------------------------------------------------------------*/
 /*    Begin a new set of NEW-ENVIRON values to request or send       */

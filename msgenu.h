@@ -16,7 +16,6 @@
 #define _MSGENU_H_
 
 #include "printfmt.h"       /* Hercules printf/sscanf format strings */
-
 /*
 -----------------------------------------------------------------------
                         Message principles
@@ -73,10 +72,7 @@ Examples:
   128bit psw: "%016X %016X", psw64h, psw64l
   Regs:       "GR%02d CR%02d AR%02d FP%02d", grnum, crnum, arnum, fpnum
   Strings:    "%s", ""
-
------------------------------------------------------------------------
 */
-
 /*-------------------------------------------------------------------*/
 /*                      PRIMARY MESAGE MACROS                        */
 /*-------------------------------------------------------------------*/
@@ -84,86 +80,10 @@ Examples:
 ** PROGRAMMING NOTE: the "##" preceding "__VA_ARGS__" is required
 ** for compatibility with gcc/MSVC compilers and mustn't be removed.
 */
-#if defined(DEBUG_MSGS) || (!defined(_MSVC_) && (defined(_DEBUG) || defined(DEBUG)))
-
-  /*
-  ** DO NOT REMOVE - This code is used to verify our MSGBUF and WRMSG
-  ** related macros (which use 'printf' type functions) are using the
-  ** right printf pattern and data type (which the gcc compiler checks).
-  */
-
-  #define WRMSG( id, s, ... ) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__, "%s", _buf ); \
-         free(_buf); \
-    } \
-    while(0)
-
-  #define FWRMSG( f, id, s, ... ) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, #id s " " id "\n", ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         fwritemsg( f, __FILE__, __LINE__, __FUNCTION__, "%s", _buf ); \
-         free(_buf); \
-    } \
-    while(0)
-
-  #define LOGMSG( s, ... ) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, s, ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__, "%s", _buf ); \
-         free(_buf); \
-    } \
-    while(0)
-
-  #define FLOGMSG( f, s, ... ) \
-    do { \
-         char *_msgbuf = (char *)malloc((size_t)32768); \
-         char *_buf; \
-         int _rc = 0; \
-         ASSERT( _msgbuf != NULL); \
-         _rc =  snprintf( _msgbuf, 32767, s, ## __VA_ARGS__); \
-         ASSERT( _rc != -1 ); \
-         _buf = strdup( _msgbuf ); \
-         free(_msgbuf); \
-         ASSERT( _buf != NULL ); \
-         fwritemsg( f, __FILE__, __LINE__, __FUNCTION__, "%s", _buf ); \
-         free(_buf); \
-    } \
-    while(0)
-
-#else // !DEBUG_MSGS
-
-  #define  WRMSG(     id, s, ... )   fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__, #id s " " id "\n", ## __VA_ARGS__ )
-  #define FWRMSG(  f, id, s, ... )   fwritemsg( f,      __FILE__, __LINE__, __FUNCTION__, #id s " " id "\n", ## __VA_ARGS__ )
-  #define  LOGMSG(        s, ... )   fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__,     s          "", ## __VA_ARGS__ )
-  #define FLOGMSG( f,     s, ... )   fwritemsg( f,      __FILE__, __LINE__, __FUNCTION__,     s          "", ## __VA_ARGS__ )
-
-#endif // DEBUG_MSGS ...
+#define  WRMSG(     id, s, ... )   fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__, #id s " " id "\n", ## __VA_ARGS__ )
+#define FWRMSG(  f, id, s, ... )   fwritemsg( f,      __FILE__, __LINE__, __FUNCTION__, #id s " " id "\n", ## __VA_ARGS__ )
+#define  LOGMSG(        s, ... )   fwritemsg( stdout, __FILE__, __LINE__, __FUNCTION__,     s          "", ## __VA_ARGS__ )
+#define FLOGMSG( f,     s, ... )   fwritemsg( f,      __FILE__, __LINE__, __FUNCTION__,     s          "", ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
 /*                     Message helper macros                         */
