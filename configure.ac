@@ -1411,8 +1411,18 @@ if test "$GCC"                          = "yes"  &&
 
         [hc_cv_regparm_attr_broke],
         [
+            /*
+                Set initial CFLAGS
+
+                -O3 or -O3 is selected depending on whether or not GCC properly
+                handles -O3 optimization at the requested version level.
+            */
             hc_temp="$CFLAGS"
-            CFLAGS="-O3 -fomit-frame-pointer"
+            AS_VERSION_COMPARE( $hc_gcc_level, 4.9.2,
+                                [CFLAGS = "-O3"],
+                                [CFLAGS = "-O2"],
+                                [CFLAGS = "-O3"] )
+            CFLAGS = "${CFLAGS} -fomit-frame-pointer"
 
             AC_TRY_RUN(
                 [
