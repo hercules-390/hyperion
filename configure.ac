@@ -1411,12 +1411,15 @@ if test "$GCC"                          = "yes"  &&
 
         [hc_cv_regparm_attr_broke],
         [
-            /*
-                Set initial CFLAGS
-
-                -O3 or -O3 is selected depending on whether or not GCC properly
-                handles -O3 optimization at the requested version level.
-            */
+            #
+            #   Set initial CFLAGS
+            #
+            #   -O3 or -O3 is selected depending on whether or not GCC properly
+            #   handles -O3 optimization at the requested version level.
+            #
+            #   There is a minority view that -O3 produces less optimised
+            #   code than -O2.  In one context the slowdown by -O3 was 50%
+            #
             hc_temp="$CFLAGS"
             AS_VERSION_COMPARE( $hc_gcc_level, 4.9.2,
                                 [CFLAGS = "-O3"],

@@ -1,5 +1,5 @@
 # This test file was generated from offline assembler source
-# by bldhtc.rexx 13 Nov 2015 17:12:51
+# by bldhtc.rexx 16 Jan 2016 12:11:11
 # Treat as object code.  That is, modifications will be lost.
 # assemble and listing files are provided for information only.
 *Testcase ilc

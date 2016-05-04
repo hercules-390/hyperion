@@ -1,7 +1,7 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2015/11/12 13.05
+-                                                                                           jHLASM 1.0   2016/01/16 12.11
 0  No Overriding ASMAOPT Parameters                                                                                      
-   No Overriding Parameters                                                                                              
+   Overriding Parameters-  term                                                                                          
    No Process Statements                                                                                                 
                                                                                                                          
                                                                                                                          
@@ -40,7 +40,7 @@
      SIZE(MAX)                                                                                                           
    NOSUPRWARN                                                                                                            
      SYSPARM()                                                                                                           
-   NOTERM                                                                                                                
+ 3   TERM                                                                                                                
    NOTEST                                                                                                                
      THREAD                                                                                                              
    NOTRANSLATE                                                                                                           
@@ -51,11 +51,11 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1INVPSW                                        External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2015/11/12 13.05
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/01/16 12.11
 0INV       SD 00000001 00000000 000001E0             00                                                                  
 1INVPSW   invalid program new PSW                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2015/11/12 13.05
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/01/16 12.11
 0                                               3 * This file was put into the public domain 2015-11-12                  
                                                 4 * by John P. Hartmann.  You can use it for anything you like,          
                                                 5 * as long as this notice remains.                                      
@@ -68,17 +68,17 @@
                                                13  punch '* *Done'                                                       
                                                14  END  ,                                                                
 1INVPSW                         Ordinary Symbol and Literal Cross Reference                                     Page    4
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2015/11/12 13.05
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/01/16 12.11
 0inv           1 00000000 00000001     J                    8    9                                                       
 1INVPSW                            Diagnostic Cross Reference and Assembler Summary                             Page    5
--                                                                                           jHLASM 1.0   2015/11/12 13.05
+-                                                                                           jHLASM 1.0   2016/01/16 12.11
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, Oct  7 2015 15:59:07                                                           
-0System:  Linux release 3.19.0-32-generic on jbox (i686)                                                                 
+0System:  Linux release 3.19.0-43-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Con DDname   Data Set Name                                Volume  Member                                               
    P1 SYSIN    invpsw.assemble                                                                                           
-0Assembly Start Time: 13.05.03 Stop Time: 13.05.03 Processor Time: 00.00.00.0048.
+0Assembly Start Time: 12.11.11 Stop Time: 12.11.11 Processor Time: 00.00.00.0051.
  
                                      
  Return Code 000                                                                                                         
