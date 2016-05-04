@@ -1421,11 +1421,11 @@ if test "$GCC"                          = "yes"  &&
             #   code than -O2.  In one context the slowdown by -O3 was 50%
             #
             hc_temp="$CFLAGS"
-            AS_VERSION_COMPARE( $hc_gcc_level, 4.9.2,
-                                [CFLAGS = "-O3"],
-                                [CFLAGS = "-O2"],
-                                [CFLAGS = "-O3"] )
-            CFLAGS = "${CFLAGS} -fomit-frame-pointer"
+            AS_VERSION_COMPARE( $hc_gcc_level, "4.9.2",
+                                [CFLAGS="-O3"],
+                                [CFLAGS="-O2"],
+                                [CFLAGS="-O3"] )
+            CFLAGS="${CFLAGS} -fomit-frame-pointer"
 
             AC_TRY_RUN(
                 [
