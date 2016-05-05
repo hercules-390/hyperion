@@ -192,6 +192,7 @@ accomplishes nothing.
 
 *Info       Synonym for *Hmsg.  Use if an informational message is
             expected.
+
 *Error      Synonym for *Hmsg.  Use if an error message is expected.
 
 *Explain    Specify  the explanatory text to write when the next
@@ -202,7 +203,7 @@ accomplishes nothing.
 *Message    Print a message on the output.
 
 *If         Specify a condition to test (see later).  The expression is
-            evaluated by REXX interpreter.   If the condition holds the
+            evaluated by the REXX interpreter.   If the condition holds the
             following directives are processed up to the matching *Else
             or *Fi.   If the condition does not hold, directives are
             ignored except that nested *If directives are parsed.
@@ -220,12 +221,12 @@ accomplishes nothing.
 *Timeout    A timeout is expected.  Do not use.
 
 logicimm.tst shows examples of all directives, except *Key, *Prefix,
-and *Program; see sske.tst for an example of *Key and *program.  See
+and *Program; see sske.tst for an example of *Key and *Program.  See
 pr.tst for *Prefix.  See mainsize.tst for conditional processing.
 
 Predefined variables are specified as arguments to redtest.rexx and
 extracted from the features message, HHC01417I.  When the runtest
-script (not to be confused with the runtest command below) finds
+script (not to be confused with the runtest command above) finds
 config.h, it extracts the size of a pointer and sets the variable
 "ptrsize" to 4 or 8.  For any facilities listed by message HHC01417I,
 a variable named by the facility name is set to 1, for example,
