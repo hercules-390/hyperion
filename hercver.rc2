@@ -1,4 +1,4 @@
-/* HERCVER.RC2  (C) Copyright "Fish" (David B. Trout), 2009-2015     */
+/* HERCVER.RC2  (C) Copyright "Fish" (David B. Trout), 2009-2016     */
 /*      Defines the Hercules product version resource information    */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -34,12 +34,7 @@
 #define ISPRERELEASE    NONE
 #endif
 
-#if !defined(VERSION)
-#if defined(VERS_MAJ) && defined(VERS_INT) && defined(VERS_MIN) & defined(VERS_BLD)
-#define VER             VERS_MAJ##.##VERS_INT##.##VERS_MIN##.##VERS_BLD
-#define VERSION         QSTR(VER)
-#endif
-#endif
+#include "_dynamic_version.h"  /* created by _dynamic_version script */
 
 #if !defined(VERSION) || !defined(VERS_MAJ) || !defined(VERS_INT) || !defined(VERS_MIN) || !defined(VERS_BLD)
   #error VERSION not defined properly

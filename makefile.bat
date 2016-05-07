@@ -298,10 +298,6 @@
   if %rc% NEQ 0 (set "rc=1"
                  %exit%)
 
-  call :set_VERSION
-  if %rc% NEQ 0 (set "rc=1"
-                 %exit%)
-
   goto :%build_env%
 
 ::-----------------------------------------------------------------------------
@@ -725,316 +721,15 @@
 ::-----------------------------------------------------------------------------
 :set_VERSION
 
-  ::  The following logic determines the Hercules version number,
-  ::  git or svn commit/revision information, and sets variables
-  ::  VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD and VERSION.
+  :: All Hercules version logic moved to "_dynamic_version.cmd" script
 
-  if defined VERSION goto :set_VERSION_done
-
-  set "VERS_MAJ="
-  set "VERS_INT="
-  set "VERS_MIN="
-  set "VERS_BLD="
-  set "VERSION="
-  set "modified_str="
-
-  :: ---------------------------------------------------------------
-  ::  First, extract the Hercules version from the "configure.ac"
-  ::  file by looking for "AM_INIT_AUTOMAKE(hercules,x.y[.z])"
-  :: ---------------------------------------------------------------
-
-  for /f "tokens=1-5 delims=(),. " %%a in ('type configure.ac ^| find /i "AM_INIT_AUTOMAKE"') do (
-    set "VERS_MAJ=%%c"
-    set "VERS_INT=%%d"
-    set "VERS_MIN=%%e"
+  call _dynamic_version.cmd  /c
+  set "rc=%errorlevel%"
+  if "%rc%" == "0" (
+    if defined CUSTOM_BUILD_STRING (
+      echo CUSTOM_BUILD_STRING = %CUSTOM_BUILD_STRING%
+    )
   )
-
-  %TRACE%.
-  %TRACE%   After configure.ac parse
-  %TRACE%.
-  %TRACE% VERS_MAJ         = %VERS_MAJ%
-  %TRACE% VERS_INT         = %VERS_INT%
-  %TRACE% VERS_MIN         = %VERS_MIN%
-  %TRACE%.
-
-  if not defined VERS_MAJ (
-    set "VERS_MAJ=0"
-    set "VERS_INT=0"
-    set "VERS_MIN=0"
-  ) else (
-    call :isnumeric "%VERS_MIN%"
-    if not defined # set "VERS_MIN=0"
-  )
-
-  %TRACE%.
-  %TRACE%   Before calling :remlead0
-  %TRACE%.
-  %TRACE% VERS_MAJ         = %VERS_MAJ%
-  %TRACE% VERS_INT         = %VERS_INT%
-  %TRACE% VERS_MIN         = %VERS_MIN%
-  %TRACE%.
-
-  call :remlead0  "%VERS_MAJ%"  VERS_MAJ
-  call :remlead0  "%VERS_INT%"  VERS_INT
-  call :remlead0  "%VERS_MIN%"  VERS_MIN
-
-  %TRACE%.
-  %TRACE%   After calling :remlead0
-  %TRACE%.
-  %TRACE% VERS_MAJ         = %VERS_MAJ%
-  %TRACE% VERS_INT         = %VERS_INT%
-  %TRACE% VERS_MIN         = %VERS_MIN%
-  %TRACE%.
-
-  @REM  Now to calulate a NUMERIC value for 'VERS_BLD' based on the
-  @REM  SVN/GIT repository revision number.  Note that the revision
-  @REM  number for SVN repositories is always numeric anyway but for
-  @REM  GIT repositories we must calculate it based on total number
-  @REM  of commits since GIT "revision numbers" are actually hashes.
-
-  :: ---------------------------------------------------------------
-  ::  Try TortoiseSVN's "SubWCRev.exe" program, if it exists
-  :: ---------------------------------------------------------------
-
-  set "SubWCRev_exe=SubWCRev.exe"
-  call :fullpath "%SubWCRev_exe%"
-  if "%fullpath%" == "" goto :set_VERSION_try_SVN
-
-  %TRACE% Attempting SubWCRev.exe ...
-
-  set "#="
-  for /f %%a in ('%SubWCRev_exe% "." ^| find /i "E155007"') do set "#=1"
-  if defined # goto :set_VERSION_try_GIT
-
-  %TRACE% Using SubWCRev.exe ...
-
-  set "modified_str="
-
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Updated to revision"') do set "VERS_BLD=%%j"
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Local modifications found"') do set "modified_str=-modified"
-
-  if defined VERS_BLD (
-    %TRACE% VERS_BLD     = %VERS_BLD%
-    %TRACE% modified_str = %modified_str%
-    goto :set_VERSION_do_set
-  )
-
-  goto :set_VERSION_try_SVN
-
-  :: ---------------------------------------------------------------
-  ::  Try the "svn info" and "svnversion" commands, if they exist
-  :: ---------------------------------------------------------------
-
-:set_VERSION_try_SVN
-
-  set "svn_exe=svn.exe"
-  call :fullpath "%svn_exe%"
-  if "%fullpath%" == "" goto :set_VERSION_try_GIT
-
-  %TRACE% Attempting svn.exe ...
-
-  set "#="
-  for /f %%a in ('%svn_exe% info 2^>^&1 ^| find /i "E155007"') do set "#=1"
-  if defined # goto :set_VERSION_try_GIT
-
-  %TRACE% Using svn.exe ...
-
-  set "modified_str="
-
-  for /f "tokens=1-2" %%a in ('%svn_exe% info 2^>^&1 ^| find /i "Revision:"') do set "VERS_BLD=%%b"
-
-  @REM Check if there are local modifications
-
-  set "svnversion=svnversion.exe"
-  call :fullpath "%svnversion%"
-  if "%fullpath%" == "" goto :set_VERSION_try_SVN_done
-
-  %TRACE% ... and svnversion.exe too ...
-
-  @REM  The following handles weird svnversion revision number strings
-  @REM  such as "1234:5678MSP" (mixed revision switched working copy
-  @REM  in sparse directory with local modifications).  Note that all
-  @REM  we are trying to do is determine if there is an 'M' anywhere
-  @REM  indicating local modifications are present.
-
-  set "revnum="
-  for /f "tokens=*" %%a in ('%svnversion%') do set "revnum=%%a"
-  set "svnversion="
-
-  for /f "tokens=1,2 delims=M" %%a in ("%revnum%") do (
-    set "first_token=%%a"
-    set "second_token=%%b"
-  )
-
-  if not "%first_token%%second_token%" == "%revnum%" set "modified_str=-modified"
-
-  set "second_token="
-  set "first_token="
-  set "revnum="
-
-:set_VERSION_try_SVN_done
-
-  %TRACE% VERS_BLD     = %VERS_BLD%
-  %TRACE% modified_str = %modified_str%
-
-  goto :set_VERSION_do_set
-
-  :: ---------------------------------------------------------------
-  ::  Try the "git log" command, if it exists
-  :: ---------------------------------------------------------------
-
-:set_VERSION_try_GIT
-
-  @REM Prefer "git.cmd" over git.exe (if it exists)
-
-  set "git=git.cmd"
-  call :fullpath "%git%"
-  if not "%fullpath%" == "" goto :set_VERSION_test_git
-
-  set "git=git.exe"
-  call :fullpath "%git%"
-  if "%fullpath%" == "" goto :set_VERSION_try_XXX
-
-:set_VERSION_test_git
-
-  @REM If we're using git.cmd, we must 'call' it.
-
-  set "call_git=%git%"
-  if /i "%git:~-4%" == ".cmd" set "call_git=call %git%"
-
-  %TRACE% Attempting %git% ...
-
-  set "#="
-  for /f %%a in ('%git% log --pretty=format:"%h" -n 1 2^>^&1 ^| find /i "Not a git repository"') do set "#=1"
-  if defined # goto :set_VERSION_try_XXX
-
-  %TRACE% Using %git% ...
-
-  set "modified_str="
-
-  for /f %%a in ('%git% rev-parse --verify HEAD') do set "modified_str=%%a"
-  set "modified_str=-g%modified_str:~0,7%"
-  %call_git% diff-index --quiet HEAD
-  if %errorlevel% NEQ 0 set "modified_str=%modified_str%-modified"
-
-  call :fullpath "wc.exe"
-  if "%fullpath%" == "" goto :set_VERSION_try_GIT_no_wc
-
-  %TRACE% Using wc.exe to count total commits ...
-
-  for /f "usebackq" %%a in (`%git% log --pretty^=format:'' ^| wc.exe -l`) do set "VERS_BLD=%%a"
-
-  goto :set_VERSION_try_GIT_done
-
-:set_VERSION_try_GIT_no_wc
-
-  %TRACE% Counting total commits ourself, the hard way ...
-
-  :: PROGRAMMING NOTE: MS batch "for /f" always skips blank lines.
-  :: Thus we use --pretty=format:"x" rather than --pretty=format:""
-  :: so each output line is non-empty so "for /f" can count them.
-
-  :: Technique: build a temporary batch file containing code to
-  :: count the lines in the git log output file and then run it.
-
-  call :tempfn  git_log  .log
-  call :tempfn  wcl_cmd  .cmd
-
-  %git% log --pretty=format:"x" > "%temp%\%git_log%"
-
-  if exist "%temp%\%wcl_cmd%" del "%temp%\%wcl_cmd%"
-
-  echo @echo off                                                  >> "%temp%\%wcl_cmd%"
-  echo set /a "VERS_BLD=0"                                        >> "%temp%\%wcl_cmd%"
-  echo for /f "tokens=*" %%%%a in (%%~1) do set /a "VERS_BLD+=1"  >> "%temp%\%wcl_cmd%"
-
-  call "%temp%\%wcl_cmd%"  "%temp%\%git_log%"
-
-  del "%temp%\%wcl_cmd%"
-  del "%temp%\%git_log%"
-
-  goto :set_VERSION_try_GIT_done
-
-:set_VERSION_try_GIT_done
-
-  %TRACE% VERS_BLD     = %VERS_BLD%
-  %TRACE% modified_str = %modified_str%
-
-  goto :set_VERSION_do_set
-
-:set_VERSION_try_XXX
-
-  :: Repo type XXX...
-
-  if defined VERS_BLD (
-    %TRACE% VERS_BLD     = %VERS_BLD%
-    %TRACE% modified_str = %modified_str%
-    goto :set_VERSION_do_set
-  )
-  goto :set_VERSION_try_YYY
-
-:set_VERSION_try_YYY
-
-  :: Repo type YYY...
-
-  if defined VERS_BLD (
-    %TRACE% VERS_BLD     = %VERS_BLD%
-    %TRACE% modified_str = %modified_str%
-    goto :set_VERSION_do_set
-  )
-  goto :set_VERSION_try_ZZZ
-
-:set_VERSION_try_ZZZ
-
-  :: Repo type ZZZ...
-
-  if defined VERS_BLD (
-    %TRACE% VERS_BLD     = %VERS_BLD%
-    %TRACE% modified_str = %modified_str%
-    goto :set_VERSION_do_set
-  )
-
-  %TRACE% Out of things to try!
-
-  goto :set_VERSION_do_set
-
-:set_VERSION_do_set
-
-  %TRACE%.
-  %TRACE%     set_VERSION_do_set
-  %TRACE%.
-  %TRACE% VERS_MAJ         = %VERS_MAJ%
-  %TRACE% VERS_INT         = %VERS_INT%
-  %TRACE% VERS_MIN         = %VERS_MIN%
-  %TRACE% VERS_BLD         = %VERS_BLD%
-  %TRACE% modified_str     = %modified_str%
-  %TRACE% VERSION          = %VERSION%
-  %TRACE%.
-
-  if not defined VERS_BLD set "VERS_BLD=0"
-
-  set "VERSION=%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%%modified_str%"
-
-  :: Surround the value with escaped double quotes so that it gets
-  :: passed properly on the command line (see e.g. HERC_FLAGS.msvc).
-
-  set  VERSION=\"%VERSION%\"
-
-  goto :set_VERSION_done
-
-:set_VERSION_done
-
-  %TRACE%.
-  %TRACE%     set_VERSION_done
-  %TRACE%.
-  %TRACE% VERS_MAJ         = %VERS_MAJ%
-  %TRACE% VERS_INT         = %VERS_INT%
-  %TRACE% VERS_MIN         = %VERS_MIN%
-  %TRACE% VERS_BLD         = %VERS_BLD%
-  %TRACE% VERSION          = %VERSION%
-  %TRACE% modified_str     = %modified_str%
-  %TRACE%.
-
   %return%
 
 
@@ -1137,7 +832,7 @@
   call :fxxx INCLUDE
 
 
-  @REM  Check for existence of required <win32.mak> file.
+  @REM  Check for existence of required win32.mak file.
 
   set "opath=%path%"
   set "path=%opath%;%include%"
@@ -1153,6 +848,17 @@
   echo --------------------------------- MAKE ---------------------------------
   echo.
 
+  @REM  Only set VERSION if we're actually building something
+
+  call :ifallorclean  %extra_nmake_args%
+  if defined @ (
+    call :set_VERSION
+    if %rc% NEQ 0 (
+      set "rc=1"
+      %exit%
+    )
+  )
+
   ::  Additional nmake arguments (for reference):
   ::
   ::   -nologo   suppress copyright banner
@@ -1160,8 +866,7 @@
   ::   -k        keep going if error(s)
   ::   -g        display !INCLUDEd files (VS2005 or greater only)
 
-
-  nmake -nologo -f "%makefile_name%" -s %extra_nmake_args%
+  nmake -nologo -s -f "%makefile_name%"  %extra_nmake_args%
   set "rc=%errorlevel%"
   %exit%
 

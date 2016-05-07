@@ -746,15 +746,22 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
 
     /* Log version */
 
+    // "%s version %s (%u.%u.%u.%u)"
+
     if (f != stdout)
         if (httpfd)
-            hprintf( httpfd, MSG( HHC01413, "I", prog, VERSION ));
+            hprintf( httpfd, MSG( HHC01413, "I", prog, VERSION,
+                VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
         else
-            fprintf( f, MSG( HHC01413, "I", prog, VERSION ));
+            fprintf( f, MSG( HHC01413, "I", prog, VERSION,
+                VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
     else
-        WRMSG( HHC01413, "I", prog, VERSION );
+        WRMSG( HHC01413, "I", prog, VERSION,
+            VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD );
 
     /* Log Copyright */
+
+    // "%s"
 
     if (f != stdout)
         if (httpfd)
@@ -765,6 +772,8 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
         WRMSG( HHC01414, "I", HERCULES_COPYRIGHT );
 
     /* Log build date/time */
+
+    // "Build date: %s at %s"
 
     if (f != stdout)
         if (httpfd)

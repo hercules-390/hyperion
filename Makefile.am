@@ -12,6 +12,8 @@ SUBDIRS = decNumber m4 util html man . crypto
 
 LDADD = @LIBS@
 
+DYNAMIC_VERSION := $(shell ./_dynamic_version)
+
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber -I@HQA_INC@
 
 if BUILD_HERCIFC
@@ -619,7 +621,13 @@ vmfplc2_LDFLAGS		 = $(tools_LD_FLAGS)
 # Also contains some WIN32 only source files
 #
 
-EXTRA_DIST = autoconf/config.rpath \
+EXTRA_DIST = autogen.sh					\
+				 bldlvlck					\
+				 configure.ac				\
+				 hercules.m4				\
+				 Makefile.am				\
+				 _dynamic_version			\
+				 autoconf/config.rpath \
 				 autoconf/mkinstalldirs \
 				 scripts/cmpsc.cnf	  \
 				 scripts/cmpsc.rexx	  \
@@ -685,11 +693,11 @@ EXTRA_DIST = autoconf/config.rpath \
 				 msvc.makefile.includes/REXX_DIRS.msvc 	\
 				 msvc.makefile.includes/REXX_FLAGS.msvc	\
 				 msvc.makefile.includes/REXX_RULES.msvc	\
-				 msvc.makefile.includes/VERSION.msvc		\
 				 msvc.makefile.includes/ZLIB_DIR.msvc		\
 				 msvc.makefile.includes/ZLIB_FLAGS.msvc	\
 				 msvc.makefile.includes/ZLIB_RULES.msvc	\
 				 makefile.bat			  \
+				 _dynamic_version.cmd	  \
 				 dynmake.bat				\
 				 Hercules.dsp			  \
 				 Hercules.dsw			  \

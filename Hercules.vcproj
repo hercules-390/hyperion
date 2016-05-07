@@ -2072,6 +2072,10 @@
 					Name="msvc"
 					>
 					<File
+						RelativePath=".\_dynamic_version.cmd"
+						>
+					</File>
+					<File
 						RelativePath=".\dynmake.bat"
 						>
 					</File>
@@ -2179,10 +2183,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\msvc.makefile.includes\VERSION.msvc"
-							>
-						</File>
-						<File
 							RelativePath=".\msvc.makefile.includes\ZLIB_DIR.msvc"
 							>
 						</File>
@@ -2243,6 +2243,10 @@
 				<Filter
 					Name="other"
 					>
+					<File
+						RelativePath=".\_dynamic_version"
+						>
+					</File>
 					<File
 						RelativePath=".\autogen.sh"
 						>

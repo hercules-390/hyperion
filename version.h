@@ -16,6 +16,7 @@
 #define _HERCULES_H_
 
 #include "hercules.h"
+#include "_dynamic_version.h"  /* created by _dynamic_version script */
 
 #ifndef _VERSION_C_
 #ifndef _HUTIL_DLL_
@@ -59,5 +60,5 @@ VER_DLL_IMPORT void display_build_options ( FILE* f, int httpfd );
 VER_DLL_IMPORT int  get_buildinfo_strings ( const char*** pppszBldInfoStr );
 
 #define HERCULES_COPYRIGHT \
-       "(C) Copyright 1999-2015 by Roger Bowler, Jan Jaeger, and others"
+       "(C) Copyright 1999-2016 by Roger Bowler, Jan Jaeger, and others"
 #endif // _HERCULES_H_

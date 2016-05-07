@@ -9,7 +9,6 @@ INCDIR = msvc.makefile.includes
 
 # ---------------------------------------------------------------------
 !INCLUDE $(INCDIR)\CONFIG.msvc
-!INCLUDE $(INCDIR)\VERSION.msvc
 !INCLUDE $(INCDIR)\OUTPUT_DIRS.msvc
 !INCLUDE $(INCDIR)\MODULES.msvc
 !INCLUDE $(INCDIR)\OBJ_CODE.msvc

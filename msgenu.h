@@ -909,7 +909,7 @@ Examples:
 #define HHC01412 "Hercules terminated"
 
 /* version.c */
-#define HHC01413 "%s version %s"
+#define HHC01413 "%s version %s (%u.%u.%u.%u)"
 #define HHC01414 "%s"
 #define HHC01415 "Build date: %s at %s"
 //efine HHC01416 (available)

@@ -1,25 +1,48 @@
 ###############################################################################
 # CONFIGURE.AC: Process this file with AutoConf to produce a configure script.
 ###############################################################################
-
+#
 #    AC is AutoConfigure, AM is AutoMake, and AH is AutoHeader. The
 #    'HC_XXXX..' macros are custom Hercules autoconf macros defined
 #    in the 'hercules.m4' file in the 'autoconf' subdirectory.
+#
+###############################################################################
 
-AC_INIT(hercules.h)                     # (package, version, bugreport email, etc)
-AC_REVISION($Revision$)                 # (the version of this configure.ac)
-AC_CONFIG_AUX_DIR(autoconf)             # (directory containing auxillary build tools)
-AM_INIT_AUTOMAKE(hercules,4.0)          # (the version of our software package)
-AC_CONFIG_HEADERS(config.h)             # (the file the resulting configure script will produce)
+AC_INIT(hercules.h)           # (package, version, bugreport email, etc)
+AC_REVISION($Revision$)       # (the version of this configure.ac)
+AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxillary build tools)
+
+# -----------------------------------------------------------------------------
+#  PROGRAMMING NOTE: The below VERS_MAJ, VERS_INT and VERS_MIN assignment
+#  statements must retain their existing variable names (VERS_MAJ, VERS_INT
+#  and VERS_MIN) since the *Nix "_dynamic_version" script and the Windows
+#  "_dynamic_version.cmd" script both expect those names. (They both parse
+#  this file (configure.ac) and extract VERS_MAJ, VERS_INT and VERS_MIN.)
+# -----------------------------------------------------------------------------
+#  PLEASE ALSO NOTE that each of them must be numeric values and must NOT
+#  be defined with any leading zeros as doing so would cause the C compiler
+#  to interpret them as octal values leading to a compiler error whenever
+#  any of them reaches '08' or '09' both of which are invalid octal values.
+# -----------------------------------------------------------------------------
+
+VERS_MAJ=4                    # first  digit of version
+VERS_INT=0                    # second digit of version
+VERS_MIN=0                    # third  digit of version
+
+AM_INIT_AUTOMAKE(hercules,${VERS_MAJ}.${VERS_INT}.${VERS_MIN})
+
+# -----------------------------------------------------------------------------
+
+AC_CONFIG_HEADERS(config.h)   # (the file the resulting configure script will produce)
 AM_MAINTAINER_MODE()
-AC_CANONICAL_HOST()                     # (sets $host_cpu, $host_vendor, and $host_os)
-AC_CANONICAL_TARGET()                   # (sets $target_cpu, $target_vendor, and $target_os)
+AC_CANONICAL_HOST()           # (sets $host_cpu, $host_vendor, and $host_os)
+AC_CANONICAL_TARGET()         # (sets $target_cpu, $target_vendor, and $target_os)
 
 ###############################################################################
 #   Programs section...
 ###############################################################################
 
-AC_PROG_CC()                            # (back to using this again)
+AC_PROG_CC()                  # (back to using this again)
 
 ###############################################################################
 #   OS-specific settings that we can't figure out any other way (yet)

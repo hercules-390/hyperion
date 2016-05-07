@@ -1,0 +1,154 @@
+#!/bin/bash
+
+INFILE=configure.ac
+OUTFILE=_dynamic_version.h
+TMPFILE=_dyn_version_tmp.h
+TOUCHFILE=version.h
+
+#------------------------------------------------------------------------------
+#                         create_dyn_vers_hdr
+#------------------------------------------------------------------------------
+
+create_dyn_vers_hdr()
+{
+  cat <<END_OF_HEADER > $TMPFILE
+/*  _DYNAMIC_VERSION.H (C) Copyright "Fish" (David B. Trout), 2016   */
+/*      Dynamically generated Hercules VERSION #defines              */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
+
+/*-------------------------------------------------------------------*/
+/* This header file defines the Hercules version constants. It is    */
+/* dynamically generated during the build by the _dynamic_version    */
+/* script (on Windows by the "_dynamic_version.cmd" batch file)      */
+/* and is #included automatically by the "version.h" header.         */
+/*-------------------------------------------------------------------*/
+
+#undef  VERS_MAJ
+#define VERS_MAJ    ${VERS_MAJ}
+
+#undef  VERS_INT
+#define VERS_INT    ${VERS_INT}
+
+#undef  VERS_MIN
+#define VERS_MIN    ${VERS_MIN}
+
+#undef  VERS_BLD
+#define VERS_BLD    ${VERS_BLD}
+
+#undef  VERSION
+#define VERSION     ${VERSION}
+END_OF_HEADER
+
+  # PROGRAMMING NOTE: in order to ensure make's dependency tracking is
+  # handled correctly, we always output to $TMPFILE and then compare it
+  # with the existing file. Only if they are different do we then delete
+  # the old file and rename the new file to replace it. After doing so,
+  # we then touch the "version.h" header file so make knows it is out-
+  # of-date and must therefore rebuild any files that depend on it.
+
+  if [ ! -f $OUTFILE ]; then
+    CMP_RC=1
+  else
+    cmp --silent $TMPFILE $OUTFILE
+    CMP_RC=$?
+  fi
+
+  if [ $CMP_RC -eq 0 ]; then
+    rm $TMPFILE
+  else
+
+    if [ -f $OUTFILE ]; then
+      rm $OUTFILE
+    fi
+
+    mv $TMPFILE $OUTFILE
+    touch $TOUCHFILE
+
+  fi
+}
+
+#------------------------------------------------------------------------------
+#                             M A I N
+#------------------------------------------------------------------------------
+
+# Extract the VERS_MAJ, VERS_INT and VERS_MIN values from $INFILE
+
+VERS_MAJ=$(grep -o -a -m 1  '^VERS_MAJ=[0-9][0-9]*'  $INFILE)
+VERS_INT=$(grep -o -a -m 1  '^VERS_INT=[0-9][0-9]*'  $INFILE)
+VERS_MIN=$(grep -o -a -m 1  '^VERS_MIN=[0-9][0-9]*'  $INFILE)
+
+# Result of above is "VERS_xxx=n". The below does the assignment.
+
+eval $VERS_MAJ
+eval $VERS_INT
+eval $VERS_MIN
+
+# PROGRAMMING NOTE: must check for the existence of both the .git
+# directory as well as the git command itself since either may exist
+# or not exist independent of the other. Only when both are true
+# can we then safely query/use the git repository values.
+
+if ! test -d ".git/" ||
+   ! type "git" >/dev/null 2>/dev/null;  then
+
+  # Can't query the git repository since the .git directory doesn't
+  # exist (i.e. this directory isn't a git repository clone) or else
+  # the git command doesn't exist (i.e. git itself isn't installed)
+
+  VERS_BLD="0"
+  git_hash=""
+  modified_str=""
+
+else
+
+  # The current directory appears to be a git repository clone AND the
+  # git command exists (i.e. git *IS* installed), so we can safely ask
+  # git for some repository values that we can then use in our VERSION.
+
+  # Count the number of commits and use that as our "build" number
+  VERS_BLD=$(git log --pretty=format:'' | wc -l)
+
+  # Extract the git hash of the repository (usually the last commit)
+  git_hash=$(git --git-dir=./.git --work-tree=. rev-parse --short HEAD)
+  git_hash="-g${git_hash}"
+
+  # Determine if any local modifications exist
+  git diff-index --quiet HEAD >/dev/null 2>/dev/null
+  if test "$?" == "1"; then
+    modified_str="-modified"
+  else
+    modified_str=""
+  fi
+fi
+
+
+# Make sure all required variables have a value
+
+if test "x$VERS_MAJ" = "x"; then
+           VERS_MAJ=0
+fi
+if test "x$VERS_INT" = "x"; then
+           VERS_INT=0
+fi
+if test "x$VERS_MIN" = "x"; then
+           VERS_MIN=0
+fi
+if test "x$VERS_BLD" = "x"; then
+           VERS_BLD=0
+fi
+
+
+# Construct a quoted VERSION string value
+
+QUOTE='"'
+VERSION="${QUOTE}${VERS_MAJ}.${VERS_INT}.${VERS_MIN}.${VERS_BLD}${git_hash}${modified_str}${QUOTE}"
+
+
+# Finally, output the dynamically generated header file itself
+
+create_dyn_vers_hdr
+echo DYNAMIC_VERSION
+exit 0
