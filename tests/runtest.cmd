@@ -259,7 +259,7 @@
 
   set "@=%~1"
   set "isnum="
-  for /f "delims=0123456789" %%i in ("%@%\") do if "%%i" == "\" set "isnum=1"
+  for /f "delims=0123456789" %%i in ("%@%/") do if "%%i" == "/" set "isnum=1"
   %return%
 
 
