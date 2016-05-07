@@ -2113,7 +2113,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a name="loc3270ipaddr"></a>
     <dt><code><em>ipaddr</em> [ <em>mask</em> ]</code>
     <dd><p>
-        The optional IP address and optional subnet mask specify the ip address(es)
+        The optional IP address and optional subnet mask specify the IP address(es)
         of which client(s) are allowed to connect at the device address identified
         by the device statement on which they appear. This provides an alternative
         and/or additional means of specifying to which device(s) a client tn3270
@@ -2124,7 +2124,7 @@ a real System/390.  The configuration file is an ASCII text file.
         the optional subnet mask (which defaults to 255.255.255.255 if not specified),
         matches the IP address entered on the device statement, then the client
         is eligible to connect at that device address. Otherwise the client is
-        ineligible to connect at that address and then next available device, if
+        ineligible to connect at that address and the next available device, if
         any, for which the client is eligible to connect (if any) is selected instead.
         <p>
 
@@ -2136,7 +2136,7 @@ a real System/390.  The configuration file is an ASCII text file.
         The optional IP address and subnet mask may also be specified in conjunction
         with the previously mentioned terminal group argument, but the terminal group
         argument, if specified, must be specified <i>ahead of</i> (i.e. before) the
-        optional ip address and subnet mask arguments. To specify an IP address and
+        optional IP address and subnet mask arguments. To specify an IP address and
         subnet mask without also specifying a terminal group, simply use '*' as the
         group name instead.
         <p>
@@ -2147,14 +2147,14 @@ a real System/390.  The configuration file is an ASCII text file.
         <p>
 
         The terminal group name argument, if specified, always takes precedence over
-        any optional ip address and subnet mask which may also be specified.
+        any optional IP address and subnet mask which may also be specified.
         <p>
 
     </dl>
 
     To summarize, the device number suffix always takes precedence over any group name
     which may also be specified, and any group name, if specified, always takes precedence
-    over any ip address / subnet mask value which may also be specified.
+    over any IP address / subnet mask value which may also be specified.
     <p>
 
 <hr width="50%"><p>
@@ -2278,7 +2278,7 @@ a real System/390.  The configuration file is an ASCII text file.
     the system is awaiting input on that device.
     <p>
 
-    Additionally, a terminal group name, ip address and subnet mask may all also
+    Additionally, a terminal group name, IP address and subnet mask may all also
     be optionally specified in the exact same manner as discussed in the previous
     <a href="#loc3270">Local non-SNA 3270 devices</a> section with the exception
     that the "noprompt" option, if specified, must precede the other arguments.
@@ -3001,7 +3001,7 @@ a real System/390.  The configuration file is an ASCII text file.
             <p>
             Check the manufacturer information for your particular model of
             SCSI attached tape drive (and/or use Fish's
-            "<a href="http://www.softdevlabs.com/free">ftape</a>"
+            "<a href="http://www.softdevlabs.com/ftape">ftape</a>"
             Windows utility)
             to determine whether or not this option is needed for your
             particular drive.
