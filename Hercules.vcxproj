@@ -520,6 +520,7 @@
     <None Include="html\hercmstt.html" />
     <None Include="html\hercmstu.html" />
     <None Include="html\hercmsvm.html" />
+    <None Include="html\telnet.html" />
     <None Include="dynmake.bat" />
     <None Include="makefile-dllmod.msvc" />
     <None Include="makefile.bat" />

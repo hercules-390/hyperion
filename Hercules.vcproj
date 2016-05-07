@@ -1902,6 +1902,10 @@
 							RelativePath=".\html\tasks.html"
 							>
 						</File>
+						<File
+							RelativePath=".\html\telnet.html"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="msgs"

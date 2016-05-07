@@ -1,14 +1,15 @@
-dist_pkgdata_DATA =   cckddasd.html fishgui.html  hercconf.html hercfaq.html     \
-        hercinst.html herclic.html  hercload.html hercmsca.html hercmscf.html  \
+dist_pkgdata_DATA =   cckddasd.html fishgui.html  hercconf.html hercfaq.html  \
+        hercinst.html herclic.html  hercload.html hercmsca.html hercmscf.html \
         hercmscp.html hercmsct.html hercmscu.html hercmsda.html hercmsdc.html \
         hercmsdg.html hercmsdi.html hercmsdl.html hercmsds.html hercmsdt.html \
-        hercmsdu.html hercmsg.html  hercmshd.html hercmshe.html hercmshg.html  \
+        hercmsdu.html hercmsg.html  hercmshd.html hercmshe.html hercmshg.html \
         hercmshm.html hercmsht.html hercmshu.html hercmsif.html hercmsin.html \
         hercmslc.html hercmslg.html hercmspn.html hercmspr.html hercmspu.html \
         hercmsrd.html hercmssd.html hercmsta.html hercmstc.html hercmste.html \
         hercmstm.html hercmsts.html hercmstt.html hercmstu.html hercmsvm.html \
-        hercnew.html  hercrdr.html  hercrnot.html hercsupp.html herctcp.html    \
-        hercules.html index.html    shared.html   tasks.html    hercules.css
+        hercnew.html  hercrdr.html  hercrnot.html hercsupp.html herctcp.html  \
+        hercules.html index.html    shared.html   tasks.html    hercules.css  \
+        telnet.html
 
 include_sources = include/header.htmlpart include/footer.htmlpart
 
@@ -31,7 +32,13 @@ images_sources = images/loadoffu.gif images/restartu.gif \
         images/hercpic-rblk-80.gif images/powerononu.gif images/translucentonu.gif \
         images/interruptd.gif images/redd.gif images/waitoffu.gif \
         images/interruptu.gif images/redu.gif images/waitonu.gif \
-        images/loadd.gif images/restartd.gif
+        images/loadd.gif images/restartd.gif \
+        images/telnetputtyconndata.png  \
+        images/telnetputtysession.png   \
+        images/telnetputtyterminal.png  \
+        images/telnetwin10.png          \
+        images/telnetwinntconnect.png   \
+        images/telnetwinnttermpref.png
 
 images_pkgdatadir = $(pkgdatadir)/images
 

@@ -899,6 +899,9 @@
     <None Include="html\hercmsvm.html">
       <Filter>Other Files\DOC\html\msgs</Filter>
     </None>
+    <None Include="html\telnet.html">
+      <Filter>Other Files\DOC\html\msgs</Filter>
+    </None>
     <None Include="dynmake.bat">
       <Filter>Other Files\Build\msvc</Filter>
     </None>
