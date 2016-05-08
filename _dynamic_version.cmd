@@ -133,14 +133,16 @@
   ::  we then "touch" the "version.h" header file so nmake knows it is out
   ::  of date and must therefore rebuild any files that depend on it.
 
-  if exist %tmpfile% del %tmpfile%
+
+  call :tempfn  tmpfile  .h
+  if exist "%tmpfile%" del "%tmpfile%"
 
   setlocal enabledelayedexpansion
   for /L %%i in (1,1,%numlines%) do (
     if not defined line%%i (
-      echo.>> !tmpfile!
+      echo.>> "!tmpfile!"
     ) else (
-      echo !line%%i! >> !tmpfile!
+      echo !line%%i! >> "!tmpfile!"
     )
   )
   endlocal
@@ -153,15 +155,14 @@
 
 :new_file
 
-  if exist "%outfile%" del "%outfile%"
-  ren "%tmpfile%" "%outfile%"
+  move /y "%tmpfile%" "%outfile%"
 
   @REM Windows's magic "touch" syntax!
 
   @REM "https://technet.microsoft.com/en-us/library/bb490886.aspx"
   @REM "https://blogs.msdn.microsoft.com/oldnewthing/20130710-00/?p=3843/"
 
-  copy version.h+,, > nul 2>&1
+  copy "%touchfile%"+,, > nul 2>&1
 
 :echo_version
 
@@ -194,7 +195,7 @@
 
   set "infile=configure.ac"
   set "outfile=_dynamic_version.h"
-  set "tmpfile=_dyn_version_tmp.h"
+  set "touchfile=version.h"
 
   @REM  Options as listed in help...
 
@@ -217,6 +218,24 @@
   if /i "%~1" == "--help"  goto :help
 
   goto :parse_options_loop
+
+::-----------------------------------------------------------------------------
+::                              tempfn
+::-----------------------------------------------------------------------------
+:tempfn
+
+  setlocal
+  set "var_name=%~1"
+  set "file_ext=%~2"
+  set "%var_name%="
+  set "@="
+  for /f "delims=/ tokens=1-3" %%a in ("%date:~4%") do (
+    for /f "delims=:. tokens=1-4" %%d in ("%time: =0%") do (
+      set "@=TMP%%c%%a%%b%%d%%e%%f%%g%file_ext%"
+    )
+  )
+  endlocal && set "%var_name%=%@%"
+  %return%
 
 ::-----------------------------------------------------------------------------
 ::                              isfile
