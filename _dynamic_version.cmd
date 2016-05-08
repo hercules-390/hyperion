@@ -155,7 +155,7 @@
 
 :new_file
 
-  move /y "%tmpfile%" "%outfile%"
+  move /y "%tmpfile%" "%outfile%" > nul 2>&1
 
   @REM Windows's magic "touch" syntax!
 
