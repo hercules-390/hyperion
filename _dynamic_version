@@ -1,11 +1,17 @@
 #!/bin/bash
 
-top_srcdir=$1
-gitdir=${top_srcdir}/.git/
-INFILE=${top_srcdir}/configure.ac
-OUTFILE=${top_srcdir}/_dynamic_version.h
+# PROGRAMMING NOTE: apparently some git commands report
+# inaccurate information if the current directory isn't
+# root repository directory where the source files live.
+
+orig_dir="$(pwd)"
+top_srcdir="$1"
+cd "$top_srcdir"
+
+INFILE=configure.ac
+OUTFILE=_dynamic_version.h
 TMPFILE=/tmp/_dyn_version_tmp.h
-TOUCHFILE=${top_srcdir}/version.h
+TOUCHFILE=version.h
 
 #------------------------------------------------------------------------------
 #                         create_dyn_vers_hdr
@@ -93,7 +99,7 @@ eval $VERS_MIN
 # or not exist independent of the other. Only when both are true
 # can we then safely query/use the git repository values.
 
-if ! test -d "${gitdir}" ||
+if ! test -d "./.git" ||
    ! type "git" >/dev/null 2>/dev/null;  then
 
   # Can't query the git repository since the .git directory doesn't
@@ -111,14 +117,14 @@ else
   # git for some repository values that we can then use in our VERSION.
 
   # Count the number of commits and use that as our "build" number
-  VERS_BLD=$(git --git-dir ${gitdir} log --pretty=format:'' | wc -l)
+  VERS_BLD=$(git log --pretty=format:'' | wc -l)
 
   # Extract the git hash of the repository (usually the last commit)
-  git_hash=$(git --git-dir ${gitdir} --work-tree=. rev-parse --short HEAD)
+  git_hash=$(git --work-tree=. rev-parse --short HEAD)
   git_hash="-g${git_hash}"
 
   # Determine if any local modifications exist
-  git --git-dir ${gitdir} diff-index --quiet HEAD >/dev/null 2>/dev/null
+  git status --untracked-files=no --porcelain > /dev/null 2>&1
   if test "$?" == "1"; then
     modified_str="-modified"
   else
@@ -153,4 +159,5 @@ VERSION="${QUOTE}${VERS_MAJ}.${VERS_INT}.${VERS_MIN}.${VERS_BLD}${git_hash}${mod
 
 create_dyn_vers_hdr
 echo DYNAMIC_VERSION
+cd "$orig_dir"
 exit 0
