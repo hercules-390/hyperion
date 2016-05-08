@@ -4130,7 +4130,7 @@ BYTE    stat;                           /* Unit status               */
     /*---------------------------------------------------------------*/
 
         /* Calculate number of bytes to write and set residual count */
-        num = (count < (U32)dev->bufsize) ? count : dev->bufsize;
+        num = (count < (U32)dev->bufsize) ? count : (U32)dev->bufsize;
         *residual = count - num;
 
         /* Translate data in channel buffer to ASCII */
