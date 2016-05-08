@@ -352,7 +352,7 @@ union telnet_event_t
     /*
      * WARNING and ERROR events
      */
-    struct error_t
+    struct zz_error_t
     {
         enum telnet_event_code_t    type;       /* alias for type               */
         const char*                 file;       /* file the error occured in     */

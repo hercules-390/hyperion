@@ -12,7 +12,7 @@ SUBDIRS = decNumber m4 util html man . crypto
 
 LDADD = @LIBS@
 
-DYNAMIC_VERSION := $(shell ./_dynamic_version $(top_srcdir))
+DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir))
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/decNumber -I@HQA_INC@
 
