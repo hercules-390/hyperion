@@ -151,3 +151,6 @@ autoconf/compile
 
 # QA Testing
 allTests.testin
+
+# Dynamically generated files
+_dynamic_version.h
