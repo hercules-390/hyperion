@@ -748,7 +748,6 @@ static void  disconnect_console_device( DEVBLK* dev )
        closes the device and marks it available for reuse.
     */
     dev->connected =  0;
-    dev->console   =  0;
     dev->fd        = -1;
 
     disconnect_telnet_client( dev->tn );
