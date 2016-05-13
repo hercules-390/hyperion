@@ -1317,7 +1317,7 @@ int     c = 0;                        /* Next option flag            */
 
 #if defined(OPTION_DYNAMIC_LOAD)
         case 'p':
-            if (optarg && hdl_setpath(optarg, FALSE))
+            if (optarg && !hdl_setpath(optarg, FALSE))
                 arg_error++;
             break;
         case 'l':
