@@ -68,6 +68,7 @@ static int scrid = 0;                   /* Script identification no. */
 
 /* Forward declarations:                                             */
 static int do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p);
+static int set_restart(const char * s);
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
@@ -663,7 +664,7 @@ void ListScriptsIds()
         if (!pCtl->scr_tid) continue; /* (inactive) */
         // "Script id:%d, tid:"TIDPAT", level:%d, name:%s"
         WRMSG( HHC02315, "I", pCtl->scr_id,
-            pCtl->scr_tid, pCtl->scr_recursion,
+            (int) pCtl->scr_tid, pCtl->scr_recursion,
             pCtl->scr_name ? pCtl->scr_name : "" );
     }
 
@@ -1140,7 +1141,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
             args = p2;
 #endif
 
-        if (isalpha( args[0] ))  /* [RESTART|START]? */
+        if (isalpha( args[0] ))  /* [RESTART|START|<oldpsw>]? */
         {
 #define MAX_KW_LEN 15
             char kw[ MAX_KW_LEN + 1 ] = {0};
@@ -1148,10 +1149,12 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
 
             if (sscanf( args, "%"QSTR( MAX_KW_LEN )"s %lf", kw, &secs ))
             {
-                if (strcasecmp( kw, "start" ) == 0)
+                if (!strcasecmp( kw, "start" ))
                     dostart = 1;
-                else if (strcasecmp( kw, "restart" ) != 0)
-                    pkw = kw;
+                else if (!strcasecmp( kw, "restart" ))
+                    ;                 /* Do nothing                  */
+                else if (!set_restart(kw))
+                    pkw = kw;         /* Not valid restart           */
             }
             else
                 pkw = args;
@@ -1292,6 +1295,45 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
     }
 
     return 0;
+}
+
+/* Set the restart PSW address to the contents of an old PSW.        */
+
+static int
+set_restart(const char * s)
+{
+    int i;
+    REGS *regs;
+
+    static const char * psws[] =
+    {
+        /* Maintain in order of assigned locations                   */
+        "external", "svc", "program", "machine", "io", 0
+    };
+
+    for (i = 0; ; i++)
+    {
+        if (!psws[i]) return 0;
+        if (!strcasecmp(s, psws[i])) break;
+    }
+
+    regs = sysblk.regs[sysblk.pcpu];
+
+    if (sysblk.arch_mode == ARCH_900)
+    {
+        PSA_900 * psa = regs->zpsa;
+        const int len = sizeof(psa->rstnew);
+
+        memcpy(psa->rstnew, psa->extold + i * len, len);
+    }
+    else
+    {
+        PSA_3XX * psa = regs->psa;
+        const int len = sizeof(psa->extold);
+
+        memcpy(psa->iplpsw, psa->extold + i * len, len);
+    }
+    return 1;                         /* OK                          */
 }
 
 /*-------------------------------------------------------------------*/

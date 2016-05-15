@@ -241,7 +241,11 @@ struct REGS {                           /* Processor registers       */
         BYTE   *storkeys;               /* -> Main storage key array */
         RADR    mainlim;                /* Central Storage limit or  */
                                         /* guest storage limit (SIE) */
-        PSA_3XX *psa;                   /* -> PSA for this CPU       */
+        union
+        {
+            PSA_3XX *psa;         /* -> PSA for this CPU 370 and ESA */
+            PSA_900 *zpsa;     /* -> PSA for this CPU when in z arch */
+        };
 
      /*
       * The fields hostregs and guestregs have been move outside the
