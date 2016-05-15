@@ -691,18 +691,17 @@
 
   set "git=git.cmd"
   call :fullpath "%git%"
-  if not "%fullpath%" == "" goto :set_VERSION_test_git
+  if not "%fullpath%" == "" goto :set_VERSION_test_call_git
 
   set "git=git.exe"
   call :fullpath "%git%"
   if "%fullpath%" == "" goto :set_VERSION_try_XXX
 
-:set_VERSION_test_git
+:set_VERSION_test_call_git
 
   @REM If we're using git.cmd, we must 'call' it.
 
-  set "call_git=%git%"
-  if /i "%git:~-4%" == ".cmd" set "call_git=call %git%"
+  if /i "%git:~-4%" == ".cmd" set "git=call %git%"
 
   %TRACE% Attempting %git% ...
 
@@ -711,12 +710,30 @@
 
   %TRACE% Using %git% ...
 
-  set "modified_str="
+  ::  Determine if any local modifications exist
+  ::  Note that doing a "update-index --refresh"
+  ::  is critical to ensure accurate results!
 
-  for /f %%a in ('%git% rev-parse --verify HEAD') do set "modified_str=%%a"
-  set "modified_str=-g%modified_str:~0,7%"
-  %call_git% diff-index --quiet HEAD
-  if %errorlevel% NEQ 0 set "modified_str=%modified_str%-modified"
+  set "changed="
+  for /f "tokens=*" %%a in ('%git% update-index --refresh -q') do set "changed=%%a"
+
+  ::  (Twice just to be sure!)
+
+  set "changed="
+  for /f "tokens=*" %%a in ('%git% update-index --refresh -q') do set "changed=%%a"
+
+  if "%changed%" == "" (
+    set "modified_str="
+  ) else (
+    set "modified_str=-modified"
+  )
+
+  ::  Extract the short git hash of the repository (usually the last commit)
+
+  set "git_hash=-gHHHHHHH"
+  for /f %%a in ('%git% --work-tree=. rev-parse --short HEAD') do set "git_hash=-g%%a"
+
+  ::  Count the number of commits and use that as our "build" number
 
   call :fullpath "wc.exe"
   if "%fullpath%" == "" goto :set_VERSION_try_GIT_no_wc
@@ -757,6 +774,9 @@
   goto :set_VERSION_try_GIT_done
 
 :set_VERSION_try_GIT_done
+
+  set "modified_str=%git_hash%%modified_str%"
+  set "git_hash="
 
   %TRACE% VERS_BLD     = %VERS_BLD%
   %TRACE% modified_str = %modified_str%

@@ -116,20 +116,27 @@ else
   # git command exists (i.e. git *IS* installed), so we can safely ask
   # git for some repository values that we can then use in our VERSION.
 
+  # Determine if any local modifications exist
+  # Note that doing a "update-index --refresh"
+  # is critical to ensure accurate results!
+
+  changed=$(git update-index --refresh -q)
+  changed=$(git update-index --refresh -q)  # (Twice just to be sure!)
+
+  if [ -z "$changed" ]; then
+    modified_str=""
+  else
+    modified_str="-modified"
+  fi
+
+  # Extract the short git hash of the repository (usually the last commit)
+
+  git_hash=-g$(git --work-tree=. rev-parse --short HEAD)
+
   # Count the number of commits and use that as our "build" number
+
   VERS_BLD=$(git log --pretty=format:'' | wc -l)
 
-  # Extract the git hash of the repository (usually the last commit)
-  git_hash=$(git --work-tree=. rev-parse --short HEAD)
-  git_hash="-g${git_hash}"
-
-  # Determine if any local modifications exist
-  git status --untracked-files=no --porcelain > /dev/null 2>&1
-  if test "$?" == "1"; then
-    modified_str="-modified"
-  else
-    modified_str=""
-  fi
 fi
 
 
