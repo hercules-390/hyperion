@@ -3214,6 +3214,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     {
         // "COMM: error in function %s: %s"
         WRMSG( HHC01034, "E", "bind()", strerror( HSO_errno ));
+        free( server );
         return NULL;
     }
 
@@ -3222,6 +3223,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     {
         // "COMM: error in function %s: %s"
         WRMSG( HHC01034, "E", "listen()", strerror( HSO_errno ));
+        free( server );
         return NULL;
     }
 
