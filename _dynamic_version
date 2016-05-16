@@ -116,14 +116,14 @@ else
   # git command exists (i.e. git *IS* installed), so we can safely ask
   # git for some repository values that we can then use in our VERSION.
 
-  # Determine if any local modifications exist
-  # Note that doing a "update-index --refresh"
-  # is critical to ensure accurate results!
+  # Determine if any local modifications exist. PLEASE NOTE that doing
+  # "update-index --refresh" beforehand is seemingly critical to ensure
+  # accurate "diff-index" results.
 
-  changed=$(git update-index --refresh -q)
-  changed=$(git update-index --refresh -q)  # (Twice just to be sure!)
+  git update-index --refresh -q > /dev/null 2>&1
+  git diff-index --quiet HEAD
 
-  if [ -z "$changed" ]; then
+  if test "$?" == "0"; then
     modified_str=""
   else
     modified_str="-modified"

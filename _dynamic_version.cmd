@@ -710,19 +710,14 @@
 
   %TRACE% Using %git% ...
 
-  ::  Determine if any local modifications exist
-  ::  Note that doing a "update-index --refresh"
-  ::  is critical to ensure accurate results!
+  ::  Determine if any local modifications exist. PLEASE NOTE that doing
+  ::  "update-index --refresh" beforehand is seemingly critical to ensure
+  ::  accurate "diff-index" results.
 
-  set "changed="
-  for /f "tokens=*" %%a in ('%git% update-index --refresh -q') do set "changed=%%a"
+  %git% update-index --refresh -q > nul 2>&1
+  %git% diff-index --quiet HEAD
 
-  ::  (Twice just to be sure!)
-
-  set "changed="
-  for /f "tokens=*" %%a in ('%git% update-index --refresh -q') do set "changed=%%a"
-
-  if "%changed%" == "" (
+  if %errorlevel% EQU 0 (
     set "modified_str="
   ) else (
     set "modified_str=-modified"
