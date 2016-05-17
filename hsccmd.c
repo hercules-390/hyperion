@@ -7004,12 +7004,16 @@ char   **save_argv = NULL;
         dev->argv = NULL;
 
     /* Call the device init routine to do the hard work */
+    dev->reinit = 1;
     if ((rc = (dev->hnd->init)(dev, init_argc, init_argv)) < 0)
     {
+        // "%1d:%04X device initialization failed"
         WRMSG(HHC02244,"E",lcss, devnum );
     } else {
+        // "%1d:%04X device initialized"
         WRMSG(HHC02245, "I", lcss, devnum );
     }
+    dev->reinit = 0;
 
     /* Release the device lock */
     release_lock (&dev->lock);

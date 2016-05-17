@@ -606,7 +606,6 @@ DEVBLK**dvpp;
         InitializeListLink   ( &dev->stape_mntdrq.link  );
         dev->stape_statrq.dev = dev;
         dev->stape_mntdrq.dev = dev;
-        dev->sstat            = GMT_DR_OPEN(-1);
 #endif
         /* Search for the last device block on the chain */
         for (dvpp = &(sysblk.firstdev); *dvpp != NULL;

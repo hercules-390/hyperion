@@ -648,51 +648,43 @@ static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 int             rc;
 DEVINITTAB*     pDevInitTab;
-int             attn = 0;
 
     dev->rcd = &tape_read_configuration_data;
 
-    /* Set flag so attention will be raised for re-init */
-    if(dev->devtype)
-    {
-        attn = 1;
-    }
-
     /* Close current tape */
-    if(dev->fd>=0)
+    if (dev->fd >= 0)
     {
-
-    /* Prevent accidental re-init'ing of already loaded tape drives */
-    if (sysblk.nomountedtapereinit)
-    {
-        char*  devclass;
-
-        tapedev_query_device(dev, &devclass, 0, NULL);
-
-        if (1
-            && strcmp(devclass,"TAPE") == 0
-            && (0
-                || TAPEDEVT_SCSITAPE == dev->tapedevt
-                || (argc >= 3 && strcmp(argv[2], TAPE_UNLOADED) != 0)
-               )
-        )
+        /* Prevent accidental re-init'ing of already loaded tape drives */
+        if (sysblk.nomountedtapereinit)
         {
-            ASSERT( dev->tmh && dev->tmh->tapeloaded );
-            if (dev->tmh->tapeloaded( dev, NULL, 0 ))
+            char*  devclass;
+
+            tapedev_query_device( dev, &devclass, 0, NULL );
+
+            if (1
+                && strcmp( devclass,"TAPE" ) == 0
+                && (0
+                    || TAPEDEVT_SCSITAPE == dev->tapedevt
+                    || (argc >= 3 && strcmp( argv[2], TAPE_UNLOADED ) != 0)
+                   )
+            )
             {
-                release_lock (&dev->lock);
-                WRMSG(HHC02243, "E", SSID_TO_LCSS(dev->ssid), dev->devnum);
-                return -1;
+                ASSERT( dev->tmh && dev->tmh->tapeloaded );
+                if (dev->tmh->tapeloaded( dev, NULL, 0 ))
+                {
+                    release_lock( &dev->lock );
+                    WRMSG( HHC02243, "E", SSID_TO_LCSS( dev->ssid ), dev->devnum );
+                    return -1;
+                }
             }
         }
+
+        dev->tmh->close( dev );
+        dev->fd = -1;
     }
 
-        dev->tmh->close(dev);
-        dev->fd=-1;
-    }
-
-    autoload_close(dev);
-    dev->tdparms.displayfeat=0;
+    autoload_close( dev );
+    dev->tdparms.displayfeat = 0;
 
     /* reset excps count */
     dev->excps = 0;
@@ -815,10 +807,6 @@ int             attn = 0;
     dev->forced_logging      = 0;   // (always, initially)
     dev->noautomount         = 0;   // (always, initially)
 
-    /* Initialize SCSI tape control fields */
-#if defined(OPTION_SCSI_TAPE)
-    dev->sstat = GMT_DR_OPEN(-1);
-#endif
     /* Clear the DPA */
     memset (dev->pgid, 0, sizeof(dev->pgid));
     /* Clear Drive password - Adrian */
@@ -878,19 +866,30 @@ int             attn = 0;
     if (dev->devchar[8] & 0x08)     // SIC supported?
         dev->SIC_supported = 1;     // remember that fact
 
+#if defined(OPTION_SCSI_TAPE)
+    /* Initialize SCSI tape status field (must not do
+       this until AFTER mountnewtape has been called
+       since dev->stape_online is otherwise undefined) */
+    dev->sstat = dev->stape_online ? 0 : GMT_DR_OPEN( -1 );
+#endif
+
 #ifdef OPTION_SYNCIO
+    /* Initialize syncio fields */
     if (dev->tapedevt == TAPEDEVT_SCSITAPE)
         dev->syncio = 0;  // (SCSI i/o too slow; causes Machine checks)
     else
         dev->syncio = 2;  // (aws/het/etc are fast; syncio likely safe)
-#endif // OPTION_SYNCIO
+#endif
+
+    /* Request a maximum sized device I/O buffer */
+    dev->bufsize = MAX_BLKLEN;
 
     /* Make attention pending if necessary */
-    if(attn)
+    if (dev->reinit)
     {
-        release_lock (&dev->lock);
-        device_attention (dev, CSW_DE);
-        obtain_lock (&dev->lock);
+        release_lock( &dev->lock );
+        device_attention( dev, CSW_DE );
+        obtain_lock( &dev->lock );
     }
 
     return rc;
@@ -1329,6 +1328,11 @@ enum
 /*    --blkid-32       for SCSI tape only, means the hardware        */
 /*                     only supports full 32-bit block-ids.          */
 /*                                                                   */
+/*    --online         for SCSI tape only, means the drive does not  */
+/*                     use the clearing/setting of the GMT_DR_OPEN   */
+/*                     flag to indicate when a tape is mounted but   */
+/*                     rather uses the GMT_ONLINE flag instead.      */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 {
@@ -1359,7 +1363,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         hostpath(dev->filename, argv[0], sizeof(dev->filename));
     }
 
-    /* Determine tape device type... */
+    /* Determine tape device type... (initializes "dev->tapedevt") */
     VERIFY( gettapetype( dev, &short_descr ) == 0 );
 
     /* (sanity check) */
@@ -1370,9 +1374,6 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
     /* Initialize device dependent fields */
     dev->fd                = -1;
-#if defined(OPTION_SCSI_TAPE)
-    dev->sstat             = GMT_DR_OPEN(-1);
-#endif
     dev->omadesc           = NULL;
     dev->omafiles          = 0;
     dev->curfilen          = 1;
@@ -1393,6 +1394,8 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
 #if defined(OPTION_SCSI_TAPE)
     // Real 3590's support Erase Gap and use 32-bit blockids.
+    // Note that these are just defaults and may be changed
+    // further below after processing our remaining options.
 
     if (TAPEDEVT_SCSITAPE == dev->tapedevt
         &&     0x3590     == dev->devtype)
@@ -1734,6 +1737,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 
     if (0 != rc)
         return -1;
+
+#if defined(OPTION_SCSI_TAPE)
+    if (dev->tapedevt == TAPEDEVT_SCSITAPE)
+        dev->sstat = dev->stape_online ? 0 : GMT_DR_OPEN( -1 );
+#endif
 
     /* Adjust the display if necessary */
     if(dev->tdparms.displayfeat)

@@ -55,6 +55,44 @@ static int int_nbio_scsitape_open( const char* fn, BYTE* ro )
 }
 
 /*-------------------------------------------------------------------*/
+/*           (internal determine maximum blocksize)                  */
+/*-------------------------------------------------------------------*/
+static int get_max_blocksize( DEVBLK *dev, int* maxblk )
+{
+    //                       2M       2M-1     256K    256K-1  128K 
+    static int blksize[] = { 2097152, 2097151, 262144, 262143, 131072,
+    //                       128K-1  64K    64K-1  32K    32K-1
+                             131071, 65536, 65535, 32768, 32767 };
+    struct mtop opblk;
+    int i, rc;
+
+    // Technique: keep trying to set ever decreasing fixed-
+    // length block sizes until one of them eventually works.
+
+    for (i=0; i < _countof( blksize ); ++i)
+    {
+        opblk.mt_op    = MTSETBLK;
+        opblk.mt_count = blksize[i];
+
+        if (ioctl_tape( dev->fd, MTIOCTOP, (char*) &opblk ) == 0)
+            break;
+    }
+
+    if (i >= _countof( blksize ))
+        i  = _countof( blksize ) - 1;
+
+    *maxblk = blksize[i];
+
+    // (reset back to variable blocksize mode again)
+
+    opblk.mt_op    = MTSETBLK;
+    opblk.mt_count = 0;
+
+    rc = ioctl_tape( dev->fd, MTIOCTOP, (char*) &opblk );
+    return rc;
+}
+
+/*-------------------------------------------------------------------*/
 /*                 Open a SCSI tape device                           */
 /*                                                                   */
 /* If successful, the file descriptor is stored in the device block  */
@@ -94,7 +132,7 @@ int open_scsitape (DEVBLK *dev, BYTE *unitstat, BYTE code)
 
     ASSERT( dev->fd < 0 );  // (sanity check)
     dev->fd = -1;
-    dev->sstat = GMT_DR_OPEN( -1 );
+    dev->sstat = dev->stape_online ? 0 : GMT_DR_OPEN( -1 );
 
     /* Open the SCSI tape device */
     dev->fd = int_nbio_scsitape_open( dev->filename, &ro );
@@ -243,29 +281,25 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
     dev->blockid = 0;
     dev->fenced = 0;
 
-    /* Set the tape device to process variable length blocks */
+    /*  Determine maximum I/O size and set the tape device to variable
+        length block mode. We must do this regardless of whether we'll
+        be writing to to tape or not.
+    */
+    rc = get_max_blocksize( dev, &dev->bufsize );
 
-    if (!STS_WR_PROT( dev ))
+    if (rc < 0)
     {
-        opblk.mt_op = MTSETBLK;
-        opblk.mt_count = 0;
-
-        rc = ioctl_tape (dev->fd, MTIOCTOP, (char*)&opblk);
-
-        if (rc < 0)
-        {
-            /* Device cannot be used; fail the open */
-            int save_errno = errno;
-            rc = dev->fd;
-            dev->fd = -1;
-            close_tape( rc );
-            errno = save_errno;
-            // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-            WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
-                    dev->filename, "scsi", "ioctl_tape(MTSETBLK)", strerror(errno));
-            build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
-            return -1; /* (fatal error) */
-        }
+        /* Device cannot be used; fail the open */
+        int save_errno = errno;
+        rc = dev->fd;
+        dev->fd = -1;
+        close_tape( rc );
+        errno = save_errno;
+        // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+        WRMSG (HHC00205, "E", SSID_TO_LCSS(dev->ssid), dev->devnum,
+                dev->filename, "scsi", "ioctl_tape(MTSETBLK)", strerror(errno));
+        build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
+        return -1; /* (fatal error) */
     }
 
 #if defined( HAVE_DECL_MTEWARN ) && HAVE_DECL_MTEWARN
@@ -344,7 +378,7 @@ void close_scsitape(DEVBLK *dev)
         dev->prvblkpos = -1;
     }
 
-    dev->sstat  = GMT_DR_OPEN(-1); // (forced)
+    dev->sstat  = dev->stape_online ? 0 : GMT_DR_OPEN(-1); // (forced)
     dev->fenced = (rc >= 0) ? 0 : 1;
 
     release_lock( &sysblk.stape_lock );
@@ -362,9 +396,8 @@ void close_scsitape(DEVBLK *dev)
 int read_scsitape (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
 {
 int  rc;
-/* int  save_errno; */
 
-    rc = read_tape (dev->fd, buf, MAX_BLKLEN);
+    rc = read_tape( dev->fd, buf, dev->bufsize );
 
     if (rc >= 0)
     {
@@ -1988,21 +2021,17 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only )
     /* Display tape status if tracing is active */
     if (unlikely( dev->ccwtrace || dev->ccwstep ))
     {
-        // "%1d:%04X Tape file %s, type scsi status %s, sstat 0x%8.8"PRIX32": %s %s%s%s%s%s%s%s"
+        char sstat_str[ 384 ] = {0};
+        gstat2str( (U32) dev->sstat, sstat_str, sizeof( sstat_str ));
+
+        // "%1d:%04X Tape file %s, type scsi status %s, sstat 0x%8.8"PRIX32": %s"
         WRMSG( HHC00211, "I"
-            ,SSID_TO_LCSS(dev->ssid)
-            ,dev->devnum
-            ,( (dev->filename[0]) ? (dev->filename)  : ("(undefined)") )
-            ,( (dev->fd   <   0 ) ? (   "closed"  )  : (   "opened"  ) )
-            ,(U32)dev->sstat
-            ,STS_ONLINE(dev)      ? "ON-LINE"        : "OFF-LINE"
-            ,STS_MOUNTED(dev)     ? "READY"          : "NO-TAPE"
-            ,STS_TAPEMARK(dev)    ? " TAPE-MARK"     : ""
-            ,STS_EOF     (dev)    ? " END-OF-FILE"   : ""
-            ,STS_BOT     (dev)    ? " LOAD-POINT"    : ""
-            ,STS_EOT     (dev)    ? " END-OF-TAPE"   : ""
-            ,STS_EOD     (dev)    ? " END-OF-DATA"   : ""
-            ,STS_WR_PROT (dev)    ? " WRITE-PROTECT" : ""
+            , SSID_TO_LCSS(dev->ssid)
+            , dev->devnum
+            , ( (dev->filename[0]) ? (dev->filename)  : ("(undefined)") )
+            , ( (dev->fd   <   0 ) ? (   "closed"  )  : (   "opened"  ) )
+            , (U32) dev->sstat
+            , sstat_str
         );
 
         if ( STS_BOT(dev) )

@@ -276,7 +276,7 @@ Examples:
 #define HHC00208 "%1d:%04X Tape file %s, type %s: maximum tape capacity exceeded"
 #define HHC00209 "%1d:%04X Tape file %s, type %s: maximum tape capacity enforced"
 #define HHC00210 "%1d:%04X Tape file %s, type %s: tape unloaded"
-#define HHC00211 "%1d:%04X Tape file %s, type scsi status %s, sstat 0x%8.8"PRIX32": %s %s%s%s%s%s%s%s"
+#define HHC00211 "%1d:%04X Tape file %s, type scsi status %s, sstat 0x%8.8"PRIX32": %s"
 #define HHC00212 "%1d:%04X Tape file %s, type %s: data chaining not supported for CCW %2.2X"
 #define HHC00213 "%1d:%04X Tape file %s, type %s: Error opening: errno=%d: %s"
 #define HHC00214 "%1d:%04X Tape file %s, type %s: auto-mount rejected: drive not empty"
