@@ -664,7 +664,7 @@ void ListScriptsIds()
         if (!pCtl->scr_tid) continue; /* (inactive) */
         // "Script id:%d, tid:"TIDPAT", level:%d, name:%s"
         WRMSG( HHC02315, "I", pCtl->scr_id,
-            (int) pCtl->scr_tid, pCtl->scr_recursion,
+            pCtl->scr_tid, pCtl->scr_recursion,
             pCtl->scr_name ? pCtl->scr_name : "" );
     }
 
