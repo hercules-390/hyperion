@@ -50,6 +50,7 @@ EXTRA_DIST =            \
     fiebr.txt           \
     fixtr.txt           \
     iedtr.txt           \
+    ieee-adds.tst       \
     ilc.assemble        \
     ilc.listing         \
     ilc.tst             \
