@@ -64,7 +64,8 @@ static int get_max_blocksize( DEVBLK *dev, int* maxblk )
     //                       128K-1  64K    64K-1  32K    32K-1
                              131071, 65536, 65535, 32768, 32767 };
     struct mtop opblk;
-    int i, rc;
+    size_t i;
+    int rc;
 
     // Technique: keep trying to set ever decreasing fixed-
     // length block sizes until one of them eventually works.
@@ -241,9 +242,8 @@ int int_scsi_status_mounted( DEVBLK *dev, int update_status )
 /*-------------------------------------------------------------------*/
 int finish_scsitape_open( DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
-int             rc;                     /* Return code               */
-int             oflags;                 /* re-open flags             */
-struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
+    int rc;                             /* Return code               */
+    int oflags;                         /* re-open flags             */
 
     /* Switch over to BLOCKING-mode I/O... (without O_NONBLOCK flag) */
 
@@ -313,6 +313,8 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 
     if (!STS_WR_PROT( dev ))
     {
+        struct mtop opblk;
+
         opblk.mt_op    = MTEWARN;
         opblk.mt_count = dev->eotmargin;
 
