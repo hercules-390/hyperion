@@ -599,6 +599,7 @@
     <None Include="tests\fiebr.txt" />
     <None Include="tests\fixtr.txt" />
     <None Include="tests\iedtr.txt" />
+    <None Include="tests\ieee-adds.tst" />
     <None Include="tests\kimd0.txt" />
     <None Include="tests\kimd1.txt" />
     <None Include="tests\kimd2.txt" />

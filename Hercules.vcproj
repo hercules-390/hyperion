@@ -3122,6 +3122,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\ieee-adds.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\invpsw.tst"
 								>
 							</File>
