@@ -207,11 +207,11 @@ r 520.10  # BFP long sums RXE and RRE part 2
 
 *Compare
 r 530.10  # BFP extended sum RRE one of two
-*Want "Ext BFP Sums 1 of 2" 400F8000 00000000 00000000 00000000
+*Want "Ext BFP Sums 1 of 2" 40008000 00000000 00000000 00000000
 
 *Compare
 r 540.10  # BFP extended sum RRE two of two
-*Want "Ext BFP Sums 2 of 2" 3FC00000 00000000 00000000 00000000
+*Want "Ext BFP Sums 2 of 2" 40000000 00000000 00000000 00000000
 
 *Compare
 r 550.10   # Short BFP to Integer results
