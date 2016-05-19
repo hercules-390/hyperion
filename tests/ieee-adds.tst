@@ -163,8 +163,7 @@ r 40C=FFFFFFFE     # -2 fourth test integer
 # 560.10             Convert long BFP to Integer results
 # 570.8              Convert extended BFP to Integer results
 
-restart
-pause 1
+runtest 
 
 *Compare
 r 410.10  # Inputs converted to BFP short 
