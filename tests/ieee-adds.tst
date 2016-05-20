@@ -1,5 +1,5 @@
 *
-*Testcase Binary Floating Point CONVERT FROM/TO FIXED, ADD, 11 instructions
+*Testcase IEEE CONVERT FROM/TO FIXED 32 (6), ADD (5), 11 instr total
 * ADD tests - Binary Floating Point
 *
 #

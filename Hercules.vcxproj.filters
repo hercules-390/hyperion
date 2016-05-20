@@ -1145,6 +1145,12 @@
     <None Include="tests\ieee-adds.tst">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
+    <None Include="tests\ieee-sqrts.tst">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-subs.tst">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
     <None Include="tests\kimd0.txt">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
