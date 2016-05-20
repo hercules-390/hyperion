@@ -51,6 +51,8 @@ EXTRA_DIST =            \
     fixtr.txt           \
     iedtr.txt           \
     ieee-adds.tst       \
+    ieee-sqrts.tst      \
+    ieee-subs.tst       \
     ilc.assemble        \
     ilc.listing         \
     ilc.tst             \
