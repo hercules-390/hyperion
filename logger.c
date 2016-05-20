@@ -306,17 +306,6 @@ int bytes_read;
     /* Set device thread priority; ignore any errors */
     set_thread_priority(0, sysblk.devprio);
 
-#if !defined( _MSVC_ )
-    /* Redirect stdout to the logger */
-    if(dup2(logger_syslogfd[LOG_WRITE],STDOUT_FILENO) == -1)
-    {
-        if(logger_hrdcpy)
-            // "Logger: error in function %s: %s"
-            fprintf(logger_hrdcpy, MSG(HHC02102, "E", "dup2()", strerror(errno)));
-        exit(1);
-    }
-#endif /* !defined( _MSVC_ ) */
-
     setvbuf (stdout, NULL, _IONBF, 0);
 
     obtain_lock(&logger_lock);
