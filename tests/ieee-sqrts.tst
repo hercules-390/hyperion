@@ -3,7 +3,7 @@
 * SQUARE ROOT tests - Binary Floating Point
 *
 #
-# Tests five addition instructions:
+# Tests five square root instructions:
 #   SQUARE ROOT (extended BFP, RRE) 
 #   SQUARE ROOT (long BFP, RRE) 
 #   SQUARE ROOT (long BFP, RXE) 
@@ -35,8 +35,9 @@
 #  Take the square root of each in each BFP format
 #  Convert back to integers (Note: SQRT(2) will/should round)
 #  Because all inputs must be positive, we'll use this rig to test 
-#     logical (unsigned) conversions.   And we will test 32 and 64
-#     bit logical conversions.  The comments will still say "integers" though. 
+#     logical (unsigned) conversions when that support is added to 
+#     Hercules.   And we will test 32 and 64 bit logical conversions.  
+#     The comments will still say "integers" though. 
 #
 sysclear
 archmode esame
@@ -67,37 +68,32 @@ r 618=41900440     #         LA    R9,EXTBFP    Point to start of extended BFP i
 r 61C=B3750000     #SQRTLOOP LZDR  R0           Zero FPR0
 r 620=B3750010     #         LZDR  R1           Zero FPR1
 #     BFP Short square root RXE and RRE
-r 624=47000000     #         NOP   ,            Not used for testing
-r 628=ED0070000014 #         SQEB  R0,0(,R7)    Put square root of test case in FPR0
-r 62E=70003000     #         STE   R0,0(,R3)    Store short BFP result from RXE
-r 632=47000000     #         NOP   ,            Not used for testing
-r 636=78107000     #         LE    R1,0(,R7)    Get test case for RRE instruction
-r 63A=B3140001     #         SQEBR R0,R1        Add BFP values, result in FPR0
-r 63E=70003004     #         STE   R0,4(,R3)    Store short BFP from RRE
-r 642=41707004     #         LA    R7,4(,R7)    Point to next short BFP test case
-r 646=41303008     #         LA    R3,8(,R3)    Point to next short BFP result pair
+r 624=ED0070000014 #         SQEB  R0,0(,R7)    Put square root of test case in FPR0
+r 62A=70003000     #         STE   R0,0(,R3)    Store short BFP result from RXE
+r 62E=78107000     #         LE    R1,0(,R7)    Get test case for RRE instruction
+r 632=B3140001     #         SQEBR R0,R1        Add BFP values, result in FPR0
+r 636=70003004     #         STE   R0,4(,R3)    Store short BFP from RRE
+r 63A=41707004     #         LA    R7,4(,R7)    Point to next short BFP test case
+r 63E=41303008     #         LA    R3,8(,R3)    Point to next short BFP result pair
 #     BFP Long square root RXE and RRE
-r 64A=47000000     #         NOP   ,            Not used for testing
-r 64E=ED0080000015 #         SQDB  R0,0(,R8)    Square root BFP long test case
-r 654=60004000     #         STD   R0,0(,R4)    Store long BFP result from RXE
-r 658=47000000     #         NOP   ,            Not used for testing
-r 65C=68108000     #         LD    R1,0(,R8)    Get BFP long test case
-r 660=B3150001     #         SQDBR R0,R1        Take square root, result in FPR0
-r 664=60004008     #         STD   R0,8(,R4)    Store long BFP from RRE
-r 668=41808008     #         LA    R8,8(,R8)    Point to next long BFP test case
-r 66C=41404010     #         LA    R4,16(,R4)   Point to next long BFP result pair
+r 642=ED0080000015 #         SQDB  R0,0(,R8)    Square root BFP long test case
+r 648=60004000     #         STD   R0,0(,R4)    Store long BFP result from RXE
+r 64C=47000000     #         NOP   ,            Not used for testing
+r 650=68108000     #         LD    R1,0(,R8)    Get BFP long test case
+r 654=B3150001     #         SQDBR R0,R1        Take square root, result in FPR0
+r 658=60004008     #         STD   R0,8(,R4)    Store long BFP from RRE
+r 65C=41808008     #         LA    R8,8(,R8)    Point to next long BFP test case
+r 660=41404010     #         LA    R4,16(,R4)   Point to next long BFP result pair
 #     BFP Extended square root RRE
-r 670=47000000     #         NOP   ,            Not used for testing
-r 674=47000000     #         NOP   ,            Not used for testing
-r 678=68109000     #         LD    R1,0(,R9)    Get BFP ext. 1st half of test case
-r 67C=68309008     #         LD    R3,8(,R9)    Get BFP ext. 2nd half of test case
-r 680=B3160001     #         SQXBR R0,R1        Add BFP values, result in FPR0-FPR2
-r 684=60005000     #         STD   R0,0(,R5)    Store ext. BFP from RRE
-r 688=60205008     #         STD   R2,8(,R5)    Store ext. BFP from RRE
-r 68C=41909010     #         LA    R9,16(,R9)   Point to next ext. BFP input 
-r 690=41505010     #         LA    R5,16(,R5)   Point to next ext. BFP result
-r 694=4620061C     #         BCT   R2,SQRTLOOP   Square root next input pair
-r 698=07FC         #         BR    R12          Return to caller
+r 664=68109000     #         LD    R1,0(,R9)    Get BFP ext. 1st half of test case
+r 668=68309008     #         LD    R3,8(,R9)    Get BFP ext. 2nd half of test case
+r 66C=B3160001     #         SQXBR R0,R1        Add BFP values, result in FPR0-FPR2
+r 670=60005000     #         STD   R0,0(,R5)    Store ext. BFP from RRE
+r 674=60205008     #         STD   R2,8(,R5)    Store ext. BFP from RRE
+r 678=41909010     #         LA    R9,16(,R9)   Point to next ext. BFP input 
+r 67C=41505010     #         LA    R5,16(,R5)   Point to next ext. BFP result
+r 680=4620061C     #         BCT   R2,SQRTLOOP   Square root next input pair
+r 684=07FC         #         BR    R12          Return to caller
 
 #
 r 3EC=00040000     # CTLR0             Control register 0 (bit45 AFP control)

@@ -3126,6 +3126,14 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\ieee-divs.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ieee-mults.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\ieee-sqrts.tst"
 								>
 							</File>
