@@ -3,14 +3,14 @@
 * SUBTRACT tests - Binary Floating Point
 *
 #
-# Tests five addition instructions:
+# Tests five subtraction instructions:
 #   SUBTRACT (extended BFP, RRE) 
 #   SUBTRACT (long BFP, RRE) 
 #   SUBTRACT (long BFP, RXE) 
 #   SUBTRACT (short BFP, RRE) 
 #   SUBTRACT (short BFP, RXE) 
 #
-# Also tests the following three conversion instructions
+# Also tests the following six conversion instructions
 #   CONVERT FROM FIXED (64 to short BFP, RRE)
 #   CONVERT FROM FIXED (64 to long BFP, RRE) 
 #   CONVERT FROM FIXED (64 to extended BFP, RRE)  
@@ -38,9 +38,9 @@ r 1d0=0002000000000000000000000000DEAD # z/Arch pgm chk new PSW disabled wait
 r 200=B60003EC     #         STCTL R0,R0,CTLR0  Store CR0 to enable AFP
 r 204=960403ED     #         OI    CTLR0+1,X'04'  Turn on AFP bit
 r 208=B70003EC     #         LCTL  R0,R0,CTLR0  Reload updated CR0
-r 20C=45C00800     #         BAL   R12,CVTINPUT Convert inputs to binary formats
-r 210=45C00600     #         BAL   R12,TESTSUB  Perform subtractions
-r 214=45C00900     #         BAL   R12,CVTOUTS  Convert results to integers
+r 20C=4DC00800     #         BAS   R12,CVTINPUT Convert inputs to binary formats
+r 210=4DC00600     #         BAS   R12,TESTSUB  Perform subtractions
+r 214=4DC00900     #         BAS   R12,CVTOUTS  Convert results to integers
 r 218=B2B203F0     #         LPSWE WAITPSW      All done, load enabled wait PSW
 
 #
@@ -195,7 +195,6 @@ r 410.10  # Inputs converted to BFP short
 *Compare
 r 420.10  # Inputs converted to BFP long part 1
 *Want "Int->Long BFP 1/2"  40000000 00000000 3FF00000 00000000
-
 *Compare
 r 430.10  # Inputs converted to BFP long part 2
 *Want "Int->Long BFP 2/2" 40100000 00000000 C0000000 00000000
@@ -203,15 +202,12 @@ r 430.10  # Inputs converted to BFP long part 2
 *Compare
 r 440.10  # Inputs converted to BFP ext part 1
 *Want "Int->Extended BFP 1/4" 40000000 00000000 00000000 00000000
-
 *Compare
 r 450.10  # Inputs converted to BFP ext part 2
 *Want "Int->Extended BFP 2/4" 3FFF0000 00000000 00000000 00000000
-
 *Compare
 r 460.10  # Inputs converted to BFP ext part 3
 *Want "Int->Extended BFP 3/4" 40010000 00000000 00000000 00000000
-
 *Compare
 r 470.10  # Inputs converted to BFP ext part 4
 *Want "Int->Extended BFP 4/4" C0000000 00000000 00000000 00000000
@@ -223,7 +219,6 @@ r 500.10  # BFP short differences RXE and RRE
 *Compare
 r 510.10  # BFP long differences RXE and RRE part 1
 *Want "Long BFP Sums 1/2" 3FF00000 00000000 3FF00000 00000000
-
 *Compare
 r 520.10  # BFP long differences RXE and RRE part 2
 *Want "Long BFP Sums 2/2" 40180000 00000000 40180000 00000000
@@ -231,7 +226,6 @@ r 520.10  # BFP long differences RXE and RRE part 2
 *Compare
 r 530.10  # BFP extended differences RRE part 1
 *Want "Ext BFP Sums 1/2" 3FFF0000 00000000 00000000 00000000
-
 *Compare
 r 540.10  # BFP extended differences RRE part 2
 *Want "Ext BFP Sums 2/2" 40018000 00000000 00000000 00000000
@@ -239,7 +233,6 @@ r 540.10  # BFP extended differences RRE part 2
 *Compare
 r 550.10   # Short BFP to Integer results part 1
 *Want "Short BFP Integer Results 1/2"  00000000 00000001 00000000 00000001
-
 *Compare
 r 560.10   # Short BFP to Integer results part 2
 *Want "Short BFP Integer Results 2/2"  00000000 00000006 00000000 00000006
@@ -247,8 +240,6 @@ r 560.10   # Short BFP to Integer results part 2
 *Compare
 r 570.10   # Convert long BFP to Integer results part 1
 *Want "Long BFP Integer Results 1/2"  00000000 00000001 00000000 00000001 
-
-
 *Compare
 r 580.10   # Convert long BFP to Integer results part 2
 *Want "Long BFP Integer Results 2/2" 00000000 00000006 00000000 00000006
@@ -256,12 +247,6 @@ r 580.10   # Convert long BFP to Integer results part 2
 *Compare
 r 590.10    # Convert extended BFP to Integer results
 *Want "Extended BFP Integer Results"  00000000 00000001 00000000 00000006
-
-# Following useful for script testing; not required for instruction validation
-# *Compare
-# r 150.10    # No program checks
-# *Want "No ProgChk"  00000000 00000000 00000000 00000000
-# Comment this back out before you commit.
 
 *Done
 
