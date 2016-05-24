@@ -74,9 +74,10 @@ The "runtest" UNIX shell script ("runtest.cmd" batch file on Windows)
 is used to run one or more (usually all) automated .tst scripts to
 verify proper Hercules functionality.
 
-On UNIX, assuming that your are building outside the source tree in the
-"atom" directory such that the source directory is ../hyperion, use the
-following command to run and verify the .tst test cases:
+On UNIX, assuming that your are building outside the source tree,
+perhaps in the "atom" directory, the source directory will be
+../hyperion.  Use the following command to run and verify the .tst test
+cases:
 
                 ../hyperion/tests/runtest
 
@@ -117,15 +118,21 @@ test should be started as well as the maximum amount of time it should
 run. Unlike the 'pause' command, 'runtest' waits only until all CPUs
 are in the stopped state.
 
-      runtest   [restart|start]   [timeout]   [# comment...]
+      runtest   [restart|start|<oldpsw>]   [timeout]   [# comment...]
 
-The first argument must be either "restart" or "start" (or be omitted).
-It specifies how the test should be started: via the Hercules restart
-console command or the "start" console command.  The default is to
-start the test via the "restart" command.
+      <oldpsw> ::= external | svc | program | machine | io
 
-The second argument (which is also optional) defines the maximum amount
-of time (specified in whole or fractional number of seconds) that the
+The first argument is optional.  If specified, it must be either
+"restart", "start", or an interrupt type.  It specifies how the test
+should be started: via the Hercules "restart" console command or the
+"start" console command.  The default is to start the test via the
+"restart" command.  When an interrupt type is specified, the old psw for
+that type is copied to the restart new PSW before the restart command is
+issued to fire up the test case where it left off taking an interrupt
+for which the new PSW was disabled.
+
+The second argument, which is also optional, defines the maximum amount
+of time (specified in a whole or fractional number of seconds) that the
 test is allowed to run.  This is a safety feature to prevent runaway
 tests from running forever due to a bug in the test or within Hercules
 itself.  Under normal circumstances all tests should end automatically
@@ -139,10 +146,7 @@ tests on systems that may be slower than the system they were
 originally designed for.  Refer to the documentation describing
 Hercules's supported command line arguments.
 
-Other runtest and/or command line arguments may be added in the future
-as they are needed.
-
-The runtest .tst script command is almost always immediately followed
+The runtest script command is almost always immediately followed
 by Hercules console commands to display storage or registers, etc, as
 well as several of the below .tst file directives to verify the test
 case ran correctly.
@@ -171,8 +175,11 @@ accomplishes nothing.
 
 *Gpr        A previous gpr console command should have been issued to
             display the general registers.  The specified register is
-            compared with the stored data.  Specify a decimal register
-            number with no leading zero.
+            compared with the hexadecimal data specified after the
+            register number.  Specify a decimal register number with no
+            leading zero.  The comment "#address" may be specified to
+            notify the CMS test driver that the register contains a
+            storage address.
 
 *Key        Compare the specified key against the key displayed in the
             previous r command.
@@ -242,3 +249,96 @@ mainsize 2147483648b
 *Else # 64 bit
 *Info HHC17003I MAIN     storage is 2G (mainsize); storage is not locked
 *Fi
+
+Creating test files that can run on z/CMS as well as under Hercules
+-------------------------------------------------------------------
+
+There are a number of differences when a test case is run on CMS rather
+than on the bare iron:
+
+1.    The machine is not all yours.  Well, it *is*, but you may not wish
+      to exercise that prerogative.  You'd likely want CMS to remain
+      after running the test case.
+
+2.    GPR15 is the base register for an emulated main storage the size
+      of the program (see AGF.assemble).  The test case is entered with
+      the return address in GPR14.
+
+3.    The test case must not modify GPR11 (or it must save and restore
+      it).  Where a test case would load a disabled PSW, it should first
+      check whether GPR14 is nonzero and branch back, if so.
+
+4.    The *Gpr directive to verify an address must add the comment
+      "#address" so that the value can be rebased.
+
+Here is an example of how to code a dual-path return:
+
+ ltr 14,14     Have a return address?
+ bnzr 14       return if so
+ LPSWE WAITPSW     Load wait PSW
+WAITPSW dc x'0002000180000000',ad(0) OK wait state PSW
+
+Some programs contain a series of tests where the CPU is stopped after
+each test.  This should be emulated by a branch back that sets GPR14 to
+the resume address:
+
+ ltr 14,14
+ bz stop
+ basr 14,14
+ b resume
+stop equ *
+ stap cpu
+ lh 2,cpu
+ sigp 0,2,5 Stop
+resume equ *
+
+If the program is running problem state, the SIGP instruction will cause
+a program check.  Use SVC 255 instead.
+
+ ltr 14,14
+ bz stop
+ basr 14,14
+ b resume
+stop equ *
+ svc 255
+resume equ *
+
+For a complex test, you may wish to make this a subroutine.  See
+digest.assemble for a test that has taken this to the extreme.
+
+The test cases are TEXT decks on CMS.  When the .tst script is built from
+assembler source, the object deck is a by product; it should be uploaded
+to CMS.
+
+The Rexx script cvttst.rexx builds an object deck from a .tst script
+that is built by hand (notably the ieee floating point test cases).
+This process makes several changes to the program:
+
+1.    References to the PSA are rebased to use GPR15 as a base register.
+      For LA, this is done only when the displacement is above the first
+      instruction in the program (which is obtained from the restart new
+      PSW field).
+
+2.    A LPSW[E] for a disabled wait is replaced by BR 14 to return.
+
+3.    LCTL to enable advanced floating point is replaced by a no
+      operation and a directive is emitted to have the test driver
+      enable this flag and disable it again after the tests have all
+      been run.
+
+4.    The addresses in the various new PSW fields in the PSA are marked
+      as relocatable.
+
+5.    Distinguishing between an instruction and a constant is in general
+      an untractable problem, but it is assumed that there is one "r"
+      command for each instruction and for each constant.  Clearly, a
+      lenght that is not one of 2, 4, 6 must refer to a constant.  If
+      the first two bits of the data are not congruent with the length
+      of the area, it must be a constant.  Further, data where the first
+      byte is either '00'x or 'ff'x is also a constant.
+
+      This leaves short precision constants.  If the displacement
+      part of the value is less than '200'x it is taken as a constant.
+      I'll likely have to invent better algorithms.
+
+cvttst is still very much experimental.

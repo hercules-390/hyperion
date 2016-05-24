@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Note: UNIX and REXX required.
 
@@ -14,7 +14,64 @@
 # configured  in  the source tree; the external object directory if you
 # configured elsewhere.
 
-# Arguments:
+# Arguments flags:
+
+# -d <word>
+# Specify  the  path  to  the test directory.  The default is ${dirname
+# $0}, perhaps ../hyperion/tests
+
+# -e <word>
+# Specify  the  default extension for the input test files.  tst is the
+# default.   The  -e  flag is active for all -f flags until the next -e
+# flag if any.
+
+# -f <word>
+# Specify  the  input  file  name  perhaps including an extension.  The
+# default  is  "-f  *.tst"  to  get the current behaviour.  Multiple -f
+# flags  are  supported.  The default extension is appended if the word
+# does not contain a period.
+
+# -h <word>
+# Specify  the  object directory that contains the hercules executable.
+# The default is parent of -d if there is no hercules executable in the
+# current directory.
+
+# -l <word>
+# Specify the name of a module to load dynamically into hercules.  This
+# is passed to Hercules.
+
+# -p <word>
+# Specify the library path for loadable modules, i.e., device managers.
+# This is passed to Hercules.
+
+# -q
+# Pass "quiet" to redtest to suppress details about test cases.
+
+# -r <number>
+# Repeat  the  composite  test  script  n  times.   There is no need to
+# specify  -x  as  hercules terminates without an explicit quit when in
+# daemon mode.
+
+# -t <number>
+# Passed to hercules (timeout factor)
+
+# -v <word>
+# Set  variable  for redtest.rexx (in fact, arguments to redtest.rexx).
+# Use  -v ptrsize=4 when running a 32 bit executable on an 8 bit system
+# if no valid config.h can be found. You can also set private variables
+# this  way  (but  such  variables  will  be  unset  when running "make
+# check").  It  is  unspecified  whether  case is respected in variable
+# names. -v quiet will make redtest more terse.
+
+# -w <word>
+# Specify the work file name.  The default is allTests.
+
+# -x
+# Do not append the quit command the composite test script.
+
+#  Positional  arguments  for  compatibility  with the past.  These are
+#  inspected  only if the first argument is not of the form of a single
+#  hyphen followed by single lowercase letter
 
 # 1     Path  from the current directory to the tests source directory.
 #       Specify - (minus, hyphen) for the default ../hyperion/tests
@@ -51,27 +108,86 @@
 # libtool  script  is  built.  Or the directory must contain a symbolic
 # link to the hercules executable.
 
-function verlt()
+verlt()
 {
-   # "Bourne-Again shell script text executable"
-   # "Bourne-Again shell script executable (binary data)"
-   # "POSIX shell script text executable"
-   # "POSIX shell script executable (binary data)"
-
-   if [ "$2" == "Bourne-Again" -o "$2" == "POSIX" ] ; then
+   if [ "$2" = "Bourne-Again" ] ; then
       return 1
    fi
-
+# "POSIX shell script text executable"
+   if [ "$2" = "POSIX" ] ; then
+      return 1
+   fi
    echo $*
    return 0
 }
 
-wfn=allTests
+setvar()
+{
+        if [ $# -lt 3 ] ; then
+                echo "Value is missing for flag $2"
+                exit 17
+        fi
+        eval $1=$3
+}
 
-if [ "${FUNCNAME[0]}" == "source" ] ; then
-   echo "Do not source $BASH_SOURCE"
-   return 20
-fi
+scanflags()
+{
+        while [ $# -gt 0 ]
+        do
+                case $1 in
+                        (-d) setvar testdir $1 $2 ; shift ;;
+                        (-e) setvar ftype   $1 $2 ; shift ;;
+                        (-f)
+                                setvar fname   $1 $2
+                                echo -n $fname|grep -q '\.'
+                                if [ $? -eq 1 ] ; then fname=$fname.$ftype; fi
+                                files="$files $testdir/$fname"
+                                shift ;;
+                        (-h) setvar hercexec $1 $2 ; shift ;;
+                        (-l|-p|-t)
+                                setvar dummy    $1 $2
+                                hercargs="$hercargs $1 $2"
+                                shift ;;
+                        (-r) setvar repeat  $1 $2 ; shift ;;
+                        (-q) vars="quiet $vars" ;;
+                        (-v)
+                                setvar dummy    $1 $2
+                                vars="$vars $2"
+                                shift ;;
+                        (-w) setvar wfn     $1 $2 ; shift ;;
+                        (-x)    exit=noexit ;;
+                        (*)  break;;
+                esac
+                shift 1
+        done
+        rest="$*"
+}
+
+scanold()
+{
+
+        dir=${1:-$testdir}
+        if [ "$dir" = "-" ] ; then
+                dir=$testdir
+        fi
+        if [ $# -gt 1 ] ; then
+                fns=$2
+        fi
+
+        if [ $# -gt 2 ] ; then
+                exit=$3
+        fi
+
+        if [ $# -gt 3 ] ; then
+                ftype=$4
+                shift 4
+                rest="$*"
+        fi
+
+        files=$dir/$fns.$ftype
+}
+
+wfn=allTests
 
 # Determine  the  relative path to the tests directory.  The default is
 # set on the assumption that this file is in the tests directory, which
@@ -79,17 +195,33 @@ fi
 # advised to write your own derivative of this script.
 
 testdir=$(dirname $0)
-dir=${1:-$testdir}
-if [ "$dir" == "-" ] ; then
-        dir=$testdir
-fi
-
+dir=$testdir
+fns='*'
+exit=exit
+ftype=tst
+# hparms
+# Location of hercules executable
 hdir=.
+
+if [ $# -gt 0 ] ; then
+        echo -n $1|grep -q '^[-][a-z]$'
+        if [ $? -eq 0 ] ; then
+                scanflags $*
+        else
+                scanold $*
+        fi
+fi
+if [ -z "$files" ] ; then files="$testdir/*.$ftype"; fi
+
+
+# echo dir $testdir ft $ftype fn $fname files $files all $allfiles herc $hercexec rep $repeat work $wfn vars $vars
+
 if [ ! -x hercules ] ; then
    if [ -x $dir/../hercules ] ; then
         hdir=$dir/..
    else
       echo 'Hercules executable (or the libtool front end) is not where expected.'
+      echo "... tried '$PWD' and '$dir/..'"
       exit 16
    fi
 fi
@@ -97,23 +229,10 @@ fi
 if [ -f $hdir/config.h ] ; then
    ptrsize=$(grep SIZEOF_INT_P $hdir/config.h | cut -d ' ' -f 3)
    vars="$vars ptrsize=$ptrsize"
+   # echo Pointer size is set to $ptrsize
 else
    echo "Unable to determine the size of a pointer.  Specify ptrsize=4 if on a 32-bit system."
 fi
-
-shift
-
-fns=${1:-*}
-
-shift
-
-exit=${1:-exit}
-
-shift
-
-ftype=${1:-tst}
-
-shift
 
 # Verify that the configuration file and redtest.rexx are available.
 
@@ -133,17 +252,14 @@ if [ -z $(which rexx) ] ; then
    rv=1
 fi
 
-# Determine if "hercules" is a libtool wrapper script
-# or an executable binary.
-
 verlt $(file $hdir/hercules)
 vrv=$?
-if [ $vrv = 0 ] ; then
+if [ $vrv -eq 0 ] ; then
    echo "Error:  Hercules executable $hdir/hercules is not the libtool wrapper."
    rv=1
 fi
 
-if [ "0" != "$rv" ] ; then
+if [ 0 -ne $rv ] ; then
    exit 12
 fi
 
@@ -152,31 +268,44 @@ fi
 # File  name  expansion  sorts  it  alphabetically (some shell variants
 # ignore case and/or punctuation).
 
-echo defsym testpath $dir|cat - $dir/$fns.$ftype >$wfn.testin
+# set -x
+
+echo Files: $files
+echo defsym testpath $dir|cat - $files >$wfn.testin
 rv=$?
-if [ "$rv" != "0" ] ; then
-   exit $rv
+if [ $rv -ne 0 ] ; then
+        echo Unable to build input file rv=$rv
+        exit $rv
+fi
+if [ -n "$repeat" ] ; then
+        echo Repeating $repeat
+        while [ 0 -lt $repeat ]
+        do
+                cat $files >>$wfn.testin
+                eval repeat=$(($repeat - 1))
+        done
 fi
 
 # Run  the script through Hercules.  Redirecting standard output writes
 # a log file.  2>&1 disables the panel display and the ability to enter
 # panel commands.
 
-cmd="$hdir/hercules -d -f $dir/tests.conf -r $wfn.testin -t"
-if [ "$exit" == "noexit" ] ; then
-        LD_LIBRARY_PATH=$hdir $cmd >$wfn.out
+# set -x
+cmd="$hdir/hercules $hercargs -f $dir/tests.conf -r $wfn.testin -t"
+if [ "$exit" = "noexit" ] ; then
+        $cmd >$wfn.out
         rv=$?
 else
-        # Run  Hercules  in  daemon mode be redirecting both stdout and
+        # Run  Hercules  in  daemon mode by redirecting both stdout and
         # stderr.
         echo exit >>$wfn.testin
-        LD_LIBRARY_PATH=$hdir $cmd >$wfn.out 2>&1
+        $cmd -d >$wfn.out 2>&1
         rv=$?
 fi
 
 # Read entire file to allow redtest.rexx to parse the features list
-if [ "$rv" == "0" ] ; then
-   rexx $dir/redtest.rexx $wfn.out $vars $*
+if [ $rv -eq 0 ] ; then
+   rexx $dir/redtest.rexx $wfn.out $vars $rest
    rv=$?
 fi
 
