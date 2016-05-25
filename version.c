@@ -86,7 +86,15 @@ static const char *build_info[] = {
     #if defined(__apple_build_version__)
         "Apple "
     #endif
-    "Clang " __clang_version__,
+    "Clang"
+    #if defined(_MSC_VER)
+        #if defined(__c2__)
+            "/C2"
+        #elif defined(__llvm__)
+            "/LLVM"
+        #endif
+    #endif
+    " " __clang_version__,
 #elif defined(__DECC)
     "Compaq C " value(__DECC_VER),
 #elif defined(__convexc__)
@@ -145,6 +153,9 @@ static const char *build_info[] = {
 #elif defined(__MWERKS__)
     "Metrowerks CodeWarrior",
 #elif defined(_MSC_VER)
+   /* && !defined(__clang__) by definition due to prior test     */
+   /*     __clang__ with _MSC_VER indicates MSC build with Clang */
+   /*     and the intent here is to only identify the compiler.  */
     "Microsoft Visual C " value(_MSC_FULL_VER)
     #if defined(_MSC_BUILD)
         " " value(_MSC_BUILD)
@@ -463,7 +474,7 @@ static const char *build_info[] = {
     "Windows"
     #if   defined(_WIN32_WCE)
         " CE " value(_WIN32_WCE)
-    #elif defined(_MSVC_)
+    #elif defined(_MSVC_) && !defined(__llvm__)
         " MSVC"
     #endif
 #elif defined(_WINDU_SOURCE)
