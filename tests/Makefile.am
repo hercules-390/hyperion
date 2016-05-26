@@ -51,6 +51,7 @@ EXTRA_DIST =            \
     fixtr.txt           \
     iedtr.txt           \
     ieee-adds.tst       \
+    ieee-comps.tst
     ieee-divs.tst       \
     ieee-mults.txt      \
     ieee-sqrts.tst      \
