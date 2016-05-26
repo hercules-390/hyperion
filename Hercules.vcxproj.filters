@@ -1145,6 +1145,9 @@
     <None Include="tests\ieee-adds.tst">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
+    <None Include="tests\ieee-comps.tst">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
     <None Include="tests\ieee-divs.tst">
       <Filter>Other Files\tests\scripts</Filter>
     </None>

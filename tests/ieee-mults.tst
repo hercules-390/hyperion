@@ -4,7 +4,7 @@
 #
 #  1. Multiply adjacent pairs of values in the input set (five values means four
 #     products).  
-#     Test data: 1, 2. 4. -2, -2; expected products 2, 8, -8, 4
+#     Test data: 1, 2, 4, -2, -2; expected products 2, 8, -8, 4
 #
 #  2. Multiply adjacent pairs of values in the input set and add the first value
 #     in the pair to the product (five values means four results).  
@@ -34,9 +34,9 @@
 #   MULTIPLY AND SUBTRACT (BFP long x long -> long, RXE) MSDB
 #
 # Also tests the following six conversion instructions
-#   LOAD LENGTHENED (short BFP to long BFP, RRE)
-#   LOAD LENGTHENED (short BFP to extended BFP, RRE) 
-#   LOAD LENGTHENED (long BFP to extended BFP, RRE)  
+#   LOAD LENGTHENED (short BFP to long BFP, RXE)
+#   LOAD LENGTHENED (short BFP to extended BFP, RXE) 
+#   LOAD LENGTHENED (long BFP to extended BFP, RXE)  
 #   LOAD LENGTHENED (short BFP to long BFP, RRE)
 #   LOAD LENGTHENED (short BFP to extended BFP, RRE) 
 #   LOAD LENGTHENED (long BFP to extended BFP, RRE)  
@@ -230,7 +230,6 @@ r 410=C0000000     # -2
 # 500.80             EXTDRES1:  Results from l*l=e
 # 580.80             EXTDRES2:  Results from e*e=e
 
-t+ 77e-792
 runtest 
 
 *Compare
@@ -355,12 +354,6 @@ r 5E0.10  # BFP Extended products from extended x extended part 4a
 *Compare
 r 5F0.10  # BFP Extended products from extended x extended part 4b
 *Want "e*e->e 4b/4" 40010000 00000000 00000000 00000000
-
-# Following useful for script testing; not required for instruction validation
-#*Compare
-#r 150.10    # No program checks
-#*Want "No ProgChk"  00000000 00000000 00000000 00000000
-# Comment this back out before you commit.
 
 *Done
 

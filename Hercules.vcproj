@@ -3126,6 +3126,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\ieee-comps.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\ieee-divs.tst"
 								>
 							</File>
