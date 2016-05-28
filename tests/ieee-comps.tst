@@ -73,22 +73,27 @@ r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1d0=0002000000000000000000000000DEAD # z/Arch pgm chk new PSW disabled wait
 
 #
-r 200=B60003EC     #         STCTL R0,R0,CTLR0    Store CR0 to enable AFP
-r 204=960403ED     #         OI    CTLR0+1,X'04'  Turn on AFP bit
-r 208=B70003EC     #         LCTL  R0,R0,CTLR0    Reload updated CR0
+r 200=B60003D4     #STARTTST STCTL R0,R0,CTLR0    Store CR0 to enable AFP
+r 204=960403D5     #         OI    CTLR0+1,X'04'  Turn on AFP bit
+r 208=B70003D4     #         LCTL  R0,R0,CTLR0    Reload updated CR0
 r 20C=B38C0000     #         EFPC  R0             Save reference copy of FPC
-r 210=4DC00600     #         BAS   R12,TESTCOMP   Perform compares and tests
-r 214=12EE         #         LTR   R14,R14        Any value in R14?
-r 216=077E         #         BNZR  R14            ..yes, on z/CMS, take graceful exit
-r 218=B2B203F0     #         LPSWE WAITPSW        ..no, on bare iron, load disabled wait PSW
+r 210=E3B003D80024 #         STG   R11,SAVER11    Save R11 in case we're on z/CMS
+r 216=4DC00600     #         BAS   R12,TESTCOMP   Perform compares and tests
+r 21A=E3B003D80004 #         LG    R11,SAVER11    Restore R11 in case we're on z/CMS
+r 220=12EE         #         LTR   R14,R14        Any value in R14?
+r 222=077E         #         BNZR  R14            ..yes, running on z/CMS, take graceful exit
+r 224=B2B203E0     #         LPSWE WAITPSW        ..no, on bare iron, load disabled wait PSW
+
+r 3D4=00040000     #CTLR0    DS    F             Control register 0 (bit45 AFP control)
+# 3D8.8            #SAVER11  DS    D             Savearea for R11, needed when on z/CMS
+r 3E0=00020000000000000000000000000000 # WAITPSW Disabled wait state PSW - normal completion
 
 
-
-# BFP Compares, Load and Test, and Test Data Class.
-# All tests are performed in one loop. 
+# BFP Compares, Load and Test, and Test Data Class main processing loop.
+# All tests are performed in each iteration of the loop.
 
 #                            ORG   X'600'
-                   #TESTMULT DS    0H                
+                   #TESTCASE DS    0H           Process one test case
 r 600=41200008     #         LA    R2,8         Set count of multiplication operations
 r 604=41300400     #         LA    R3,RESULTCC  Point cc table, 8 per precision per instruction
 r 608=41400500     #         LA    R4,RESULTMS  Point mask table, 8 per precision per instruction
@@ -127,7 +132,7 @@ r 720=B2220010     #         IPM   R1           Get condition code and program m
 r 724=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 728=42103000     #         STC   R1,0(,R3)    Save condition code in results table
 r 72C=B38C0010     #         EFPC  R1           Get result FPC
-r 730=BE144000     #         STCM  R1,X'40',0(,R4)  Store IEEE Flags in results table
+r 730=BE144000     #         STCM  R1,B'0100',0(,R4)  Store IEEE Flags in results table
 #     Compare value pair using short RRE
 r 734=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 738=B309001D     #         CEBR  R1,R13       Compare first and second values
@@ -135,7 +140,7 @@ r 73C=B2220010     #         IPM   R1           Get condition code and program m
 r 740=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 744=42103008     #         STC   R1,8(,R3)    Save condition code in results table
 r 748=B38C0010     #         EFPC  R1           Get result FPC
-r 74C=BE144008     #         STCM  R1,X'40',8(,R4)  Store IEEE Flags in results table
+r 74C=BE144008     #         STCM  R1,B'0100',8(,R4)  Store IEEE Flags in results table
 #     Compare and Signal value pair using short RXE
 r 750=B3840000     #         SFPC  R0           Load reference copy of FPC
 r 754=ED0070040008 #         KEB   R0,4(,R7)    Compare first and second values, signal if NaN
@@ -143,7 +148,7 @@ r 75A=B2220010     #         IPM   R1           Get condition code and program m
 r 75E=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 762=42103028     #         STC   R1,40(,R3)   Save condition code in results table
 r 766=B38C0010     #         EFPC  R1           Get result FPC
-r 76A=BE144028     #         STCM  R1,X'40',40(,R4)  Store IEEE Flags in results table
+r 76A=BE144028     #         STCM  R1,B'0100',40(,R4)  Store IEEE Flags in results table
 #     Compare and Signal value pair using short RRE
 r 76E=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 772=B308001D     #         KEBR  R1,R13       Compare first and second values, signal if NaN
@@ -151,7 +156,7 @@ r 776=B2220010     #         IPM   R1           Get condition code and program m
 r 77A=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 77E=42103030     #         STC   R1,48(,R3)   Save condition code in results table
 r 782=B38C0010     #         EFPC  R1           Get result FPC
-r 786=BE144030     #         STCM  R1,X'40',48(,R4)  Store IEEE Flags in results table
+r 786=BE144030     #         STCM  R1,B'0100',48(,R4)  Store IEEE Flags in results table
 #      Load and Test value short RRE
 r 78A=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 78E=B30200C0     #         LTEBR R12,R0       Load and test 
@@ -160,7 +165,7 @@ r 796=B2220010     #         IPM   R1           Get condition code and program m
 r 79A=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 79E=42103050     #         STC   R1,80(,R3)   Save condition code in results table
 r 7A2=B38C0010     #         EFPC  R1           Get result FPC
-r 7A6=BE144050     #         STCM  R1,X'40',80(,R4)  Store IEEE Flags in results table
+r 7A6=BE144050     #         STCM  R1,B'0100',80(,R4)  Store IEEE Flags in results table
 #     Test Data Class short RRE
 r 7AA=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 7AE=48108000     #         LH    R1,0(,R8)    Get test data class mask value for True
@@ -190,7 +195,7 @@ r 914=B2220010     #         IPM   R1           Get condition code and program m
 r 918=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 91C=42103010     #         STC   R1,16(,R3)   Save condition code in results table
 r 920=B38C0010     #         EFPC  R1           Get result FPC
-r 924=BE144010     #         STCM  R1,X'40',16(,R4)  Store IEEE Flags in results table
+r 924=BE144010     #         STCM  R1,B'0100',16(,R4)  Store IEEE Flags in results table
 #     Compare value pair using long RRE
 r 928=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 92C=B319001D     #         CDBR  R1,R13       Compare first and second values
@@ -198,7 +203,7 @@ r 930=B2220010     #         IPM   R1           Get condition code and program m
 r 934=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 938=42103018     #         STC   R1,24(,R3)   Save condition code in results table
 r 93C=B38C0010     #         EFPC  R1           Get result FPC
-r 940=BE144018     #         STCM  R1,X'40',24(,R4)  Store IEEE Flags in results table
+r 940=BE144018     #         STCM  R1,B'0100',24(,R4)  Store IEEE Flags in results table
 #     Compare and Signal value pair using long RXE
 r 944=B3840000     #         SFPC  R0           Load reference copy of FPC
 r 948=ED0090080018 #         KDB   R0,8(,R9)    Compare first and second values
@@ -206,7 +211,7 @@ r 94E=B2220010     #         IPM   R1           Get condition code and program m
 r 952=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 956=42103038     #         STC   R1,56(,R3)   Save condition code in results table
 r 95A=B38C0010     #         EFPC  R1           Get result FPC
-r 95E=BE144038     #         STCM  R1,X'40',56(,R4)  Store IEEE Flags in results table
+r 95E=BE144038     #         STCM  R1,B'0100',56(,R4)  Store IEEE Flags in results table
 #      Compare and Signal value pair using long RRE
 r 962=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 966=B318001D     #         KDBR  R1,R13       Generate RRE s*s=s product
@@ -214,7 +219,7 @@ r 96A=B2220010     #         IPM   R1           Get condition code and program m
 r 96E=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 972=42103040     #         STC   R1,64(,R3)   Save condition code in results table
 r 976=B38C0010     #         EFPC  R1           Get result FPC
-r 97A=BE144040     #         STCM  R1,X'40',64(,R4)  Store IEEE Flags in results table
+r 97A=BE144040     #         STCM  R1,B'0100',64(,R4)  Store IEEE Flags in results table
 #     Load and Test value long RRE
 r 97E=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 982=B31200C0     #         LTDBR R12,R0       Load and test 
@@ -223,7 +228,7 @@ r 98A=B2220010     #         IPM   R1           Get condition code and program m
 r 98E=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 992=42103058     #         STC   R1,88(,R3)   Save condition code in results table
 r 996=B38C0010     #         EFPC  R1           Get result FPC
-r 99A=BE144058     #         STCM  R1,X'40',88(,R4)  Store IEEE Flags in results table
+r 99A=BE144058     #         STCM  R1,B'0100',88(,R4)  Store IEEE Flags in results table
 #     Test Data Class long RRE
 r 99E=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 9A2=48108000     #         LH    R1,0(,R8)    Get test data class mask value for True
@@ -254,7 +259,7 @@ r B1C=B2220010     #         IPM   R1           Get condition code and program m
 r B20=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r B24=42103020     #         STC   R1,32(,R3)   Save condition code in results table
 r B28=B38C0010     #         EFPC  R1           Get result FPC
-r B2C=BE144020     #         STCM  R1,X'40',32(,R4)  Store IEEE Flags in results table
+r B2C=BE144020     #         STCM  R1,B'0100',32(,R4)  Store IEEE Flags in results table
 #      Compare and Signal value pair using extended RRE
 r B30=B3840000     #         LFPC  R0           Load reference copy of FPC
 r B34=B348001D     #         KXBR  R1,R13       Generate RRE s*s=s product
@@ -262,7 +267,7 @@ r B38=B2220010     #         IPM   R1           Get condition code and program m
 r B3C=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r B40=42103048     #         STC   R1,72(,R3)   Save condition code in results table
 r B44=B38C0010     #         EFPC  R1           Get result FPC
-r B48=BE144048     #         STCM  R1,X'40',72(,R4)  Store IEEE Flags in results table
+r B48=BE144048     #         STCM  R1,B'0100',72(,R4)  Store IEEE Flags in results table
 #     Load and Test value extended RRE
 r B4C=B3840000     #         LFPC  R0           Load reference copy of FPC
 r B50=B34200C0     #         LTXBR R12,R0       Load and test 
@@ -272,7 +277,7 @@ r B58=B2220010     #         IPM   R1           Get condition code and program m
 r B5C=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r B60=42103060     #         STC   R1,96(,R3)   Save condition code in results table
 r B64=B38C0010     #         EFPC  R1           Get result FPC
-r B68=BE144060     #         STCM  R1,X'40',96(,R4)  Store IEEE Flags in results table
+r B68=BE144060     #         STCM  R1,B'0100',96(,R4)  Store IEEE Flags in results table
 #     Test Data Class extended RRE
 r B6C=B3840000     #         LFPC  R0           Load reference copy of FPC
 r B70=48108000     #         LH    R1,0(,R8)    Get test data class mask value for True
@@ -338,9 +343,6 @@ r 340=00100000     #     0 0 0 0 | 0 0 0 0 || 0 0 0 1 | 0 0 0 0  -inf
 r 344=00400000     #     0 0 0 0 | 0 0 0 0 || 0 1 0 0 | 0 0 0 0  -2
 r 348=00200000     #     0 0 0 0 | 0 0 0 0 || 0 0 1 0 | 0 0 0 0  +inf
 r 34C=00020000     #     0 0 0 0 | 0 0 0 0 || 0 0 0 0 | 0 0 2 0  +SNaN
-
-r 3EC=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 3F0=00020000000000000000000000000000 # WAITPSW Disabled wait state PSW - normal completion
 
 
 #                    RESULTCC: 8 Condition codes from each of 16 instructions
@@ -432,7 +434,7 @@ r 550.8  # BFP Short Load and Test RRE IEEE Flags, expecting 00, 00, 00, 00, 00,
 *Want "LTEBR IEEE Flags" 00000000 00000080
 *Compare
 r 570.4  # BFP Short Load and Test RRE SNaN->QNaN, expecting 7FC00001
-*Want "LTEBR SNaN->QNaN" 7FC00001
+*Want "LTEBR SNaN->QNaN" 7FC10000
 
 *Compare
 r 468.8  # BFP Short Test Data Class condition codes, expecting 1 1 1 1 1 1 1 1
