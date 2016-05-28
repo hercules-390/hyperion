@@ -2461,7 +2461,7 @@ int     i;
 /*-------------------------------------------------------------------*/
 /* Square root of fraction                                           */
 /* This routine uses the Newton-Iteration-Method                     */
-/* The iteration is startet with a table look up                     */
+/* The iteration is started with a table look up                     */
 /*                                                                   */
 /* Input:                                                            */
 /*      a       short fraction expanded to U64                       */
@@ -2740,10 +2740,12 @@ static const unsigned short sqtab[] = {
     /* exit iteration when xi, xj equal or differ by 1 */
     for (;;) {
         xj = (((U32)(a / xi)) + xi) >> 1;
-
-        if ((xj == xi) || (abs(xj - xi) == 1)) {
+        if (0
+            || xj == xi
+            || xj == (xi+1)
+            || xj == (xi-1)
+        )
             break;
-        }
         xi = xj;
     }
 
@@ -5118,10 +5120,12 @@ U64     msj, lsj;
             /* done iteration when xi, xj equal or differ by 1 */
             for (;;) {
                 xj = (div_U128(mmsa, msa, xi) + xi) >> 1;
-
-                if ((xj == xi) || (abs(xj - xi) == 1)) {
+                if (0
+                    || xj == xi
+                    || xj == (xi+1)
+                    || xj == (xi-1)
+                )
                     break;
-                }
                 xi = xj;
             }
 

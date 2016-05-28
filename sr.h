@@ -597,7 +597,7 @@ BYTE*  buf  = p;
     if (sr_write_hdr(file, key, len) != 0)
         return -1;
 
-    TRACE("SR: sr_write_buf:    key=0x%8.8x, len=0x%16.16llx\n", key, len);
+    TRACE("SR: sr_write_buf:    key=0x%8.8x, len=0x%16.16"PRIx64"\n", key, len);
 
     while (tot)
     {
@@ -622,7 +622,7 @@ static INLINE int sr_write_value (FILE* file, U32 key, U64 val, U32 len)
 {
 BYTE    buf[8];
 
-    TRACE("SR: sr_write_value:  key=0x%8.8x, len=0x%8.8x, val=0x%16.16llx\n", key, len, val);
+    TRACE("SR: sr_write_value:  key=0x%8.8x, len=0x%8.8x, val=0x%16.16"PRIx64"\n", key, len, val);
 
     if (len != 1 && len != 2 && len != 4 && len != 8)
     {
@@ -729,7 +729,7 @@ U32    siz;
 U64    tot  = len;
 BYTE*  buf  = p;
 
-    TRACE("SR: sr_read_buf:                   len=0x%16.16llx\n", len);
+    TRACE("SR: sr_read_buf:                   len=0x%16.16"PRIx64"\n", len);
 
     while (tot)
     {
@@ -778,7 +778,7 @@ U64     value;
         default: value = 0;              break; /* To ward off gcc -Wall */
     }
 
-    TRACE("                           val=0x%16.16llx\n", value);
+    TRACE("                           val=0x%16.16"PRIx64"\n", value);
 
     switch (reslen)
     {
