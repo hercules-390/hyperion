@@ -154,7 +154,11 @@ Select
                Do
                   parse var rest 'K:' key .
                   If key = ''
-                     Then parse var rest display +36 /* Save for compare order */
+                     Then
+                        Do
+                           parse var rest display +36 /* Save for compare order */
+                           lastaddr = verb
+                        end
                      else
                         Do
                            keyaddr = substr(verb, 3)
@@ -255,6 +259,7 @@ pgmok = 0                             /* Program check not expected  */
 gpr.=''
 lastkey = ''
 keyaddr = '<unknown>'
+lastaddr = '<unknown>'
 prefix = ''
 lastmsg.0 = 0
 lasterror.0 = 0
@@ -332,11 +337,18 @@ unprocessed = ''
 return
 
 /*********************************************************************/
-/* Compare storage display atainst wanted contents.                  */
+/* Compare storage display against wanted contents.                  */
 /*********************************************************************/
 
 want:
-call test rest = display, 'Storage at' lastkey 'compare mismatch. ' info 'Want:' rest 'got' display
+wantres = rest = display
+call test wantres, 'Storage at' lastaddr 'compare mismatch. ' info
+If \wantres
+   Then
+      Do
+         say '... Want:' strip(rest)
+         say '... Have:' strip(display)
+      End
 return
 
 /*********************************************************************/
