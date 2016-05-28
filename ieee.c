@@ -258,7 +258,7 @@ static INLINE U32 float128_class( float128 op )
     if (!(op.high & LIT64( 0x7FFFFFFFFFFFFFFF )) && !op.low) return float_class_zero          >> neg;
     if ( (op.high & LIT64( 0x7FFFFFFFFFFFFFFF ))
                  == LIT64( 0x7FFF000000000000 )  && !op.low) return float_class_infinity      >> neg;
-    if (  op.high & LIT64( 0x0000800000000000 ))             return float_class_normal        >> neg;
+    if (  op.high & LIT64( 0x7FFF000000000000 ))             return float_class_normal        >> neg;
                                                              return float_class_subnormal     >> neg;
 }
 
@@ -271,7 +271,7 @@ static INLINE U32 float64_class( float64 op )
     if (!(op & LIT64( 0x7FFFFFFFFFFFFFFF ))) return float_class_zero          >> neg;
     if ( (op & LIT64( 0x7FFFFFFFFFFFFFFF ))
             == LIT64( 0x7FF0000000000000 ))  return float_class_infinity      >> neg;
-    if (  op & LIT64( 0x0008000000000000 ))  return float_class_normal        >> neg;
+    if (  op & LIT64( 0x7FF0000000000000 ))  return float_class_normal        >> neg;
                                              return float_class_subnormal     >> neg;
 }
 
@@ -284,7 +284,7 @@ static INLINE U32 float32_class( float32 op )
     if (!(op & 0x7FFFFFFF))             return float_class_zero          >> neg;
     if ( (op & 0x7FFFFFFF)
             == 0x7F800000)              return float_class_infinity      >> neg;
-    if (  op & 0x00400000)              return float_class_normal        >> neg;
+    if (  op & 0x7F800000)              return float_class_normal        >> neg;
                                         return float_class_subnormal     >> neg;
 }
 
@@ -1575,7 +1575,7 @@ DEF_INST(load_and_test_bfp_ext_reg)
     if (float128_is_signaling_nan( op2 ))
     {
         float_raise( &ctx, float_flag_invalid );
-        op1.high = float128_default_nan_high;
+		op1.high = op2.high | LIT64(0x0000800000000000);
         op1.low  = float128_default_nan_low;
     }
     else
@@ -1599,7 +1599,7 @@ DEF_INST(load_and_test_bfp_long_reg)
     if (float64_is_signaling_nan( op2 ))
     {
         float_raise( &ctx, float_flag_invalid );
-        op1 = float64_default_nan;
+        op1 = op2 | LIT64(0x0008000000000000);
     }
     else
         op1 = op2;
@@ -1622,7 +1622,7 @@ DEF_INST(load_and_test_bfp_short_reg)
     if (float32_is_signaling_nan( op2 ))
     {
         float_raise( &ctx, float_flag_invalid );
-        op1 = float32_default_nan;
+        op1 = op2 | 0x00400000;
     }
     else
         op1 = op2;
