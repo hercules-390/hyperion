@@ -392,7 +392,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
     }
 
     /* Display control registers if appropriate */
-    if (!REAL_MODE(&regs->psw) || opcode == 0xB2)
+    if (!REAL_MODE(&regs->psw) || opcode == 0xB2 || opcode == 0xB6 || opcode == 0xB7)
     {
         len += display_cregs (regs, buf + len, buflen - len - 1, "HHC02271I ");
         if (sysblk.showregsfirst)
@@ -407,15 +407,44 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
             len += snprintf(buf + len, buflen - len - 1, "\n");
     }
 
+    if ((regs->CR(0) & CR0_AFP) && (               /* Display floating point control register if AFP enabled */
+                                (opcode == 0x01 && inst[1] == 0x0A)          /* PFPO Perform Floating Point Operation  */
+                                || (opcode == 0xB2 && inst[1] == 0x99)       /* SRNM   Set BFP Rounding mode 2-bit     */
+                                || (opcode == 0xB2 && inst[1] == 0x9C)       /* STFPC  Store FPC                       */
+                                || (opcode == 0xB2 && inst[1] == 0x9D)       /* LFPC   Load FPC                        */
+                                || (opcode == 0xB2 && inst[1] == 0xB8)       /* SRNMB  Set BFP Rounding mode 3-bit     */
+                                || (opcode == 0xB2 && inst[1] == 0xB9)       /* SRNMT  Set DFP Rounding mode           */
+                                || (opcode == 0xB2 && inst[1] == 0xBD)       /* LFAS   Load FPC and Signal             */
+                                || (opcode == 0xB3 && (inst[1] <= 0x1F))                       /* RRE BFP arithmetic   */
+                                || (opcode == 0xB3 && (inst[1] >= 0x40 && inst[1] <= 0x5F))    /* RRE BFP arithmetic   */
+                                || (opcode == 0xB3 && (inst[1] >= 0x84 && inst[1] <= 0x8C))    /* SFPC, SFASR, EFPC    */
+                                || (opcode == 0xB3 && (inst[1] >= 0x90 && inst[1] <= 0xAF))    /* RRE BFP arithmetic   */
+                                || (opcode == 0xB3 && (inst[1] >= 0xD0 && inst[1] <= 0xFF))    /* RRE DFP arithmetic   */
+                                || (opcode == 0xB9 && (inst[1] >= 0x41 && inst[1] <= 0x43))    /* DFP Conversions      */
+                                || (opcode == 0xB9 && (inst[1] >= 0x49 && inst[1] <= 0x5B))    /* DFP Conversions      */
+                                || (opcode == 0xED && (inst[1] <= 0x1F))                       /* RXE BFP arithmetic   */
+                                || (opcode == 0xED && (inst[1] >= 0x40 && inst[1] <= 0x59))    /* RXE DFP shifts, tests*/
+                                || (opcode == 0xED && (inst[1] >= 0xA8 && inst[1] <= 0xAF)))   /* RXE DFP conversions  */
+        )
+    {
+        len += snprintf(buf + len, buflen - len - 1, MSG(HHC02276,"I", regs->fpc));
+        if (sysblk.showregsfirst)
+             len += snprintf(buf + len, buflen - len - 1, "\n");
+    }
+
     /* Display floating-point registers if appropriate */
-    if (opcode == 0xB3 || opcode == 0xED
-        || (opcode >= 0x20 && opcode <= 0x3F)
-        || (opcode >= 0x60 && opcode <= 0x70)
-        || (opcode >= 0x78 && opcode <= 0x7F)
-        || (opcode == 0xB2 && inst[1] == 0x2D) /*DXR*/
-        || (opcode == 0xB2 && inst[1] == 0x44) /*SQDR*/
-        || (opcode == 0xB2 && inst[1] == 0x45) /*SQER*/
-       )
+    if ( (opcode == 0xB3 && !((inst[1] == 0x84) || (inst[1] == 0x85) || (inst[1] == 0x8C)))  /* exclude FPC-only instrs  */
+        || (opcode == 0xED)
+        || (opcode >= 0x20 && opcode <= 0x3F)  /* HFP Arithmetic and load/store  */
+        || (opcode >= 0x60 && opcode <= 0x70)  /* HFP Arithmetic and load/store  */
+        || (opcode >= 0x78 && opcode <= 0x7F)  /* HFP Arithmetic and load/store  */
+        || (opcode == 0xB2 && inst[1] == 0x2D) /* DXR  Divide HFP extended               */
+        || (opcode == 0xB2 && inst[1] == 0x44) /* SQDR Square Root HFP long              */
+        || (opcode == 0xB2 && inst[1] == 0x45) /* SQER Square Root HFP short             */
+        || (opcode == 0xB9 && (inst[1] >= 0x41 && inst[1] <= 0x43)) /* DFP Conversions*/
+        || (opcode == 0xB9 && (inst[1] >= 0x49 && inst[1] <= 0x5B)) /* DFP Conversions*/
+        || (opcode == 0x01 && inst[1] == 0x0A) /* PFPO Perform Floating Point Operation  */
+        )
     {
         len += display_fregs (regs, buf + len, buflen - len - 1, "HHC02270I ");
         if (sysblk.showregsfirst)
