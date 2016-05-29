@@ -38,7 +38,9 @@
 
 # -l <word>
 # Specify the name of a module to load dynamically into hercules.  This
-# is passed to Hercules.
+# is passed to Hercules.  The configuration file loads
+# dyncrypt; if you manage to load that module, Hercules will abort.
+# You can specify multiple -l flags; they will be accumulated.
 
 # -p <word>
 # Specify the library path for loadable modules, i.e., device managers.
