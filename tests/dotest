@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# This  file  was  put  into  the  public  domain 2016-05-29 by John P.
+# Hartmann.   You  can  use  it  for anything you like, as long as this
+# notice remains.
+
+# Run a test case locally.
+
+# This  sample  shows how to run hercules out of the build directory so
+# you  can  validate  it before installing it.  Its purpose is to run a
+# single test case from a directory where the tst scripts are built.
+
+# Where hercules is made (make)
+dir=/usr/data/src/hercules/
+bin=$dir/atom
+lib=$bin/.libs
+
+if [ -f config.h ] ; then
+   ptrsize=$(grep SIZEOF_INT_P config.h | cut -d ' ' -f 3)
+   vars="$vars ptrsize=$ptrsize"
+fi
+
+fn=$1.tst
+if [ "$2" != "noexit" ] ; then
+        echo exit|cat $fn - >atest.in
+        fn=atest.in
+        redir='2>&1'
+fi
+
+cmd="$dir/atom/hercules -p $lib -l $bin/crypto/.libs/dyncrypt -t -f $dir/hyperion/tests/tests.conf -r $fn >atest.out $redir"
+eval $cmd
+rexx redtest.rexx atest.out $vars

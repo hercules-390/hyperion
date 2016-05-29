@@ -51,7 +51,7 @@ endif
 
 dynamic_SRC 		 = dyngui.c	 \
 							dyninst.c	\
-							s37x.c	  \
+							s37x.c		\
 							s37xmod.c	\
 							hdteq.c
 
@@ -434,7 +434,7 @@ endif
 #
 # THIS is the hercules executable.
 #		 hdlmain.c is requires so that dlopen(self) retrieves
-#					  the 'main' hdl symbols
+#						the 'main' hdl symbols
 #
 
 if OPTION_DYNAMIC_LOAD
@@ -465,8 +465,8 @@ else
 
   HDEPS	  = dyngui.la		\
 				 dyninst.la	\
-				 s37x.la 	  \
-				 hdteq.la	  \
+				 s37x.la 		\
+				 hdteq.la		\
 				 hdt1403.la	\
 				 hdt3420.la	\
 				 hdt2703.la	\
@@ -634,7 +634,7 @@ EXTRA_DIST = autogen.sh					\
 				 util/CMPSC.txt		  \
 				 hercules.cnf			  \
 				 license_dyn76.txt	  \
-				 COPYRIGHT				  \
+				 COPYRIGHT					\
 				 BUILDING				  \
 				 INSTALL 				  \
 				 CHANGES 				  \
@@ -669,7 +669,7 @@ EXTRA_DIST = autogen.sh					\
 				 README.SUN 				\
 				 README.TAPE				\
 				 README.WIN64			  \
-				 _TODO.txt				  \
+				 _TODO.txt					\
 				 makefile.msvc 		  \
 				 makefile-dllmod.msvc	\
 				 msvc.makefile.includes/BZIP2_DIR.msvc 	\
@@ -697,7 +697,7 @@ EXTRA_DIST = autogen.sh					\
 				 msvc.makefile.includes/ZLIB_FLAGS.msvc	\
 				 msvc.makefile.includes/ZLIB_RULES.msvc	\
 				 makefile.bat			  \
-				 _dynamic_version.cmd	  \
+				 _dynamic_version.cmd		\
 				 dynmake.bat				\
 				 Hercules.dsp			  \
 				 Hercules.dsw			  \
@@ -723,111 +723,111 @@ EXTRA_DIST = autogen.sh					\
 #
 noinst_HEADERS = hostinfo.h		\
 					  cpuint.h		  \
-					  feat370.h 	  \
-					  feat390.h 	  \
-					  feat900.h 	  \
-					  featall.h 	  \
-					  featchk.h 	  \
-					  feature.h 	  \
+					  feat370.h 		\
+					  feat390.h 		\
+					  feat900.h 		\
+					  featall.h 		\
+					  featchk.h 		\
+					  feature.h 		\
 					  esa390.h		  \
 					  opcode.h		  \
 					  clock.h			\
-					  hercules.h	  \
-					  hinlines.h	  \
+					  hercules.h		\
+					  hinlines.h		\
 					  inline.h		  \
 					  dat.h			  \
 					  vstore.h		  \
-					  hbyteswp.h	  \
-					  dasdblks.h	  \
+					  hbyteswp.h		\
+					  dasdblks.h		\
 					  hetlib.h		  \
 					  ftlib.h			\
-					  version.h 	  \
+					  version.h 		\
 					  parser.h		  \
-					  dasdtab.h 	  \
+					  dasdtab.h 		\
 					  sllib.h			\
 					  htypes.h		  \
-					  printfmt.h	  \
-					  fthreads.h	  \
-					  w32ctca.h 	  \
+					  printfmt.h		\
+					  fthreads.h		\
+					  w32ctca.h 		\
 					  hifr.h 			\
 					  tt32if.h		  \
-					  tt32api.h 	  \
-					  resolve.h 	  \
-					  ctc_ptp.h 	  \
-					  linklist.h	  \
-					  httpmisc.h	  \
-					  devtype.h 	  \
-					  codepage.h	  \
-					  ctcadpt.h 	  \
-					  hercifc.h 	  \
+					  tt32api.h 		\
+					  resolve.h 		\
+					  ctc_ptp.h 		\
+					  linklist.h		\
+					  httpmisc.h		\
+					  devtype.h 		\
+					  codepage.h		\
+					  ctcadpt.h 		\
+					  hercifc.h 		\
 					  tuntap.h		  \
-					  tapedev.h 	  \
-					  scsitape.h	  \
-					  scsiutil.h	  \
+					  tapedev.h 		\
+					  scsitape.h		\
+					  scsiutil.h		\
 					  logger.h		  \
-					  commadpt.h	  \
-					  comm3705.h	  \
-					  cnsllogo.h	  \
+					  commadpt.h		\
+					  comm3705.h		\
+					  cnsllogo.h		\
 					  telnet.h		  \
 					  cache.h			\
 					  ecpsvm.h		  \
-					  memrchr.h 	  \
+					  memrchr.h 		\
 					  shared.h		  \
 					  hscutl.h		  \
-					  hexdumpe.h	  \
+					  hexdumpe.h		\
 					  cmdtab.h		  \
 					  hdl.h			  \
-					  sockdev.h 	  \
+					  sockdev.h 		\
 					  ltdl.h 			\
 					  herc_getopt.h  \
-					  service.h 	  \
+					  service.h 		\
 					  chsc.h 			\
 					  qeth.h 			\
 					  qdio.h 			\
 					  zfcp.h 			\
 					  mpc.h			  \
-					  pttrace.h 	  \
-					  history.h 	  \
-					  sr.h			  \
+					  pttrace.h 		\
+					  history.h 		\
+					  sr.h				\
 					  hchan.h			\
-					  fillfnam.h	  \
-					  hthreads.h	  \
-					  hostopts.h	  \
-					  w32util.h 	  \
-					  hconsts.h 	  \
+					  fillfnam.h		\
+					  hthreads.h		\
+					  hostopts.h		\
+					  w32util.h 		\
+					  hconsts.h 		\
 					  herror.h		  \
-					  hmacros.h 	  \
-					  hstructs.h	  \
-					  hexterns.h	  \
-					  hconsole.h	  \
-					  hextapi.h 	  \
-					  hstdinc.h 	  \
-					  ccfixme.h 	  \
-					  ccnowarn.h	  \
-					  hstdint.h 	  \
-					  hsocket.h 	  \
-					  w32stape.h	  \
+					  hmacros.h 		\
+					  hstructs.h		\
+					  hexterns.h		\
+					  hconsole.h		\
+					  hextapi.h 		\
+					  hstdinc.h 		\
+					  ccfixme.h 		\
+					  ccnowarn.h		\
+					  hstdint.h 		\
+					  hsocket.h 		\
+					  w32stape.h		\
 					  w32dl.h			\
-					  hercwind.h	  \
+					  hercwind.h		\
 					  getopt.h		  \
-					  w32mtio.h 	  \
+					  w32mtio.h 		\
 					  vmd250.h		  \
 					  msgenu.h		  \
-					  hdiagf18.h	  \
-					  dbgtrace.h	  \
+					  hdiagf18.h		\
+					  dbgtrace.h		\
 					  chain.h			\
 					  extstring.h		\
 					  hRexx.h			\
-					  hRexxapi.h	  \
+					  hRexxapi.h		\
 					  cmpsc.h			\
-					  cmpscbit.h	  \
-					  cmpscdbg.h	  \
-					  cmpscdct.h	  \
-					  cmpscget.h	  \
-					  cmpscmem.h	  \
-					  cmpscput.h	  \
+					  cmpscbit.h		\
+					  cmpscdbg.h		\
+					  cmpscdct.h		\
+					  cmpscget.h		\
+					  cmpscmem.h		\
+					  cmpscput.h		\
 					  hqainc.h		  \
-					  hqadefs.h 	  \
+					  hqadefs.h 		\
 					  hatomic.h
 					  $(extra_dynamic_SRC)
 
@@ -901,4 +901,4 @@ uninstall-hook:
 	$(COMPILE) -E $< >$@
 
 check:
-	$(top_srcdir)/tests/runtest $(top_srcdir)/tests
+	$(top_srcdir)/tests/runtest -p .libs -l crypto/.libs/dyncrypt $(top_srcdir)/tests
