@@ -4,10 +4,13 @@ AGF      TITLE 'agf test case'
 * by John P. Hartmann.  You can use it for anything you like,                   
 * as long as this notice remains.                                               
                                                                                 
- punch ':test agf'                                                              
- punch ':btst z'                                                                
+ punch '* *Testcase agf &sysdatc &systime'                                      
+ punch '* sysclear'                                                             
+ punch '* archlvl z'                                                            
 agf start 0                                                                     
- using agf,0                                                                    
+agf rmode any                                                                   
+agf amode any                                                                   
+ using agf,15                                                                   
  org agf+x'1a0'                                                                 
  dc x'0000000180000000',ad(x'200')                                              
  org agf+x'1d0' Program new                                                     
@@ -15,18 +18,20 @@ agf start 0
  org agf+x'200'                                                                 
  LA 0,testcount   0=Number of test data                                         
  LA 1,TEST1       1=>Test data table                                            
- LA 15,rES1       15=>Result table                                              
- S 8,8          Clear CC register                                               
+ LA 10,rES1       10=>Result table                                              
+ Sr 8,8          Clear CC register                                              
 A LG 4,0(,1)     Load 4=TESTn                                                   
  L 5,8(,1)       Load 5=TESTn+8                                                 
  AGF 4,8(,1)     Add fullword at TESTn+8                                        
  IPM 8            8=Cond code and pgm mask                                      
- STG 4,0(,15)    Store 4 in result table                                        
- ST 8,8(,15)     Store CC in table                                              
- LA 15,16(,15)   15=>next result table                                          
+ STG 4,0(,10)    Store 4 in result table                                        
+ ST 8,8(,10)     Store CC in table                                              
+ LA 10,16(,10)   15=>next result table                                          
  LA 1,16(,1)     1=>Next TESTn                                                  
  BCT 0,A          Loop to end of TEST table                                     
- LPSWE WAITPSW     Load enabled wait PSW                                        
+ ltr 14,14     Have a return address?                                           
+ bnzr 14       return if so                                                     
+ LPSWE WAITPSW     Load wait PSW                                                
  ds 0d                                                                          
 WAITPSW dc x'0002000180000000',ad(0) OK wait state PSW                          
 TEST1 DC fd'5',F'3'                                                             

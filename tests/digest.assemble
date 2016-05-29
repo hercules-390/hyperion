@@ -1,0 +1,325 @@
+DIGEST   TITLE 'Tests for message digest instructions KIMD KLMD'                
+***********************************************************************         
+*                                                                     *         
+* This  file  was put into the public domain 2016-05-07 by John       *         
+* P.  Hartmann.   You can use it for anything you like, as long       *         
+* as this notice remains.                                             *         
+*                                                                     *         
+* Change activity:                                                    *         
+*  7 May 2016  New module by John P. Hartmann.                        *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+digest start 0                                                                  
+digest amode any                                                                
+digest rmode any                                                                
+ using *,15                                                                     
+ punch '* *Testcase digest &sysdatc &systime'                                   
+ punch '* sysclear'                                                             
+ punch '* archlvl z'                                                            
+ org digest+x'140' SVC old                                                      
+svcold ds 2d                                                                    
+ org digest+x'1a0' Restart new                                                  
+ dc x'0001000180000000',ad(go)                                                  
+ org digest+x'1c0' SVC new                                                      
+ dc x'0002000180000000',ad(0)                                                   
+ org digest+x'1d0' Program new                                                  
+ dc x'0002000180000000',ad(0)                                                   
+ org digest+x'200'                                                              
+kimdmap ds 2d                                                                   
+kmacmap ds 2d                                                                   
+                                                                                
+data loctr                                                                      
+ ds 0d                                                                          
+CRYPTDAT DC    CE'>Top Secret< encrypt weakly for best propagation'     TST05420
+         DC    CE'------------------------------------------------'     TST05430
+         DC    CE'++++++++++++++++++++++++++++++++++++++++++++++++'     TST05440
+LCRYPDAT EQU   *-CRYPTDAT                                               TST05450
+         DC    CE'>Top Secret< encrypt weakly for best propagation'     TST05420
+         DC    CE'------------------------------------------------'     TST05430
+         DC    CE'++++++++++++++++++++++++++++++++++++++++++++++++'     TST05440
+longdata equ cryptdat,*-cryptdat                                                
+                                                                                
+code loctr                                                                      
+*                                                                               
+* Subroutine to resume driver/script                                            
+*                                                                               
+swap equ *                                                                      
+ ltr 14,14  Running on CMS?                                                     
+ jz bare                                                                        
+* Under z/CMS in 31-bit mode.  Simulate a SVC 255                               
+ la 10,0(,9)                  Strip amode bit                                   
+ st 10,svcold+12                                                                
+ basr 14,14                   Return to driver                                  
+ br 9                         Return to caller                                  
+bare equ *                                                                      
+ svc 255  We are in problem state                                               
+ br 9                                                                           
+*                                                                     *         
+* Mainline code                                                       *         
+*                                                                     *         
+go equ *                                                                        
+ la 0,x'80' Invalid function code                                               
+ la 1,kimdmap                                                                   
+ kimd 0,2                                                                       
+ punch '* *Program 6'                                                           
+ punch '* runtest .1' Bad function                                              
+ la 0,0 valid function code                                                     
+ la 1,kimdmap                                                                   
+ kimd 0,0  Bad R2                                                               
+ punch '* *Program 6'                                                           
+ punch '* runtest program .1' Bad operand 2                                     
+ kimd 0,2  Store list of supported codes                                        
+ bas 9,swap  Go check it                                                        
+ punch '* runtest program .1' Good query                                        
+ punch '* *Compare'                                                             
+ punch '* r 200.10'                                                             
+ punch '* *Want F0000000 00000000 40000000 00000000 '                           
+*                                                                               
+* Function 1   KIMD                                                             
+*                                                                               
+ punch '* * '                                                                   
+ punch '* * SHA1'                                                               
+ punch '* * '                                                                   
+digest loctr                                                                    
+* 220                                                                           
+DIGEST1  DC    X'67452301'             \                                TST01450
+         DC    X'EFCDAB89'              \  Initial chaining ..          TST01460
+         DC    X'98BADCFE'               >   .. vector ..               TST01470
+         DC    X'10325476'              /  .. for SHA1                  TST01480
+         DC    X'C3D2E1F0'             /                                TST01490
+* Not aligned                                                                   
+         DC    adl8(lcrypdat*8)     message bit length                  TST01500
+code loctr                                                                      
+ la 0,1 SHA1 digest                                                             
+ la 1,digest1                                                                   
+ la 2,cryptdat                                                                  
+ la 3,LCRYPDAT  Not multiple of 64                                              
+ kimd 0,2                                                                       
+ punch '* *Program 6'                                                           
+ punch '* runtest svc .1' SHA 1                                                 
+ la 3,64 One block                                                              
+ kimd 0,2  Good                                                                 
+ bo *-4                                                                         
+ ipm 4                                                                          
+ bas 9,swap  Go check it                                                        
+ punch '* runtest program .1' SHA 1                                             
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0440 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0000'                                                          
+ punch '* r 220.10'                                                             
+*  87A5F8FF 10EEA3A1 4A00D61F F1FFA053                                          
+ punch '* *Want 8FEA16BE 2F911D81 D9F428E2 3BAD6691'                            
+ punch '* r 230.4'                                                              
+ punch '* *Want 94298417'                                                       
+*                                                                               
+* Test 2.  KLMD SHA1                                                            
+*                                                                               
+ la 3,lcrypdat-64 Remainder of block                                            
+ klmd 0,2                                                                       
+ bo *-4                                                                         
+ ipm 4                                                                          
+ bas 9,swap  Go check it                                                        
+ punch '* runtest svc .1' SHA 1                                                 
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0490 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0000'                                                          
+ punch '* r 220.10'                                                             
+ punch '* *Want 666D243D 011EFC7A F7BA3154 41E9752A'                            
+ punch '* r 230.4'                                                              
+ punch '* *Want BC1249FC'                                                       
+ punch '* r 234.8'                                                              
+ punch '* *Want  00000000 00000480'                                             
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* SHA256                                                              *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ punch '* * '                                                                   
+ punch '* * SHA256'                                                             
+ punch '* * '                                                                   
+digest loctr                                                                    
+* 240                                                                           
+sha256 ds 0d                                                                    
+ dc x'6A09 E667'                                                                
+ dc x'BB67 AE85'                                                                
+ dc x'3C6E F372'                                                                
+ dc x'A54F F53A'                                                                
+ dc x'510E 527F'                                                                
+ dc x'9B05 688C'                                                                
+ dc x'1F83 D9AB'                                                                
+ dc x'5BE0 CD19'                                                                
+         DC    ad(lcrypdat*8)     message bit length                    TST01500
+         ds d align on quad                                                     
+                                                                                
+code loctr                                                                      
+ la 0,2 SHA256 digest                                                           
+ la 1,sha256                                                                    
+ la 2,cryptdat                                                                  
+ la 3,LCRYPDAT  Not multiple of 64                                              
+ kimd 0,2                                                                       
+ punch '* *Program 6'                                                           
+ punch '* runtest svc .1' SHA 1                                                 
+ la 3,64 One block                                                              
+ kimd 0,2  Good                                                                 
+ bo *-4                                                                         
+ ipm 4                                                                          
+ bas 9,swap  Go check it                                                        
+ punch '* runtest program .1' SHA 256                                           
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0440 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0000'                                                          
+ punch '* r 240.10'                                                             
+ punch '* *Want F0A7469C 39FC8746 A28C327F 76118103'                            
+ punch '* r 250.10'                                                             
+ punch '* *Want 5E07E96A AC689C36 EC17DF1F 88779E4B'                            
+*                                                                               
+* Test 4.  KLMD SHA256                                                          
+*                                                                               
+ la 3,lcrypdat-64 Remainder of block                                            
+ klmd 0,2                                                                       
+ bo *-4                                                                         
+ ipm 4                                                                          
+ bas 9,swap  Go check it                                                        
+ punch '* runtest svc .1' SHA 1                                                 
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0490 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0000'                                                          
+ punch '* r 240.10'                                                             
+ punch '* *Want 712F0D37 DD6440BF F9FFE27F 6DD8FBC0'                            
+ punch '* r 250.10'                                                             
+ punch '* *Want  785A84C6 D352D7A5 D3647682 9FF675E8'                           
+ punch '* r 260.8'                                                              
+ punch '* *Want  00000000 00000480'                                             
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* SHA512                                                              *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ punch '* * '                                                                   
+ punch '* * SHA512'                                                             
+ punch '* * '                                                                   
+digest loctr                                                                    
+* 270                                                                           
+sha512 ds 0d                                                                    
+ dc x'6A09 E667 F3BC C908'                                                      
+ dc x'BB67 AE85 84CA A73B'                                                      
+ dc x'3C6E F372 FE94 F82B'                                                      
+ dc x'A54F F53A 5F1D 36F1'                                                      
+ dc x'510E 527F ADE6 82D1'                                                      
+ dc x'9B05 688C 2B3E 6C1F'                                                      
+ dc x'1F83 D9AB FB41 BD6B'                                                      
+ dc x'5BE0 CD19 137E 2179'                                                      
+ dc d'0'                                                                        
+         DC    ad(l'longdata*8)     'message bit length                 TST01500
+* 2c0                                                                           
+                                                                                
+code loctr                                                                      
+ la 0,3 SHA512 digest                                                           
+ la 1,sha512                                                                    
+ la 2,longdata                                                                  
+ la 3,L'longdata  'Not multiple of 64                                           
+ kimd 0,2                                                                       
+ punch '* *Program 6'                                                           
+ punch '* runtest svc .1' SHA 1                                                 
+ la 3,128 One block                                                             
+ kimd 0,2  Good                                                                 
+ bo *-4                                                                         
+ ipm 4                                                                          
+ bas 9,swap  Go check it                                                        
+ punch '* runtest program .1'                                                   
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0480 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0000'                                                          
+ punch '* r 270.10'                                                             
+ punch '* *Want 3683E74A DE2CF007 5CB76A7C 9B5386F3'                            
+ punch '* r 280.10'                                                             
+ punch '* *Want 722122C7 9EC1B0CC E10202B2 13274F27'                            
+ punch '* r 290.10'                                                             
+ punch '* *Want 17BFB280 F0CEF114 CB9511E5 775F09DC'                            
+ punch '* r 2a0.10'                                                             
+ punch '* *Want 057B9AE0 D25AF58B 161617FD 0E4E7395'                            
+*                                                                               
+* Test 4.  KLMD SHA512                                                          
+*                                                                               
+ la 3,l'longdata-128 'Remainder of block                                        
+ klmd 0,2                                                                       
+ bo *-4                                                                         
+ ipm 4                                                                          
+ bas 9,swap  Go check it                                                        
+ punch '* runtest svc .1'                                                       
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0520 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0000'                                                          
+ punch '* r 270.10'                                                             
+ punch '* *Want 24F541F7 9ED7EF7D 703F2F73 4687F0B3'                            
+ punch '* r 280.10'                                                             
+ punch '* *Want FEE421D4 126933BD 714C0278 3C71FF52'                            
+ punch '* r 290.10'                                                             
+ punch '* *Want A5D3CEFB 1E32E356 EB021FF4 803293B4'                            
+ punch '* r 2a0.10'                                                             
+ punch '* *Want 4036039B 61CEC167 D0D5FB43 E1C46250'                            
+ punch '* r 2b0.10'                                                             
+ punch '* *Want 00000000 00000000 00000000 00000900'                            
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* GHASH                                                               *         
+*                                                                     *         
+* Usage note: For the COMPUTE INTERMEDIATE MESSAGE DIGEST GHASH       *         
+* function,  the  hash subkey, H, is the result of encrypting a       *         
+* 128-bit  zero  using  the  AES  encryption  algorithm  with a       *         
+* 128-bit, 192-bit, or 256-bit cryptographic key.                     *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ punch '* * '                                                                   
+ punch '* * GHASH'                                                              
+ punch '* * '                                                                   
+digest loctr                                                                    
+* 2c0                                                                           
+ghparms dc x'6A09E667BB67AE853C6EF372A54FF53A'                                  
+        dc x'510E527F9B05688C1F83D9AB5BE0CD19'                                  
+* 2e0                                                                           
+data loctr                                                                      
+ghdat  ds 0d                                                                    
+ dc x'000102030405060708090A0B0C0D0E0F'                                         
+ dc x'101112131415161718191A1B1C1D1E1F'                                         
+ dc x'202122232425262728292A2B2C2D2E2F'                                         
+ dc x'303132333435363738393A3B3C3D3E3F'                                         
+ghdata equ ghdat,*-ghdat                                                        
+code loctr                                                                      
+ la 0,65                                                                        
+ la 1,ghparms                                                                   
+ la 2,ghdata                                                                    
+ la 3,l'ghdata '                                                                
+ kimd 0,2                                                                       
+ bo *-4                                                                         
+ bas 9,swap  Go check it                                                        
+                                                                                
+ punch '* runtest svc .1'                                                       
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0560 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0000'                                                          
+ punch '* r 2c0.10'                                                             
+ punch '* *Want 3835EC6F 7151E73A 2A593988 B05B7E61'                            
+ punch '* r 2d0.10'                                                             
+ punch '* *Want 510E527F 9B05688C 1F83D9AB 5BE0CD19'                            
+                                                                                
+ punch '* *Done'                                                                
+digest loctr ,                                                                  
+ org digest+x'400'                                                              
+data loctr                                                                      
+ org data+x'200'                                                                
+ end                                                                            
