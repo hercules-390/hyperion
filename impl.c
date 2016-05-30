@@ -89,8 +89,8 @@ enum cfgorrc
 
 static struct cfgandrcfile cfgorrc[ cfgorrccount ] =
 {
-   { NULL, "HERCULES_CFG", "hercules.cnf", "Configuration", },
-   { NULL, "HERCULES_RC",  "hercules.rc",  "Recovery", },
+   { NULL, "HERCULES_CNF", "hercules.cnf", "Configuration", },
+   { NULL, "HERCULES_RC",  "hercules.rc",  "Run Commands",  },
 };
 
 #if defined(OPTION_DYNAMIC_LOAD)
