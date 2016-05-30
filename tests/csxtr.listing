@@ -1,0 +1,147 @@
+1                               High Level Assembler Option Summary                                             Page    1
+-                                                                                           jHLASM 1.0   2016/05/30 22.35
+0  No Overriding ASMAOPT Parameters                                                                                      
+   Overriding Parameters-  term                                                                                          
+   No Process Statements                                                                                                 
+                                                                                                                         
+                                                                                                                         
+   Options for this Assembly                                                                                             
+0  NOADATA                                                                                                               
+     ALIGN                                                                                                               
+   NOASA                                                                                                                 
+     BATCH                                                                                                               
+     CODEPAGE(047C)                                                                                                      
+   NOCOMPAT                                                                                                              
+   NODBCS                                                                                                                
+   NODECK                                                                                                                
+     DXREF                                                                                                               
+     ESD                                                                                                                 
+   NOEXIT                                                                                                                
+     FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)                                              
+   NOFOLD                                                                                                                
+   NOGOFF                                                                                                                
+   NOINFO                                                                                                                
+     LANGUAGE(EN)                                                                                                        
+   NOLIBMAC                                                                                                              
+     LINECOUNT(60)                                                                                                       
+     LIST(121)                                                                                                           
+     MACHINE(,NOLIST)                                                                                                    
+     MXREF(SOURCE)                                                                                                       
+     OBJECT                                                                                                              
+     OPTABLE(UNI,NOLIST)                                                                                                 
+   NOPCONTROL                                                                                                            
+   NOPESTOP                                                                                                              
+   NOPROFILE                                                                                                             
+   NORA2                                                                                                                 
+   NORENT                                                                                                                
+     RLD                                                                                                                 
+     RXREF                                                                                                               
+     SECTALGN(8)                                                                                                         
+     SIZE(MAX)                                                                                                           
+   NOSUPRWARN                                                                                                            
+     SYSPARM()                                                                                                           
+ 3   TERM                                                                                                                
+   NOTEST                                                                                                                
+     THREAD                                                                                                              
+   NOTRANSLATE                                                                                                           
+     TYPECHECK(MAGNITUDE,REGISTER)                                                                                       
+     USING(NOLIMIT,MAP,WARN(15))                                                                                         
+   NOWORKFILE                                                                                                            
+     XREF(SHORT,UNREFS)                                                                                                  
+                                                                                                                         
+   No Overriding DD Names                                                                                                
+1                                              External Symbol Dictionary                                       Page    2
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/05/30 22.35
+0CXSTR     SD 00000001 00000000 00000328             07                                                                  
+1                                                                                                               Page    3
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/30 22.35
+000000000                00000000 00000328      1 cxstr start 0                                                          
+                                                2 cxstr amode any                                                        
+                                                3 cxstr rmode any                                                        
+                     R:F 00000000               4  using *,15                                                            
+                                                5  punch '* *Testcase csxtr &sysdatc &systime'                           
+                                                 + punch '* *Testcase csxtr 20160530 22.35'                              
+                                                6  punch '* sysclear'                                                    
+                                                7  punch '* archlvl z'                                                   
+ 00000000                00000000 00000140      8  org cxstr+x'140' SVC old                                              
+ 00000140                                       9 svcold ds 2d                                                           
+ 00000150                00000150 000001A0     10  org cxstr+x'1a0' Restart new                                          
+ 000001A0 0001000180000000                     11  dc x'0001000180000000',ad(go)                                         
+ 000001B0                000001B0 000001C0     12  org cxstr+x'1c0' SVC new                                              
+ 000001C0 0002000180000000                     13  dc x'0002000180000000',ad(0)                                          
+ 000001D0                000001D0 000001D0     14  org cxstr+x'1d0' Program new                                          
+ 000001D0 0002000180000000                     15  dc x'0002000180000000',ad(0)                                          
+ 000001E0                000001E0 00000200     16  org cxstr+x'200'                                                      
+ 00000200                                      17 go ds 0h                                                               
+ 00000200 6800 F318               00000318     18  LD 0,=LD'1234567890123456789012345678901234' 34 digits                
+ 00000204 6820 F318               00000318     19  LD 2,=LD'1234567890123456789012345678901234'                          
+ 00000208 B3EB 0040                            20  CSXTR 4,0,0 Convert 31 signed digits to (GG3,GG4)                     
+ 0000020C EB45 F300 0024          00000300     21  STMG 4,5,reg45 Store low-order 31 digits and sign                     
+ 00000212 ED00 001F 0049          0000001F     22  SRXT 0,0,31 Shift, keeping 3 high-order digits                        
+ 00000218 B3EA 0040                            23  CUXTR 4,0 Convert 3 unsigned digits                                   
+ 0000021C 4050 F310               00000310     24  STH 5,Packed Store remaining 3 digits                                 
+ 00000220 12EE                                 25  ltr 14,14                                                             
+ 00000222 077E                                 26  bnzr 14                                                               
+ 00000224 0AFF                                 27  svc 255                                                               
+ 00000226                00000226 00000300     28  org cxstr+x'300'                                                      
+ 00000300                                      29 reg45 ds 2d                                                            
+ 00000310                                      30 Packed ds h Packed digits and sign Figure 455.                         
+ 00000318                                      31  ltorg                                                                 
+ 00000318 2608134B9C1E28E5                     32                =LD'1234567890123456789012345678901234'                 
+                                               33  punch '* runtest .1'                                                  
+                                               34  punch '* r 300.10'                                                    
+                                               35  punch '* *Want 45678901 23452302 01382834 1780165C'                   
+                                               36  punch '* r 310.2'                                                     
+                                               37  punch '* *Want 0123'                                                  
+                                               38  punch '* *Done'                                                       
+                                               39  end                                                                   
+1                                                 Relocation Dictionary                                         Page    4
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/05/30 22.35
+0  00000001 00000001 000001A8   A 8     +                                                                                
+1                               Ordinary Symbol and Literal Cross Reference                                     Page    5
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/05/30 22.35
+0cxstr         1 00000000 00000001     J                    1    2     3     8    10    12    14    16    28             
+ go            2 00000200 00000001     H  H                17   11                                                       
+ Packed        2 00000310 00000001     H  H                30   24S                                                      
+ reg45         8 00000300 00000001     D  D                29   21S                                                      
+ =LD'1234567890123456789012345678901234'                                                                                 
+              16 00000318 00000001     L                   32   18    19                                                 
+1                                  Unreferenced Symbols Defined in CSECTs                                       Page    6
+-  Defn  Symbol                                                                             jHLASM 1.0   2016/05/30 22.35
+0     9  svcold                                                                                                          
+1                                                      Using Map                                                Page    7
+-                                                                                           jHLASM 1.0   2016/05/30 22.35
+   Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
+           Count      Id           Type          Value    Range     Id        Disp    Stmt                               
+0     4  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 00318     24 *,15                          
+1                                   General Purpose Register Cross Reference                                    Page    8
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/05/30 22.35
+0    0(0)    (no references identified)                                                                                  
+     1(1)    (no references identified)                                                                                  
+     2(2)    (no references identified)                                                                                  
+     3(3)    (no references identified)                                                                                  
+     4(4)      20S   21    23S                                                                                           
+     5(5)      20S   21    23S   24                                                                                      
+     6(6)    (no references identified)                                                                                  
+     7(7)    (no references identified)                                                                                  
+     8(8)    (no references identified)                                                                                  
+     9(9)    (no references identified)                                                                                  
+    10(A)    (no references identified)                                                                                  
+    11(B)    (no references identified)                                                                                  
+    12(C)    (no references identified)                                                                                  
+    13(D)    (no references identified)                                                                                  
+    14(E)      25S   25    26B                                                                                           
+    15(F)       4U                                                                                                       
+1                                  Diagnostic Cross Reference and Assembler Summary                             Page    9
+-                                                                                           jHLASM 1.0   2016/05/30 22.35
+0     No Statements Flagged in this Assembly                                                                             
+0John's High Level Assembler Release 1.0, May 30 2016 20:36:44                                                           
+0System:  Linux release 3.19.0-59-generic on jbox (i686)                                                                 
+0Data Sets Allocated for this Assembly                                                                                   
+  Type     Mtime                File path                                                                                
+  input    2016-05-30 22:35:47  csxtr.assemble                                                                           
+0Assembly Start Time: 22.35.51 Stop Time: 22.35.51 Processor Time: 00.00.00.0090.
+ 
+                                     
+ Return Code 000                                                                                                         
