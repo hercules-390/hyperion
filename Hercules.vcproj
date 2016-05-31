@@ -3134,6 +3134,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\ieee-div-nans.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\ieee-mults.tst"
 								>
 							</File>

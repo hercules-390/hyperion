@@ -1151,6 +1151,9 @@
     <None Include="tests\ieee-divs.tst">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
+    <None Include="tests\ieee-div-nans.tst">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
     <None Include="tests\ieee-mults.tst">
       <Filter>Other Files\tests\scripts</Filter>
     </None>

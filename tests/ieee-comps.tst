@@ -86,17 +86,17 @@ r 224=B2B203E0     #         LPSWE WAITPSW        ..no, on bare iron, load disab
 
 r 3D4=00040000     #CTLR0    DS    F             Control register 0 (bit45 AFP control)
 # 3D8.8            #SAVER11  DS    D             Savearea for R11, needed when on z/CMS
-r 3E0=00020000000000000000000000000000 # WAITPSW Disabled wait state PSW - normal completion
+r 3E0=00020000000000000000000000000000 #WAITPSW  DS    2D    Disabled wait state PSW - normal completion
 
 
 # BFP Compares, Load and Test, and Test Data Class main processing loop.
 # All tests are performed in each iteration of the loop.
 
 #                            ORG   X'600'
-                   #TESTCASE DS    0H           Process one test case
+                   #TESTCOMP DS    0H           Process one test case
 r 600=41200008     #         LA    R2,8         Set count of multiplication operations
 r 604=41300400     #         LA    R3,RESULTCC  Point cc table, 8 per precision per instruction
-r 608=41400500     #         LA    R4,RESULTMS  Point mask table, 8 per precision per instruction
+r 608=41400500     #         LA    R4,RESULTFL  Point IEEE flags table, 8 per precision per instruction
 r 60C=41700300     #         LA    R7,SHORTBFP  Point to start of short BFP input values
 r 610=41800330     #         LA    R8,TDCMASKS  Point to start of masks for TDC instruction
 r 614=41900350     #         LA    R9,LONGBFP   Point to start of long BFP input values
@@ -232,12 +232,12 @@ r 99A=BE144058     #         STCM  R1,B'0100',88(,R4)  Store IEEE Flags in resul
 #     Test Data Class long RRE
 r 99E=B3840000     #         LFPC  R0           Load reference copy of FPC
 r 9A2=48108000     #         LH    R1,0(,R8)    Get test data class mask value for True
-r 9A6=ED0010000011 #         TCDBR R0,0(,R1)    Test Data Class, set condition code
+r 9A6=ED0010000011 #         TCDB  R0,0(,R1)    Test Data Class, set condition code
 r 9AC=B2220010     #         IPM   R1           Get condition code and program mask
 r 9B0=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 9B4=42103078     #         STC   R1,120(,R3)  Save condition code in results table
 r 9B8=48108002     #         LH    R1,2(,R8)    Get test data class mask value for False
-r 9BC=ED0010000011 #         TCDBR R0,0(,R1)    Test Data Class, set condition code
+r 9BC=ED0010000011 #         TCDB  R0,0(,R1)    Test Data Class, set condition code
 r 9C2=B2220010     #         IPM   R1           Get condition code and program mask
 r 9C6=8810001C     #         SRL   R1,28        Isolate CC in low order byte
 r 9CA=42103080     #         STC   R1,128(,R3)  Save condition code in results table
@@ -345,7 +345,7 @@ r 348=00200000     #     0 0 0 0 | 0 0 0 0 || 0 0 1 0 | 0 0 0 0  +inf
 r 34C=00020000     #     0 0 0 0 | 0 0 0 0 || 0 0 0 0 | 0 0 2 0  +SNaN
 
 
-#                    RESULTCC: 8 Condition codes from each of 16 instructions
+#                  #RESULTCC DS    19D      8 Condition codes from each of 19 instructions
 # 400.8  (  +0)          COMPARE short RXE results
 # 408.8  (  +8)          COMPARE short RRE results
 # 410.8  ( +16)          COMPARE long RXE results
@@ -369,7 +369,7 @@ r 34C=00020000     #     0 0 0 0 | 0 0 0 0 || 0 0 0 0 | 0 0 2 0  +SNaN
 # 488.8  (+136)          TEST DATA CLASS extended RRE results (True results)
 # 490.8  (+144)          TEST DATA CLASS extended RRE results (False results)
 
-#                    RESULTCC: 8 IEEE flag bytes from each of 13 instructions
+#                  #RESULTFL DS    13D      8 IEEE flag bytes from each of 13 instructions
 #                    (TEST DATA CLASS does not set IEEE flags)
 # 500.8  (  +0)          COMPARE short RXE results
 # 508.8  (  +8)          COMPARE short RRE results
@@ -389,7 +389,7 @@ r 34C=00020000     #     0 0 0 0 | 0 0 0 0 || 0 0 0 0 | 0 0 2 0  +SNaN
 
 # 570.4                  LTEBRTST  DS F    LOAD AND TEST Short result (to test conversion of SNaN into QNaN)
 # 578.8                  LTDBRTST  DS D    LOAD AND TEST Long result (to test conversion of SNaN into QNaN)
-# 580.10                 LTXBRTST: DS 2D   LOAD AND TEST Extended result (to test conversion of SNaN into QNaN)
+# 580.10                 LTXBRTST  DS 2D   LOAD AND TEST Extended result (to test conversion of SNaN into QNaN)
 
 runtest 
 

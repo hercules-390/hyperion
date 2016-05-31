@@ -53,6 +53,7 @@ EXTRA_DIST =				\
 	 ieee-adds.tst 		\
 	 ieee-comps.tst		\
 	 ieee-divs.tst 		\
+	 ieee-div-nans.tst 		\
 	 ieee-mults.tst		\
 	 ieee-sqrts.tst		\
 	 ieee-subs.tst 		\

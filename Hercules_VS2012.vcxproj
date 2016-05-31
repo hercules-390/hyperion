@@ -612,6 +612,7 @@
     <None Include="tests\ieee-adds.tst" />
     <None Include="tests\ieee-comps.tst" />
     <None Include="tests\ieee-divs.tst" />
+    <None Include="tests\ieee-div-nans.tst" />
     <None Include="tests\ieee-mults.tst" />
     <None Include="tests\ieee-sqrts.tst" />
     <None Include="tests\ieee-subs.tst" />
