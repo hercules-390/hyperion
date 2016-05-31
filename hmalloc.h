@@ -41,7 +41,7 @@
 
 #if !defined(CACHE_ALIGN)
 
-    #if defined(_MSVC_)
+    #if defined(_MSC_VER) || defined(_MSVC_)
         #define __ALIGN(_n)     __declspec(align(_n))
     #else
         #define __ALIGN(_n)     __attribute__ ((aligned(_n)))
