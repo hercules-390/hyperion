@@ -4,6 +4,7 @@
 # Hartmann.   You  can  use  it  for anything you like, as long as this
 # notice remains.
 
+msglevel -debug
 archmode s/370
 numcpu 1
 *Compare
