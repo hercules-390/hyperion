@@ -1,0 +1,553 @@
+CIPHER   TITLE 'Test of KM instruction.'                                        
+***********************************************************************         
+*                                                                     *         
+* This  file  was put into the public domain 2016-05-26 by John       *         
+* P.  Hartmann.   You can use it for anything you like, as long       *         
+* as this notice remains.                                             *         
+*                                                                     *         
+* Change activity:                                                    *         
+* 26 May 2016  New module by John P. Hartmann.                        *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ macro                                                                          
+ encipher &code,&key,&op=km                                                     
+ gblc kmkey                                                                     
+ gblc kmop                                                                      
+&kmkey setc '&key'                                                              
+&kmop setc '&op'                                                                
+ la 0,&code                                                                     
+ la 1,&key                                                                      
+ aif ('&kmop' eq 'km').noch                                                     
+ mvc &kmkey,chain                                                               
+.noch anop                                                                      
+ la 2,swap                                                                      
+ la 3,l'enciphered '                                                            
+ la 4,enciphered                                                                
+ xc enciphered,enciphered                                                       
+ sr 5,5 For mask                                                                
+ &op 4,2                                                                        
+ jo *-4                                                                         
+ ipm 5                                                                          
+ jas 9,swap                                                                     
+ punch '* runtest svc .1'                                                       
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0800 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0500 #address'                                                 
+ punch '* *Gpr 5 0000' cc                                                       
+ punch '* r 400.10'                                                             
+ mend                                                                           
+                                                     SPACE 1                    
+ macro                                                                          
+ decipher &what                                                                 
+ gblc kmkey                                                                     
+ gblc kmop                                                                      
+ aif ('&kmop' eq 'km').noch                                                     
+ mvc &kmkey,chain                                                               
+.noch anop                                                                      
+ ahi 0,x'80' Decipher                                                           
+ la 4,clear                                                                     
+ xc clear,clear                                                                 
+ la 2,enciphered                                                                
+ la 3,l'enciphered '                                                            
+ &kmop 4,2                                                                      
+ jo *-4                                                                         
+ ipm 5                                                                          
+ jas 9,swap                                                                     
+ punch '* runtest svc .1'                                                       
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0500 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0600 #address'                                                 
+ punch '* *Gpr 5 0000' cc                                                       
+ punch '* r 500.10'                                                             
+ punch '* *Want "&what. clear" 12EEA784 000841A0 900050A0 F14C0DEE'             
+ mend                                                                           
+                                                     SPACE 1                    
+cipher start 0                                                                  
+cipher amode any                                                                
+cipher rmode any                                                                
+psa loctr                                                                       
+work loctr                                                                      
+data loctr                                                                      
+code loctr                                                                      
+psa loctr                                                                       
+ using *,15                                                                     
+ punch '* *Testcase cipher &sysdatc &systime'                                   
+ punch '* sysclear'                                                             
+ punch '* archlvl z'                                                            
+ org psa+x'140' SVC old                                                         
+svcold ds 2d                                                                    
+ org psa+x'1a0' Restart new                                                     
+ dc x'0000000180000000',ad(go)                                                  
+ org psa+x'1c0' SVC new                                                         
+ dc x'0002000180000000',ad(0)                                                   
+ org psa+x'1d0' Program new                                                     
+ dc x'0002000180000000',ad(0)                                                   
+                                                                                
+code loctr                                                                      
+*                                                                               
+* Subroutine to resume driver/script                                            
+*                                                                               
+swap equ *                                                                      
+ ltr 14,14  Running on CMS?                                                     
+ jz bare                                                                        
+* Under z/CMS in 31-bit mode.  Simulate a SVC 255                               
+ la 10,0(,9)                  Strip amode bit                                   
+ st 10,svcold+12                                                                
+ basr 14,14                   Return to driver                                  
+ br 9                         Return to caller                                  
+bare equ *                                                                      
+ svc 255  We are in perhaps problem state                                       
+ br 9                                                                           
+*                                                                     *         
+* Mainline code                                                       *         
+*                                                                     *         
+go equ *                                                                        
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* PCKMO Query                                                         *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+work loctr                                                                      
+* 200                                                                           
+ckqueryout dc 2d'0'                                                             
+queryout dc 2d'0'                                                               
+kmcqueryout dc 2d'0'                                                            
+*                                                                               
+deachain dc x'0f0e0d0c0b0a0908'                                                 
+DEA_Key ds 0cl32                                                                
+ dc x'0001020304050607'                                                         
+deawrap dc xl24'00'                                                             
+*                                                                               
+tdea128chain dc x'0f0e0d0c0b0a0908'                                             
+TDEA_128_Key ds 0cl40                                                           
+ dc x'0001020304050607'                                                         
+ dc x'08090a0b0c0d0e0f'                                                         
+dea128wrap dc xl24'00'                                                          
+ ds d Align on quad                                                             
+*                                                                               
+tdea192chain dc x'0f0e0d0c0b0a0908'                                             
+TDEA_192_Key ds 0cl48                                                           
+ dc x'0001020304050607'                                                         
+ dc x'08090a0b0c0d0e0f'                                                         
+ dc x'1011121314151617'                                                         
+dea192wrap dc xl24'00'                                                          
+*                                                                               
+aes128chain dc x'0f0e0d0c0b0a0908 0706050403020100'                             
+AES_128_Key ds 0cl48                                                            
+ dc x'0001020304050607'                                                         
+ dc x'08090a0b0c0d0e0f'                                                         
+aes128wrap dc xl32'00'                                                          
+aes128xts dc x'0001020304050607' XTS extension                                  
+ dc x'08090a0b0c0d0e0f'                                                         
+*                                                                               
+aes192chain dc x'0f0e0d0c0b0a0908 0706050403020100'                             
+AES_192_Key ds 0cl56                                                            
+ dc x'0001020304050607'                                                         
+ dc x'08090a0b0c0d0e0f'                                                         
+ dc x'1011121314151617'                                                         
+aes192wrap dc xl32'00'                                                          
+ ds d Align on quad                                                             
+*                                                                               
+aes256chain dc x'0f0e0d0c0b0a0908 0706050403020100'                             
+AES_256_Key ds 0cl64                                                            
+ dc x'0001020304050607'                                                         
+ dc x'08090a0b0c0d0e0f'                                                         
+ dc x'1011121314151617'                                                         
+ dc x'18191a1b1c1d1e1f'                                                         
+aes256wrap dc xl32'00'                                                          
+ ds 0d                                                                          
+                                                                                
+code loctr                                                                      
+ la  0,x'80' Query                                                              
+ la  1,ckqueryout                                                               
+ pckmo                                                                          
+ punch '* *Program 6'                                                           
+ punch '* runtest .1' bad operand 1                                             
+ la  0,0 Query                                                                  
+ pckmo                                                                          
+ jas 9,swap                                                                     
+ punch '* runtest program .1' OK query                                          
+ punch '* *Compare'                                                             
+ punch '* r 200.10'                                                             
+ punch '* *Want F0003800 00000000 00000000 00000000'                            
+*                                                                               
+ la 0,1                                                                         
+ la 1,dea_key                                                                   
+ pckmo                                                                          
+ la 0,2                                                                         
+ la 1,tdea_128_key                                                              
+ pckmo                                                                          
+ la 0,3                                                                         
+ la 1,tdea_192_key                                                              
+ pckmo                                                                          
+ la 0,18                                                                        
+ la 1,aes_128_key                                                               
+ pckmo                                                                          
+ la 0,19                                                                        
+ la 1,aes_192_key                                                               
+ pckmo                                                                          
+ la 0,20                                                                        
+ la 1,aes_256_key                                                               
+ pckmo                                                                          
+ jas 9,swap                                                                     
+ punch '* runtest svc .1' OK query                                              
+ punch '* *Compare'                                                             
+* The contents of this is not predictable, but can be used with                 
+* various other instructions.                                                   
+ punch '* r 230.130'                                                            
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Query                                                               *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ la  0,0 Query                                                                  
+ la  1,queryout                                                                 
+ km  0,2                                                                        
+ punch '* *Program 6'                                                           
+ punch '* runtest svc .1' bad operand 1                                         
+ km  2,0                                                                        
+ punch '* *Program 6'                                                           
+ punch '* runtest program .1' Bad operand 2                                     
+ km  2,2                                                                        
+ la 1,kmcqueryout                                                               
+ kmc  2,2                                                                       
+ jas 9,swap                                                                     
+ punch '* runtest program .1' OK query                                          
+ punch '* *Compare'                                                             
+ punch '* r 210.10'                                                             
+ punch '* *Want "km query" F0703838 00002828 00000000 00000000'                 
+ punch '* r 220.10'                                                             
+ punch '* *Want "kmc query" F0703838 00000000 10000000 00000000'                
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* DEA                                                                 *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+data loctr                                                                      
+enciphered ds cl256                                                             
+clear ds cl256                                                                  
+chain dc x'0f0e0d0c0b0a0908 0706050403020100'                                   
+deachainx ds d                                                                  
+deakey dc x'0001020304050607'                                                   
+ ds d Align on quad                                                             
+code loctr                                                                      
+ encipher 1,deakey                                                              
+ punch '* *Want "DEA encrypt"  0AC1057C AE3140C8 42998815 A83F973B'             
+                                                                                
+ decipher dea                                                                   
+                                                                                
+ encipher 1,deachainx,op=kmc                                                    
+ punch '* *Want "kmc DEA encrypt" 775871E5 7BCFB637 7A18002F 9D060111'          
+                                                                                
+ decipher kmc-dea                                                               
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Encrypted DEA                                                       *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ encipher  9,dea_key                                                            
+ punch '* *Want "dea-c encrypt" 0AC1057C AE3140C8 42998815 A83F973B'            
+                                                                                
+ decipher  dea-c                                                                
+                                                     SPACE 2                    
+ encipher  9,deachain,op=kmc                                                    
+ repro                                                                          
+* *Want "kmc-dea-c encrypt"  775871E5 7BCFB637 7A18002F 9D060111                
+                                                                                
+ decipher  kmc-dea-c                                                            
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* TDEA-128                                                            *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+data loctr                                                                      
+chain128 ds d                                                                   
+deakey128 dc x'0001020304050607'                                                
+ dc x'08090a0b0c0d0e0f'                                                         
+code loctr                                                                      
+                                                                                
+ encipher 2,deakey128                                                           
+ repro                                                                          
+* *Want "TDEA-128 encrypt"  7CA6D1C7 ED63C17C 82B881F2 ED99515A                 
+                                                                                
+ decipher tdea-128                                                              
+                                                                                
+ encipher 2,chain128,op=kmc                                                     
+ repro                                                                          
+* *Want "kmc-TDEA-128 encrypt"   ECB31BB4 AD6F93D9 C011B376 FB0A028C            
+                                                                                
+ decipher kmc-tdea-128                                                          
+                                                                                
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Encrypted TDEA-128                                                            
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ encipher 10,tdea_128_key                                                       
+ repro                                                                          
+* *Want "tdea-128-c encrypt" 7CA6D1C7 ED63C17C 82B881F2 ED99515A                
+                                                                                
+ decipher tdea-128-c                                                            
+                                                     SPACE 2                    
+ encipher 10,tdea128chain,op=kmc                                                
+ repro                                                                          
+* *Want "kmc-TDEA-128-c encrypt"   ECB31BB4 AD6F93D9 C011B376 FB0A028C          
+                                                                                
+ decipher kmc-tdea-128-c                                                        
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* TDEA-192                                                            *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+data loctr                                                                      
+chain192 ds d                                                                   
+deakey192 dc x'0001020304050607'                                                
+ dc x'08090a0b0c0d0e0f'                                                         
+ dc x'1011121314151617'                                                         
+ dc d'0' Align on quad                                                          
+code loctr                                                                      
+                                                                                
+ encipher 3,deakey192                                                           
+ repro                                                                          
+* *Want "TDEA-192 encrypt"   486E3849 9D047AE7 0CB72FC7 52D816BD                
+                                                                                
+ decipher tdea-192                                                              
+                                                                                
+ encipher 3,chain192,op=kmc                                                     
+ repro                                                                          
+* *Want "kmc-TDEA-192 encrypt"   B28FE3BA 98A5F8B9 6A025CE0 A10EB6C7            
+                                                                                
+ decipher kmc-tdea-192                                                          
+                                                                                
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Encrypted TDEA-192                                                            
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ encipher 11,tdea_192_key                                                       
+ repro                                                                          
+* *Want "tdea-192-c encrypt" 486E3849 9D047AE7 0CB72FC7 52D816BD                
+                                                                                
+ decipher tdea-192-c                                                            
+                                                     SPACE 2                    
+ encipher 11,tdea192chain,op=kmc                                                
+ repro                                                                          
+* *Want "kmc-TDEA-192-c encrypt"   B28FE3BA 98A5F8B9 6A025CE0 A10EB6C7          
+                                                                                
+ decipher kmc-tdea-192-c                                                        
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* AES-128                                                             *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+data loctr                                                                      
+achain128 ds xl16                                                               
+aeskey128 dc x'0001020304050607'                                                
+ dc x'08090a0b0c0d0e0f'                                                         
+xts128 dc x'0001020304050607' XTS extension                                     
+ dc x'08090a0b0c0d0e0f'                                                         
+code loctr                                                                      
+                                                                                
+ encipher 18,aeskey128                                                          
+ repro                                                                          
+* *Want "AES-128 encrypt"   4BAEA5CB F3A16993 492F7031 31D004E6                 
+                                                                                
+ decipher aes-128                                                               
+                                                                                
+ encipher 18,achain128,op=kmc                                                   
+ repro                                                                          
+* *Want "kmc AES-128 encrypt"  31090D54 5341F560 12C8663B E3EA8CB6              
+                                                                                
+ decipher kmc-aes-128                                                           
+                                                     SPACE 2                    
+ encipher 26,aes_128_key                                                        
+ repro                                                                          
+* *Want "aes-128-c encrypt" 4BAEA5CB F3A16993 492F7031 31D004E6                 
+                                                                                
+ decipher aes-128-c                                                             
+                                                                                
+ encipher 26,aes128chain,op=kmc                                                 
+ repro                                                                          
+* *Want "kmc AES-128-c encrypt"  31090D54 5341F560 12C8663B E3EA8CB6            
+                                                                                
+ decipher kmc-aes-128-c                                                         
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* XTS-AES-128                                                         *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ encipher 50,aeskey128                                                          
+ repro                                                                          
+* *Want "XTS-AES-128 encrypt"   0671AB22 583E906D 12C21AB6 463341AE             
+ mvc xts128(16),aeskey128 Re init                                               
+ decipher xts-aes-128                                                           
+                                                     SPACE 2                    
+ encipher 58,aes_128_key                                                        
+ repro                                                                          
+* *Want "XTS-aes-128-c encrypt" 0671AB22 583E906D 12C21AB6 463341AE             
+                                                                                
+ mvc aes128xts(16),aeskey128 Re init                                            
+ decipher xts-aes-128-c                                                         
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* AES-192                                                             *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+data loctr                                                                      
+achain192 ds xl16                                                               
+aeskey192 dc x'0001020304050607'                                                
+ dc x'08090a0b0c0d0e0f'                                                         
+ dc x'1011121314151617'                                                         
+ dc d'0' Align on quad                                                          
+code loctr                                                                      
+                                                                                
+ encipher 19,aeskey192                                                          
+ repro                                                                          
+* *Want "AES-192 encrypt"  EE3EAA7F 5500091D 509AC619 2A222632                  
+                                                                                
+ decipher aes-192                                                               
+                                                                                
+ encipher 19,achain192,op=kmc                                                   
+ repro                                                                          
+* *Want "kmc-AES-192 encrypt"  7A5E62BE 6DD45AB4 03F9EB6A DFCF9920              
+                                                                                
+ decipher kmc-aes-192                                                           
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Encrypted AES-192                                                   *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ encipher 27,aes_192_key                                                        
+ repro                                                                          
+* *Want "AES-192-c encrypt"  EE3EAA7F 5500091D 509AC619 2A222632                
+ punch '* r 410.f0'                                                             
+                                                                                
+ decipher aes-192-c                                                             
+                                                     SPACE 2                    
+ encipher 27,aes192chain,op=kmc                                                 
+ repro                                                                          
+* *Want "kmc-AES-192-c encrypt"  7A5E62BE 6DD45AB4 03F9EB6A DFCF9920            
+                                                                                
+ decipher kmc-aes-192-c                                                         
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* AES-256                                                             *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+data loctr                                                                      
+achain256 ds xl16                                                               
+aeskey256 dc x'0001020304050607'                                                
+ dc x'08090a0b0c0d0e0f'                                                         
+ dc x'1011121314151617'                                                         
+ dc x'18191a1b1c1d1e1f'                                                         
+code loctr                                                                      
+                                                                                
+ encipher 20,aeskey256                                                          
+ repro                                                                          
+* *Want "AES-256 encrypt"   BFF28D4A A70CFF6F 2DF87BF0 D6FC2882                 
+                                                                                
+ decipher aes-256                                                               
+                                                                                
+ encipher 20,achain256,op=kmc                                                   
+ repro                                                                          
+* *Want "kmc-AES-256 encrypt"   418BF112 38C9F028 A32DF978 A3E56293             
+                                                                                
+ decipher kmc-aes-256                                                           
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* Encrypted AES-256                                                   *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+ encipher 28,aes_256_key                                                        
+ repro                                                                          
+* *Want "AES-256 encrypt"   BFF28D4A A70CFF6F 2DF87BF0 D6FC2882                 
+                                                                                
+ decipher aes-256-c                                                             
+                                                     SPACE 2                    
+ encipher 28,aes256chain,op=kmc                                                 
+ repro                                                                          
+* *Want "kmc-AES-256 encrypt"  418BF112 38C9F028 A32DF978 A3E56293              
+                                                                                
+ decipher kmc-aes-256-c                                                         
+                                                                                
+                                                       EJECT                    
+***********************************************************************         
+*                                                                     *         
+* KMC-PRNG                                                            *         
+*                                                                     *         
+***********************************************************************         
+                                                     SPACE 2                    
+work loctr                                                                      
+prngchain dc x'0f0e0d0c0b0a0908'                                                
+ dc x'0001020304050607'                                                         
+ dc x'08090a0b0c0d0e0f'                                                         
+ dc x'1011121314151617'                                                         
+                                                                                
+code loctr                                                                      
+                                                                                
+ la 0,67                                                                        
+ la 1,prngchain                                                                 
+ la 2,swap                                                                      
+ la 3,l'enciphered '                                                            
+ la 4,enciphered                                                                
+ xc enciphered,enciphered                                                       
+ sr 5,5 For mask                                                                
+ kmc 4,2                                                                        
+ jo *-4                                                                         
+ ipm 5                                                                          
+ jas 9,swap                                                                     
+ punch '* runtest svc .1'                                                       
+ punch '* gpr'                                                                  
+ punch '* *Gpr 2 0800 #address'                                                 
+ punch '* *Gpr 3 0000'                                                          
+ punch '* *Gpr 4 0500 #address'                                                 
+ punch '* *Gpr 5 0000' cc                                                       
+ punch '* r 400.10'                                                             
+ repro                                                                          
+* *Want "kmc-prng"  895D7F0D 4A95FB6D 2D170C6D 59FE9CF7                         
+ punch '* r 3b8.8'                                                              
+ punch '* *Want "prng chain" AAF415C1 203ECFBB'                                 
+                                                                                
+                                                                                
+data loctr                                                                      
+work loctr                                                                      
+                                                                                
+ punch '* *Done'                                                                
+psa loctr                                                                       
+ org psa+x'200'                                                                 
+work loctr                                                                      
+ org work+x'200'                                                                
+data loctr                                                                      
+ org data+x'300'                                                                
+ end                                                                            
