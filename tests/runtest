@@ -44,7 +44,9 @@
 
 # -p <word>
 # Specify the library path for loadable modules, i.e., device managers.
-# This is passed to Hercules.
+# This is passed to Hercules.  The default is .libs, to ensure that the
+# crypto  module  is  loaded  at startup.  Refer to test.conf for three
+# symbolic links that are needed to load crypto automatically.
 
 # -q
 # Pass "quiet" to redtest to suppress details about test cases.
@@ -146,10 +148,11 @@ scanflags()
                                 files="$files $testdir/$fname"
                                 shift ;;
                         (-h) setvar hercexec $1 $2 ; shift ;;
-                        (-l|-p|-t)
+                        (-l|-t)
                                 setvar dummy    $1 $2
                                 hercargs="$hercargs $1 $2"
                                 shift ;;
+                        (-p) setvar modpath $1 $2 ; shift ;;
                         (-r) setvar repeat  $1 $2 ; shift ;;
                         (-q) vars="quiet $vars" ;;
                         (-v)
@@ -198,6 +201,7 @@ wfn=allTests
 
 testdir=$(dirname $0)
 dir=$testdir
+modpath=.libs
 fns='*'
 exit=exit
 ftype=tst
@@ -293,7 +297,7 @@ fi
 # panel commands.
 
 # set -x
-cmd="$hdir/hercules $hercargs -f $dir/tests.conf -r $wfn.testin -t"
+cmd="$hdir/hercules -p $modpath $hercargs -f $dir/tests.conf -r $wfn.testin -t"
 if [ "$exit" = "noexit" ] ; then
         $cmd >$wfn.out
         rv=$?

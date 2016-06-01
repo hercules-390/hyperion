@@ -28,5 +28,6 @@ if [ "$2" != "noexit" ] ; then
 fi
 
 cmd="$dir/atom/hercules -p $lib -t -f $dir/hyperion/tests/tests.conf -r $fn >atest.out $redir"
+echo $cmd
 eval $cmd
 rexx redtest.rexx atest.out $vars

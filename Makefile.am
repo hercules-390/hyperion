@@ -703,8 +703,8 @@ EXTRA_DIST = autogen.sh					\
 				 Hercules.dsw			  \
 				 Hercules.vcproj			\
 				 Hercules.sln			  \
-				 hercver.rc2			  \
-				 hercprod.rc			  \
+				 hercver.rc2				\
+				 hercprod.rc				\
 				 hercules.ico			  \
 				 hercdasd.rc				\
 				 hercdasd.ico			  \
@@ -901,4 +901,4 @@ uninstall-hook:
 	$(COMPILE) -E $< >$@
 
 check:
-	$(top_srcdir)/tests/runtest -p .libs -l crypto/.libs/dyncrypt $(top_srcdir)/tests
+	$(top_srcdir)/tests/runtest -p .libs $(top_srcdir)/tests
