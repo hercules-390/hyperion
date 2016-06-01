@@ -100,9 +100,14 @@ cdebug  = $(cdebug:/Gm=)
 # so we don't have to rely on user having rebase utility.
 ldebug = $(ldebug) /base:0x400000
 
-# Optimize for AMD64 CPU architecture
 !IF "$(CPU)" == "AMD64"
+!IF $(vsversion) >= $(vers_vs2015)
+# Optimize for Intel CPU architecture
+cflags = $(cflags) /favor:INTEL64
+!ELSE
+# Optimize for AMD CPU architecture
 cflags = $(cflags) /favor:AMD64
+!ENDIF
 !ENDIF
 
 # Increase the sockets set size limit/default to be the
