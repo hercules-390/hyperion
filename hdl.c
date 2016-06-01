@@ -9,32 +9,22 @@
 #include "hercules.h"
 #include "opcode.h"
 
-/*
-extern HDLPRE hdl_preload[];
-*/
-
 #if defined(OPTION_DYNAMIC_LOAD)
-HDLPRE hdl_preload[] = {
-    { "hdteq",          HDL_LOAD_NOMSG },
-    { "dyncrypt",       HDL_LOAD_NOMSG },
-#if 0
-    { "dyn_test1",      HDL_LOAD_DEFAULT },
-    { "dyn_test2",      HDL_LOAD_NOMSG },
-    { "dyn_test3",      HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },
+HDLPRE hdl_preload[] =
+{
+    { "hdteq",              HDL_LOAD_NOMSG                     },
+#if defined(_MSVC_)
+    { "dyncrypt",           HDL_LOAD_NOMSG                     },
+#else
+    { "crypto/dyncrypt",    HDL_LOAD_NOMSG                     },
 #endif
-    { NULL,             0  } };
-
 #if 0
-/* Forward definitions from hdlmain.c stuff */
-/* needed because we cannot depend on dlopen(self) */
-extern void *HDL_DEPC;
-extern void *HDL_INIT;
-extern void *HDL_RESO;
-extern void *HDL_DDEV;
-extern void *HDL_DINS;
-extern void *HDL_FINI;
+    { "dyn_test1",          HDL_LOAD_DEFAULT                   },
+    { "/foo/dyn_test2",     HDL_LOAD_NOMSG                     },
+    { "../bar/dyn_test3",   HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },
 #endif
-
+    { NULL,                 0                                  },
+};
 
 static DLLENT *hdl_dll;                  /* dll chain                */
 static LOCK   hdl_lock;                  /* loader lock              */
@@ -175,7 +165,9 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
             }
             else
             {
+                // "HDL: change request of directory to %s is ignored"
                 WRMSG( HHC01506, "W", pathname );
+                // "HDL: directory remains %s; taken from startup"
                 WRMSG( HHC01507, "W", hdl_modpath );
                 return hdl_modpath;
             }
@@ -191,6 +183,7 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
     hdl_modpath = strdup(pathname);
 
     if (MLVL(VERBOSE))
+        // "HDL: loadable module directory is %s"
         WRMSG( HHC01508, "I", hdl_modpath );
 
     return hdl_modpath;

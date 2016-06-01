@@ -28,23 +28,6 @@
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
-/* Following block moved to 'hdl.c' */
-/* this is so that                  */
-/* hdlmain.c can be moved to the executable portion */
-/* hdl_main can find hdl_preload */
-/*
-HDLPRE hdl_preload[] = {
-    { "hdteq",          HDL_LOAD_NOMSG },
-    { "dyncrypt",       HDL_LOAD_NOMSG },
-#if 0
-    { "dyn_test1",      HDL_LOAD_DEFAULT },
-    { "dyn_test2",      HDL_LOAD_NOMSG },
-    { "dyn_test3",      HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },
-#endif
-    { NULL,             0  } };
-*/
-
-
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);

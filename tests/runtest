@@ -36,17 +36,13 @@
 # The default is parent of -d if there is no hercules executable in the
 # current directory.
 
+# -p <word>
+# Specify the library path for loadable modules.  The default is .libs.
+
 # -l <word>
 # Specify the name of a module to load dynamically into hercules.  This
-# is passed to Hercules.  The configuration file loads
-# dyncrypt; if you manage to load that module, Hercules will abort.
-# You can specify multiple -l flags; they will be accumulated.
-
-# -p <word>
-# Specify the library path for loadable modules, i.e., device managers.
-# This is passed to Hercules.  The default is .libs, to ensure that the
-# crypto  module  is  loaded  at startup.  Refer to test.conf for three
-# symbolic links that are needed to load crypto automatically.
+# is passed to Hercules.  You can specify multiple -l flags; they will
+# be accumulated.
 
 # -q
 # Pass "quiet" to redtest to suppress details about test cases.
