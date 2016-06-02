@@ -1416,3 +1416,37 @@ int initialize_utility( int argc, char* argv[],
 
     return argc;
 }
+
+/*********************************************************************/
+/* Dump an area of storage.  This is not for emulated core storage.  */
+/*********************************************************************/
+
+void
+dumpStorageHow( void * what, size_t length, char * msg, int reverse)
+{
+   unsigned char * s = what;
+   static const char i2a[16] = "0123456789abcdef";
+   char dumpbuf[96];
+   int offs = 0;
+
+   logmsg("%s:\n", msg);
+   if (reverse) s += length - 1;
+   while (0 < length)
+   {
+      char * t = dumpbuf;
+      int i;
+
+      for (i = 0; 0 < length && 32 > i; i++)
+      {
+         if (!(3 & i) && i) *t++ = ' ';
+         *t++ = i2a[*s >> 4];
+         *t++ = i2a[0xf & *s];
+         if (reverse) s--;
+         else s++;
+         length--;
+      }
+      *t = 0;
+      logmsg("%06x  %s\n", offs, dumpbuf);
+      offs += 32;
+   }
+}

@@ -900,5 +900,8 @@ uninstall-hook:
 %.i: %.c
 	$(COMPILE) -E $< >$@
 
+.libs/SoftFloat.o: SoftFloat-specialise.c
+.libs/ieee.o: SoftFloat-specialise.c
+
 check:
 	$(top_srcdir)/tests/runtest -p .libs $(top_srcdir)/tests

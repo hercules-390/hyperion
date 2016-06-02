@@ -33,6 +33,17 @@ go ds 0h
  ld 4,=dd'1234567890123456'                                                     
  csdtr 6,4,0                                                                    
  stg 6,reg6                                                                     
+*                                                                               
+ lmg 4,5,reg45                                                                  
+ cxstr 0,4 Convert low part back                                                
+ std 0,cxhi                                                                     
+ std 2,cxlow                                                                    
+*                                                                               
+ srlg 5,5,4   Drop sign                                                         
+ cxutr 0,4 Convert low part back                                                
+ std 0,cxuhi                                                                    
+ std 2,cxulow                                                                   
+*                                                                               
  ltr 14,14                                                                      
  bnzr 14                                                                        
  svc 255                                                                        
@@ -41,6 +52,11 @@ shifted ds 2d
 reg45 ds 2d                                                                     
 Packed ds h Packed digits and sign Figure 455.                                  
 reg6 ds d                                                                       
+cxhi ds d                                                                       
+cxlow ds d                                                                      
+cxuhi ds d                                                                      
+cxulow ds d                                                                     
+*                                                                               
 cr0 ds f                                                                        
  print data                                                                     
  ltorg                                                                          
@@ -54,5 +70,9 @@ cr0 ds f
  punch '* *Want "csxtr/srxt high" 0123'                                         
  punch '* r 328.8'                                                              
  punch '* *Want "csdtr" 23456789 0123456C'                                      
+ punch '* r 330.10'                                                             
+ punch '* *Want "cxstr" 2208004B 9C1E28E5 6F3C1271 77823534'                    
+ punch '* r 340.10'                                                             
+ punch '* *Want "cxutr" 2208045D E08D4D2E 70781271 77823534'                    
  punch '* *Done'                                                                
  end                                                                            

@@ -128,6 +128,8 @@ static INLINE float32 commonNaNToFloat32( commonNaNT a )
 | signaling NaN, the invalid exception is raised.
 *----------------------------------------------------------------------------*/
 
+#include <stdio.h>
+#include "msgenu.h"
 static float32 propagateFloat32NaN( void* ctx, float32 a, float32 b )
 {
     flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
@@ -139,20 +141,16 @@ static float32 propagateFloat32NaN( void* ctx, float32 a, float32 b )
     a |= 0x00400000;
     b |= 0x00400000;
     if ( aIsSignalingNaN | bIsSignalingNaN ) float_raise( ctx, float_flag_invalid );
-    if ( aIsSignalingNaN ) {
-        if ( bIsSignalingNaN ) goto returnLargerSignificand;
-        return bIsNaN ? b : a;
-    }
-    else if ( aIsNaN ) {
-        if ( bIsSignalingNaN | ! bIsNaN ) return a;
- returnLargerSignificand:
-        if ( (bits32) ( a<<1 ) < (bits32) ( b<<1 ) ) return b;
-        if ( (bits32) ( b<<1 ) < (bits32) ( a<<1 ) ) return a;
-        return ( a < b ) ? a : b;
-    }
-    else {
-        return b;
-    }
+
+    /* Refer to figure 19-20 Results: Divide. */
+
+    if ( aIsSignalingNaN ) return a;
+    if ( bIsSignalingNaN ) return b;
+    if ( aIsNaN ) return a;
+    if ( bIsNaN ) return b;
+
+    /* Neither is a NaN.  How did we get here?                       */
+    return a;
 }
 
 /*----------------------------------------------------------------------------
@@ -167,7 +165,7 @@ static float32 propagateFloat32NaN( void* ctx, float32 a, float32 b )
 
 static INLINE flag float64_is_nan( float64 a )
 {
-    return ( LIT64( 0xFFE0000000000000 ) < (bits64) ( a<<1 ) );
+    return ( LIT64( 0xFFE0000000000000 ) < (((bits64) a) <<1 ) );
 }
 
 /*----------------------------------------------------------------------------
@@ -178,8 +176,8 @@ static INLINE flag float64_is_nan( float64 a )
 static INLINE flag float64_is_signaling_nan( float64 a )
 {
     return
-           ( ( ( a>>51 ) & 0xFFF ) == 0xFFE )
-        && ( a & LIT64( 0x0007FFFFFFFFFFFF ) );
+           ( ( (((bits64) a)>>51 ) & 0xFFF ) == 0xFFE )
+        && (((bits64) a) & LIT64( 0x000FFFFFFFFFFFFF ) );
 }
 
 /*----------------------------------------------------------------------------
@@ -217,7 +215,7 @@ static INLINE float64 commonNaNToFloat64( commonNaNT a )
 | is a NaN, and returns the appropriate NaN result.  If either `a' or `b' is a
 | signaling NaN, the invalid exception is raised.
 *----------------------------------------------------------------------------*/
-
+#include "hscutl.h"
 static float64 propagateFloat64NaN( void* ctx, float64 a, float64 b )
 {
     flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
@@ -226,23 +224,24 @@ static float64 propagateFloat64NaN( void* ctx, float64 a, float64 b )
     aIsSignalingNaN = float64_is_signaling_nan( a );
     bIsNaN = float64_is_nan( b );
     bIsSignalingNaN = float64_is_signaling_nan( b );
+
+#if 0
+    dumpStorageReversed(&a, sizeof(a), "a");
+    dumpStorageReversed(&b, sizeof(b), "b");
+    logmsg("a nan %d b nan %d a snan %d b snan %d\n",
+       aIsNaN, bIsNaN ,aIsSignalingNaN , bIsSignalingNaN );
+#endif
+
     a |= LIT64( 0x0008000000000000 );
     b |= LIT64( 0x0008000000000000 );
     if ( aIsSignalingNaN | bIsSignalingNaN ) float_raise( ctx, float_flag_invalid );
-    if ( aIsSignalingNaN ) {
-        if ( bIsSignalingNaN ) goto returnLargerSignificand;
-        return bIsNaN ? b : a;
-    }
-    else if ( aIsNaN ) {
-        if ( bIsSignalingNaN | ! bIsNaN ) return a;
- returnLargerSignificand:
-        if ( (bits64) ( a<<1 ) < (bits64) ( b<<1 ) ) return b;
-        if ( (bits64) ( b<<1 ) < (bits64) ( a<<1 ) ) return a;
-        return ( a < b ) ? a : b;
-    }
-    else {
-        return b;
-    }
+    if ( aIsSignalingNaN ) return a;
+    if ( bIsSignalingNaN ) return b;
+    if ( aIsNaN ) return a;
+    if ( bIsNaN ) return b;
+
+    /* Neither is a NaN.  How did we get here?                       */
+    return b;
 }
 
 #ifdef FLOAT128
@@ -325,20 +324,13 @@ static float128 propagateFloat128NaN( void* ctx, float128 a, float128 b )
     a.high |= LIT64( 0x0000800000000000 );
     b.high |= LIT64( 0x0000800000000000 );
     if ( aIsSignalingNaN | bIsSignalingNaN ) float_raise( ctx, float_flag_invalid );
-    if ( aIsSignalingNaN ) {
-        if ( bIsSignalingNaN ) goto returnLargerSignificand;
-        return bIsNaN ? b : a;
-    }
-    else if ( aIsNaN ) {
-        if ( bIsSignalingNaN | ! bIsNaN ) return a;
- returnLargerSignificand:
-        if ( lt128( a.high<<1, a.low, b.high<<1, b.low ) ) return b;
-        if ( lt128( b.high<<1, b.low, a.high<<1, a.low ) ) return a;
-        return ( a.high < b.high ) ? a : b;
-    }
-    else {
-        return b;
-    }
+    if ( aIsSignalingNaN ) return a;
+    if ( bIsSignalingNaN ) return b;
+    if ( aIsNaN ) return a;
+    if ( bIsNaN ) return b;
+
+    /* Neither is a NaN.  How did we get here?                       */
+    return a;
 }
 
 POP_GCC_WARNINGS()

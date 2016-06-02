@@ -77,7 +77,7 @@ these four paragraphs for those parts of this code that are retained.
 | are propagated from function inputs to output.  These details are target-
 | specific.
 *----------------------------------------------------------------------------*/
-#include "SoftFloat-specialise.h"
+#include "SoftFloat-specialise.c"
 
 /*----------------------------------------------------------------------------
 | Takes a 64-bit fixed-point value `absZ' with binary point between bits 6
@@ -2384,6 +2384,7 @@ float64 float64_mul( void* ctx, float64 a, float64 b )
 | the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
+#include "hscutl.h"
 float64 float64_div( void* ctx, float64 a, float64 b )
 {
     flag aSign, bSign, zSign;
@@ -2392,6 +2393,8 @@ float64 float64_div( void* ctx, float64 a, float64 b )
     bits64 rem0, rem1;
     bits64 term0, term1;
 
+    dumpStorageReversed(&a, sizeof(a), "float a");
+    dumpStorageReversed(&b, sizeof(b), "float b");
     aSig = extractFloat64Frac( a );
     aExp = extractFloat64Exp( a );
     aSign = extractFloat64Sign( a );
