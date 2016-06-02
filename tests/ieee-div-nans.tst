@@ -77,7 +77,7 @@ r 63C=47F00700     #         B     TESTLONG     Go test long BFP division.
 
                              ORG   X'700'
                    #TESTLONG DS    0H
-r 700=41200004     #         LA    R2,5         Set count of division operations
+r 700=41200005     #         LA    R2,5         Set count of division operations
 r 704=41300440     #         LA    R3,LONGRES   Point to start of long BFP quotients
 r 708=41700320     #         LA    R7,LONGBFP   Point to start of extended BFP input values
 r 70C=0DD0         #         BASR  R13,0        Set top of loop for long BFP tests
@@ -135,10 +135,10 @@ r 314=7F840000      # SNaN(4)
 # 320.40  LONGBFP   DS  0D    6 long BFP (Room for 8)
 r 320=4000000000000000    # 2
 r 328=0000000000000000    # 0
-r 330=7FFC100000000000    # QNaN(1)
-r 338=7FFC200000000000    # QNaN(2)
-r 340=7FF8300000000000    # SNaN(3)
-r 348=7FF8400000000000    # SNaN(4)
+r 330=7FF8100000000000    # QNaN(1)
+r 338=7FF8200000000000    # QNaN(2)
+r 340=7FF0300000000000    # SNaN(3)
+r 348=7FF0400000000000    # SNaN(4)
 
 # 360.80  EXTDBFP   DS  0D    6 Extended BFP (Room for 8, but not 9)
 r 360=40000000000000000000000000000000    # 2
@@ -177,16 +177,16 @@ r 440.10  # BFP Long quotients part 1 Expecting +inf, +inf
 *Want "DDB/DDBR NaN 1/8" 7FF00000 00000000 7FF00000 00000000
 *Compare
 r 450.10  # BFP Long quotients part 2 Expecting QNaN(1), QNaN(1)
-*Want "DDB/DDBR NaN 2/8" 7FFC1000 00000000 7FFC1000 00000000
+*Want "DDB/DDBR NaN 2/8" 7FF81000 00000000 7FF81000 00000000
 *Compare
 r 460.10  # BFP Long quotients part 3 Expecting QNaN(1), QNaN(1)
-*Want "DDB/DDBR NaN 3/8" 7FFC1000 00000000 7FFC1000 00000000
+*Want "DDB/DDBR NaN 3/8" 7FF81000 00000000 7FF81000 00000000
 *Compare
 r 470.10  # BFP Long quotients part 4 Expecting QNaN(3), QNaN(3)
-*Want "DDB/DDBR NaN 4/8" 7FFC3000 00000000 7FFC3000 00000000
+*Want "DDB/DDBR NaN 4/8" 7FF83000 00000000 7FF83000 00000000
 *Compare
 r 480.10  # BFP Long quotients part 5 Expecting QNaN(3), QNaN(3)
-*Want "DDB/DDBR NaN 5/8" 7FFC3000 00000000 7FFC3000 00000000
+*Want "DDB/DDBR NaN 5/8" 7FF83000 00000000 7FF83000 00000000
 *Compare
 r 490.10  # BFP Long quotients part 6 Expecting 0, 0
 *Want "DDB/DDBR NaN 6/8" 00000000 00000000 00000000 00000000
@@ -221,5 +221,7 @@ r 560.10  # BFP Extended quotients part 7 Expecting 0
 *Compare
 r 570.10  # BFP Extended quotients part 8 Expecting 0
 *Want "DXBR NaN 8/8" 00000000 00000000 00000000 00000000
+
+
 *Done
 
