@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2016/05/30 22.35
+-                                                                                           jHLASM 1.0   2016/06/02 09.24
 0  No Overriding ASMAOPT Parameters                                                                                      
    Overriding Parameters-  term                                                                                          
    No Process Statements                                                                                                 
@@ -51,79 +51,109 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1                                              External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/05/30 22.35
-0CXSTR     SD 00000001 00000000 00000328             07                                                                  
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/06/02 09.24
+0CXSTR     SD 00000001 00000000 00000350             07                                                                  
 1                                                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/30 22.35
-000000000                00000000 00000328      1 cxstr start 0                                                          
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/06/02 09.24
+000000000                00000000 00000350      1 cxstr start 0                                                          
                                                 2 cxstr amode any                                                        
                                                 3 cxstr rmode any                                                        
                      R:F 00000000               4  using *,15                                                            
                                                 5  punch '* *Testcase csxtr &sysdatc &systime'                           
-                                                 + punch '* *Testcase csxtr 20160530 22.35'                              
+                                                 + punch '* *Testcase csxtr 20160602 09.24'                              
                                                 6  punch '* sysclear'                                                    
                                                 7  punch '* archlvl z'                                                   
  00000000                00000000 00000140      8  org cxstr+x'140' SVC old                                              
  00000140                                       9 svcold ds 2d                                                           
  00000150                00000150 000001A0     10  org cxstr+x'1a0' Restart new                                          
- 000001A0 0001000180000000                     11  dc x'0001000180000000',ad(go)                                         
+ 000001A0 0000000180000000                     11  dc x'0000000180000000',ad(go)                                         
  000001B0                000001B0 000001C0     12  org cxstr+x'1c0' SVC new                                              
  000001C0 0002000180000000                     13  dc x'0002000180000000',ad(0)                                          
  000001D0                000001D0 000001D0     14  org cxstr+x'1d0' Program new                                          
  000001D0 0002000180000000                     15  dc x'0002000180000000',ad(0)                                          
  000001E0                000001E0 00000200     16  org cxstr+x'200'                                                      
  00000200                                      17 go ds 0h                                                               
- 00000200 6800 F318               00000318     18  LD 0,=LD'1234567890123456789012345678901234' 34 digits                
- 00000204 6820 F318               00000318     19  LD 2,=LD'1234567890123456789012345678901234'                          
- 00000208 B3EB 0040                            20  CSXTR 4,0,0 Convert 31 signed digits to (GG3,GG4)                     
- 0000020C EB45 F300 0024          00000300     21  STMG 4,5,reg45 Store low-order 31 digits and sign                     
- 00000212 ED00 001F 0049          0000001F     22  SRXT 0,0,31 Shift, keeping 3 high-order digits                        
- 00000218 B3EA 0040                            23  CUXTR 4,0 Convert 3 unsigned digits                                   
- 0000021C 4050 F310               00000310     24  STH 5,Packed Store remaining 3 digits                                 
- 00000220 12EE                                 25  ltr 14,14                                                             
- 00000222 077E                                 26  bnzr 14                                                               
- 00000224 0AFF                                 27  svc 255                                                               
- 00000226                00000226 00000300     28  org cxstr+x'300'                                                      
- 00000300                                      29 reg45 ds 2d                                                            
- 00000310                                      30 Packed ds h Packed digits and sign Figure 455.                         
- 00000318                                      31  ltorg                                                                 
- 00000318 2608134B9C1E28E5                     32                =LD'1234567890123456789012345678901234'                 
-                                               33  punch '* runtest .1'                                                  
-                                               34  punch '* r 300.10'                                                    
-                                               35  punch '* *Want 45678901 23452302 01382834 1780165C'                   
-                                               36  punch '* r 310.2'                                                     
-                                               37  punch '* *Want 0123'                                                  
-                                               38  punch '* *Done'                                                       
-                                               39  end                                                                   
-1                                                 Relocation Dictionary                                         Page    4
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/05/30 22.35
+                                               18  punch '* *Program 7'                                                  
+ 00000200 B3EB 0040                            19  CSXTR 4,0,0 Convert 31 signed digits to (GG3,GG4)                     
+ 00000204 B600 F330               00000330     20  stctl 0,0,cr0                                                         
+ 00000208 9604 F331      00000331              21  oi cr0+1,x'04'                                                        
+ 0000020C B700 F330               00000330     22  lctl 0,0,cr0                                                          
+ 00000210 6800 F338               00000338     23  LD 0,=LD'1234567890123456789012345678901234' 34 digits                
+ 00000214 6820 F340               00000340     24  LD 2,=LD'1234567890123456789012345678901234'+8                        
+ 00000218 B3EB 0040                            25  CSXTR 4,0,0 Convert 31 signed digits to (GG3,GG4)                     
+ 0000021C EB45 F310 0024          00000310     26  STMG 4,5,reg45 Store low-order 31 digits and sign                     
+ 00000222 ED00 001F 0049          0000001F     27  SRXT 0,0,31 Shift, keeping 3 high-order digits                        
+ 00000228 6000 F300               00000300     28  std 0,shifted                                                         
+ 0000022C 6020 F308               00000308     29  std 2,shifted+8                                                       
+ 00000230 B3EA 0040                            30  CUXTR 4,0 Convert 3 unsigned digits                                   
+ 00000234 4050 F320               00000320     31  STH 5,Packed Store remaining 3 digits                                 
+                                               32 *                                                                      
+ 00000238 6840 F348               00000348     33  ld 4,=dd'1234567890123456'                                            
+ 0000023C B3E3 0064                            34  csdtr 6,4,0                                                           
+ 00000240 E360 F328 0024          00000328     35  stg 6,reg6                                                            
+ 00000246 12EE                                 36  ltr 14,14                                                             
+ 00000248 077E                                 37  bnzr 14                                                               
+ 0000024A 0AFF                                 38  svc 255                                                               
+ 0000024C                0000024C 00000300     39  org cxstr+x'300'                                                      
+ 00000300                                      40 shifted ds 2d                                                          
+ 00000310                                      41 reg45 ds 2d                                                            
+ 00000320                                      42 Packed ds h Packed digits and sign Figure 455.                         
+ 00000328                                      43 reg6 ds d                                                              
+ 00000330                                      44 cr0 ds f                                                               
+                                               45  print data                                                            
+ 00000338                                      46  ltorg                                                                 
+ 00000338 2608134B9C1E28E5                     47                =LD'1234567890123456789012345678901234'                 
+ 00000340 6F3C127177823534                                                                                               
+ 00000348 263934B9C1E28E56                     48                =dd'1234567890123456'                                   
+                                               49  punch '* runtest .1'                                                  
+                                               50  punch '* runtest program .1'                                          
+                                               51  punch '* *Compare'                                                    
+                                               52  punch '* r 300.10'                                                    
+                                               53  punch '* r 310.10'                                                    
+1                                                                                                               Page    4
+   Active Usings: CXSTR,R15                                                                                              
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/06/02 09.24
+0                                              54  punch '* *Want "csxtr/srxt low" 45678901 23456789 01234567 8901234C'  
+                                               55  punch '* r 320.2'                                                     
+                                               56  punch '* *Want "csxtr/srxt high" 0123'                                
+                                               57  punch '* r 328.8'                                                     
+                                               58  punch '* *Want "csdtr" 23456789 0123456C'                             
+                                               59  punch '* *Done'                                                       
+                                               60  end                                                                   
+1                                                 Relocation Dictionary                                         Page    5
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/06/02 09.24
 0  00000001 00000001 000001A8   A 8     +                                                                                
-1                               Ordinary Symbol and Literal Cross Reference                                     Page    5
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/05/30 22.35
-0cxstr         1 00000000 00000001     J                    1    2     3     8    10    12    14    16    28             
+1                               Ordinary Symbol and Literal Cross Reference                                     Page    6
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/06/02 09.24
+0cr0           4 00000330 00000001     F  F                44   20S   21M   22                                           
+ cxstr         1 00000000 00000001     J                    1    2     3     8    10    12    14    16    39             
  go            2 00000200 00000001     H  H                17   11                                                       
- Packed        2 00000310 00000001     H  H                30   24S                                                      
- reg45         8 00000300 00000001     D  D                29   21S                                                      
+ Packed        2 00000320 00000001     H  H                42   31S                                                      
+ reg45         8 00000310 00000001     D  D                41   26S                                                      
+ reg6          8 00000328 00000001     D  D                43   35S                                                      
+ shifted       8 00000300 00000001     D  D                40   28S   29S                                                
+ =dd'1234567890123456'                                                                                                   
+               8 00000348 00000001     D                   48   33                                                       
  =LD'1234567890123456789012345678901234'                                                                                 
-              16 00000318 00000001     L                   32   18    19                                                 
-1                                  Unreferenced Symbols Defined in CSECTs                                       Page    6
--  Defn  Symbol                                                                             jHLASM 1.0   2016/05/30 22.35
+              16 00000338 00000001     L                   47   23    24                                                 
+1                                  Unreferenced Symbols Defined in CSECTs                                       Page    7
+-  Defn  Symbol                                                                             jHLASM 1.0   2016/06/02 09.24
 0     9  svcold                                                                                                          
-1                                                      Using Map                                                Page    7
--                                                                                           jHLASM 1.0   2016/05/30 22.35
+1                                                      Using Map                                                Page    8
+-                                                                                           jHLASM 1.0   2016/06/02 09.24
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
-0     4  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 00318     24 *,15                          
-1                                   General Purpose Register Cross Reference                                    Page    8
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/05/30 22.35
+0     4  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 00348     35 *,15                          
+1                                   General Purpose Register Cross Reference                                    Page    9
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/06/02 09.24
 0    0(0)    (no references identified)                                                                                  
      1(1)    (no references identified)                                                                                  
      2(2)    (no references identified)                                                                                  
      3(3)    (no references identified)                                                                                  
-     4(4)      20S   21    23S                                                                                           
-     5(5)      20S   21    23S   24                                                                                      
-     6(6)    (no references identified)                                                                                  
+     4(4)      19S   25S   26    30S                                                                                     
+     5(5)      19S   25S   26    30S   31                                                                                
+     6(6)      34S   35                                                                                                  
      7(7)    (no references identified)                                                                                  
      8(8)    (no references identified)                                                                                  
      9(9)    (no references identified)                                                                                  
@@ -131,17 +161,17 @@
     11(B)    (no references identified)                                                                                  
     12(C)    (no references identified)                                                                                  
     13(D)    (no references identified)                                                                                  
-    14(E)      25S   25    26B                                                                                           
+    14(E)      36S   36    37B                                                                                           
     15(F)       4U                                                                                                       
-1                                  Diagnostic Cross Reference and Assembler Summary                             Page    9
--                                                                                           jHLASM 1.0   2016/05/30 22.35
+1                                  Diagnostic Cross Reference and Assembler Summary                             Page   10
+-                                                                                           jHLASM 1.0   2016/06/02 09.24
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, May 30 2016 20:36:44                                                           
 0System:  Linux release 3.19.0-59-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Type     Mtime                File path                                                                                
-  input    2016-05-30 22:35:47  csxtr.assemble                                                                           
-0Assembly Start Time: 22.35.51 Stop Time: 22.35.51 Processor Time: 00.00.00.0090.
+  input    2016-06-02 09:24:20  csxtr.assemble                                                                           
+0Assembly Start Time: 09.24.23 Stop Time: 09.24.23 Processor Time: 00.00.00.0112.
  
                                      
  Return Code 000                                                                                                         

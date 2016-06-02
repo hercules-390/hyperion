@@ -2764,7 +2764,7 @@ decimal128      x2;                     /* Extended DFP values       */
 decNumber       dwork;                  /* Working decimal number    */
 decContext      set;                    /* Working context           */
 int32_t         scale;                  /* Scaling factor            */
-BYTE            pwork[17];              /* 33-digit packed work area */
+BYTE            pwork[18];              /* 33-digit packed work area */
 
     RRF_M4(inst, regs, r1, r2, m4);
     DFPINST_CHECK(regs);

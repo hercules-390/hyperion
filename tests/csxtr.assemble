@@ -8,31 +8,51 @@ cxstr rmode any
  org cxstr+x'140' SVC old                                                       
 svcold ds 2d                                                                    
  org cxstr+x'1a0' Restart new                                                   
- dc x'0001000180000000',ad(go)                                                  
+ dc x'0000000180000000',ad(go)                                                  
  org cxstr+x'1c0' SVC new                                                       
  dc x'0002000180000000',ad(0)                                                   
  org cxstr+x'1d0' Program new                                                   
  dc x'0002000180000000',ad(0)                                                   
  org cxstr+x'200'                                                               
 go ds 0h                                                                        
+ punch '* *Program 7'                                                           
+ CSXTR 4,0,0 Convert 31 signed digits to (GG3,GG4)                              
+ stctl 0,0,cr0                                                                  
+ oi cr0+1,x'04'                                                                 
+ lctl 0,0,cr0                                                                   
  LD 0,=LD'1234567890123456789012345678901234' 34 digits                         
- LD 2,=LD'1234567890123456789012345678901234'                                   
+ LD 2,=LD'1234567890123456789012345678901234'+8                                 
  CSXTR 4,0,0 Convert 31 signed digits to (GG3,GG4)                              
  STMG 4,5,reg45 Store low-order 31 digits and sign                              
  SRXT 0,0,31 Shift, keeping 3 high-order digits                                 
+ std 0,shifted                                                                  
+ std 2,shifted+8                                                                
  CUXTR 4,0 Convert 3 unsigned digits                                            
  STH 5,Packed Store remaining 3 digits                                          
+*                                                                               
+ ld 4,=dd'1234567890123456'                                                     
+ csdtr 6,4,0                                                                    
+ stg 6,reg6                                                                     
  ltr 14,14                                                                      
  bnzr 14                                                                        
  svc 255                                                                        
  org cxstr+x'300'                                                               
+shifted ds 2d                                                                   
 reg45 ds 2d                                                                     
 Packed ds h Packed digits and sign Figure 455.                                  
+reg6 ds d                                                                       
+cr0 ds f                                                                        
+ print data                                                                     
  ltorg                                                                          
  punch '* runtest .1'                                                           
+ punch '* runtest program .1'                                                   
+ punch '* *Compare'                                                             
  punch '* r 300.10'                                                             
- punch '* *Want 45678901 23452302 01382834 1780165C'                            
- punch '* r 310.2'                                                              
- punch '* *Want 0123'                                                           
+ punch '* r 310.10'                                                             
+ punch '* *Want "csxtr/srxt low" 45678901 23456789 01234567 8901234C'           
+ punch '* r 320.2'                                                              
+ punch '* *Want "csxtr/srxt high" 0123'                                         
+ punch '* r 328.8'                                                              
+ punch '* *Want "csdtr" 23456789 0123456C'                                      
  punch '* *Done'                                                                
  end                                                                            
