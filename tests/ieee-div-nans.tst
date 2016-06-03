@@ -5,10 +5,10 @@
 
 #  Divide adjacent pairs of values in the input set (six values means five results).
 #
-#  Test data:         2,    0,      QNaN(1),      QNaN(2),      SNaN(3),      SNaN(4). 
+#  Test data:         2,    0,      QNaN(1),      QNaN(2),      SNaN(3),      SNaN(4).
 #  Expected Results    +inf, QNaN(1),      QNaN(1),      SNaN(3),      SNaN(3).
 #
-#  NaN payload--in parentheses--is used to confirm that the right NaN ends up in the result.  
+#  NaN payload--in parentheses--is used to confirm that the right NaN ends up in the result.
 #
 # Tests seven division instructions:
 #   DIVIDE (BFP short RRE) DEBR
@@ -34,7 +34,7 @@ archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1d0=0002000000000000000000000000DEAD # z/Arch pgm chk new PSW disabled wait
 
-# Mainline program.  
+# Mainline program.
 r 200=B60003EC     #         STCTL R0,R0,CTLR0    Store CR0 to enable AFP
 r 204=960403ED     #         OI    CTLR0+1,X'04'  Turn on AFP bit
 r 208=B70003EC     #         LCTL  R0,R0,CTLR0    Reload updated CR0
@@ -44,11 +44,11 @@ r 210=B2B203F0     #         LPSWE WAITPSW        All done, load disabled wait P
 
 # BFP Division Short RXE and RRE using NaNs as inputs.
 
-# We cannot use Load Rounded to shrink extended BFP into the shorts needed 
+# We cannot use Load Rounded to shrink extended BFP into the shorts needed
 # for this test because Load Rounded will convert the SNaNs into QNaNs
 
 #                            ORG   X'600'
-                   #TESTDIV  DS    0H           
+                   #TESTDIV  DS    0H
 r 600=41200005     #         LA    R2,5         Set count of division operations
 r 604=41300400     #         LA    R3,SHORTRES  Point to start of short BFP quotients
 r 608=41700300     #         LA    R7,SHORTBFP  Point to start of short BFP input values
@@ -71,9 +71,9 @@ r 63A=062D         #         BCTR  R2,R13       Loop through all short BFP test 
 r 63C=47F00700     #         B     TESTLONG     Go test long BFP division.
 
 
-# BFP Division long RXE and RRE 
+# BFP Division long RXE and RRE
 
-                             ORG   X'700'
+#                            ORG   X'700'
                    #TESTLONG DS    0H
 r 700=41200005     #         LA    R2,5         Set count of division operations
 r 704=41300440     #         LA    R3,LONGRES   Point to start of long BFP quotients
@@ -82,7 +82,7 @@ r 70C=0DD0         #         BASR  R13,0        Set top of loop for long BFP tes
 #     Top of loop
 #     Collect dividend and divisor, do two divisions, store quotients
 r 70E=68007000     #         LD    R0,0(,R7)    Get BFP ext dividend
-R 712=2850         #         LDR   R5,R0        Save dividend for RRE 
+R 712=2850         #         LDR   R5,R0        Save dividend for RRE
 r 714=68407008     #         LD    R4,8(,R7)    Get BFP ext divisor
 r 718=ED007008001D #         DDB   R0,8(,R7)    Generate RXE long
 r 71E=B31D0054     #         DDBR  R5,R4        Generate RRE long
@@ -94,7 +94,7 @@ r 732=062D         #         BCTR  R2,R13       Loop through all long test cases
 r 734=47F00800     #         B     TESTEXT      Skip across patch area
 
 
-# BFP division extended, RRE only.  
+# BFP division extended, RRE only.
 
 #                            ORG   X'800'
                    #TESTEXT  DS    0H
@@ -151,7 +151,7 @@ r 3B0=7FFF0400000000000000000000000000    # SNaN(4)
 # 500.80             EXTDRES  DS 16D   Results from extended divide, five results, room for 8
 
 
-runtest 
+runtest
 
 r 400.40       # Display short BFP results in test log
 r 440.80       # Display long BFP results in test log

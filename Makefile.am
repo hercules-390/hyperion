@@ -903,11 +903,10 @@ uninstall-hook:
 
 # PROGRAMMING NOTE: the following two rules cause only ieee.c and softfloat.c
 # to be recompiled (the only two source files dependent on SoftFloat-specialise)
-# whenever SoftFloat-specialise is changed (instead of the entire Hercules engine)
-# making for a much faster build.
+# whenever the interface to SoftFloat-specialise is changed.
 
-.libs/SoftFloat.o: SoftFloat-specialise.c
-.libs/ieee.o: SoftFloat-specialise.c
+.libs/SoftFloat.o: SoftFloat-specialise.h
+.libs/ieee.o: SoftFloat-specialise.h
 
 check:
 	$(top_srcdir)/tests/runtest -p .libs $(top_srcdir)/tests

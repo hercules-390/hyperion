@@ -1,0 +1,126 @@
+1                               High Level Assembler Option Summary                                             Page    1
+-                                                                                           jHLASM 1.0   2016/05/05 09.49
+0  No Overriding ASMAOPT Parameters                                                                                      
+   Overriding Parameters-  term                                                                                          
+   No Process Statements                                                                                                 
+                                                                                                                         
+                                                                                                                         
+   Options for this Assembly                                                                                             
+0  NOADATA                                                                                                               
+     ALIGN                                                                                                               
+   NOASA                                                                                                                 
+     BATCH                                                                                                               
+     CODEPAGE(047C)                                                                                                      
+   NOCOMPAT                                                                                                              
+   NODBCS                                                                                                                
+   NODECK                                                                                                                
+     DXREF                                                                                                               
+     ESD                                                                                                                 
+   NOEXIT                                                                                                                
+     FLAG(0,ALIGN,CONT,EXLITW,NOIMPLEN,NOPAGE0,PUSH,RECORD,NOSUBSTR,USING0)                                              
+   NOFOLD                                                                                                                
+   NOGOFF                                                                                                                
+   NOINFO                                                                                                                
+     LANGUAGE(EN)                                                                                                        
+   NOLIBMAC                                                                                                              
+     LINECOUNT(60)                                                                                                       
+     LIST(121)                                                                                                           
+     MACHINE(,NOLIST)                                                                                                    
+     MXREF(SOURCE)                                                                                                       
+     OBJECT                                                                                                              
+     OPTABLE(UNI,NOLIST)                                                                                                 
+   NOPCONTROL                                                                                                            
+   NOPESTOP                                                                                                              
+   NOPROFILE                                                                                                             
+   NORA2                                                                                                                 
+   NORENT                                                                                                                
+     RLD                                                                                                                 
+     RXREF                                                                                                               
+     SECTALGN(8)                                                                                                         
+     SIZE(MAX)                                                                                                           
+   NOSUPRWARN                                                                                                            
+     SYSPARM()                                                                                                           
+ 3   TERM                                                                                                                
+   NOTEST                                                                                                                
+     THREAD                                                                                                              
+   NOTRANSLATE                                                                                                           
+     TYPECHECK(MAGNITUDE,REGISTER)                                                                                       
+     USING(NOLIMIT,MAP,WARN(15))                                                                                         
+   NOWORKFILE                                                                                                            
+     XREF(SHORT,UNREFS)                                                                                                  
+                                                                                                                         
+   No Overriding DD Names                                                                                                
+1PFPO                                          External Symbol Dictionary                                       Page    2
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/05/05 09.49
+0PFPO      SD 00000001 00000000 00000094             00                                                                  
+1PFPO     Perform floating point operation.  ESA mode.                                                          Page    3
+   Active Usings: None                                                                                                   
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/05/05 09.49
+0                                               3 * This file was put into the public domain 2016-05-05                  
+                                                4 * by John P. Hartmann.  You can use it for anything you like,          
+                                                5 * as long as this notice remains.                                      
+0                                               7  punch '* *Testcase pfpo-esa'                                          
+                                                8  punch '* sysclear'                                                    
+                                                9  punch '* arclvl esa/390'                                              
+000000000                00000000 00000094     11 pfpo start 0                                                           
+                     R:F 00000000              12  using pfpo,15                                                         
+000000000 0001000000000070                     14  dc a(x'0001 0000',go) Restart PSW at 0                                
+ 00000008                00000008 00000068     15  org pfpo+x'68' ESA program new                                        
+ 00000068 00020000DEADDEAD                     16  dc x'0002 0000',a(x'deaddead')                                        
+000000070                                      18 go ds 0h                                                               
+ 00000070 5800 F090               00000090     19  l 0,=a(x'80000000') Test for invalid function                         
+ 00000074 010A                                 20  pfpo                                                                  
+ 00000076 8200 F080      00000080              21  lpsw stop                                                             
+ 00000080                                      22  ds 0d                                                                 
+ 00000080 0002000000000000                     23 stop dc x'0002 0000',f'0',ad(0)  Both /370 and z                       
+ 00000090                                      24  ltorg                                                                 
+ 00000090 80000000                             25                =a(x'80000000')                                         
+                                               26  punch '* *Program 0001' Expect program check                           00240000
+                                               27  punch '* runtest .1'                                                  
+                                               28  punch '* *Done'                                                       
+                                               29  end                                                                   
+1PFPO                                             Relocation Dictionary                                         Page    4
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/05/05 09.49
+0  00000001 00000001 00000004   A 4     +                                                                                
+1PFPO                           Ordinary Symbol and Literal Cross Reference                                     Page    5
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/05/05 09.49
+0go            2 00000070 00000001     H  H                18   14                                                       
+ pfpo          1 00000000 00000001     J                   11   12U   15                                                 
+ stop          4 00000080 00000001     X  X                23   21                                                       
+ =a(x'80000000')                                                                                                         
+               4 00000090 00000001     A                   25   19                                                       
+1PFPO                                                  Using Map                                                Page    6
+-                                                                                           jHLASM 1.0   2016/05/05 09.49
+   Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
+           Count      Id           Type          Value    Range     Id        Disp    Stmt                               
+0    12  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 00090     21 pfpo,15                       
+1                                   General Purpose Register Cross Reference                                    Page    7
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/05/05 09.49
+0    0(0)      19S   20                                                                                                  
+     1(1)      20M                                                                                                       
+     2(2)    (no references identified)                                                                                  
+     3(3)    (no references identified)                                                                                  
+     4(4)    (no references identified)                                                                                  
+     5(5)    (no references identified)                                                                                  
+     6(6)    (no references identified)                                                                                  
+     7(7)    (no references identified)                                                                                  
+     8(8)    (no references identified)                                                                                  
+     9(9)    (no references identified)                                                                                  
+    10(A)    (no references identified)                                                                                  
+    11(B)    (no references identified)                                                                                  
+    12(C)    (no references identified)                                                                                  
+    13(D)    (no references identified)                                                                                  
+    14(E)    (no references identified)                                                                                  
+    15(F)      12U                                                                                                       
+1PFPO                              Diagnostic Cross Reference and Assembler Summary                             Page    8
+-                                                                                           jHLASM 1.0   2016/05/05 09.49
+0     No Statements Flagged in this Assembly                                                                             
+0John's High Level Assembler Release 1.0, Feb  3 2016 13:09:05                                                           
+0System:  Linux release 3.19.0-58-generic on jbox (i686)                                                                 
+0Data Sets Allocated for this Assembly                                                                                   
+  Con DDname   Data Set Name                                Volume  Member                                               
+   P1 SYSIN    pfpo-esa.assemble                                                                                         
+0Assembly Start Time: 09.49.18 Stop Time: 09.49.18 Processor Time: 00.00.00.0063.
+ 
+                                     
+ Return Code 000                                                                                                         
