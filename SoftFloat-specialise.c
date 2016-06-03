@@ -165,7 +165,7 @@ static float32 propagateFloat32NaN( void* ctx, float32 a, float32 b )
 
 static INLINE flag float64_is_nan( float64 a )
 {
-    return ( LIT64( 0xFFE0000000000000 ) < (((bits64) a) <<1 ) );
+    return 0x7ff == (0x7ff & (a >> 52)) && (0x000FFFFFFFFFFFFFLL & a);
 }
 
 /*----------------------------------------------------------------------------
@@ -175,9 +175,7 @@ static INLINE flag float64_is_nan( float64 a )
 
 static INLINE flag float64_is_signaling_nan( float64 a )
 {
-    return
-           ( ( (((bits64) a)>>51 ) & 0xFFF ) == 0xFFE )
-        && (((bits64) a) & LIT64( 0x000FFFFFFFFFFFFF ) );
+    return float64_is_nan(a) && !(0x0008000000000000LL & a);
 }
 
 /*----------------------------------------------------------------------------
@@ -215,7 +213,7 @@ static INLINE float64 commonNaNToFloat64( commonNaNT a )
 | is a NaN, and returns the appropriate NaN result.  If either `a' or `b' is a
 | signaling NaN, the invalid exception is raised.
 *----------------------------------------------------------------------------*/
-#include "hscutl.h"
+
 static float64 propagateFloat64NaN( void* ctx, float64 a, float64 b )
 {
     flag aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
@@ -224,13 +222,6 @@ static float64 propagateFloat64NaN( void* ctx, float64 a, float64 b )
     aIsSignalingNaN = float64_is_signaling_nan( a );
     bIsNaN = float64_is_nan( b );
     bIsSignalingNaN = float64_is_signaling_nan( b );
-
-#if 0
-    dumpStorageReversed(&a, sizeof(a), "a");
-    dumpStorageReversed(&b, sizeof(b), "b");
-    logmsg("a nan %d b nan %d a snan %d b snan %d\n",
-       aIsNaN, bIsNaN ,aIsSignalingNaN , bIsSignalingNaN );
-#endif
 
     a |= LIT64( 0x0008000000000000 );
     b |= LIT64( 0x0008000000000000 );
