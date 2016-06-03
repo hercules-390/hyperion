@@ -2,8 +2,6 @@
 *Testcase IEEE-NaNs Test DIVIDE instruction with zero, QNaNs and SNaNs
 *Message Testcase ieee-div-nans.tst: IEEE Division with zero and NaNs
 *Message ..Test case values include zero, QNaNs, and SNaNs
-*Message ..Compare failures from this test are a known issue and 
-*Message ..need not be reported.  
 
 #  Divide adjacent pairs of values in the input set (six values means five results).
 #
