@@ -60,6 +60,9 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
+#ifndef _SOFTFLOAT_H_
+#define _SOFTFLOAT_H_
+
 /*----------------------------------------------------------------------------
 | The macro `FLOAT128' must be defined to enable the quadruple-precision
 | floating-point format `float128'.  If this macro is not defined, the
@@ -146,7 +149,7 @@ char float32_lt( void* ctx, float32, float32 );
 char float32_eq_signaling( void* ctx, float32, float32 );
 char float32_le_quiet( void* ctx, float32, float32 );
 char float32_lt_quiet( void* ctx, float32, float32 );
-static INLINE char float32_is_signaling_nan( float32 );
+char float32_is_signaling_nan( float32 );
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE double-precision conversion routines.
@@ -176,7 +179,7 @@ char float64_lt( void* ctx, float64, float64 );
 char float64_eq_signaling( void* ctx, float64, float64 );
 char float64_le_quiet( void* ctx, float64, float64 );
 char float64_lt_quiet( void* ctx, float64, float64 );
-static INLINE char float64_is_signaling_nan( float64 );
+char float64_is_signaling_nan( float64 );
 
 #ifdef FLOAT128
 
@@ -206,7 +209,8 @@ char float128_lt( void* ctx, float128, float128 );
 char float128_eq_signaling( void* ctx, float128, float128 );
 char float128_le_quiet( void* ctx, float128, float128 );
 char float128_lt_quiet( void* ctx, float128, float128 );
-static INLINE char float128_is_signaling_nan( float128 );
+char float128_is_signaling_nan( float128 );
 
-#endif
+#endif // FLOAT128
 
+#endif // _SOFTFLOAT_H_

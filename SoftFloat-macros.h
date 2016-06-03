@@ -53,6 +53,9 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
+#ifndef _SOFTFLOAT_MACROS_H_
+#define _SOFTFLOAT_MACROS_H_
+
 PUSH_GCC_WARNINGS()
 DISABLE_GCC_WARNING( "-Wunused-function" )
 
@@ -745,3 +748,5 @@ static INLINE flag ne128( bits64 a0, bits64 a1, bits64 b0, bits64 b1 )
 }
 
 POP_GCC_WARNINGS()
+
+#endif // _SOFTFLOAT_MACROS_H_

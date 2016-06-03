@@ -422,6 +422,8 @@
     <ClCompile Include="script.c" />
     <ClCompile Include="service.c" />
     <ClCompile Include="sie.c" />
+    <ClCompile Include="SoftFloat-specialise.c" />
+    <ClCompile Include="SoftFloat.c" />
     <ClCompile Include="sr.c" />
     <ClCompile Include="stack.c" />
     <ClCompile Include="strsignal.c" />
@@ -774,6 +776,11 @@
     <ClInclude Include="printfmt.h" />
     <ClInclude Include="pttrace.h" />
     <ClInclude Include="service.h" />
+    <ClInclude Include="SoftFloat-macros.h" />
+    <ClInclude Include="SoftFloat-milieu.h" />
+    <ClInclude Include="SoftFloat-specialise.h" />
+    <ClInclude Include="SoftFloat-types.h" />
+    <ClInclude Include="SoftFloat.h" />
     <ClInclude Include="sr.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="vstore.h" />

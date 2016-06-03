@@ -28,10 +28,13 @@
 /* the original unmodified SoftFloat package is still distributed    */
 /* in zipped format here as SoftFloat-2b.zip                         */
 
+#ifndef _SOFTFLOAT_TYPES_H_
+#define _SOFTFLOAT_TYPES_H_
+
 /*----------------------------------------------------------------------------
 | One of the macros `BIGENDIAN' or `LITTLEENDIAN' must be defined.
 *----------------------------------------------------------------------------*/
-#ifndef LITTLEENDIAN
+#if 0 // never referenced!
 #define LITTLEENDIAN
 #endif
 
@@ -137,3 +140,5 @@ enum {
     float_flag_underflow = 0x00100000,
     float_flag_inexact   = 0x00080000
 };
+
+#endif // _SOFTFLOAT_TYPES_H_

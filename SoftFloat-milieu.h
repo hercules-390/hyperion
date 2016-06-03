@@ -53,6 +53,9 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
+#ifndef _SOFTFLOAT_MILIEU_H_
+#define _SOFTFLOAT_MILIEU_H_
+
 /*----------------------------------------------------------------------------
 | Suppress some compiler warnings
 *----------------------------------------------------------------------------*/
@@ -72,3 +75,5 @@ enum {
     TRUE  = 1
 };
 #endif
+
+#endif // _SOFTFLOAT_MILIEU_H_

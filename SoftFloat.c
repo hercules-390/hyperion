@@ -59,25 +59,14 @@ these four paragraphs for those parts of this code that are retained.
 
 =============================================================================*/
 
+#include "hstdinc.h"
+#include "hercules.h"
+
 #include "SoftFloat-milieu.h"
+#include "SoftFloat-types.h"
 #include "SoftFloat.h"
-
-/*----------------------------------------------------------------------------
-| Primitive arithmetic functions, including multi-word arithmetic, and
-| division and square root approximations.  (Can be specialized to target if
-| desired.)
-*----------------------------------------------------------------------------*/
 #include "SoftFloat-macros.h"
-
-/*----------------------------------------------------------------------------
-| Functions and definitions to determine:  (1) whether tininess for underflow
-| is detected before or after rounding by default, (2) what (if anything)
-| happens when exceptions are raised, (3) how signaling NaNs are distinguished
-| from quiet NaNs, (4) the default generated quiet NaNs, and (5) how NaNs
-| are propagated from function inputs to output.  These details are target-
-| specific.
-*----------------------------------------------------------------------------*/
-#include "SoftFloat-specialise.c"
+#include "SoftFloat-specialise.h"
 
 /*----------------------------------------------------------------------------
 | Takes a 64-bit fixed-point value `absZ' with binary point between bits 6
@@ -2384,7 +2373,6 @@ float64 float64_mul( void* ctx, float64 a, float64 b )
 | the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-#include "hscutl.h"
 float64 float64_div( void* ctx, float64 a, float64 b )
 {
     flag aSign, bSign, zSign;
@@ -2393,8 +2381,10 @@ float64 float64_div( void* ctx, float64 a, float64 b )
     bits64 rem0, rem1;
     bits64 term0, term1;
 
+#if 0
     dumpStorageReversed(&a, sizeof(a), "float a");
     dumpStorageReversed(&b, sizeof(b), "float b");
+#endif
     aSig = extractFloat64Frac( a );
     aExp = extractFloat64Exp( a );
     aSign = extractFloat64Sign( a );
@@ -3818,5 +3808,4 @@ flag float128_lt_quiet( void* ctx, float128 a, float128 b )
 
 }
 
-#endif
-
+#endif // FLOAT128

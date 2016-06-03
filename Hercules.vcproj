@@ -1197,6 +1197,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\SoftFloat-specialise.c"
+							>
+						</File>
+						<File
 							RelativePath=".\SoftFloat.c"
 							>
 						</File>
@@ -3042,6 +3046,18 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\cipher.assemble"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\csxtr.assemble"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\digest.assemble"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\ilc.assemble"
 								>
 							</File>
@@ -3086,6 +3102,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\cipher.tst"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\cmd-abs-2K.txt"
 								>
 							</File>
@@ -3114,11 +3134,15 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tests\hetbsf.tst"
+								RelativePath=".\tests\csxtr.tst"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ilc.tst"
+								RelativePath=".\tests\digest.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\hetbsf.tst"
 								>
 							</File>
 							<File
@@ -3130,11 +3154,11 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ieee-divs.tst"
+								RelativePath=".\tests\ieee-div-nans.tst"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\ieee-div-nans.tst"
+								RelativePath=".\tests\ieee-divs.tst"
 								>
 							</File>
 							<File
@@ -3147,6 +3171,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\ieee-subs.tst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ilc.tst"
 								>
 							</File>
 							<File
@@ -3223,6 +3251,18 @@
 							>
 							<File
 								RelativePath=".\tests\agf.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cipher.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\csxtr.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\digest.listing"
 								>
 							</File>
 							<File

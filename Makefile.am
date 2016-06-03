@@ -394,6 +394,7 @@ endif
 								timer.c		\
 								esame.c		\
 								ieee.c 		\
+								SoftFloat-specialise.c \
 								SoftFloat.c	\
 								dfp.c			\
 								machdep.h 	\
@@ -899,6 +900,11 @@ uninstall-hook:
 
 %.i: %.c
 	$(COMPILE) -E $< >$@
+
+# PROGRAMMING NOTE: the following two rules cause only ieee.c and softfloat.c
+# to be recompiled (the only two source files dependent on SoftFloat-specialise)
+# whenever SoftFloat-specialise is changed (instead of the entire Hercules engine)
+# making for a much faster build.
 
 .libs/SoftFloat.o: SoftFloat-specialise.c
 .libs/ieee.o: SoftFloat-specialise.c

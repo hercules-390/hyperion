@@ -1421,6 +1421,7 @@ int initialize_utility( int argc, char* argv[],
 /* Dump an area of storage.  This is not for emulated core storage.  */
 /*********************************************************************/
 
+DLL_EXPORT
 void
 dumpStorageHow( void * what, size_t length, char * msg, int reverse)
 {

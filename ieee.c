@@ -79,9 +79,10 @@
 /*           'SoftFloat' IEEE Binary Floating Point package                  */
 
 #include "SoftFloat-milieu.h"
+#include "SoftFloat-types.h"
 #include "SoftFloat.h"
 #include "SoftFloat-macros.h"
-#include "SoftFloat-specialise.c"
+#include "SoftFloat-specialise.h"
 
 /* Handy constants                           low       high                 */
 static const float128  float128_zero   = { LIT64(0), LIT64( 0x0000000000000000 ) };
@@ -1575,7 +1576,7 @@ DEF_INST(load_and_test_bfp_ext_reg)
     if (float128_is_signaling_nan( op2 ))
     {
         float_raise( &ctx, float_flag_invalid );
-                op1.high = op2.high | LIT64(0x0000800000000000);
+        op1.high = op2.high | LIT64(0x0000800000000000);
         op1.low  = float128_default_nan_low;
     }
     else
