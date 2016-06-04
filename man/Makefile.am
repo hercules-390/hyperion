@@ -1,5 +1,8 @@
-man_MANS = cckddiag.1 cckd.4 dasdseq.1
+man_MANS =      \
+    cckd.4      \
+    cckddiag.1  \
+    dasdseq.1   \
+    Makefile.am \
+    vmfplc2.1
 
 EXTRA_DIST = $(man_MANS)
-
-

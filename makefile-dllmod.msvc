@@ -73,6 +73,7 @@ $(O)$(DYNMOD).res: $(DYNDIR)$(DYNMOD).rc
 
 $(X)$(DYNMOD).dll: $(O)$(DYNMOD).res $(DYNOBJ) $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib
     $(linkdll)
+    $(MT_DLL_CMD)
 
 {$(DYNDIR)}.c{$(OBJDIR)}.obj::
     $(cc) $(cdebug) $(cflags) $(use_pch_opt) $(cvarsdll) /Fo"$(OBJDIR)\\" /Fd"$(OBJDIR)\\" $<

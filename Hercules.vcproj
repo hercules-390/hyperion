@@ -429,7 +429,19 @@
 						Name="Header Files"
 						>
 						<File
+							RelativePath=".\decNumber\decBasic.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decCommon.h"
+							>
+						</File>
+						<File
 							RelativePath=".\decNumber\decContext.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decDouble.h"
 							>
 						</File>
 						<File
@@ -460,12 +472,24 @@
 							RelativePath=".\decNumber\decPacked.h"
 							>
 						</File>
+						<File
+							RelativePath=".\decNumber\decQuad.h"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decSingle.h"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Source Files"
 						>
 						<File
 							RelativePath=".\decNumber\decContext.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decDouble.c"
 							>
 						</File>
 						<File
@@ -488,10 +512,54 @@
 							RelativePath=".\decNumber\decPacked.c"
 							>
 						</File>
+						<File
+							RelativePath=".\decNumber\decQuad.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\decSingle.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\example1.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\example2.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\example3.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\example4.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\example5.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\example6.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\example7.c"
+							>
+						</File>
+						<File
+							RelativePath=".\decNumber\example8.c"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="Resource Files"
 						>
+						<File
+							RelativePath=".\decNumber\decNumber.def"
+							>
+						</File>
 						<File
 							RelativePath=".\decNumber\decNumber.rc"
 							>
@@ -1646,6 +1714,10 @@
 			ParseFiles="false"
 			>
 			<File
+				RelativePath=".\.gitignore"
+				>
+			</File>
+			<File
 				RelativePath=".\hercdasd.ico"
 				>
 			</File>
@@ -1694,6 +1766,14 @@
 				</File>
 				<File
 					RelativePath=".\CHANGES"
+					>
+				</File>
+				<File
+					RelativePath=".\COPYRIGHT"
+					>
+				</File>
+				<File
+					RelativePath=".\license_dyn76.txt"
 					>
 				</File>
 				<File
@@ -1931,6 +2011,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\html\hercmscu.html"
+							>
+						</File>
+						<File
 							RelativePath=".\html\hercmsda.html"
 							>
 						</File>
@@ -1948,6 +2032,10 @@
 						</File>
 						<File
 							RelativePath=".\html\hercmsdl.html"
+							>
+						</File>
+						<File
+							RelativePath=".\html\hercmsdn.html"
 							>
 						</File>
 						<File
@@ -2059,6 +2147,254 @@
 							>
 						</File>
 					</Filter>
+					<Filter
+						Name="images"
+						>
+						<File
+							RelativePath=".\html\images\back.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\bkued.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\blueu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\dial1.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\dial2.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\dial3.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\dial4.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\favicon.ico"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\greend.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\greenu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\hercpic-rblk-256.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\hercpic-rblk-80.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\interruptd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\interruptu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\loadd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\loadoffu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\loadonu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\loadu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\manoffu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\manonu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\note.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\osi-certified-60x50.jpg"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\poweroffd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\poweroffu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\poweronoffd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\poweronoffu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\poweronond.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\powerononu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\redd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\redu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\restartd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\restartu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\startd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\startu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\stopd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\stopu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\stored.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\storeu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\sysoffu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\sysonu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\telnetputtyconndata.png"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\telnetputtysession.png"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\telnetputtyterminal.png"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\telnetwin10.png"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\telnetwinntconnect.png"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\telnetwinnttermpref.png"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\translucentoffd.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\translucentoffu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\translucentond.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\translucentonu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\waitoffu.gif"
+							>
+						</File>
+						<File
+							RelativePath=".\html\images\waitonu.gif"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="include"
+						>
+						<File
+							RelativePath=".\html\include\footer.htmlpart"
+							>
+						</File>
+						<File
+							RelativePath=".\html\include\header.htmlpart"
+							>
+						</File>
+					</Filter>
+				</Filter>
+				<Filter
+					Name="man"
+					>
+					<File
+						RelativePath=".\man\cckd.4"
+						>
+					</File>
+					<File
+						RelativePath=".\man\cckddiag.1"
+						>
+					</File>
+					<File
+						RelativePath=".\man\dasdseq.1"
+						>
+					</File>
+					<File
+						RelativePath=".\man\Makefile.am"
+						>
+					</File>
+					<File
+						RelativePath=".\man\vmfplc2.1"
+						>
+					</File>
 				</Filter>
 			</Filter>
 			<Filter
@@ -2248,6 +2584,18 @@
 					Name="other"
 					>
 					<File
+						RelativePath=".\_build"
+						>
+					</File>
+					<File
+						RelativePath=".\_build.bat"
+						>
+					</File>
+					<File
+						RelativePath=".\_build.tail"
+						>
+					</File>
+					<File
 						RelativePath=".\_dynamic_version"
 						>
 					</File>
@@ -2271,6 +2619,182 @@
 						RelativePath=".\Makefile.am"
 						>
 					</File>
+					<Filter
+						Name="autoconf"
+						>
+						<File
+							RelativePath=".\autoconf\config.guess"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\config.rpath"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\config.sub"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\depcomp"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\install-sh"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\libtool.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\ltdl.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\ltmain.sh"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\missing"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\mkinstalldirs"
+							>
+						</File>
+						<File
+							RelativePath=".\autoconf\README"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="m4"
+						>
+						<File
+							RelativePath=".\m4\ChangeLog"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\codeset.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\gettext.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\glibc2.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\glibc21.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\iconv.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\intdiv0.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\intmax.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\inttypes-pri.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\inttypes.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\inttypes_h.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\isc-posix.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\lcmessage.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\lib-ld.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\lib-link.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\lib-prefix.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\longdouble.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\longlong.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\Makefile.am"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\nls.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\po.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\printf-posix.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\progtest.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\signed.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\size_max.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\stdint_h.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\uintmax_t.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\ulonglong.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\wchar_t.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\wint_t.m4"
+							>
+						</File>
+						<File
+							RelativePath=".\m4\xsize.m4"
+							>
+						</File>
+					</Filter>
 				</Filter>
 			</Filter>
 			<Filter
@@ -2294,6 +2818,10 @@
 				</File>
 				<File
 					RelativePath=".\util\CMPSC.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\util\configure.ac"
 					>
 				</File>
 				<File
@@ -2336,6 +2864,14 @@
 			<Filter
 				Name="tests"
 				>
+				<File
+					RelativePath=".\tests\awsbsf.aws"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\hetbsf.het"
+					>
+				</File>
 				<File
 					RelativePath=".\tests\Makefile.am"
 					>
@@ -2391,8 +2927,32 @@
 				<Filter
 					Name="scripts"
 					>
+					<File
+						RelativePath=".\tests\asmtst.xedit"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\bldhtc.exec"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\redtest.rexx"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\runtest"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\runtest.cmd"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\tests.conf"
+						>
+					</File>
 					<Filter
-						Name="manual"
+						Name="txt"
 						>
 						<File
 							RelativePath=".\tests\agf.txt"
@@ -2448,6 +3008,26 @@
 						</File>
 						<File
 							RelativePath=".\tests\channel-370.txt"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-abs-2K.txt"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-abs-4K.txt"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-rv-2K.txt"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-rv-4K-32.txt"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-rv-4K-64.txt"
 							>
 						</File>
 						<File
@@ -2947,6 +3527,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\runtest.txt"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\srdt.txt"
 							>
 						</File>
@@ -2983,6 +3567,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\tapebsf.txt"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\tapepos.txt"
 							>
 						</File>
@@ -3012,292 +3600,248 @@
 						</File>
 					</Filter>
 					<Filter
-						Name="automated"
+						Name="assemble"
 						>
 						<File
-							RelativePath=".\tests\asmtst.xedit"
+							RelativePath=".\tests\agf.assemble"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\bldhtc.exec"
+							RelativePath=".\tests\cipher.assemble"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\redtest.rexx"
+							RelativePath=".\tests\csxtr.assemble"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\runtest"
+							RelativePath=".\tests\digest.assemble"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\runtest.cmd"
+							RelativePath=".\tests\ilc.assemble"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\tests.conf"
+							RelativePath=".\tests\invpsw.assemble"
 							>
 						</File>
-						<Filter
-							Name="assemble"
+						<File
+							RelativePath=".\tests\leapfrog.assemble"
 							>
-							<File
-								RelativePath=".\tests\agf.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cipher.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\csxtr.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\digest.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ilc.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\invpsw.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\leapfrog.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\logicimm.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\mhi.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\mvcle.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\sigp.assemble"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\sske.assemble"
-								>
-							</File>
-						</Filter>
-						<Filter
-							Name="tst scripts"
+						</File>
+						<File
+							RelativePath=".\tests\logicimm.assemble"
 							>
-							<File
-								RelativePath=".\tests\agf.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\awsbsf.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cipher.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cmd-abs-2K.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cmd-abs-4K.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cmd-abs.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cmd-rv-2K.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cmd-rv-4K-32.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cmd-rv-4K-64.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cmd-rv.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\csxtr.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\digest.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\hetbsf.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-adds.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-comps.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-div-nans.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-divs.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-mults.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-sqrts.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-subs.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ilc.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\invpsw.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\leapfrog.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\logicimm.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\mainsize.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\mhi.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\mvcle.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\pr.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\runtest.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\runtest0.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\runtest4.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\sigp.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ssk370.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\sske.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\sske370.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\sske390.tst"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\tapebsf.txt"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\timeout.tst"
-								>
-							</File>
-						</Filter>
-						<Filter
-							Name="listing"
+						</File>
+						<File
+							RelativePath=".\tests\mhi.assemble"
 							>
-							<File
-								RelativePath=".\tests\agf.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\cipher.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\csxtr.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\digest.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ilc.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\invpsw.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\leapfrog.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\logicimm.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\mhi.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\mvcle.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\sigp.listing"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\sske.listing"
-								>
-							</File>
-						</Filter>
+						</File>
+						<File
+							RelativePath=".\tests\mvcle.assemble"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\pfpo-esa.assemble"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sigp.assemble"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sske.assemble"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="listing"
+						>
+						<File
+							RelativePath=".\tests\agf.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cipher.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\csxtr.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\digest.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ilc.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\invpsw.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\leapfrog.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\logicimm.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mhi.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mvcle.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\pfpo-esa.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sigp.listing"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sske.listing"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="tst"
+						>
+						<File
+							RelativePath=".\tests\agf.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\awsbsf.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cipher.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-abs.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-rv.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\csxtr.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\digest.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\hetbsf.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-adds.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-comps.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-div-nans.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-divs.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-mults.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-sqrts.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-subs.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ilc.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\invpsw.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\leapfrog.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\logicimm.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mainsize.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mhi.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\mvcle.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\pfpo-esa.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\pr.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\runtest0.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\runtest4.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sigp.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ssk370.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sske.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sske370.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\sske390.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\timeout.tst"
+							>
+						</File>
 					</Filter>
 				</Filter>
 			</Filter>

@@ -13,12 +13,13 @@ LDADD = @LIBS@
 
 AM_CPPFLAGS = -I$(top_srcdir) -I@HQA_INC@
 
-decNumber_SRC = decContext.c \
-		decimal128.c \
-		decimal32.c  \
-		decimal64.c  \
-		decNumber.c  \
-		decPacked.c  
+decNumber_SRC =         \
+		decContext.c    \
+		decimal32.c     \
+		decimal64.c     \
+		decimal128.c    \
+		decNumber.c     \
+		decPacked.c
 
 if BUILD_SHARED
    XSTATIC =
@@ -48,20 +49,40 @@ endif
   libdecNumber_la_LDFLAGS = $(LIB_LD_FLAGS)
   libdecNumber_la_LIBADD  = $(LDADD)
 
-noinst_HEADERS = decContext.h      \
-		 decDPD.h          \
-		 decimal128.h      \
-		 decimal32.h       \
-		 decimal64.h       \
-		 decNumber.h       \
-		 decNumberLocal.h  \
-		 decPacked.h  
+noinst_HEADERS =            \
+		 decContext.h       \
+		 decDPD.h           \
+		 decimal32.h        \
+		 decimal64.h        \
+		 decimal128.h       \
+		 decNumber.h        \
+		 decNumberLocal.h   \
+		 decPacked.h
 
-EXTRA_DIST = decNumber.def     \
-	     decnumber.pdf     \
-	     decNumber.rc      \
-	     ICU-license.html  \
-	     readme.txt
+EXTRA_DIST =                \
+		 decBasic.h         \
+		 decCommon.h        \
+		 decDouble.c        \
+		 decDouble.h        \
+		 decNumber.def      \
+		 decnumber.pdf      \
+		 decNumber.rc       \
+		 decQuad.c          \
+		 decQuad.h          \
+		 decSingle.c        \
+		 decSingle.h        \
+		 example1.c         \
+		 example2.c         \
+		 example3.c         \
+		 example4.c         \
+		 example5.c         \
+		 example6.c         \
+		 example7.c         \
+		 example8.c         \
+		 ICU-license.html   \
+		 Makefile.am        \
+		 readme.txt
 
 %.s: %.c
 	$(COMPILE) -S $<
+

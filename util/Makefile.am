@@ -1,8 +1,24 @@
-bin_SCRIPTS = dasdlist bldlvlck
 
-dist_pkgdata_DATA = cckddump.hla awswrite.jcl rawstape.jcl tapeconv.jcl\
-                    TMOUNT.txt \
-                    zzsacard.bin awssl-v19g cckdload.hla \
-                    scsiboot
+bin_SCRIPTS =       \
+    bldlvlck        \
+    dasdlist        \
+    voldsext.cmd
 
-EXTRA_DIST = dasdlist  dasdlist.bat bldlvlck
+
+dist_pkgdata_DATA = \
+    awssl-v19g      \
+    awswrite.jcl    \
+    cckddump.hla    \
+    cckdload.hla    \
+    rawstape.jcl    \
+    scsiboot        \
+    tapeconv.jcl    \
+    TMOUNT.txt      \
+    zzsacard.bin
+
+
+EXTRA_DIST =        \
+    configure.ac    \
+    dasdlist.bat    \
+    Makefile.am
+

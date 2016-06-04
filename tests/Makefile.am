@@ -1,25 +1,27 @@
-dist_pkgdata_DATA =		\
+dist_pkgdata_DATA =			\
 	 a.core					\
 	 b.core					\
 	 bctr.core				\
 	 cpu0off.core			\
 	 l.core					\
-	 la.core 				\
+	 la.core				\
 	 la2.core				\
 	 mvc.core				\
-	 sieve.core 			\
+	 sieve.core				\
 	 st.core
 
 EXTRA_DIST =				\
-	 agf.txt 				\
 	 agf.assemble			\
 	 agf.listing			\
-	 agf.tst 				\
+	 agf.tst				\
+	 agf.txt				\
 	 alsi.txt				\
 	 asmtst.xedit			\
+	 awsbsf.aws				\
+	 awsbsf.tst				\
 	 axtr.txt				\
 	 bldhtc.exec			\
-	 brc.txt 				\
+	 brc.txt				\
 	 cdfr.txt				\
 	 cdgr.txt				\
 	 cdsg.txt				\
@@ -30,76 +32,88 @@ EXTRA_DIST =				\
 	 cgxr.txt				\
 	 cgxtr.txt				\
 	 channel-370.txt		\
+	 cipher.assemble		\
+	 cipher.listing			\
+	 cipher.tst				\
+	 cmd-abs-2K.txt			\
+	 cmd-abs-4K.txt			\
 	 cmd-abs.tst			\
-	 cmd-abs-2K.txt		\
-	 cmd-abs-4K.txt		\
-	 cmd-rv.tst 			\
-	 cmd-rv-2K.txt 		\
-	 cmd-rv-4K-32.txt 	\
-	 cmd-rv-4K-64.txt 	\
+	 cmd-rv-2K.txt			\
+	 cmd-rv-4K-32.txt		\
+	 cmd-rv-4K-64.txt		\
+	 cmd-rv.tst				\
 	 comments.txt			\
 	 cpsdr.txt				\
 	 csst.txt				\
+	 csxtr.assemble			\
+	 csxtr.listing			\
+	 csxtr.tst				\
 	 cxgbr.txt				\
 	 cxgtr.txt				\
-	 diag24.txt 			\
+	 diag24.txt				\
 	 diag8.txt				\
+	 digest.assemble		\
+	 digest.listing			\
+	 digest.tst				\
+	 dotest					\
 	 dxtr.txt				\
 	 epsw.txt				\
 	 exrl.txt				\
 	 fiebr.txt				\
 	 fixtr.txt				\
+	 hetbsf.het				\
+	 hetbsf.tst				\
 	 iedtr.txt				\
-	 ieee-adds.tst 		\
-	 ieee-comps.tst		\
-	 ieee-divs.tst 		\
-	 ieee-div-nans.tst 		\
-	 ieee-mults.tst		\
-	 ieee-sqrts.tst		\
-	 ieee-subs.tst 		\
+	 ieee-adds.tst			\
+	 ieee-comps.tst			\
+	 ieee-div-nans.tst		\
+	 ieee-divs.tst			\
+	 ieee-mults.tst			\
+	 ieee-sqrts.tst			\
+	 ieee-subs.tst			\
 	 ilc.assemble			\
 	 ilc.listing			\
-	 ilc.tst 				\
+	 ilc.tst				\
 	 invpsw.assemble		\
-	 invpsw.listing		\
-	 invpsw.tst 			\
+	 invpsw.listing			\
+	 invpsw.tst				\
 	 kimd0.txt				\
 	 kimd1.txt				\
 	 kimd2.txt				\
 	 kimd3.txt				\
-	 kimd65.txt 			\
+	 kimd65.txt				\
 	 klmd0.txt				\
 	 klmd1.txt				\
 	 klmd2.txt				\
 	 klmd3.txt				\
-	 km0.txt 				\
-	 km1.txt 				\
+	 km0.txt				\
+	 km1.txt				\
 	 km10.txt				\
 	 km11.txt				\
 	 km18.txt				\
 	 km19.txt				\
-	 km2.txt 				\
+	 km2.txt				\
 	 km20.txt				\
 	 km26.txt				\
 	 km27.txt				\
 	 km28.txt				\
-	 km3.txt 				\
+	 km3.txt				\
 	 km50.txt				\
 	 km52.txt				\
 	 km58.txt				\
 	 km60.txt				\
-	 km9.txt 				\
+	 km9.txt				\
 	 kmac0.txt				\
 	 kmac1.txt				\
-	 kmac10.txt 			\
-	 kmac11.txt 			\
-	 kmac18.txt 			\
-	 kmac19.txt 			\
+	 kmac10.txt				\
+	 kmac11.txt				\
+	 kmac18.txt				\
+	 kmac19.txt				\
 	 kmac2.txt				\
-	 kmac20.txt 			\
-	 kmac26.txt 			\
-	 kmac27.txt 			\
-	 kmac28.txt 			\
+	 kmac20.txt				\
+	 kmac26.txt				\
+	 kmac27.txt				\
+	 kmac28.txt				\
 	 kmac3.txt				\
 	 kmac9.txt				\
 	 kmc0.txt				\
@@ -116,19 +130,19 @@ EXTRA_DIST =				\
 	 kmc3.txt				\
 	 kmc67.txt				\
 	 kmc9.txt				\
-	 kmctr0.txt 			\
-	 kmctr1.txt 			\
+	 kmctr0.txt				\
+	 kmctr1.txt				\
 	 kmctr10.txt			\
 	 kmctr11.txt			\
 	 kmctr18.txt			\
 	 kmctr19.txt			\
-	 kmctr2.txt 			\
+	 kmctr2.txt				\
 	 kmctr20.txt			\
 	 kmctr26.txt			\
 	 kmctr27.txt			\
 	 kmctr28.txt			\
-	 kmctr3.txt 			\
-	 kmctr9.txt 			\
+	 kmctr3.txt				\
+	 kmctr9.txt				\
 	 kmf0.txt				\
 	 kmf1.txt				\
 	 kmf10.txt				\
@@ -157,49 +171,57 @@ EXTRA_DIST =				\
 	 kmo9.txt				\
 	 ldetr.txt				\
 	 ldxtr.txt				\
-	 leapfrog.assemble	\
-	 leapfrog.listing 	\
+	 leapfrog.assemble		\
+	 leapfrog.listing		\
 	 leapfrog.tst			\
 	 ledtr.txt				\
 	 lfpc.txt				\
 	 llhrl.txt				\
 	 locgr.txt				\
-	 logicimm.assemble	\
-	 logicimm.listing 	\
+	 logicimm.assemble		\
+	 logicimm.listing		\
 	 logicimm.tst			\
 	 loop.txt				\
 	 lparnum.txt			\
-	 lpp.txt 				\
+	 lpp.txt				\
 	 lxdtr.txt				\
 	 maer.txt				\
+	 mainsize.tst			\
 	 Makefile.am			\
 	 mhi.assemble			\
 	 mhi.listing			\
-	 mhi.tst 				\
-	 mvcle.assemble		\
-	 mvcle.listing 		\
+	 mhi.tst				\
+	 mvcle.assemble			\
+	 mvcle.listing			\
 	 mvcle.tst				\
 	 mvcos.txt				\
 	 mxtr.txt				\
-	 popcnt.txt 			\
+	 pfpo-esa.assemble		\
+	 pfpo-esa.listing		\
+	 pfpo-esa.tst			\
+	 popcnt.txt				\
 	 pr.tst					\
-	 prtest.txt 			\
-	 ptf.txt 				\
+	 prtest.txt				\
+	 ptf.txt				\
 	 README					\
 	 redtest.rexx			\
 	 res40002.txt			\
 	 rnsbg.txt				\
 	 rrdtr.txt				\
 	 rrxtr.txt				\
-	 runtest 				\
+	 runtest				\
 	 runtest.cmd			\
+	 runtest.txt			\
 	 runtest0.tst			\
 	 runtest4.tst			\
+	 sigp.assemble			\
+	 sigp.listing			\
+	 sigp.tst				\
 	 srdt.txt				\
-	 sske.assemble 		\
+	 ssk370.tst				\
+	 sske.assemble			\
 	 sske.listing			\
 	 sske.tst				\
-	 ssk370.tst 			\
 	 sske370.tst			\
 	 sske390.tst			\
 	 stfle.txt				\
@@ -207,15 +229,16 @@ EXTRA_DIST =				\
 	 stsi.txt				\
 	 sus40002.txt			\
 	 tape.240k-2.txt		\
-	 tape.240k.txt 		\
+	 tape.240k.txt			\
 	 tape.2m.txt			\
 	 tape.32k.txt			\
+	 tapebsf.txt			\
 	 tapepos.txt			\
 	 tbedr.txt				\
 	 tdcdt.txt				\
 	 tdgdt.txt				\
-	 tests.conf 			\
+	 tests.conf				\
 	 thder.txt				\
 	 timeout.tst			\
 	 trace.txt				\
-	 trte.txt
+	 trte.txt				\
