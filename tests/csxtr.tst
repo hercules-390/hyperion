@@ -1,8 +1,8 @@
 # This test file was generated from offline assembler source
-# by bldhtc.rexx  2 Jun 2016 11:39:52
+# by bldhtc.rexx  4 Jun 2016 15:56:30
 # Treat as object code.  That is, modifications will be lost.
 # assemble and listing files are provided for information only.
-*Testcase csxtr 20160602 11.39
+*Testcase csxtr csdtr cxstr cxutr 20160604 15.56
 sysclear
 archlvl z
 r    1A0=00000001800000000000000000000200

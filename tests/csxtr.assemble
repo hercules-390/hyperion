@@ -2,7 +2,7 @@ cxstr start 0
 cxstr amode any                                                                 
 cxstr rmode any                                                                 
  using *,15                                                                     
- punch '* *Testcase csxtr &sysdatc &systime'                                    
+ punch '* *Testcase csxtr csdtr cxstr cxutr &sysdatc &systime'                  
  punch '* sysclear'                                                             
  punch '* archlvl z'                                                            
  org cxstr+x'140' SVC old                                                       

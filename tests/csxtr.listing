@@ -1,5 +1,5 @@
 1                               High Level Assembler Option Summary                                             Page    1
--                                                                                           jHLASM 1.0   2016/06/02 11.39
+-                                                                                           jHLASM 1.0   2016/06/04 15.56
 0  No Overriding ASMAOPT Parameters                                                                                      
    Overriding Parameters-  term                                                                                          
    No Process Statements                                                                                                 
@@ -51,17 +51,17 @@
                                                                                                                          
    No Overriding DD Names                                                                                                
 1                                              External Symbol Dictionary                                       Page    2
--Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/06/02 11.39
+-Symbol   Type   Id     Address  Length   Owner Id Flags Alias-of                           jHLASM 1.0   2016/06/04 15.56
 0CXSTR     SD 00000001 00000000 00000370             07                                                                  
 1                                                                                                               Page    3
    Active Usings: None                                                                                                   
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/06/02 11.39
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/06/04 15.56
 000000000                00000000 00000370      1 cxstr start 0                                                          
                                                 2 cxstr amode any                                                        
                                                 3 cxstr rmode any                                                        
                      R:F 00000000               4  using *,15                                                            
-                                                5  punch '* *Testcase csxtr &sysdatc &systime'                           
-                                                 + punch '* *Testcase csxtr 20160602 11.39'                              
+                                                5  punch '* *Testcase csxtr csdtr cxstr cxutr &sysdatc &systime'         
+                                                 + punch '* *Testcase csxtr csdtr cxstr cxutr 20160604 15.56'            
                                                 6  punch '* sysclear'                                                    
                                                 7  punch '* archlvl z'                                                   
  00000000                00000000 00000140      8  org cxstr+x'140' SVC old                                              
@@ -113,7 +113,7 @@
  00000328                                      54 reg6 ds d                                                              
 1                                                                                                               Page    4
    Active Usings: CXSTR,R15                                                                                              
-0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/06/02 11.39
+0  Loc    Object Code      Addr1    Addr2    Stmt  Source Statement                         jHLASM 1.0   2016/06/04 15.56
 000000330                                      55 cxhi ds d                                                              
  00000338                                      56 cxlow ds d                                                             
  00000340                                      57 cxuhi ds d                                                             
@@ -142,10 +142,10 @@
                                                79  punch '* *Done'                                                       
                                                80  end                                                                   
 1                                                 Relocation Dictionary                                         Page    5
--   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/06/02 11.39
+-   Pos.Id   Rel.Id   Address  Type  Action                                                 jHLASM 1.0   2016/06/04 15.56
 0  00000001 00000001 000001A8   A 8     +                                                                                
 1                               Ordinary Symbol and Literal Cross Reference                                     Page    6
--Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/06/02 11.39
+-Symbol   Length   Value     Id    R Type Asm  Program   Defn References                    jHLASM 1.0   2016/06/04 15.56
 0cr0           4 00000350 00000001     F  F                60   20S   21M   22                                           
  cxhi          8 00000330 00000001     D  D                55   39S                                                      
  cxlow         8 00000338 00000001     D  D                56   40S                                                      
@@ -162,15 +162,15 @@
  =LD'1234567890123456789012345678901234'                                                                                 
               16 00000358 00000001     L                   63   23    24                                                 
 1                                  Unreferenced Symbols Defined in CSECTs                                       Page    7
--  Defn  Symbol                                                                             jHLASM 1.0   2016/06/02 11.39
+-  Defn  Symbol                                                                             jHLASM 1.0   2016/06/04 15.56
 0     9  svcold                                                                                                          
 1                                                      Using Map                                                Page    8
--                                                                                           jHLASM 1.0   2016/06/02 11.39
+-                                                                                           jHLASM 1.0   2016/06/04 15.56
    Stmt  -----Location----- Action ----------------Using----------------- Reg Max     Last Label and Using Text          
            Count      Id           Type          Value    Range     Id        Disp    Stmt                               
 0     4  00000000  00000001 USING  ORDINARY    00000000 00001000 00000001  15 00368     45 *,15                          
 1                                   General Purpose Register Cross Reference                                    Page    9
-- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/06/02 11.39
+- Register  References (S=set, M=modified, B=branch, U=using, D=drop, N=index)              jHLASM 1.0   2016/06/04 15.56
 0    0(0)    (no references identified)                                                                                  
      1(1)    (no references identified)                                                                                  
      2(2)    (no references identified)                                                                                  
@@ -188,14 +188,14 @@
     14(E)      47S   47    48B                                                                                           
     15(F)       4U                                                                                                       
 1                                  Diagnostic Cross Reference and Assembler Summary                             Page   10
--                                                                                           jHLASM 1.0   2016/06/02 11.39
+-                                                                                           jHLASM 1.0   2016/06/04 15.56
 0     No Statements Flagged in this Assembly                                                                             
 0John's High Level Assembler Release 1.0, May 30 2016 20:36:44                                                           
 0System:  Linux release 3.19.0-59-generic on jbox (i686)                                                                 
 0Data Sets Allocated for this Assembly                                                                                   
   Type     Mtime                File path                                                                                
-  input    2016-06-02 11:39:36  csxtr.assemble                                                                           
-0Assembly Start Time: 11.39.40 Stop Time: 11.39.40 Processor Time: 00.00.00.0137.
+  input    2016-06-02 11:41:01  csxtr.assemble                                                                           
+0Assembly Start Time: 15.56.30 Stop Time: 15.56.30 Processor Time: 00.00.00.0281.
  
                                      
  Return Code 000                                                                                                         
