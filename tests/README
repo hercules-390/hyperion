@@ -23,6 +23,17 @@ assembly on a /360 system (VM, MVS, DOS), but then TEXT decks need to be
 processed into .tst files.
 
 
+.subtst
+
+Files that have a subtst extension are secondary helper scripts called
+by a primary tst script.  They are used when more than one primary tst
+script consists of code that is virtually identical to another.  Rather
+than duplicate the same code in multiple tst files, the common code is
+placed into a subtst file instead and "called" by each of the primary
+tst scripts (via the 'script' command).  Think of them as tst script
+"subroutines".
+
+
 .assemble
 
 Source files for test cases that are designed for assembly with HLASM.
@@ -93,31 +104,11 @@ An assembler listing file produced by ASMA.
 
 .txt
 
-Files that have a txt extension are in most cases manually executed
-test scripts invoked via the Hercules "script" command.  Their output
-must be manually eyeballed to ensure they executed correctly.  Usually
-they end by loading a disabled PSW.  If the PSW's instruction address
+Files that have a txt extension are manually executed test scripts
+invoked via the Hercules "script" command.  Their output must be
+manually eyeballed to ensure they executed correctly.  Usually they
+end by loading a disabled wait PSW.  If the PSW's instruction address
 is 0 then the test case likely completed successfully.
-
-However, some files with a txt extension are actually automated runtest
-tst script fragments that some automated runtest tst scripts use to
-hold test script statements that are common across more than one
-automated runtest tst script which the primary tst script calls via the
-"script" Hercules script command.
-
-The only way to know for sure is to grep all .tst and .txt files for
-the given filename to find which .tst/.txt script, if any, invokes that
-particular .txt file via a "script" command.  If no .tst/.txt scripts
-contain a script command to call the given .txt file, then the .txt
-file is a stand alone manually invoked test script.  Otherwise the test
-script is intended to be called by some other .tst/.txt script and thus
-should not normally be manually invoked.
-
-Another less reliable way to tell is to check if the script uses any of
-the .tst file directives documented further below.  If it does, then
-the chances are good the file was intended to be "called" via a .tst
-script.  Otherwise it is probably a standalone manually invoked test
-script.
 
 
 .core
