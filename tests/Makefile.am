@@ -35,13 +35,13 @@ EXTRA_DIST =				\
 	 cipher.assemble		\
 	 cipher.listing			\
 	 cipher.tst				\
-	 cmd-abs-2K.txt			\
-	 cmd-abs-4K.txt			\
-	 cmd-abs.tst			\
-	 cmd-rv-2K.txt			\
-	 cmd-rv-4K-32.txt		\
-	 cmd-rv-4K-64.txt		\
-	 cmd-rv.tst				\
+	 cmd-abs-2K.subtst		\
+	 cmd-abs-4K.subtst		\
+	 cmd-abs.subtst			\
+	 cmd-rv-2K.subtst		\
+	 cmd-rv-4K-32.subtst	\
+	 cmd-rv-4K-64.subtst	\
+	 cmd-rv.subtst			\
 	 comments.txt			\
 	 cpsdr.txt				\
 	 csst.txt				\
@@ -50,6 +50,7 @@ EXTRA_DIST =				\
 	 csxtr.tst				\
 	 cxgbr.txt				\
 	 cxgtr.txt				\
+	 dc-float.asm			\
 	 diag24.txt				\
 	 diag8.txt				\
 	 digest.assemble		\
@@ -211,7 +212,7 @@ EXTRA_DIST =				\
 	 rrxtr.txt				\
 	 runtest				\
 	 runtest.cmd			\
-	 runtest.txt			\
+	 runtest.subtst			\
 	 runtest0.tst			\
 	 runtest4.tst			\
 	 sigp.assemble			\
@@ -232,7 +233,7 @@ EXTRA_DIST =				\
 	 tape.240k.txt			\
 	 tape.2m.txt			\
 	 tape.32k.txt			\
-	 tapebsf.txt			\
+	 tapebsf.subtst			\
 	 tapepos.txt			\
 	 tbedr.txt				\
 	 tdcdt.txt				\

@@ -13,4 +13,4 @@ defsym  tapecuu     590                 # just a device number
 defsym  ftype       het                 # tape filename filetype
 defsym  tapefile    $(testpath)/$(ftype)bsf.$(ftype)
 
-script "$(testpath)/tapebsf.txt"
+script $(testpath)/tapebsf.subtst

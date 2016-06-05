@@ -264,19 +264,55 @@
 
 
 ::-----------------------------------------------------------------------------
+::                            remlead0
+::-----------------------------------------------------------------------------
+
+  @REM  Removes leading zeros from a given number so that it
+  @REM  isn't unintentionally interpretted as an octal number.
+
+  set "@v=%~1"
+  call :isnum "%@v%"
+  if not defined isnum %return%
+  set "##="
+  for /f "tokens=* delims=0" %%a in ("%@v%") do set "##=%%a"
+  if not defined ## set "##=0"
+  set "#=%##%"
+  set "##="
+  set "@v="
+  %return%
+
+
+::-----------------------------------------------------------------------------
 ::                            timesecs
 ::-----------------------------------------------------------------------------
 :timesecs
 
   @REM   Converts the passed time-of-day value in %time% format
-  @REM   to the number of seconds since midnight.
+  @REM   to the rounded up number of seconds since midnight.
 
   setlocal enabledelayedexpansion
   for /f "tokens=1,2,3,4 delims=:,. " %%a in ("%~1") do (
-    @REM Must prevent values starting with '0' from being treated as octal!
-    set /a "#=((1%%a - 100) * 60 * 60) + ((1%%b - 100) * 60) + (1%%c - 100) + (((1%%d - 100) + 50) / 100)"
+    set "@hh=%%a"
+    set "@mm=%%b"
+    set "@ss=%%c"
+    set "@cc=%%d"
   )
-  endlocal && set "#=%#%"
+
+  call :remlead0 %@hh%
+  set "@hh=%#%"
+
+  call :remlead0 %@mm%
+  set "@mm=%#%"
+
+  call :remlead0 %@ss%
+  set "@ss=%#%"
+
+  call :remlead0 %@cc%
+  set "@cc=%#%"
+
+  set /a "#=((((%@hh% * 60 * 60) + (%@mm% * 60) + %@ss%) * 100) + %@cc% + 50) / 100"
+
+  endlocal & set "#=%#%"
   %return%
 
 
@@ -804,6 +840,21 @@
 
   set "begin=1"
 
+  @REM  Save start date/time
+
+  for /f "tokens=*" %%d in ('date /t') do set "dat=%%d"
+  for /f "tokens=*" %%t in ('time /t') do set "tod=%%t"
+  set "begtime=%time%"
+
+  for /f "tokens=*" %%d in ('date /t') do set "dat2=%%d"
+  if not "%dat2%" == "%dat%" (
+    for /f "tokens=*" %%t in ('time /t') do set "tod=%%t"
+    set "begtime=%time%"
+  )
+
+
+  @REM  Output "Begin:" banner...
+
   echo.
   if defined repeat (
     if defined cmdargs (
@@ -817,6 +868,10 @@
     ) else (
       echo Begin: "%~n0" ...
     )
+    @REM  For normal runs, log date/time test was run
+    @REM  in case they're redirecting output to a file
+    echo.
+    echo On:     %dat% at %tod%
     echo.
   )
 
@@ -853,7 +908,6 @@
   set /a "totruns=0"
   set /a "totfail=0"
   set /a "failtimes=0"
-  set "begtime=%time%"
 
 
   @REM Get started!

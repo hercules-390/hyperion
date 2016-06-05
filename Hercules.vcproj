@@ -3011,26 +3011,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\cmd-abs-2K.txt"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\cmd-abs-4K.txt"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\cmd-rv-2K.txt"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\cmd-rv-4K-32.txt"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\cmd-rv-4K-64.txt"
-							>
-						</File>
-						<File
 							RelativePath=".\tests\comments.txt"
 							>
 						</File>
@@ -3479,6 +3459,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\lparnum.txt"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\lpp.txt"
 							>
 						</File>
@@ -3527,10 +3511,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\runtest.txt"
-							>
-						</File>
-						<File
 							RelativePath=".\tests\srdt.txt"
 							>
 						</File>
@@ -3564,10 +3544,6 @@
 						</File>
 						<File
 							RelativePath=".\tests\tape.32k.txt"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\tapebsf.txt"
 							>
 						</File>
 						<File
@@ -3840,6 +3816,46 @@
 						</File>
 						<File
 							RelativePath=".\tests\timeout.tst"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="subtst"
+						>
+						<File
+							RelativePath=".\tests\cmd-abs-2K.subtst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-abs-4K.subtst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-rv-2K.subtst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-rv-4K-32.subtst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cmd-rv-4K-64.subtst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\runtest.subtst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\tapebsf.subtst"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="asm"
+						>
+						<File
+							RelativePath=".\tests\dc-float.asm"
 							>
 						</File>
 					</Filter>
