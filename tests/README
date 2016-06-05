@@ -74,8 +74,12 @@ limitations relative to HLASM that you should be aware of:
       literals yourself and give them appropriate names.  (This applies
       to programs that are converted from HLASM to ASMA.)
 
-*     No floating point constants.  D'...' assembles as if FD'...' was
-      specified.
+*     No floating point constants.  D'...' assembles as if FD'...' were
+      specified.  Use hexadecimal constants to assemble floating point
+      constants.  The file dc-float.asm contains a number of constants
+      suitable for cut-and-paste in no particular order.  This file was
+      generated from the HLASM listing file from an assembly the float
+      constants.
 
 *     Input is variable length ASCII.  Continuation is specified by a
       backslash at the end of a line.  The alternate format for macro
