@@ -707,7 +707,6 @@ vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
 #
 
 EXTRA_DIST =                    \
-	.gitignore                  \
 	_build                      \
 	_build.bat                  \
 	_build.tail                 \
