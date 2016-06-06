@@ -21,6 +21,7 @@ EXTRA_DIST =				\
 	 awsbsf.tst				\
 	 axtr.txt				\
 	 bldhtc.exec			\
+	 bldhtc.rexx			\
 	 brc.txt				\
 	 cdfr.txt				\
 	 cdgr.txt				\
@@ -45,6 +46,7 @@ EXTRA_DIST =				\
 	 comments.txt			\
 	 cpsdr.txt				\
 	 csst.txt				\
+	 cvttst.rexx			\
 	 csxtr.assemble			\
 	 csxtr.listing			\
 	 csxtr.tst				\
