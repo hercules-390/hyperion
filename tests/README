@@ -3,14 +3,54 @@
 ========================================================================
 
 This directory contains test cases that are run by Hercules console
-commands.  By convention, the following file type extensions are
-used.
+commands.  High-level test cases are run under an operating system, for
+example OS/j.
 
 Test cases are run after Hyperion has been built, but before it is
 installed.  "make check" runs the entire regression test reference.
 
-With current Hyperion, there are no longer any special considerations
-for testing crypto.
+With current Hyperion as of 2016-06-06, there are no longer any special
+considerations for testing crypto.
+
+A test case is run stand-alone under hercules from a script specified
+with the -r flag.  The script first sets up a program in core storage
+either by the r console command or by loading a core image by loadcore.
+It then issues the runtest command to start Hercules by a restart
+interrupt, the restart new PSW having been set up in the previous step.
+The script regains control when all CPUs have entered the stopped state.
+The remainder of the script inspects storage, registers, etc., to
+display data that are later inspected.  The session log is then
+processed to check the results against with known good values.
+
+You can create test cases in several ways:
+
+*     Entirely by hand using only a text editor.  Many test cases have
+      been built this way, but this usage has been superseded by use of
+      an assembler that can generate core images directly.
+
+*     By using SATK's ASMA, which is an assembler that implements a
+      subset of HLASM's functionality, but has the ability to generate a
+      core image directly.  Thus no post processing is required.
+      Typically, you will write by hand a .tst file to load the .core
+      file and do whatever is required.
+
+*     By a real /360 assembler, such as IFOX or HLASM.  The object deck
+      is converted to r console commands or a core file.  This offers
+      the full assembly language with a powerful macro capability, but
+      at the expense of some post processing.
+
+Validating the test case (specifying the desired results; the oracle in
+testing parlance) is the most difficult step if you do not have access
+to z/CMS.  There may be ambiguities in the PoO or, perhaps more likely,
+you may misinterpret the manual.  As IBM do not publish the suite the
+developers use to validate a new CPU model, you will need to find a
+friend who has access to "real iron".  This real iron could be z/PDT.
+
+There are two routes to obtaining an object module and validation script
+for z/CMS:  From an ASSEMBLE file using an assembler or from a .tst file
+by the cvttst.rexx utility (very much still in the development phase).
+
+By convention, the following file type extensions are used.
 
 
 .tst
@@ -37,13 +77,13 @@ tst scripts (via the 'script' command).  Think of them as tst script
 .assemble
 
 Source files for test cases that are designed for assembly with HLASM.
-On z/VM with HLASM, the test cases can be prepared by BLDHTC EXEC.
-ASMTST XEDIT is a sample macro to perform the build step from within the
-XEDIT session.
+On z/VM with HLASM, the test cases can be prepared by BLDHTC EXEC
+(bldhtc.exec) on VM or by bldhtc.rexx on the workstation.  ASMTST XEDIT
+(asmtst.xedit) is a sample macro to perform the build step from within
+the XEDIT session.
 
-On VM/370, you can use the system assembler to assemble, but you must
-somehow process the TEXT deck yourself.  Perhaps download and run
-through a command script?
+On VM/370, you can use the system assembler to assemble, but you will
+likely do the conversion on the workstation.
 
 http://vm.marist.edu/~pipeline/zops.copy contains a stacked copy file for
 many new operation codes.
@@ -68,7 +108,6 @@ the location of the SATK and Hyperion build directories in your system.
 
 .SUFFIXES: .text .tst .assemble .rexx .asm .core
 USD:=/usr/data/src
-HPATH:=${USD}/hercules/hyperion/tests
 APATH:=${USD}/SATK/tools
 
 %.core: %.asm
@@ -86,11 +125,11 @@ limitations relative to HLASM that you should be aware of:
       to programs that are converted from HLASM to ASMA.)
 
 *     No floating point constants.  D'...' assembles as if FD'...' were
-      specified.  Use hexadecimal constants to assemble floating point
-      constants.  The file dc-float.asm contains a number of constants
-      suitable for cut-and-paste in no particular order.  This file was
-      generated from the HLASM listing file from an assembly the float
-      constants.
+      specified, which is correct only for D'0'.  Use hexadecimal
+      constants to assemble floating point constants.  The file
+      dc-float.asm contains, in no particular order, a number of
+      constants suitable for cut-and-paste.  This file was generated
+      from the HLASM listing file from an assembly the float constants.
 
 *     Input is variable length ASCII.  Continuation is specified by a
       backslash at the end of a line.  The alternate format for macro
@@ -127,7 +166,7 @@ is used to run one or more (usually all) automated .tst scripts to
 verify proper Hercules functionality.
 
 On UNIX, assuming that your are building outside the source tree,
-perhaps in the "atom" directory, the source directory will be
+perhaps in the "atom" directory, the source directory might be
 ../hyperion.  Use the following command to run and verify the .tst test
 cases:
 
@@ -213,7 +252,7 @@ make redtest more terse.
 Specify the work file name.  The default is allTests.
 
 -x
-Do not append the quit command the composite test script.
+Do not append the quit command to the composite test script.
 
 
 .tst file runtest command
@@ -358,24 +397,6 @@ mainsize 2147483648b
 *Fi
 
 
-Creating test files from assembler source
------------------------------------------
-
-Creating a test case is easier when you have access to a 360 assembler.
-HLASM is preferred, but the CMS system assembler can be used with a
-macro library that implements the many new instructions.
-
-The object deck contains object code interspesed with console commands
-and tst file directives.  The annotation is inserted by the PUNCH or
-REPRO assembler instructions.  The annotation should have a leading
-asterisk and blank to distinguish it from TXT records (e.g., punch '*
-*Testcase test').
-
-The test script of console commands is then generated by bldhtc.rexx.
-Essentially it generates r console commands from the TXT records in the
-object deck.
-
-
 Creating test files that can run on z/CMS as well as under Hercules
 -------------------------------------------------------------------
 
@@ -401,7 +422,7 @@ than on the bare iron:
       after running the test case.
 
 2.    GPR15 is the base register for an emulated main storage the size
-      of the program (see AGF.assemble).  The test case is entered with
+      of the program (see agf.assemble).  The test case is entered with
       the return address in GPR14.
 
 3.    The test case must not modify GPR11 (or it must save and restore
@@ -425,8 +446,9 @@ hand-built tst script:
 7.    Loading a disabled PSW is replaced by BR 14, so there is no reason
       to write dual path code in hand-built tst scripts.
 
-8.    Loading control register 0 is suppressed, but the fact that the
-      AFPR enable bit is on.
+8.    Loading control register 0 is suppressed, but the driver notes the
+      fact that the AFPR enable bit is on and turns it on for the
+      duration of the test.
 
 9.    The test program must not reference storage beyond the highest
       address specified in any r console command (either loading data or
@@ -442,41 +464,28 @@ program:
 WAITPSW dc x'0002000180000000',ad(0) OK wait state PSW
 
 Some programs contain a series of tests where the CPU is stopped after
-each test.  This should be emulated by a branch back that sets GPR14 to
-the resume address.  This applies only to tests that are assembled from
-assembler source; cvttst.rexx knows how to deal with loading a disabled
-PSW.
+each test.  This should be emulated by a branch back using GPR14, having
+stored the resume address in the SVC old PSW.  This applies only to
+tests that are assembled from assembler source; cvttst.rexx knows how to
+deal with loading a disabled PSW.
 
- ltr 14,14
- bz stop
- basr 14,14
- b resume
-stop equ *
- stap cpu
- lh 2,cpu
- sigp 0,2,5 Stop
-resume equ *
-
-If the program is running in problem state, the SIGP instruction will
-cause a program check.  Use SVC 255 instead and be sure to make the SVC
-new PSW a disabled wait.
-
- ltr 14,14
- bz stop
- basr 14,14
- b resume
-stop equ *
- svc 255
-resume equ *
-
-For a complex test, you may wish to make this a subroutine.  See
-digest.assemble for a test that has taken this to the extreme.
+swap equ * entry by bas 9,swap
+ ltr 14,14  Running on CMS?
+ jz bare
+* Under z/CMS in 31-bit mode.  Simulate a SVC 255
+ la 10,0(,9)                  Strip amode bit
+ st 10,svcold+12
+ basr 14,14                   Return to driver
+ br 9                         Return to caller
+bare equ *
+ svc 255  We are in problem state
+ br 9
 
 The test cases are TEXT decks on CMS.  When the .tst script is built from
 assembler source, the object deck is a by product; it should be uploaded
 to CMS without change.  The test case is loaded at a page boundary by CMS.
 
-The Rexx script cvttst.rexx builds an object deck from a .tst script
+The REXX script cvttst.rexx builds an object deck from a .tst script
 that is built by hand (notably the ieee floating point test cases).
 This process makes several changes to the program:
 
