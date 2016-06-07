@@ -145,8 +145,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 #endif
 
 /* #include "hscutl.h" is not a good idea                            */
+/* but defining them without guarding is worse :-)                   */
+#ifndef HAVE_STRLCAT
 size_t strlcat(char *dst, const char *src, size_t siz);
+#endif
+#ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t siz);
+#endif
 
 /* --- WINDOWS SUPPORT --- */
 

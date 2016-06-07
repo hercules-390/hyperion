@@ -30,7 +30,7 @@ VERS_INT=0                    # second digit of version
 VERS_MIN=0                    # third  digit of version
 
 AM_INIT_AUTOMAKE(hercules,${VERS_MAJ}.${VERS_INT}.${VERS_MIN})
-
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 # -----------------------------------------------------------------------------
 
 AC_CONFIG_HEADERS(config.h)   # (the file the resulting configure script will produce)
@@ -79,18 +79,14 @@ case "$target_os" in
         hc_cv_is_apple=no
         ;;
     darwin*)
+        hc_cv_is_darwin=yes
+        hc_cv_is_aix=no
+        hc_cv_is_nix=no
+        hc_cv_is_windows=no
+        hc_cv_is_mingw=no
         if test $target_vendor = apple; then
-            hc_cv_is_aix=no
-            hc_cv_is_nix=no
-            hc_cv_is_windows=no
-            hc_cv_is_mingw=no
             hc_cv_is_apple=yes
         else
-
-            hc_cv_is_aix=no
-            hc_cv_is_nix=no
-            hc_cv_is_windows=no
-            hc_cv_is_mingw=no
             hc_cv_is_apple=no
         fi
         ;;
@@ -2635,6 +2631,7 @@ AM_CONDITIONAL( BUILD_FTHREADS,      [ test "$hc_cv_opt_fthreads"     = "yes" ] 
 AM_CONDITIONAL( BUILD_HERCIFC,       [ test "$hc_cv_build_hercifc"    = "yes" ] )
 AM_CONDITIONAL( SETUID_HERCIFC,      [ test "$hc_cv_setuid_hercifc"   = "yes" ] )
 AM_CONDITIONAL( HERCIFC_GROUPSET,    [ test "x$hc_cv_hercifc_groupname" != "x"] )
+AM_CONDITIONAL( APPLE,               [ test "$hc_cv_is_darwin"        = "yes" ] )
 
 if test "x$hc_cv_hercifc_groupname" != "x"; then
     HERCIFC_GROUPNAME=${hc_cv_hercifc_groupname}
