@@ -1714,6 +1714,10 @@
 			ParseFiles="false"
 			>
 			<File
+				RelativePath=".\.gitattributes"
+				>
+			</File>
+			<File
 				RelativePath=".\.gitignore"
 				>
 			</File>
