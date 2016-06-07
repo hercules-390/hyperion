@@ -1,0 +1,420 @@
+#******************************************************************************
+#
+#   .gitattributes - Set default attributes for files controlled by Git.
+#
+#******************************************************************************
+#
+#   Note:  The handling of files here is to handle cases of files which
+#          may be part of a Git repository.  File ignore specifications
+#          in .gitignore may render part or all of these definitions mute.
+#
+#******************************************************************************
+
+
+# Default handling for all file types not specified
+
+*                   text=auto
+
+
+# Documents
+*.doc               binary
+*.DOC               binary
+*.docx              binary
+*.DOCX              binary
+*.dot               binary
+*.DOT               binary
+*.pdf               binary
+*.PDF               binary
+*.rtf               binary
+*.RTF               binary
+
+*.adoc              text
+*.csv               text
+*.markdown          text
+*.md                text
+*.mdwn              text
+*.mdown             text
+*.mkd               text
+*.mkdn              text
+*.mdtxt             text
+*.mdtext            text
+*.tab               text
+*.textile           text
+*.tsv               text
+*.txt               text
+AUTHORS             text
+AUTHORS.*           text
+CHANGELOG           text
+CHANGELOG.*         text
+CHANGES             text
+CHANGES.*           text
+CONTRIBUTING        text
+CONTRIBUTING.*      text
+COPYING             text
+COPYING.*           text
+INSTALL             text
+INSTALL.*           text
+license             text
+license.*           text
+LICENSE             text
+LICENSE.*           text
+NEWS                text
+NEWS.*              text
+readme              text
+readme.*            text
+README              text
+README.*            text
+*.README            text
+*.README.*          text
+TODO                text
+TODO.*              text
+
+
+# Script handling
+*.bat               text    eol=crlf
+*.cmd               text    eol=crlf
+*.sh                text    eol=lf
+
+
+# Git Configuration
+.gitattributes      text
+.gitignore          text
+.gitconfig          text
+
+
+# Build Configuration
+*.cmake             text
+*.ninja             text
+.ninja_*            text
+Makefile            text
+makefile            text
+
+
+# General Configuration
+*.cnf               text
+*.conf              text
+*.config            text
+*.ini               text
+
+
+# CMake Templates
+*.bat.in            text    eol=crlf
+*.cmd.in            text    eol=crlf
+*.sh.in             text    eol=lf
+*.in                text
+
+
+# Graphics
+*.ai                binary
+*.bmp               binary
+*.eps               binary
+*.gif               binary
+*.ico               binary
+*.jpeg              binary
+*.jpg               binary
+*.jpx               binary
+*.jxr               binary
+*.png               binary
+*.psb               binary
+*.psd               binary
+*.svg               binary
+*.svgz              binary
+*.tif               binary
+*.tiff              binary
+*.wbmp              binary
+*.webp              binary
+
+
+# Audio
+*.kar               binary
+*.m4a               binary
+*.mid               binary
+*.midi              binary
+*.mp3               binary
+*.ogg               binary
+*.ra                binary
+
+
+# Video
+*.3gpp              binary
+*.3gp               binary
+*.as                binary
+*.asf               binary
+*.asx               binary
+*.fla               binary
+*.flv               binary
+*.m4v               binary
+*.mng               binary
+*.mov               binary
+*.mp4               binary
+*.mpeg              binary
+*.mpg               binary
+*.swf               binary
+*.ts                binary
+*.webm              binary
+
+
+# Fonts
+*.eot               binary
+*.otf               binary
+*.ttf               binary
+*.woff              binary
+*.woff2             binary
+
+
+# Archives and other binary
+*.7z                binary
+*.gz                binary
+*.rar               binary
+*.tar               binary
+*.zip               binary
+
+
+# Distribution binaries
+*.bundle            binary
+*.cab               binary
+*.deb               binary
+*.jar               binary
+*.msi               binary
+*.msm               binary
+*.msp               binary
+*.rpm               binary
+
+
+# Executables
+*.exe               binary
+*.pyc               binary
+
+
+#******************************************************************************
+#
+#       C/C++
+#
+#******************************************************************************
+
+# Sources
+*.c                 text
+*.cc                text
+*.cxx               text
+*.cpp               text
+*.c++               text
+*.hpp               text
+*.h                 text
+*.h++               text
+*.hh                text
+
+
+# Compiled Object files
+*.slo               binary
+*.lo                binary
+*.o                 binary
+*.obj               binary
+
+
+# Precompiled Headers
+*.gch               binary
+*.pch               binary
+
+
+# Compiled Dynamic libraries
+*.so                binary
+*.dylib             binary
+*.dll               binary
+
+
+# Compiled Static libraries
+*.lai               binary
+*.la                binary
+*.a                 binary
+*.lib               binary
+
+
+# Executables
+*.out               binary
+*.app               binary
+
+
+# CMake Templates
+*.c.in              text
+*.cc.in             text
+*.cxx.in            text
+*.cpp.in            text
+*.c++.in            text
+*.hpp.in            text
+*.h.in              text
+*.h++.in            text
+*.hh.in             text
+
+
+#******************************************************************************
+#
+#       Java and NetRexx
+#
+#******************************************************************************
+
+# Source
+*.java              text
+*.nrx               text
+
+
+# Executables
+*.class             binary
+
+
+#******************************************************************************
+#
+#       Rexx
+#
+#******************************************************************************
+
+*.cls               text
+*.rex               text
+*.rexx              text
+*.scls              text
+*.srex              text
+*.srexx             text
+
+
+#******************************************************************************
+#
+#       Visual Studio
+#
+#******************************************************************************
+
+*.sln               text    eol=crlf
+*.csproj            text    eol=crlf
+*.vbproj            text    eol=crlf
+*.fsproj            text    eol=crlf
+*.dbproj            text    eol=crlf
+
+
+*.vcproj            text    eol=crlf
+*.vcxproj           text    eol=crlf
+*.vcxitems          text    eol=crlf
+*.props             text    eol=crlf
+*.filters           text    eol=crlf
+
+
+# CMake Templates
+*.filters.in        text    eol=crlf
+*.vcproj.user.in    text    eol=crlf
+*.vcxproj.user.in   text    eol=crlf
+
+
+#******************************************************************************
+#
+#       Web Projects
+#
+#******************************************************************************
+
+# Source Code
+*.coffee            text
+*.css               text
+*.htm               text
+*.html              text
+*.inc               text
+*.js                text
+*.json              text
+*.less              text
+*.php               text
+*.pl                text
+*.py                text
+*.rb                text
+*.sass              text
+*.scm               text
+*.scss              text
+*.sql               text
+*.styl              text
+*.svg               text
+*.ts                text
+*.xml               text
+
+
+# Web Templates
+*.dot               text
+*.ejs               text
+*.haml              text
+*.handlebars        text
+*.hbs               text
+*.hbt               text
+*.jade              text
+*.latte             text
+*.mustache          text
+*.phtml             text
+*.tmpl              text
+
+
+# Server Configuration
+.htaccess           text
+
+
+# Code Analysis Configuration
+.csslintrc          text
+.eslintrc           text
+.jshintrc           text
+.jscsrc             text
+.jshintignore       text
+.stylelintrc        text
+
+
+# Miscellaneous Configurations
+*.yaml              text
+*.yml               text
+.editorconfig       text
+
+
+# Build Configuration (Jason and NPM)
+*.npmignore         text
+*.bowerrc           text
+
+
+# Heroku
+Procfile            text
+.slugignore         text
+
+
+#******************************************************************************
+#
+#   Hercules and SATK specific files not covered by any preceding rule
+#
+#******************************************************************************
+
+# Build (root directory)
+*.ac                text    eol=lf
+*.am                text    eol=lf
+_build              text    eol=lf
+_build.tail         text    eol=lf
+_dynamic_version    text    eol=lf
+*.msvc              text    eol=crlf
+
+
+# Build (subdirectories)
+autoconf/*          text    eol=lf
+m4/*                text    eol=lf
+man/*               text    eol=lf
+util/bldlvlck       text    eol=lf
+
+msvc.makefile.includes/*   text  eol=crlf
+
+
+# Binary objects
+*.aws               binary
+*.bin               binary
+*.core              binary
+*.fkt               binary
+*.het               binary
+util/scsiboot       binary
+
+
+# EBCDIC card Images
+*.card              binary
+*.text              binary
+
+
+# Miscellaneous
+util/dasdlist       text    eol=lf
+tests/runtest       text    eol=lf
+tests/*.tst         text
+tests/*.subtst      text
+tests/*.assem*      text
+tests/*.list*       text
