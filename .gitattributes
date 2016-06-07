@@ -390,6 +390,7 @@ _dynamic_version    text    eol=lf
 
 # Build (subdirectories)
 autoconf/*          text    eol=lf
+decNumber/*.def     text    eol=crlf
 m4/*                text    eol=lf
 man/*               text    eol=lf
 util/bldlvlck       text    eol=lf
@@ -414,6 +415,7 @@ util/scsiboot       binary
 # Miscellaneous
 util/dasdlist       text    eol=lf
 tests/runtest       text    eol=lf
+
 tests/*.tst         text
 tests/*.subtst      text
 tests/*.assem*      text
