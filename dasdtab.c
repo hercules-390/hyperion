@@ -512,7 +512,7 @@ BYTE buf[256];
                         dev->ckdtab->devt, dev->ckdtab->model);
     for (i = 4; i < 30; i++)
         buf[i] = host_to_guest(buf[i]);
-    buf[30] = 0x00;
+    buf[30] = (dev->devnum >> 8) & 0xFF;
     buf[31] = (dev->devnum & 0xFF);
 
     /* Bytes 32-63: NED 2  Node element descriptor for the string */
