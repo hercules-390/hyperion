@@ -1326,6 +1326,7 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ctce_lport;             /* CTCE Local  port #   @PJJ */
         int     ctce_rport;             /* CTCE Remote port #   @PJJ */
         struct in_addr ctce_ipaddr;     /* CTCE Dest IP addr    @PJJ */
+        u_int   ctce_contention_loser:1;/* CTCE cmd collision   @PJJ */
 
         /*  Device dependent fields for printer                      */
 
