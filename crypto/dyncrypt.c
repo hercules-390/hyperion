@@ -5049,7 +5049,7 @@ END_INSTRUCTION_SECTION;
 
 HDL_REGISTER_SECTION;
 {
-  WRMSG(HHC00150, "I", "Crypto", " (c) Copyright 2003-2015 by Bernard van der Helm"); // Copyright notice
+  WRMSG(HHC00150, "I", "Crypto", " (c) Copyright 2003-2016 by Bernard van der Helm"); // Copyright notice
   WRMSG(HHC00151, "I", "Message Security Assist"); // Feature notice
 #ifdef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4
   WRMSG(HHC00151, "I", "Message Security Assist Extension 1, 2, 3 and 4"); // Feature notice
