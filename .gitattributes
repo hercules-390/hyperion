@@ -295,6 +295,11 @@ makefile            text
 *.filters           text    eol=crlf
 
 
+# Resource Compiler scripts
+*.rc                text    eol=crlf
+*.rc2               text    eol=crlf
+
+
 # CMake Templates
 *.filters.in        text    eol=crlf
 *.vcproj.user.in    text    eol=crlf
@@ -385,7 +390,7 @@ Procfile            text
 _build              text    eol=lf
 _build.tail         text    eol=lf
 _dynamic_version    text    eol=lf
-*.msvc              text    eol=crlf
+makefile*.msvc      text    eol=crlf
 
 
 # Build (subdirectories)

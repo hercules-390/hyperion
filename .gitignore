@@ -66,10 +66,12 @@ autoconf/compile
 /libtool
 /makefile
 /msvc.AMD64.bin
+/msvc.AMD64.cod
 /msvc.AMD64.map
 /msvc.AMD64.obj
 /msvc.AMD64.pdb
 /msvc.dllmod.bin
+/msvc.dllmod.cod
 /msvc.dllmod.map
 /msvc.dllmod.obj
 /msvc.dllmod.pdb
@@ -137,7 +139,7 @@ autoconf/compile
 /*.idc
 /*.pdb
 /*.psess
-/* BuildLog.htm
+/*BuildLog*
 /Hercules_VS*.opensdf
 /Hercules_VS*.sdf
 /Hercules_VS*.suo
@@ -150,7 +152,7 @@ autoconf/compile
 *~
 
 # QA Testing
-allTests.testin
+allTests.*
 
 # Dynamically generated files
 _dynamic_version.h
