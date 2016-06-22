@@ -3869,10 +3869,28 @@ ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
     if (dev->ccwtrace || dev->ccwstep)
         WRMSG (HHC01305, "I", SSID_TO_LCSS(dev->ssid), dev->devnum);
 
+    /*****************************************************************/
+    /* The release and obtain locks around OBTAIN_INTOCK have been   */
+    /* removed because they cause VM system abends IQM002 when using */
+    /* channel programs relying heavily on ATTN interrupts, such as  */
+    /* used by RSCS.  This is easily reproducible doing a large RSCS */
+    /* file transfer over a TYPE NJE link.  The IQM002 is always     */
+    /* caused by VM issueing a SSCH resulting in a CC=2, and most    */
+    /* probably due to the &dev->lock being released around the      */
+    /* OBTAIN_INTLOCK.  Also, there is no requirement for the device */
+    /* lock being held whilst issueing OBTAIN_INTLOCK.  Furthermore, */
+    /* Hercules Spinhawk version 3.12 does NOT produce IQM002 and it */
+    /* does not release + re-obtain the device lock around it.  And  */
+    /* lastly, since having removed this release + obtain device     */
+    /* lock around OBTAIN_INTLOCK no further IQM002 system abends    */
+    /* were encountered anymore.                                     */
+    /*                            Peter J. Jansen, 21-Jun-2016  @PJJ */
+    /*****************************************************************/
+
     /* Switch to INTLOCK context for remainder of attention */
-    release_lock(&dev->lock);
+/*  release_lock(&dev->lock);                                   @PJJ */
     OBTAIN_INTLOCK(NULL);
-    obtain_lock(&dev->lock);
+/*  obtain_lock(&dev->lock);                                    @PJJ */
     obtain_lock(&sysblk.iointqlk);
 
     /* Set SCSW for attention interrupt                              */
@@ -3972,6 +3990,18 @@ int     rc;                             /* Return code               */
 #endif // defined( OPTION_SHARED_DEVICES )
     {
         release_lock (&dev->lock);
+
+        /*************************************************************/
+        /* VM system abends IQM00 were found to be caused by startio */
+        /* SSCH resulting in cc=2 thanks to this additional log msg. */
+        /*                        Peter J. Jansen, 21-Jun-2016  @PJJ */
+        /*************************************************************/
+        if( dev->ccwtrace || dev->ccwstep )                  /* @PJJ */
+        {                                                    /* @PJJ */
+            WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),   /* @PJJ */
+            dev->devnum, dev->busy, dev->startpending );     /* @PJJ */
+        }                                                    /* @PJJ */
+
         return 2;
     }
 

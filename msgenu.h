@@ -885,6 +885,7 @@ Examples:
 #define HHC01333 "%1d:%04X CHAN: resume subchannel: cc=%d"
 #define HHC01334 "%1d:%04X CHAN: asynchronous I/O ccw addr %8.8x"
 #define HHC01335 "%1d:%04X CHAN: synchronous  I/O ccw addr %8.8x"
+#define HHC01336 "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
 
 /* hchan.c */
 #define HHC01350 "%1d:%04X CHAN: missing generic channel method"
