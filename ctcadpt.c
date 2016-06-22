@@ -63,7 +63,6 @@ typedef struct _CTCE_INFO
     int                working_attn_rc;    /* device_attention RC    */
                                        /* from transition to         */
                                        /* "Working(D)" state         */
-    int                working_attn_retry; /* retry count for this   */
     int                sok_buf_len;    /* socket buffer length       */
 }
 CTCE_INFO;
@@ -213,10 +212,10 @@ static BYTE CTCE_command[256] = {
     13, 3, 2, 8, 4, 3, 2, 1,13, 3, 2, 8, 6, 3, 2, 1,
     13, 3, 2, 8,13, 3, 2, 1,13, 3, 2, 8, 6, 3, 2, 1,
     13, 3, 2, 8, 4, 3, 2, 1,13, 3, 2, 8, 6, 3, 2, 1,
-    13, 3, 2,15,13, 3, 2, 1,13, 3, 2,13, 6, 3, 2, 1,
-    13, 3, 2,15, 4, 3, 2, 1,13, 3, 2,13, 6, 3, 2, 1,
-    13, 3, 2,15,13, 3, 2, 1,13, 3, 2,13, 6, 3, 2, 1,
-    13, 3, 2,15, 4, 3, 2, 1,13, 3, 2,13, 6, 3, 2, 1,
+    13, 3, 2,15,13, 3, 2, 1,13, 3, 2,15, 6, 3, 2, 1,
+    13, 3, 2,15, 4, 3, 2, 1,13, 3, 2,15, 6, 3, 2, 1,
+    13, 3, 2,15,13, 3, 2, 1,13, 3, 2,15, 6, 3, 2, 1,
+    13, 3, 2,15, 4, 3, 2, 1,13, 3, 2,15, 6, 3, 2, 1,
     13, 7, 2, 8,13, 7, 2, 1,13, 7, 2, 8, 6, 7, 2, 1,
     13, 7, 2, 8, 4, 7, 2, 1,13, 7, 2, 8, 6, 7, 2, 1,
     13, 7, 2, 8,13, 7, 2, 1,13, 7, 2, 8, 6, 7, 2, 1,
@@ -508,6 +507,47 @@ const CTCE_Fsm[16][8] = {
 #define CTCX_DEVNUM(p)          SSID_TO_LCSS(p->ssid), p->devnum
 #define CTCE_FILENAME           pDEVBLK->filename + 0
 
+/**********************************************************************/
+/* This table is used by channel.c to determine if a CCW code is an   */
+/* immediate command or not                                           */
+/* The table is addressed in the DEVHND structure as 'DEVIMM immed'   */
+/* 0 : Command is NOT an immediate command                            */
+/* 1 : Command is an immediate command                                */
+/* Note : An immediate command is defined as a command which returns  */
+/* CE (channel end) during initialisation (that is, no data is        */
+/* actually transfered). In this case, IL is not indicated for a CCW  */
+/* Format 0 or for a CCW Format 1 when IL Suppression Mode is in      */
+/* effect                                                             */
+/**********************************************************************/
+
+static BYTE CTCE_immed_commands[256] =
+{
+/* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 0x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 1x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 2x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 3x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 4x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 5x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 6x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 7x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 8x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* 9x */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* Ax */
+   0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1, /* Bx */
+   0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1, /* Cx */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1, /* Dx */
+   0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1, /* Ex */
+   0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1  /* Fx */
+};
+
+//  X0XX X011  No Operation
+//  MMMM M111  Control
+//  1100 0011  Set Extended Mode
+//  10XX X011  Set Basic Mode
+//  1110 0011  Prepare
+//  1XXX XX01  Write EOF (but not treated as such !)
+
 // --------------------------------------------------------------------
 // Device Handler Information Block
 // --------------------------------------------------------------------
@@ -588,7 +628,7 @@ DEVHND ctce_device_hndinfo =
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
         NULL,                          /* Device Attention           */
-        NULL,                          /* Immediate CCW Codes        */
+        CTCE_immed_commands,           /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
         NULL,                          /* Signal Adapter Sync        */
@@ -1839,7 +1879,6 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     int             rc;                 // Return code
     CTCE_INFO       CTCE_Info;          // CTCE information (also for tracing)
 
-    UNREFERENCED( bFlags    );
     UNREFERENCED( bChained  );
     UNREFERENCED( bPrevCode );
     UNREFERENCED( iCCWSeq   );
@@ -1850,7 +1889,6 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     CTCE_Info.de_ready           = 0;
     CTCE_Info.de_ready_attn_rc   = 0;
     CTCE_Info.working_attn_rc    = 0;
-    CTCE_Info.working_attn_retry = 0;
     CTCE_Info.busy_waits         = 0;
     CTCE_Info.sent               = 0;
     CTCE_Info.con_lost           = 0;
@@ -1967,9 +2005,13 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     }
 
     // Changes to DEVBLK are lock protected as the CTCE_RecvThread
-    // might update as well, but, due to the way actually existing
-    // software uses CTC devices, this may not be needed at all.
+    // might update as well.
     obtain_lock( &pDEVBLK->lock );
+
+    // The CCW Flags Command Chaining indicator being set indicates
+    // that a CCW Program is in progress.  The last CCW in the chain
+    // has this flag turned off.
+    pDEVBLK->ctce_ccw_flags_cc = ( ( bFlags & CCW_FLAGS_CC ) != 0 );
 
     // Copy control command byte in x command register
     pDEVBLK->ctcexCmd = bCode;
@@ -2748,7 +2790,6 @@ static void*  CTCE_RecvThread( void* argp )
     // Initialise our CTCE_Info as needed.
     CTCE_Info.de_ready_attn_rc   = 0;
     CTCE_Info.working_attn_rc    = 0;
-    CTCE_Info.working_attn_retry = 0;
     CTCE_Info.busy_waits         = 0;
 
     // This thread will loop until we receive a zero-length packet caused by CTCX_close from the other side.
@@ -2940,7 +2981,7 @@ static void*  CTCE_RecvThread( void* argp )
 
                     // All matching commands result in a final UnitStat
                     // CE + DE stat at the local device end.
-                    ctce_recv_mods_UnitStat |= CSW_CE | CSW_DE;
+                    ctce_recv_mods_UnitStat = CSW_CE | CSW_DE;
                 } // if( IS_CTCE_MATCH( CTCE_Info.actions ) )
 
                 // If the other (y-)side sent us a Device-End status
@@ -2948,7 +2989,7 @@ static void*  CTCE_RecvThread( void* argp )
                 else if( CTCE_Info.de_ready )
                 {
                     release_lock( &pDEVBLK->lock );
-                    ctce_recv_mods_UnitStat |= CSW_DE;
+                    ctce_recv_mods_UnitStat = CSW_DE;
                     CTCE_Info.de_ready_attn_rc = device_attention( pDEVBLK, CSW_DE );
                     obtain_lock( &pDEVBLK->lock );
 
@@ -2960,64 +3001,76 @@ static void*  CTCE_RecvThread( void* argp )
                 // If the other (y-)side sent us a command that may require
                 // us to signal attention then we will do so provided no
                 // program chain is in progress (SA22-7203-00, item 2.1.1,
-                // second paragraph).  Ignoring this would yield RC=1,
-                // which indicates a busy or status pending condition.
+                // second paragraph).  We test for that condition using the
+                // Command Chaining flag on the last received CCW.
                 CTCE_Info.attn_can = 0;
-                if( ( IS_CTCE_ATTN( CTCE_Info.actions ) ) &&
-                    (  ( ( pDEVBLK->ctcxmode == 1 ) && ( !IS_CTCE_CCW_PRE( pDEVBLK->ctcexCmd ) ) )
-                    || ( ( pDEVBLK->ctcxmode == 0 ) ) ) )
+                if( IS_CTCE_ATTN( CTCE_Info.actions )
+                    && ( !pDEVBLK->ctce_ccw_flags_cc )
+                    && ( CTCE_Info.con_lost == 0 ) )
                 {
 
-                    // Prior to signalling ATTN, we need to release the
-                    // device lock because device_attention also obtains
-                    // and releases the lock.  In that short period, a
-                    // (matching) command may arrive, causing a short
-                    // device busy status and an update of the other
-                    // (y-)side status.  We discover this situation.
-                    i = 10;
+                    // Produce a CTCE Trace logging if requested.
+                    if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+                    {
+
+                        // Disable ATTN RC reporting this time.
+                        CTCE_Info.working_attn_rc = -1;
+
+                        // In a contention winner situation, the command
+                        // received from the other (y-)side still needs
+                        // to be reported correctly.
+                        pDEVBLK->ctceyCmd =  pSokBuf->CmdReg;
+                        CTCE_Info.sok_buf_len = iLength;
+                        CTCE_Trace( pDEVBLK, pSokBuf->sCount, CTCE_RCV, &CTCE_Info, buf, &ctce_recv_mods_UnitStat );
+                    }
+
+                    // The device_attention might not work on the first
+                    // attempt due to the fact that we need to release
+                    // the device lock around it, merely because that
+                    // routine obtains and releases the device lock.
+                    // During that short period, one or more commands
+                    // may have come in between, causing a device busy
+                    // and a possible other (y-)side status update. So
+                    // we may need to re-try the ATTN if needed at all.
+                    release_lock( &pDEVBLK->lock );
+                    CTCE_Info.working_attn_rc = 1;
                     for( CTCE_Info.busy_waits = 0;
-                         ( CTCE_Info.attn_can == 0   ) &&
-                         ( CTCE_Info.busy_waits < 20 ) &&
-                         ( pDEVBLK->busy ) ;
+                         ( CTCE_Info.working_attn_rc == 1 ) &&
+                         ( CTCE_Info.attn_can == 0 ) &&
+                         ( CTCE_Info.busy_waits <= 20 ) ;
                          CTCE_Info.busy_waits++ )
                     {
-                        release_lock( &pDEVBLK->lock );
-                        usleep(i);
-                        i = i * 2;
-                        obtain_lock( &pDEVBLK->lock );
-
-                        // If we discover the other (y-)side state has changed
-                        // during our lock release, then ATTN is no longer needed.
-                        if( pDEVBLK->ctceyState != pSokBuf->FsmSta )
-                        {
-                            CTCE_Info.attn_can = 1;
-                        }
-                    }
-                    if( CTCE_Info.attn_can == 0 )
-                    {
-
-                        // The release and re-obtain lock is only needed
-                        // because device_attention also obtains and releases
-                        // the lock, which under Unix causes HHCCP017I eventually.
-                        release_lock( &pDEVBLK->lock );
-                        ctce_recv_mods_UnitStat |= CSW_ATTN;
                         CTCE_Info.working_attn_rc = device_attention( pDEVBLK, CSW_ATTN );
-                        obtain_lock( &pDEVBLK->lock );
 
-                        // WAIT ATTN Non-zero RC will be reported but only if
-                        // RC=1 remains after a limited number of retries.
-                        for( i = 0; ( CTCE_Info.working_attn_rc == 1 ) && ( i < 10 ); i++ )
+                        // ATTN RC=1 means a device busy status did
+                        // appear so that the signal did not work.
+                        // We will retry after some (increasingly)
+                        // small amount of time.
+                        if( CTCE_Info.working_attn_rc == 1 )
                         {
-                            release_lock( &pDEVBLK->lock );
-                            usleep(1000);
-                            CTCE_Info.working_attn_rc = device_attention( pDEVBLK, CSW_ATTN );
-                            obtain_lock( &pDEVBLK->lock );
+                            if( CTCE_Info.busy_waits == 0 )
+                            {
+                                i = 10;
+                            }
+                            else
+                            {
+                                i = i * 2;
+                            }
+                            usleep(i);
                         }
-                        CTCE_Info.working_attn_retry = i;
                     }
+                    obtain_lock( &pDEVBLK->lock );
+
+                    // We will show the ATTN status if it was signalled.
+                    if( CTCE_Info.working_attn_rc == 0 )
+                    {
+                        ctce_recv_mods_UnitStat = CSW_ATTN;
+                    }
+                    CTCE_Info.busy_waits -= 1;
                 } // if( IS_CTCE_ATTN( CTCE_Info.actions ) && ... /* Attention Needed */
                 else if( IS_CTCE_ATTN( CTCE_Info.actions ) )
                 {
+                    CTCE_Info.busy_waits = 0;
                     CTCE_Info.attn_can = 1;
                 }
             }
@@ -3029,7 +3082,7 @@ static void*  CTCE_RecvThread( void* argp )
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep
                 || ( ctce_recv_mods_UnitStat == ( CSW_BUSY | CSW_ATTN ) )
                 || ( CTCE_Info.de_ready_attn_rc != 0 )
-                || ( CTCE_Info.working_attn_rc  != 0 )
+                || ( ( CTCE_Info.working_attn_rc  != 0 ) && ( CTCE_Info.attn_can == 0 ) )
                 || ( CTCE_Info.busy_waits       >= 3 ) )
             {
 
@@ -3136,23 +3189,23 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
     BYTE           ctce_state_verify;          // CTCE state to be verfified
     char           ctce_state_l_xy[2];         // CTCE X+Y states, left
     char           ctce_state_r_xy[2];         // CTCE X+Y stares, right
-    char           ctce_trace_stat[16];        // to contain " Stat=.."
+    char           ctce_trace_stat[16];        // to contain " Stat=.. CC=."
     char           ctce_trace_xtra[256];       // to contain extra info when tracing
     char           ctce_trace_xtra_temp[256];  // temporary work area for the above
 
     pSokBuf = (CTCE_SOKPFX*)pCTCE_Buf;
 
-    // Report on the device status.
+    // Report on the device status and CCW Command Chaining flag.
     if( ( eCTCE_Cmd_Xfr != CTCE_RCV ) || ( *pUnitStat != 0 ) ||
         ( IS_CTCE_MATCH( pCTCE_Info->actions ) ) )
     {
         snprintf( ctce_trace_stat, sizeof( ctce_trace_stat ),
-            "Stat=%02X", *pUnitStat );
+            "Stat=%02X CC=%d", *pUnitStat, pDEVBLK->ctce_ccw_flags_cc );
     }
     else
     {
         snprintf( ctce_trace_stat, sizeof( ctce_trace_stat ),
-            "       " );
+            "        CC=%d", pDEVBLK->ctce_ccw_flags_cc );
     }
 
     ctce_trace_xtra[0] = '\0' ;
@@ -3167,17 +3220,11 @@ void            CTCE_Trace( const DEVBLK*             pDEVBLK,
         {
             strlcat( ctce_trace_xtra, "->NONE", sizeof( ctce_trace_xtra ) );
         }
-        else
+        else if( pCTCE_Info->working_attn_rc > -1 )
         {
             snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
                 "->RC=%d", pCTCE_Info->working_attn_rc );
             strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
-            if( pCTCE_Info->working_attn_retry > 0 )
-            {
-                snprintf( ctce_trace_xtra_temp, sizeof( ctce_trace_xtra_temp ),
-                    "(retry=%d)", pCTCE_Info->working_attn_retry );
-                strlcat( ctce_trace_xtra, ctce_trace_xtra_temp, sizeof( ctce_trace_xtra ) );
-            }
         }
     }
 
