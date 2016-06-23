@@ -1061,6 +1061,27 @@
     <None Include="tests\cpu0off.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\ieee-adds.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\ieee-comps.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\ieee-div-nans.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\ieee-divs.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\ieee-mults.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\ieee-sqrts.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\ieee-subs.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\l.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1142,22 +1163,64 @@
     <None Include="tests\iedtr.txt">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
+    <None Include="tests\ieee-adds.asm">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-adds.list">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
     <None Include="tests\ieee-adds.tst">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-comps.asm">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-comps.list">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
     <None Include="tests\ieee-comps.tst">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
-    <None Include="tests\ieee-divs.tst">
+    <None Include="tests\ieee-div-nans.asm">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-div-nans.list">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
     <None Include="tests\ieee-div-nans.tst">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
+    <None Include="tests\ieee-divs.asm">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-divs.list">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-divs.tst">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-mults.asm">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-mults.list">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
     <None Include="tests\ieee-mults.tst">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
+    <None Include="tests\ieee-sqrts.asm">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-sqrts.list">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
     <None Include="tests\ieee-sqrts.tst">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-subs.asm">
+      <Filter>Other Files\tests\scripts</Filter>
+    </None>
+    <None Include="tests\ieee-subs.list">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
     <None Include="tests\ieee-subs.tst">

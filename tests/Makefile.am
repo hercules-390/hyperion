@@ -3,6 +3,13 @@ dist_pkgdata_DATA =			\
 	 b.core					\
 	 bctr.core				\
 	 cpu0off.core			\
+	 ieee-adds.core			\
+	 ieee-comps.core		\
+	 ieee-div-nans.core		\
+	 ieee-divs.core			\
+	 ieee-mults.core		\
+	 ieee-sqrts.core		\
+	 ieee-subs.core			\
 	 l.core					\
 	 la.core				\
 	 la2.core				\
@@ -67,12 +74,26 @@ EXTRA_DIST =				\
 	 hetbsf.het				\
 	 hetbsf.tst				\
 	 iedtr.txt				\
+	 ieee-adds.asm			\
+	 ieee-adds.list			\
 	 ieee-adds.tst			\
+	 ieee-comps.asm			\
+	 ieee-comps.list		\
 	 ieee-comps.tst			\
+	 ieee-div-nans.asm		\
+	 ieee-div-nans.list		\
 	 ieee-div-nans.tst		\
+	 ieee-divs.asm			\
+	 ieee-divs.list			\
 	 ieee-divs.tst			\
+	 ieee-mults.asm			\
+	 ieee-mults.list		\
 	 ieee-mults.tst			\
+	 ieee-sqrts.asm			\
+	 ieee-sqrts.list		\
 	 ieee-sqrts.tst			\
+	 ieee-subs.asm			\
+	 ieee-subs.list			\
 	 ieee-subs.tst			\
 	 ilc.assemble			\
 	 ilc.listing			\

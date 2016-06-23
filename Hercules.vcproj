@@ -2904,6 +2904,34 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\ieee-adds.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\ieee-comps.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\ieee-div-nans.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\ieee-divs.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\ieee-mults.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\ieee-sqrts.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\ieee-subs.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\l.core"
 						>
 					</File>
@@ -3727,7 +3755,23 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\ieee-adds.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-adds.list"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\ieee-adds.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-comps.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-comps.list"
 							>
 						</File>
 						<File
@@ -3735,7 +3779,23 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\ieee-div-nans.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-div-nans.list"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\ieee-div-nans.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-divs.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-divs.list"
 							>
 						</File>
 						<File
@@ -3743,11 +3803,35 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\ieee-mults.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-mults.list"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\ieee-mults.tst"
 							>
 						</File>
 						<File
+							RelativePath=".\tests\ieee-sqrts.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-sqrts.list"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\ieee-sqrts.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-subs.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-subs.list"
 							>
 						</File>
 						<File
