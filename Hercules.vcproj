@@ -3662,62 +3662,62 @@
 							RelativePath=".\tests\sske.assemble"
 							>
 						</File>
-					</Filter>
-					<Filter
-						Name="listing"
-						>
-						<File
-							RelativePath=".\tests\agf.listing"
+						<Filter
+							Name="listing"
 							>
-						</File>
-						<File
-							RelativePath=".\tests\cipher.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\csxtr.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\digest.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ilc.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\invpsw.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\leapfrog.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\logicimm.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\mhi.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\mvcle.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\pfpo-esa.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\sigp.listing"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\sske.listing"
-							>
-						</File>
+							<File
+								RelativePath=".\tests\agf.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cipher.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\csxtr.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\digest.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ilc.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\invpsw.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\leapfrog.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\logicimm.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mhi.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\mvcle.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\pfpo-esa.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\sigp.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\sske.listing"
+								>
+							</File>
+						</Filter>
 					</Filter>
 					<Filter
 						Name="tst"
@@ -3755,23 +3755,7 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\ieee-adds.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-adds.list"
-							>
-						</File>
-						<File
 							RelativePath=".\tests\ieee-adds.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-comps.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-comps.list"
 							>
 						</File>
 						<File
@@ -3779,23 +3763,7 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\ieee-div-nans.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-div-nans.list"
-							>
-						</File>
-						<File
 							RelativePath=".\tests\ieee-div-nans.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-divs.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-divs.list"
 							>
 						</File>
 						<File
@@ -3803,35 +3771,11 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\ieee-mults.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-mults.list"
-							>
-						</File>
-						<File
 							RelativePath=".\tests\ieee-mults.tst"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\ieee-sqrts.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-sqrts.list"
-							>
-						</File>
-						<File
 							RelativePath=".\tests\ieee-sqrts.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-subs.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-subs.list"
 							>
 						</File>
 						<File
@@ -3906,38 +3850,38 @@
 							RelativePath=".\tests\timeout.tst"
 							>
 						</File>
-					</Filter>
-					<Filter
-						Name="subtst"
-						>
-						<File
-							RelativePath=".\tests\cmd-abs-2K.subtst"
+						<Filter
+							Name="subtst"
 							>
-						</File>
-						<File
-							RelativePath=".\tests\cmd-abs-4K.subtst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\cmd-rv-2K.subtst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\cmd-rv-4K-32.subtst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\cmd-rv-4K-64.subtst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\runtest.subtst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\tapebsf.subtst"
-							>
-						</File>
+							<File
+								RelativePath=".\tests\cmd-abs-2K.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cmd-abs-4K.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cmd-rv-2K.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cmd-rv-4K-32.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\cmd-rv-4K-64.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\runtest.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\tapebsf.subtst"
+								>
+							</File>
+						</Filter>
 					</Filter>
 					<Filter
 						Name="asm"
@@ -3946,6 +3890,66 @@
 							RelativePath=".\tests\dc-float.asm"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\ieee-adds.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-comps.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-div-nans.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-divs.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-mults.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-sqrts.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ieee-subs.asm"
+							>
+						</File>
+						<Filter
+							Name="list"
+							>
+							<File
+								RelativePath=".\tests\ieee-adds.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ieee-comps.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ieee-div-nans.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ieee-divs.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ieee-mults.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ieee-sqrts.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\ieee-subs.list"
+								>
+							</File>
+						</Filter>
 					</Filter>
 				</Filter>
 			</Filter>
