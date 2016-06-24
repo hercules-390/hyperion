@@ -145,6 +145,8 @@ r 518=ffffffff          # data  (VOL1)
 
 runtest 0.5
 
+detach $(tapecuu)       # now that we're done with it
+
 *Compare
 r 500.2
 *Want 0048

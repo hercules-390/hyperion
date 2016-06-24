@@ -5,8 +5,8 @@
 
 sysclear
 archmode esame
-loadcore ieee-divs.core
-runtest 
+loadcore $(testpath)/ieee-divs.core
+runtest .1
 
 r 420.20       # Display short BFP results in test log
 r 4C0.20       # Display short BFP Divide to Integer results in test log

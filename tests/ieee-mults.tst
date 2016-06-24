@@ -6,8 +6,8 @@
 
 sysclear
 archmode esame
-loadcore ieee-mults.core
-runtest 
+loadcore $(testpath)/ieee-mults.core
+runtest .1
 
 *Compare
 r 420.10  # BFP Short Products part 1 Expecting 2 2 8 8

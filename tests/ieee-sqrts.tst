@@ -44,8 +44,8 @@
 #
 sysclear
 archmode esame
-loadcore ieee-sqrts.core
-runtest 
+loadcore $(testpath)/ieee-sqrts.core
+runtest .1
 
 *Compare
 r 410.10  # Inputs converted to BFP short 

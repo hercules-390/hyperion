@@ -64,7 +64,7 @@ r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
 *Program 0006
-runtest
+runtest .1
 *Done
 *
 * -----------------------------------------------------------------
@@ -97,7 +97,7 @@ r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
 *Program 0006
-runtest
+runtest .1
 *Done
 *
 * -----------------------------------------------------------------
@@ -129,7 +129,7 @@ r $(alastpage)=$(lastpage)
 r $(apastlast)=$(pastlast)
 *
 *Program 0005
-runtest
+runtest .1
 *Done
 *
 * -----------------------------------------------------------------

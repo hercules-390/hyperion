@@ -9,8 +9,8 @@
 
 sysclear
 archmode esame
-loadcore ieee-comps.core
-runtest 
+loadcore $(testpath)/ieee-comps.core
+runtest .1
 
 # the following symbol definitions must match the first digit of the corresponding 
 # ORG statement in the ieee-comps.asm and .list files

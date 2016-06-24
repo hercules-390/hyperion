@@ -8,8 +8,8 @@
 *
 sysclear
 archmode esame
-loadcore ieee-subs.core
-runtest 
+loadcore $(testpath)/ieee-subs.core
+runtest .1
 
 *Compare
 r 410.10  # Inputs converted to BFP short 2 1 4 -2
