@@ -137,6 +137,7 @@
   set "TRACE=if defined DEBUG echo"
   set "return=goto :EOF"
   set "exit=goto :exit"
+  set "skip=goto :skip"
   set "maxrc=0"
   set "rc=0"
   set "hlp="
@@ -266,6 +267,7 @@
 ::-----------------------------------------------------------------------------
 ::                            remlead0
 ::-----------------------------------------------------------------------------
+:remlead0
 
   @REM  Removes leading zeros from a given number so that it
   @REM  isn't unintentionally interpretted as an octal number.
@@ -765,7 +767,7 @@
 
   @REM  Validate repeat option arguments
 
-  if not defined repeat goto :skip
+  if not defined repeat %skip%
 
   set "noexit="
 
@@ -785,7 +787,7 @@
 
   @REM  Validate /t factor option
 
-  if not defined ttof goto :skip
+  if not defined ttof %skip%
 
   echo If %ttof% ^< 1.0 Or %ttof% ^> %mttof% Then   >  %wfn%.vbs
   echo Wscript.Echo "0"                             >> %wfn%.vbs
@@ -1015,10 +1017,21 @@
     goto :exitnow
   )
 
+  @REM Save ending time
+
+  set "endtime=%time%"
+  call :difftime %begtime% %endtime%
+  set /a "totsecs=%#%"
+  call :dureng %totsecs%
+  set "totdur=%#%"
+
+
   @REM Exit now if normal non-repeat run...
 
   if not defined repeat (
     type %wfn%.txt
+    echo.
+    echo Duration: %totdur%
     echo.
     if %rc% EQU 0 (
       echo End: ** Success! **
@@ -1033,12 +1046,8 @@
 
   if %totfail% EQU 0 (
     call :logmsg ** Successfully completed %maxruns% runs in a row without any failures! **
+    %skip%
   )
-
-  set "endtime=%time%"
-  call :difftime %begtime% %endtime%
-  set /a "totsecs=%#%"
-  if %totfail% EQU 0 goto :skip
 
 
   @REM Report failure rate/frequency...
@@ -1061,9 +1070,8 @@
 :skip
 
 
-  call :dureng %totsecs%
   call :logmsg
-  call :logmsg Duration: %#%
+  call :logmsg Duration: %totdur%
 
 
 :exitnow
