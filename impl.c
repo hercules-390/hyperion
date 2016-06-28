@@ -374,10 +374,14 @@ static LRESULT CALLBACK MainWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
 
 // Create invisible message handling window...
 
-static BOOL CreateMsgWindow()
+HANDLE  g_hWndEvt  = NULL;  // (temporary window creation event)
+HWND    g_hMsgWnd  = NULL;  // (window handle of message window)
+
+static void* WinMsgThread( void* arg )
 {
-    HWND      hWnd  =  NULL;
     WNDCLASS  wc    =  {0};
+
+    UNREFERENCED( arg );
 
     wc.lpfnWndProc    =  MainWndProc;
     wc.hInstance      =  GetModuleHandle(0);
@@ -385,7 +389,7 @@ static BOOL CreateMsgWindow()
 
     RegisterClass( &wc );
 
-    hWnd = CreateWindowEx( 0,
+    g_hMsgWnd = CreateWindowEx( 0,
         "Hercules", "Hercules",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
@@ -393,14 +397,9 @@ static BOOL CreateMsgWindow()
         NULL, NULL,
         GetModuleHandle(0), NULL );
 
-    return hWnd ? TRUE : FALSE;
-}
+    SetEvent( g_hWndEvt );      // (indicate create window completed)
 
-// Window message thread -- pumps window messages...
-
-static void* WinMsgThread( void* arg )
-{
-    if ((*(BOOL*)arg = CreateMsgWindow()))
+    if (g_hMsgWnd)  // (pump messages if window successfully created)
     {
         MSG msg;
         while (GetMessage( &msg, NULL , 0 , 0 ))
@@ -1044,18 +1043,25 @@ int     rc;
             return(1);
         }
 
+        g_hWndEvt = CreateEvent( NULL, TRUE, FALSE, NULL );
+
         if ((rc = create_thread( &dummy, DETACHED,
             WinMsgThread, (void*) &bSuccess, "WinMsgThread" )) != 0)
         {
             // "Error in function create_thread(): %s"
             WRMSG( HHC00102, "E", strerror( rc ));
+            CloseHandle( g_hWndEvt );
             delayed_exit(-1);
             return(1);
         }
 
-        Sleep( 100 ); // (wait for WinMsgThread to set 'bSuccess')
+        // (wait for thread to create window)
+        WaitForSingleObject( g_hWndEvt, INFINITE );
+        CloseHandle( g_hWndEvt );
 
-        if (!bSuccess)
+        // Was message window successfully created?
+
+        if (!g_hMsgWnd)
         {
             // "Error in function %s: %s"
             WRMSG( HHC00136, "E", "WinMsgThread", "CreateWindowEx() failed");
