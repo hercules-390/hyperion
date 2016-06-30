@@ -148,9 +148,7 @@
   set "tname="
   set "noexit="
   set "ftype="
-  if "%PROCESSOR_ARCHITECTURE%" == "AMD64" set "vars=ptrsize=8"
-  if "%PROCESSOR_ARCHITECTURE%" == "IA64"  set "vars=ptrsize=8"
-  if "%PROCESSOR_ARCHITECTURE%" == "x86"   set "vars=ptrsize=4"
+  set "vars=platform=Windows"
   set "bitness="
   set "build="
   set "repeat="
@@ -742,8 +740,10 @@
 
   if "%bitness%" == "64" (
     set "hdir=msvc.%dbg%AMD64.bin"
+    set "vars=%vars% ptrsize=8"
   ) else if "%bitness%" == "32" (
     set "hdir=msvc.%dbg%dllmod.bin"
+    set "vars=%vars% ptrsize=4"
   ) else (
     echo ERROR: Which binaries to use must be either '64' or'32' 1>&2
     set /a "rc=1"

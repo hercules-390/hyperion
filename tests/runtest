@@ -307,6 +307,8 @@ fi
 
 # Read entire file to allow redtest.rexx to parse the features list
 if [ $rv -eq 0 ] ; then
+   platform=$(uname -s)
+   vars="platform=$platform ptrsize=$ptrsize $vars"
    rexx $dir/redtest.rexx $wfn.out $vars $rest
    rv=$?
 fi
