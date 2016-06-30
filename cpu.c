@@ -929,13 +929,24 @@ static char *pgmintname[] = {
 
 #if defined(_FEATURE_SIE)
     if(nointercept)
-    {
 #endif /*defined(_FEATURE_SIE)*/
-//FIXME: Why are we getting intlock here??
-//      OBTAIN_INTLOCK(realregs);
+    {
+        PSW pgmold, pgmnew;
+        int pgmintloop = 0;
+        int detect_pgmintloop = FACILITY_ENABLED( DETECT_PGMINTLOOP, realregs );
 
         /* Store current PSW at PSA+X'28' or PSA+X'150' for ESAME */
         ARCH_DEP(store_psw) (realregs, psa->pgmold);
+
+        /* Save program old psw */
+        if (detect_pgmintloop)
+        {
+            memcpy( &pgmold, &realregs->psw, sizeof( PSW ));
+            pgmold.cc      = 0;
+            pgmold.intcode = 0;
+            pgmold.ilc     = 0;
+            pgmold.unused  = 0;
+        }
 
         /* Load new PSW from PSA+X'68' or PSA+X'1D0' for ESAME */
         if ( (code = ARCH_DEP(load_psw) (realregs, psa->pgmnew)) )
@@ -943,31 +954,46 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_SIE)
             if(SIE_MODE(realregs))
             {
-//              RELEASE_INTLOCK(realregs);
                 longjmp(realregs->progjmp, pcode);
             }
             else
 #endif /*defined(_FEATURE_SIE)*/
-            if(FACILITY_ENABLED(DETECT_PGMINTLOOP,regs))
-            {
-                char buf[64];
+            /* Invalid pgmnew ==> program interrupt loop */
+            pgmintloop = detect_pgmintloop;
+        }
+        else if (detect_pgmintloop)
+        {
+            /* Save program new psw */
+            memcpy( &pgmnew, &realregs->psw, sizeof( PSW ));
+            pgmnew.cc      = 0;
+            pgmnew.intcode = 0;
+            pgmnew.ilc     = 0;
+            pgmnew.unused  = 0;
 
-                WRMSG(HHC00803, "I", PTYPSTR(realregs->cpuad), realregs->cpuad,
-                         str_psw (realregs, buf));
-                OBTAIN_INTLOCK(realregs);
-                realregs->cpustate = CPUSTATE_STOPPING;
-                ON_IC_INTERRUPT(realregs);
-                RELEASE_INTLOCK(realregs);
-            }
+            /* Adjust pgmold instruction address */
+            pgmold.ia.D -= ilc;
+
+            /* Check for program interrupt loop (old==new) */
+            if (memcmp( &pgmold, &pgmnew, sizeof( PSW )) == 0)
+                pgmintloop = 1;
         }
 
-//      RELEASE_INTLOCK(realregs);
+        if (pgmintloop)
+        {
+            char buf[64];
+            // "Processor %s%02X: program interrupt loop PSW %s"
+            WRMSG(HHC00803, "I", PTYPSTR(realregs->cpuad), realregs->cpuad,
+                     str_psw (realregs, buf));
+            OBTAIN_INTLOCK(realregs);
+            realregs->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT(realregs);
+            RELEASE_INTLOCK(realregs);
+        }
 
         longjmp(realregs->progjmp, SIE_NO_INTERCEPT);
-
-#if defined(_FEATURE_SIE)
     }
 
+#if defined(_FEATURE_SIE)
     longjmp (realregs->progjmp, pcode);
 #endif /*defined(_FEATURE_SIE)*/
 
