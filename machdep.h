@@ -571,12 +571,16 @@ U32  *ptr4, val4, old4, new4;
 /*-------------------------------------------------------------------
  * Decide if strict alignment is required
  *-------------------------------------------------------------------*/
+/*
 #if !defined(OPTION_STRICT_ALIGNMENT) && !defined(OPTION_NO_STRICT_ALIGNMENT)
  #if !defined(_MSVC_) && !defined(_ext_ia32) && !defined(_ext_amd64) \
   && !defined(_ext_ppc)
     #define OPTION_STRICT_ALIGNMENT
  #endif
 #endif
+*/
+/* PER C11 standard, unaligned storage accesses have an undefined behavior so...  */
+#define OPTION_STRICT_ALIGMENT
 
 /*-------------------------------------------------------------------
  * fetch_hw_noswap and fetch_hw
