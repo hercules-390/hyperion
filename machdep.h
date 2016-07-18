@@ -580,7 +580,7 @@ U32  *ptr4, val4, old4, new4;
 #endif
 */
 /* PER C11 standard, unaligned storage accesses have an undefined behavior so...  */
-#define OPTION_STRICT_ALIGMENT
+#define OPTION_STRICT_ALIGNMENT
 
 /*-------------------------------------------------------------------
  * fetch_hw_noswap and fetch_hw
