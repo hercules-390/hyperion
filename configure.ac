@@ -113,29 +113,46 @@ esac
 hc_gcc_level="`${CC} -dumpversion`"
 AC_MSG_NOTICE( [Detected GCC equivalent level for ${CC} : ${hc_gcc_level}] )
 
+#------------------------------------------#
+#  Check for broken '-O3' version of GCC   #
+#------------------------------------------#
+
+if test "$GCC" = "yes"; then
+
+    AC_CACHE_CHECK( [if this is GCC with broken '-O3' option],
+
+        [hc_cv_broken_gcc_O3],
+        [
+            AS_VERSION_COMPARE( $hc_gcc_level, "4.9.2",
+                                [hc_cv_broken_gcc_O3=no],
+                                [hc_cv_broken_gcc_O3=yes],
+                                [hc_cv_broken_gcc_O3=no] )
+        ]
+    )
+else
+    hc_cv_broken_gcc_O3=no
+fi
+
 #------------------------#
 #  Fix CFLAGS if needed  #
 #------------------------#
 
-# The following is not productive.  Stuff shoud be compiled with -g
-# so that one can put a debugger on a core dump or a runaway process.
-# The optimisation flag can be overridden by specifying -O3, which by the way
-# generates unreliable code with some levels of GCC, if not always.
-# jph 2015-11-11
-
-# Remove "-g" and "-O2" CFLAGS that "AC_PROG_CC" helpfully(?)
-# added for us that we don't want... (since we handle setting
-# the optimization flags ourselves; refer to near the end of
-# configure.ac where "$hc_cv_opt_optimization" is handled, in
-# the "AUTOMATIC DETERMINATION OF OPTIMIZATION FLAGS" section.
-
-CFLAGS="`echo $CFLAGS | sed -e 's/-g//'`"
-CFLAGS="`echo $CFLAGS | sed -e 's/-O2//'`"
-
-# Add the "-W -Wall" options to CFLAGS if we're using gcc...
-
 if test "$GCC" = "yes"; then
-  CFLAGS="$CFLAGS -W -Wall"
+
+  # Show us everything
+
+  CFLAGS="${CFLAGS} -W -Wall"
+
+  # We prefer -O3 (the highest optimization level possible)
+  # as long as we can trust GCC to implement it correctly.
+
+  if test "$hc_cv_broken_gcc_O3" = "yes"; then
+    CFLAGS="`echo $CFLAGS | sed -e 's/-O3//'`"
+    CFLAGS="${CFLAGS} -O2"
+  else
+    CFLAGS="`echo $CFLAGS | sed -e 's/-O2//'`"
+    CFLAGS="${CFLAGS} -O3"
+  fi
 fi
 
 #-------------------------------------------------------#
@@ -444,6 +461,7 @@ AH_TEMPLATE( [HAVE_GCC_DIAG_PRAGMA],         [Define if _Pragma GCC diagnostic i
 AH_TEMPLATE( [HAVE_GCC_DIAG_PUSHPOP],        [Define if _Pragma GCC diagnostic push/pop is supported] )
 AH_TEMPLATE( [HAVE_GCC_UNUSED_FUNC_WARNING], [Define if GCC issues 'defined but not used' warnings] )
 AH_TEMPLATE( [HAVE_GCC_SET_UNUSED_WARNING],  [Define if GCC issues 'variable set but not used' warnings] )
+AH_TEMPLATE( [ATOMIC_LOCK_FREE_DEFINED_OK],  [Define if GCC defines 'ATOMIC_CHAR_LOCK_FREE' correctly] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -1218,6 +1236,36 @@ AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
     ]
 )
 
+#---------------------------------------------------#
+#  Check for GCC #define ATOMIC_CHAR_LOCK_FREE bug  #
+#---------------------------------------------------#
+
+AC_CACHE_CHECK( [if GCC defines ATOMIC_CHAR_LOCK_FREE correctly],
+
+    [hc_cv_atomic_lock_free_defined_ok],
+    [
+        if test "$GCC" = "yes"; then
+
+            AC_COMPILE_IFELSE(
+                [
+                    #if defined(HAVE_STDATOMIC_H) && !defined(__STDC_NO_ATOMICS__)
+                      #include <stdatomic.h>
+                      #undef    ATOMIC_LOCK_FREE_DEFINED_OK
+                      #if 2 ==  ATOMIC_CHAR_LOCK_FREE
+                        #define ATOMIC_LOCK_FREE_DEFINED_OK
+                      #endif
+                    #endif
+                ],
+                [hc_cv_atomic_lock_free_defined_ok=yes],
+                [hc_cv_atomic_lock_free_defined_ok=no]
+            )
+
+        else
+            hc_cv_atomic_lock_free_defined_ok=yes   # (presumed)
+        fi
+    ]
+)
+
 #----------------------------------------------#
 #  Check if C99 flexible arrays are supported  #
 #----------------------------------------------#
@@ -1430,22 +1478,8 @@ if test "$GCC"                          = "yes"  &&
 
         [hc_cv_regparm_attr_broke],
         [
-            #
-            #   Set initial CFLAGS
-            #
-            #   -O3 or -O3 is selected depending on whether or not GCC properly
-            #   handles -O3 optimization at the requested version level.
-            #
-            #   There is a minority view that -O3 produces less optimised
-            #   code than -O2.  In one context the slowdown by -O3 was 50%
-            #
             hc_temp="$CFLAGS"
-            AS_VERSION_COMPARE( $hc_gcc_level, "4.9.2",
-                                [CFLAGS="-O3"],
-                                [CFLAGS="-O2"],
-                                [CFLAGS="-O3"] )
-            CFLAGS="${CFLAGS} -fomit-frame-pointer"
-
+            CFLAGS="-O3 -fomit-frame-pointer"
             AC_TRY_RUN(
                 [
                     /*
@@ -2337,16 +2371,17 @@ AC_CACHE_SAVE()
 
 AC_MSG_CHECKING( [for what optimization flags to use] )
 
-    hc_cv_optimization_flags=""
+hc_cv_optimization_flags=""
 
 if test "$GCC" = "yes"; then
 
-    # Note: the -g option we start with below will be removed if they specified
+    # Note: the -g options we start with below will be removed if they specified
     # their own optimization flags via "--enable-optimization=(flags)", but will
     # be kept if they specify an optimized build via "--enable-optimization=yes"
 
-    hc_cv_optimization_flags="$hc_cv_optimization_flags -g3"    # Include module/statement_information
-    hc_cv_optimization_flags="$hc_cv_optimization_flags -ggdb3" # Include gdb symbols
+    hc_cv_optimization_flags="$hc_cv_optimization_flags -g"     # Include debugging information
+    hc_cv_optimization_flags="$hc_cv_optimization_flags -g3"    # Include module/statement information
+    hc_cv_optimization_flags="$hc_cv_optimization_flags -ggdb3" # Include gdb debugger symbols
 fi
 
 case "$hc_cv_opt_optimization" in
@@ -2363,6 +2398,10 @@ case "$hc_cv_opt_optimization" in
 
     *)
         if test "x$hc_cv_opt_optimization" = "x"; then
+
+            # They did NOT specify any optimization flags.
+            # Don't optimize if this is a debugging build.
+            # Otherwise we definitely want to optimize.
 
             if test "$hc_cv_opt_debug" = "yes"; then
                 hc_cv_auto_optimize=no
@@ -2382,9 +2421,20 @@ esac
 
 if test "$hc_cv_auto_optimize" = "yes"; then
 
+    #----------------------------------------------------------#
+    #                      AUTO-OPTIMIZE                       #
+    #----------------------------------------------------------#
 
-    if test "$hc_cv_builtin_alloca_broke" != "yes"; then
+    if test "$GCC" = "yes"; then
+
+      # We prefer -O3 (the highest optimization level possible)
+      # as long as we can trust GCC to implement it correctly.
+
+      if test "$hc_cv_broken_gcc_O3"        != "yes"  &&
+         test "$hc_cv_builtin_alloca_broke" != "yes"
+      then
         hc_cv_optimization_flags="$hc_cv_optimization_flags -O3"
+      fi
     fi
 
     hc_cv_is_intel_x86_arch=no
@@ -2439,6 +2489,7 @@ if test "$hc_cv_auto_optimize" = "yes"; then
             hc_cv_optimization_flags="$hc_cv_optimization_flags -mcpu=$target_cpu -mtune=$target_cpu -frename-registers"
             ;;
     esac
+
     if test "$hc_cv_is_intel_x86_arch" = "yes"; then
 
         # Set CPU type
@@ -2540,6 +2591,7 @@ test "$hc_cv_have_gcc_diag_pragma"         = "yes"  &&  AC_DEFINE(HAVE_GCC_DIAG_
 test "$hc_cv_have_gcc_diag_pushpop"        = "yes"  &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
 test "$hc_cv_have_gcc_unused_func_warning" = "yes"  &&  AC_DEFINE(HAVE_GCC_UNUSED_FUNC_WARNING)
 test "$hc_cv_have_gcc_set_unused_warning"  = "yes"  &&  AC_DEFINE(HAVE_GCC_SET_UNUSED_WARNING)
+test "$hc_cv_atomic_lock_free_defined_ok"  = "yes"  &&  AC_DEFINE(ATOMIC_LOCK_FREE_DEFINED_OK)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

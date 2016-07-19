@@ -81,58 +81,93 @@
 #ifndef _JPH_HATOMIC_H
 #define _JPH_HATOMIC_H
 
-#if defined(HAVE_STDATOMIC_H) && !defined(__STDC_NO_ATOMICS__) && !defined(DISABLE_IAF2)
-   #include <stdatomic.h>
-#endif
+#define CAN_IAF2_ATOMICS_UNAVAILABLE    0
+#define CAN_IAF2_MICROSOFT_INTRINSICS   1
+#define CAN_IAF2_GCC_CLANG_INTRINSICS   2
+#define CAN_IAF2_C11_STANDARD_ATOMICS   3
 
-#if 2 == ATOMIC_CHAR_LOCK_FREE && !defined(DISABLE_IAF2)
-
-   /* C11 standard operation.  2 specifies always lock free          */
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)    \
-      (atomic_fetch_ ## op((_Atomic BYTE *) ptr, imm) fallback imm)
-   #define CAN_IAF2 3
-
-#elif defined(_MSVC_) && !defined(DISABLE_IAF2)
-
-   /* Microsoft functions, as per Fish                            */
-
-   /* The  casts  of  the  function arguments here are to silence */
-   /* pointer  warnings for the three cases that are not true and */
-   /* which the compiler later deletes as dead code.              */
-
-   /* Due to MSVC's _Interlocked intrinsics being typed to return */
-   /* a signed value coupled with C language rules pertaining to  */
-   /* second and third operands of the ?: conditional operator as */
-   /* well as the order of our sizeof() tests the results of each */
-   /* intrinsic must also be cast to unsigned in order to prevent */
-   /* sign extension of the intrinsic return value with one bits, */
-   /* thereby causing an incorrect condition code 1 instead of 0. */
-
-   /* Note that the 64-bit intrinsic function is not available in */
-   /* 32 bit windows, hence the library function is used; it will */
-   /* compile as the intrinsic function on 64 bit.                */
-
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)                                                   \
-   (                                                                                                 \
-      (sizeof(*(ptr)) == 8) ? (((U64)  Interlocked ## Op ## 64 ((U64*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 4) ? (((U32) _Interlocked ## Op       ((U32*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 2) ? (((U16) _Interlocked ## Op ## 16 ((U16*) ptr, imm )) fallback imm ) :  \
-      (sizeof(*(ptr)) == 1) ? (((U8)  _Interlocked ## Op ## 8  ((U8*)  ptr, imm )) fallback imm ) :  \
-      (assert(0) /* returns void */, 0 /* to get integral result */)                                 \
-   )
-
-   #define CAN_IAF2 1
-
-#elif 2 == __GCC_ATOMIC_CHAR_LOCK_FREE && !defined(DISABLE_IAF2)
-   /* GCC/CLANG intrinsics                                           */
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) __atomic_ ## op ## _fetch(ptr, imm, __ATOMIC_SEQ_CST)
-   #define CAN_IAF2 2
-
+#if !defined( DISABLE_IAF2 )
+  #if defined(HAVE_STDATOMIC_H) && !defined(__STDC_NO_ATOMICS__)
+    #include <stdatomic.h>
+  #endif
+  #if defined( _MSVC_ )
+    #define   CAN_IAF2      CAN_IAF2_MICROSOFT_INTRINSICS
+  #elif defined( ATOMIC_LOCK_FREE_DEFINED_OK )
+    #if ATOMIC_CHAR_LOCK_FREE == 2
+      #define CAN_IAF2      CAN_IAF2_C11_STANDARD_ATOMICS
+    #elif defined( __GCC_ATOMIC_CHAR_LOCK_FREE )
+      #if __GCC_ATOMIC_CHAR_LOCK_FREE == 2
+        #define CAN_IAF2    CAN_IAF2_GCC_CLANG_INTRINSICS
+      #else
+        #define CAN_IAF2    CAN_IAF2_ATOMICS_UNAVAILABLE
+      #endif
+    #else
+      #define CAN_IAF2      CAN_IAF2_ATOMICS_UNAVAILABLE
+    #endif
+  #elif defined( __GCC_ATOMIC_CHAR_LOCK_FREE )
+    #if __GCC_ATOMIC_CHAR_LOCK_FREE == 2
+      #define CAN_IAF2      CAN_IAF2_GCC_CLANG_INTRINSICS
+    #else
+      #define CAN_IAF2      CAN_IAF2_ATOMICS_UNAVAILABLE
+    #endif
+  #else
+    #define   CAN_IAF2      CAN_IAF2_ATOMICS_UNAVAILABLE
+  #endif
 #else
-   /* Atomics not available                                          */
-   #define H_ATOMIC_OP(ptr, imm, op, Op, fallback) (*ptr fallback ## = imm)
-   /* #undef CAN_IAF2 */
-
+  #define     CAN_IAF2      CAN_IAF2_ATOMICS_UNAVAILABLE
 #endif
+
+#if CAN_IAF2_MICROSOFT_INTRINSICS == CAN_IAF2
+
+  /* Microsoft functions, as per Fish                            */
+
+  /* The  casts  of  the  function arguments here are to silence */
+  /* pointer  warnings for the three cases that are not true and */
+  /* which the compiler later deletes as dead code.              */
+
+  /* Due to MSVC's _Interlocked intrinsics being typed to return */
+  /* a signed value coupled with C language rules pertaining to  */
+  /* second and third operands of the ?: conditional operator as */
+  /* well as the order of our sizeof() tests the results of each */
+  /* intrinsic must also be cast to unsigned in order to prevent */
+  /* sign extension of the intrinsic return value with one bits, */
+  /* thereby causing an incorrect condition code 1 instead of 0. */
+
+  /* Note that the 64-bit intrinsic function is not available in */
+  /* 32 bit windows, hence the library function is used; it will */
+  /* compile as the intrinsic function on 64 bit.                */
+
+  #define H_ATOMIC_OP(ptr, imm, op, Op, fallback)                                                  \
+  (                                                                                                \
+    (sizeof(*(ptr)) == 8) ? (((U64)  Interlocked ## Op ## 64 ((U64*) ptr, imm )) fallback imm ) :  \
+    (sizeof(*(ptr)) == 4) ? (((U32) _Interlocked ## Op       ((U32*) ptr, imm )) fallback imm ) :  \
+    (sizeof(*(ptr)) == 2) ? (((U16) _Interlocked ## Op ## 16 ((U16*) ptr, imm )) fallback imm ) :  \
+    (sizeof(*(ptr)) == 1) ? (((U8)  _Interlocked ## Op ## 8  ((U8*)  ptr, imm )) fallback imm ) :  \
+    (assert(0) /* returns void */, 0 /* to get integral result */)                                 \
+  )
+
+#elif CAN_IAF2_GCC_CLANG_INTRINSICS == CAN_IAF2
+
+  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                     \
+                                                                        \
+    (__atomic_ ## op ## _fetch( ptr, imm, __ATOMIC_SEQ_CST ))
+
+#elif CAN_IAF2_C11_STANDARD_ATOMICS == CAN_IAF2
+
+  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                     \
+                                                                        \
+    (atomic_fetch_ ## op( (_Atomic BYTE*)ptr, imm ) fallback imm)
+
+#elif CAN_IAF2_ATOMICS_UNAVAILABLE == CAN_IAF2
+
+  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                     \
+                                                                        \
+    (*ptr fallback ## = imm)
+
+#else /* (none of the above) */
+
+  #error LOGIC ERROR! in header file hatomic.h!
+
+#endif /* CAN_IAF2_XXXXXXXXX == CAN_IAF2 */
 
 #endif /* _JPH_HATOMIC_H */

@@ -236,8 +236,8 @@ FACILITY(MSA_EXTENSION_3,  Z390,         NONE,      Z390,          ALS3)
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4)
 FACILITY(MSA_EXTENSION_4,  Z390,         NONE,      Z390,          ALS3)
 #endif
-#if defined(CAN_IAF2)
-/* Note that this facility is avilable in ESA mode too (SIE)         */
+#if CAN_IAF2 != CAN_IAF2_ATOMICS_UNAVAILABLE
+/* Note that this facility is available in ESA mode too (SIE) */
 FACILITY(INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS1 | ALS2 | ALS3)
 #endif
 

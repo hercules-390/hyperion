@@ -54,8 +54,8 @@
 #define FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #define FEATURE_INTEGRATED_3270_CONSOLE
 //#define FEATURE_INTEGRATED_ASCII_CONSOLE
-#if defined(CAN_IAF2)
-   /* Feature is available in ESA mode on z processors               */
+#if CAN_IAF2 != CAN_IAF2_ATOMICS_UNAVAILABLE
+   /* Feature is available in ESA mode on z processors */
    #define FEATURE_INTERLOCKED_ACCESS_FACILITY_2
 #endif
 #define FEATURE_INTERPRETIVE_EXECUTION

@@ -693,7 +693,7 @@ static const char *build_info[] = {
  && !defined( ASSIST_CMPXCHG16 ) \
  && !defined( ASSIST_FETCH_DW  ) \
  && !defined( ASSIST_STORE_DW  ) \
- && !defined( CAN_IAF2 )
+ && CAN_IAF2_ATOMICS_UNAVAILABLE == CAN_IAF2
     " (none)",
 #else
   #if defined( ASSIST_CMPXCHG1 )
@@ -714,17 +714,20 @@ static const char *build_info[] = {
   #if defined( ASSIST_STORE_DW )
                     " store_dw"
   #endif
-  #if defined( CAN_IAF2 )
+  #if     CAN_IAF2_ATOMICS_UNAVAILABLE  != CAN_IAF2
                     " hatomics"
-    #if CAN_IAF2 == 3
-      "=C11"
-    #elif CAN_IAF2 == 2
+    #if   CAN_IAF2_MICROSOFT_INTRINSICS == CAN_IAF2
+      "=msvcIntrinsics"
+    #elif CAN_IAF2_GCC_CLANG_INTRINSICS == CAN_IAF2
       "=gccIntrinsics"
+    #elif CAN_IAF2_C11_STANDARD_ATOMICS == CAN_IAF2
+      "=C11"
+    #else
+      "=UNKNOWN!"
     #endif
   #endif
     ,
 #endif
-
 };
 
 /*-------------------------------------------------------------------*/
