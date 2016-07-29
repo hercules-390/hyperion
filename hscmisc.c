@@ -419,7 +419,7 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
                                 || (opcode == 0xB3 && (inst[1] >= 0x40 && inst[1] <= 0x5F))    /* RRE BFP arithmetic   */
                                 || (opcode == 0xB3 && (inst[1] >= 0x84 && inst[1] <= 0x8C))    /* SFPC, SFASR, EFPC    */
                                 || (opcode == 0xB3 && (inst[1] >= 0x90 && inst[1] <= 0xAF))    /* RRE BFP arithmetic   */
-                                || (opcode == 0xB3 && (inst[1] >= 0xD0 && inst[1] <= 0xFF))    /* RRE DFP arithmetic   */
+                                || (opcode == 0xB3 && (inst[1] >= 0xD0))/*inst[1] <= 0xFF)) */ /* RRE DFP arithmetic   */
                                 || (opcode == 0xB9 && (inst[1] >= 0x41 && inst[1] <= 0x43))    /* DFP Conversions      */
                                 || (opcode == 0xB9 && (inst[1] >= 0x49 && inst[1] <= 0x5B))    /* DFP Conversions      */
                                 || (opcode == 0xED && (inst[1] <= 0x1F))                       /* RXE BFP arithmetic   */
@@ -1881,6 +1881,20 @@ BYTE    c;                              /* Character work area       */
     }
 
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
+    if (SIE_MODE(regs))
+    {
+        if (regs->hostregs->mainlim == 0 || aaddr > regs->hostregs->mainlim)
+        {
+            n += snprintf (buf+n, bufl-n-1,
+                "A:"F_RADR" Guest real address is not valid", aaddr);
+            return n;
+        }
+        else
+        {
+            n += snprintf (buf+n, bufl-n-1, "A:"F_RADR":", aaddr);
+        }
+    }
+    else
     if (regs->mainlim == 0 || aaddr > regs->mainlim)
     {
         n += snprintf (buf+n, bufl-n-1, "%s", " Real address is not valid");
@@ -2695,8 +2709,13 @@ char    regs_msg_buf[4*512] = {0};
         n = 0;
         buf2[0] = '\0';
 
+  #if defined(_FEATURE_SIE)
+        if(SIE_MODE (regs))
+            n += snprintf (buf2 + n, sizeof(buf2)-n-1, "SIE: ");
+  #endif /*defined(_FEATURE_SIE)*/
+
         if (sysblk.cpus > 1)
-            n += snprintf(buf2, sizeof(buf2)-1, "%s%02X: ",
+            n += snprintf(buf2 + n, sizeof(buf2)-n-1, "%s%02X: ",
                           PTYPSTR(regs->cpuad), regs->cpuad );
 
         if(REAL_MODE(&regs->psw))
@@ -2721,8 +2740,13 @@ char    regs_msg_buf[4*512] = {0};
         n = 0;
         buf2[0] = '\0';
 
+  #if defined(_FEATURE_SIE)
+    if(SIE_MODE (regs))
+        n += snprintf (buf2 + n, sizeof(buf2)-n-1, "SIE: ");
+  #endif /*defined(_FEATURE_SIE)*/
+
         if (sysblk.cpus > 1)
-            n += snprintf(buf2, sizeof(buf2)-1, "%s%02X: ",
+            n += snprintf(buf2 + n, sizeof(buf2)-n-1, "%s%02X: ",
                           PTYPSTR(regs->cpuad), regs->cpuad );
         if (0
             || (REAL_MODE(&regs->psw)
