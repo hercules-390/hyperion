@@ -3057,6 +3057,13 @@ static void*  CTCE_RecvThread( void* argp )
                                 i = i * 2;
                             }
                             usleep(i);
+
+                            // Cancel the ATTN in case a CCW program
+                            // has started in the mean time.
+                            if ( pDEVBLK->ctce_ccw_flags_cc )
+                            {
+                                CTCE_Info.attn_can = 1;
+                            }
                         }
                     }
                     obtain_lock( &pDEVBLK->lock );
