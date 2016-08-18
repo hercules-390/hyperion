@@ -2057,7 +2057,7 @@ AC_ARG_ENABLE( multi-cpu,
 
     AC_HELP_STRING( [--enable-multi-cpu=yes|no|NUMBER],
 
-        [enable/disable multi-cpu support (1-128, default 8)]
+        [enable/disable multi-cpu support (1-128, default 128)]
     ),
     [
         case "${enableval}" in
@@ -2074,7 +2074,7 @@ AC_ARG_ENABLE( multi-cpu,
             ;;
         esac
     ],
-    [hc_cv_opt_num_cpu_engines=8]
+    [hc_cv_opt_num_cpu_engines=128]
 )
 
 AC_ARG_ENABLE( interlocked-access-facility-2,
