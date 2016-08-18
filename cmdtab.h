@@ -925,7 +925,7 @@
   "      the operating system you intend to run on Hercules. If you specify\n"   \
   "      LICENSED and run a licensed operating system in violation of that\n"    \
   "      license, then don't come after the Hercules developers when the vendor\n"\
-  "      sends his lawyers after you.\n"
+  "      sends their lawyers after you.\n"
 
 
 #define pgmtrace_cmd_desc       "Trace program interrupts"
