@@ -78,7 +78,7 @@
 #define _JPH_HATOMIC_H
 
 #if defined( _MSVC_ )
-  #if _MSC_VER < VS2015
+  #if (_MSC_VER < VS2015) || !defined(HAVE_STDATOMIC_H) || defined(__STDC_NO_ATOMICS__)
     #undef  C11_ATOMICS_AVAILABLE
   #else
     #define C11_ATOMICS_AVAILABLE
