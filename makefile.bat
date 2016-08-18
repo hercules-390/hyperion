@@ -124,7 +124,7 @@
   echo                        other makefile name if you have a customized one)
   echo.
   echo    {num-cpu-engines}   The maximum number of emulated CPUs (NUMCPU=) you
-  echo                        want this build of Hercules to support: 1 to 128.
+  echo                        want this build of Hercules to support: 1 to 64.
   echo.
   echo    -asm                To generate assembly (.cod) listings.
   echo.
