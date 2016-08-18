@@ -60,7 +60,7 @@
 /*      lock cmpxchgb   %dl, 47(%esp)   #, tmp65,                    */
 /*      jne     .L2     #,                                           */
 /*                                                                   */
-/* In  my  view  this  not a lock free operation, but apparently the */
+/* In my view this is not a lock free operation, but apparently the  */
 /* compiler writers have decided otherwise.                          */
 /*                                                                   */
 /* Rejected altrnatives:                                             */
@@ -72,53 +72,75 @@
 /* <op>_fetch, a temporary variable would be needed to implement the */
 /* non-IAF2  case,  which would have negated the overloading we take */
 /* advantage of.                                                     */
-/*                                                                   */
-/* Change activity:                                                  */
-/* 5 Oct 2015  New header file.                                      */
 /*********************************************************************/
-
 
 #ifndef _JPH_HATOMIC_H
 #define _JPH_HATOMIC_H
 
-#define CAN_IAF2_ATOMICS_UNAVAILABLE    0
-#define CAN_IAF2_MICROSOFT_INTRINSICS   1
-#define CAN_IAF2_GCC_CLANG_INTRINSICS   2
-#define CAN_IAF2_C11_STANDARD_ATOMICS   3
-
-#if !defined( DISABLE_IAF2 )
-  #if defined(HAVE_STDATOMIC_H) && !defined(__STDC_NO_ATOMICS__)
-    #include <stdatomic.h>
-  #endif
-  #if defined( _MSVC_ )
-    #define   CAN_IAF2      CAN_IAF2_MICROSOFT_INTRINSICS
-  #elif defined( ATOMIC_LOCK_FREE_DEFINED_OK )
-    #if ATOMIC_CHAR_LOCK_FREE == 2
-      #define CAN_IAF2      CAN_IAF2_C11_STANDARD_ATOMICS
-    #elif defined( __GCC_ATOMIC_CHAR_LOCK_FREE )
-      #if __GCC_ATOMIC_CHAR_LOCK_FREE == 2
-        #define CAN_IAF2    CAN_IAF2_GCC_CLANG_INTRINSICS
-      #else
-        #define CAN_IAF2    CAN_IAF2_ATOMICS_UNAVAILABLE
-      #endif
-    #else
-      #define CAN_IAF2      CAN_IAF2_ATOMICS_UNAVAILABLE
-    #endif
-  #elif defined( __GCC_ATOMIC_CHAR_LOCK_FREE )
-    #if __GCC_ATOMIC_CHAR_LOCK_FREE == 2
-      #define CAN_IAF2      CAN_IAF2_GCC_CLANG_INTRINSICS
-    #else
-      #define CAN_IAF2      CAN_IAF2_ATOMICS_UNAVAILABLE
-    #endif
+#if defined( _MSVC_ )
+  #if _MSC_VER < VS2015
+    #undef  C11_ATOMICS_AVAILABLE
   #else
-    #define   CAN_IAF2      CAN_IAF2_ATOMICS_UNAVAILABLE
+    #define C11_ATOMICS_AVAILABLE
+    #define C11_ATOMIC_BOOL_LOCK_FREE      ATOMIC_BOOL_LOCK_FREE     
+    #define C11_ATOMIC_CHAR_LOCK_FREE      ATOMIC_CHAR_LOCK_FREE     
+    #define C11_ATOMIC_CHAR16_T_LOCK_FREE  ATOMIC_CHAR16_T_LOCK_FREE     
+    #define C11_ATOMIC_CHAR32_T_LOCK_FREE  ATOMIC_CHAR32_T_LOCK_FREE     
+    #define C11_ATOMIC_WCHAR_T_LOCK_FREE   ATOMIC_WCHAR_T_LOCK_FREE     
+    #define C11_ATOMIC_SHORT_LOCK_FREE     ATOMIC_SHORT_LOCK_FREE     
+    #define C11_ATOMIC_INT_LOCK_FREE       ATOMIC_INT_LOCK_FREE      
+    #define C11_ATOMIC_LONG_LOCK_FREE      ATOMIC_LONG_LOCK_FREE     
+    #define C11_ATOMIC_LLONG_LOCK_FREE     ATOMIC_LLONG_LOCK_FREE     
+    #define C11_ATOMIC_POINTER_LOCK_FREE   ATOMIC_POINTER_LOCK_FREE
   #endif
-#else
-  #define     CAN_IAF2      CAN_IAF2_ATOMICS_UNAVAILABLE
 #endif
 
-#if CAN_IAF2_MICROSOFT_INTRINSICS == CAN_IAF2
+#define NEVER_ATOMIC        0
+#define SOMETIMES_ATOMIC    1
+#define ALWAYS_ATOMIC       2
 
+#define IAF2_ATOMICS_UNAVAILABLE    0
+#define IAF2_MICROSOFT_INTRINSICS   1
+#define IAF2_GCC_CLANG_INTRINSICS   2
+#define IAF2_C11_STANDARD_ATOMICS   3
+
+#if !defined( DISABLE_IAF2 )
+  #if defined( C11_ATOMICS_AVAILABLE )
+    #include <stdatomic.h>
+    #if C11_ATOMIC_CHAR_LOCK_FREE == ALWAYS_ATOMIC
+      #define CAN_IAF2      IAF2_C11_STANDARD_ATOMICS
+    #else
+      #if defined( _MSVC_ )
+        #define CAN_IAF2    IAF2_MICROSOFT_INTRINSICS
+      #elif defined( __GNUC__ )
+        #define CAN_IAF2    IAF2_GCC_CLANG_INTRINSICS
+      #else
+        #define CAN_IAF2    IAF2_ATOMICS_UNAVAILABLE
+      #endif
+    #endif
+  #else  /* !C11_ATOMICS_AVAILABLE */
+    #if defined( _MSVC_ )
+      #define CAN_IAF2      IAF2_MICROSOFT_INTRINSICS
+    #elif defined( __GNUC__ )
+      #define CAN_IAF2      IAF2_GCC_CLANG_INTRINSICS
+    #else
+      #define CAN_IAF2      IAF2_ATOMICS_UNAVAILABLE
+    #endif
+  #endif
+#else /* defined( DISABLE_IAF2 ) */
+  #define CAN_IAF2          IAF2_ATOMICS_UNAVAILABLE
+#endif
+
+#if CAN_IAF2 == IAF2_ATOMICS_UNAVAILABLE
+  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                 \
+    (*ptr fallback ## = imm)
+#elif CAN_IAF2 == IAF2_C11_STANDARD_ATOMICS
+  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                 \
+    (atomic_fetch_ ## op( (_Atomic BYTE*)ptr, imm ) fallback imm)
+#elif CAN_IAF2 == IAF2_GCC_CLANG_INTRINSICS
+  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                 \
+    (__atomic_ ## op ## _fetch( ptr, imm, __ATOMIC_SEQ_CST ))
+#elif CAN_IAF2 == IAF2_MICROSOFT_INTRINSICS
   /* Microsoft functions, as per Fish                            */
 
   /* The  casts  of  the  function arguments here are to silence */
@@ -145,29 +167,8 @@
     (sizeof(*(ptr)) == 1) ? (((U8)  _Interlocked ## Op ## 8  ((U8*)  ptr, imm )) fallback imm ) :  \
     (assert(0) /* returns void */, 0 /* to get integral result */)                                 \
   )
-
-#elif CAN_IAF2_GCC_CLANG_INTRINSICS == CAN_IAF2
-
-  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                     \
-                                                                        \
-    (__atomic_ ## op ## _fetch( ptr, imm, __ATOMIC_SEQ_CST ))
-
-#elif CAN_IAF2_C11_STANDARD_ATOMICS == CAN_IAF2
-
-  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                     \
-                                                                        \
-    (atomic_fetch_ ## op( (_Atomic BYTE*)ptr, imm ) fallback imm)
-
-#elif CAN_IAF2_ATOMICS_UNAVAILABLE == CAN_IAF2
-
-  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                     \
-                                                                        \
-    (*ptr fallback ## = imm)
-
 #else /* (none of the above) */
-
   #error LOGIC ERROR! in header file hatomic.h!
-
-#endif /* CAN_IAF2_XXXXXXXXX == CAN_IAF2 */
+#endif /* CAN_IAF2 ... */
 
 #endif /* _JPH_HATOMIC_H */

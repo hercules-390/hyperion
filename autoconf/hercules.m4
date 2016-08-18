@@ -1,12 +1,12 @@
-##############################################################################
+###############################################################################
 #
 #                       H E R C U L E S . M 4
 #
 #               Hercules M4 macros for auto-configure
 #
-##############################################################################
+###############################################################################
 
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
 # Macro:  HC_C99_FLEXIBLE_ARRAYS()
 #
@@ -32,7 +32,7 @@
 #              purpose.  It is provided "as is" without express
 #              or implied warranty."
 #
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
 [
@@ -73,7 +73,7 @@ AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
     fi
 ])
 
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
 # Macro:  HC_PROG_CC()       ((((( DEPRECATED )))))
 #
@@ -92,7 +92,7 @@ AC_DEFUN([HC_C99_FLEXIBLE_ARRAYS],
 #  in case something gets put in configure.ac before us. AC_REQUIRE expands
 #  AC_PROG_CC for us since we need it.
 #
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 AC_DEFUN([HC_PROG_CC],
 [
@@ -104,7 +104,7 @@ AC_DEFUN([HC_PROG_CC],
     CFLAGS=$ac_env_CFLAGS_value
 ])
 
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
 # Macro:  HC_LD_DISALLOWDUPS()
 #
@@ -114,7 +114,7 @@ AC_DEFUN([HC_PROG_CC],
 # Input:   $lt_cv_prog_gnu_ld
 # Output:  LDFLAGS variable modified as needed
 #
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 AC_DEFUN([HC_LD_DISALLOWDUPS],
 [
@@ -127,7 +127,7 @@ AC_DEFUN([HC_LD_DISALLOWDUPS],
     fi
 ])
 
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
 # Macro:  HC_ARG_ENABLE_GETOPTWRAPPER()
 #
@@ -145,7 +145,7 @@ AC_DEFUN([HC_LD_DISALLOWDUPS],
 #  specifically requested. Issues AC_DEFINE for "NEED_GETOPT_WRAPPER" if true.
 #  Refer to _HC_CHECK_NEED_GETOPT_WRAPPER helper macro for details.
 #
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 AC_DEFUN([HC_ARG_ENABLE_GETOPTWRAPPER],
 [
@@ -169,7 +169,61 @@ AC_DEFUN([HC_ARG_ENABLE_GETOPTWRAPPER],
     _HC_CHECK_NEED_GETOPT_WRAPPER($hc_cv_opt_getoptwrapper)
 ])
 
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#
+# Macro:  HC_GET_C11_LOCK_FREE_VALUE( c11_lock_free_name )
+#
+#  Retrieve ATOMIC_*_LOCK_FREE macro compile-time / run-time value.
+#
+# Input:   nothing
+#
+# Parms:   c11_lock_free_name     the stdatomic.h pre-processor macro name
+#                                 (e.g. ATOMIC_CHAR_LOCK_FREE) whose compile-
+#                                 time or run-time value is to be returned.
+#
+# Output:  $c11_lock_free_value   the compile-time or run-time value of the
+#                                 stdatomic.h ATOMIC_*_LOCK_FREE macro.
+#
+#------------------------------------------------------------------------------
+
+AC_DEFUN( [HC_GET_C11_LOCK_FREE_VALUE],
+[
+    c11_lock_free_name="$1"
+
+    if test "x$c11_lock_free_name" == "x"; then
+        # PROGRAMMING NOTE: note special m4 escape syntax used in the below
+        # message. Without it, our function name is (infinitely and recursively?)
+        # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
+        # usually resulting in some type of weird m4 unmatched quoting error.
+        AC_MSG_RESULT([LOGIC ERROR: no parm passed to ['HC_GET_C11_LOCK_FREE_VALUE'] function])
+        hc_error=yes
+        c11_lock_free_value="0"
+    else
+        AC_MSG_CHECKING([what '${c11_lock_free_name}'s value is])
+
+        AC_TRY_RUN(
+        [
+            #if !defined( __STDC_NO_ATOMICS__ )
+              #include <stdatomic.h>
+            #endif
+            int main( int argc, char* argv[] )
+            {
+            #if defined( __STDC_NO_ATOMICS__ ) || !defined( $c11_lock_free_name )
+                return 0;               /* 0 = never atomic */
+            #else
+                return $c11_lock_free_name; /* 0=never, 1=sometimes or 2=always */
+            #endif
+            }
+        ],
+        [c11_lock_free_value="0"],
+        [c11_lock_free_value="$?"],
+        [c11_lock_free_value="0"] )
+
+        AC_MSG_RESULT($c11_lock_free_value)
+    fi
+])
+
+#------------------------------------------------------------------------------
 #
 # Macro:  _HC_CHECK_NEED_GETOPT_WRAPPER( [opt = "auto"] )
 #
@@ -198,7 +252,7 @@ AC_DEFUN([HC_ARG_ENABLE_GETOPTWRAPPER],
 #  to build/use its getopt wrapper kludge. Note that all AC_DEFINE's require
 #  a corresponding AH_TEMPLATE statement somewhere in configure.ac.
 #
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 AC_DEFUN([_HC_CHECK_NEED_GETOPT_WRAPPER],
 [
@@ -305,7 +359,7 @@ DUPGETOPT2
     fi
 ])
 
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
 # Macro:  HC_CHECK_NEED_GETOPT_OPTRESET()
 #
@@ -318,7 +372,7 @@ DUPGETOPT2
 # Note:    since AC_DEFINE() might be issued, a corresponding AH_TEMPLATE()
 #          for 'NEED_GETOPT_OPTRESET' is needed somewhere in configure.ac
 #
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 AC_DEFUN([HC_CHECK_NEED_GETOPT_OPTRESET],
 [
@@ -345,7 +399,7 @@ AC_DEFUN([HC_CHECK_NEED_GETOPT_OPTRESET],
     fi
 ])
 
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #
 # Macro:  HC_CHECK_HQA_DIR()     Auto-detect HQA directory/header
 #
@@ -366,7 +420,7 @@ AC_DEFUN([HC_CHECK_NEED_GETOPT_OPTRESET],
 #          of HAVE_HQA_H if $hc_cv_have_hqa_h = yes as well as performing
 #          AC_SUBST() for HQA_INC using the defined $hc_cv_hqa_inc value.
 #
-#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 AC_DEFUN([HC_CHECK_HQA_DIR],
 [
@@ -406,5 +460,5 @@ AC_DEFUN([HC_CHECK_HQA_DIR],
 ])
 
 ###############################################################################
-#   (end-of-file)
+#                              (end-of-file)
 ###############################################################################

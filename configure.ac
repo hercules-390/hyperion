@@ -461,7 +461,17 @@ AH_TEMPLATE( [HAVE_GCC_DIAG_PRAGMA],         [Define if _Pragma GCC diagnostic i
 AH_TEMPLATE( [HAVE_GCC_DIAG_PUSHPOP],        [Define if _Pragma GCC diagnostic push/pop is supported] )
 AH_TEMPLATE( [HAVE_GCC_UNUSED_FUNC_WARNING], [Define if GCC issues 'defined but not used' warnings] )
 AH_TEMPLATE( [HAVE_GCC_SET_UNUSED_WARNING],  [Define if GCC issues 'variable set but not used' warnings] )
-AH_TEMPLATE( [ATOMIC_LOCK_FREE_DEFINED_OK],  [Define if GCC defines 'ATOMIC_CHAR_LOCK_FREE' correctly] )
+AH_TEMPLATE( [C11_ATOMICS_AVAILABLE],        [Define if C11 atomics are available] )
+AH_TEMPLATE( [C11_ATOMIC_BOOL_LOCK_FREE],    [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_CHAR_LOCK_FREE],    [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_CHAR16_T_LOCK_FREE],[Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_CHAR32_T_LOCK_FREE],[Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_WCHAR_T_LOCK_FREE], [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_SHORT_LOCK_FREE],   [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_INT_LOCK_FREE],     [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_LONG_LOCK_FREE],    [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_LLONG_LOCK_FREE],   [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [C11_ATOMIC_POINTER_LOCK_FREE], [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -1236,35 +1246,90 @@ AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
     ]
 )
 
-#---------------------------------------------------#
-#  Check for GCC #define ATOMIC_CHAR_LOCK_FREE bug  #
-#---------------------------------------------------#
+#---------------------------------------#
+#  Check if C11 atomics are available   #
+#---------------------------------------#
 
-AC_CACHE_CHECK( [if GCC defines ATOMIC_CHAR_LOCK_FREE correctly],
+AC_CACHE_CHECK( [if C11 atomics are available],
 
-    [hc_cv_atomic_lock_free_defined_ok],
+    [hc_cv_c11_atomics_available],
     [
         if test "$GCC" = "yes"; then
-
             AC_COMPILE_IFELSE(
-                [
-                    #if defined(HAVE_STDATOMIC_H) && !defined(__STDC_NO_ATOMICS__)
-                      #include <stdatomic.h>
-                      #undef    ATOMIC_LOCK_FREE_DEFINED_OK
-                      #if 2 ==  ATOMIC_CHAR_LOCK_FREE
-                        #define ATOMIC_LOCK_FREE_DEFINED_OK
-                      #endif
-                    #endif
-                ],
-                [hc_cv_atomic_lock_free_defined_ok=yes],
-                [hc_cv_atomic_lock_free_defined_ok=no]
-            )
-
+            [
+                #if !defined(HAVE_STDATOMIC_H) || defined(__STDC_NO_ATOMICS__)
+                  #error C11 atomics are not available
+                #else
+                  #include <stdatomic.h>
+                  #if defined(ATOMIC_CHAR_LOCK_FREE)
+                    #define C11_ATOMICS_ARE_AVAILABLE
+                  #else
+                    #error C11 atomics are not available
+                  #endif
+                #endif
+            ],
+            [hc_cv_c11_atomics_available=yes],
+            [hc_cv_c11_atomics_available=no] )
         else
-            hc_cv_atomic_lock_free_defined_ok=yes   # (presumed)
+            hc_cv_c11_atomics_available=no
         fi
     ]
 )
+
+#-----------------------------------------------#
+#  Determine 'safe' ATOMIC_*_LOCK_FREE values   #
+#-----------------------------------------------#
+
+if test "$hc_cv_c11_atomics_available" = "yes"; then
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_BOOL_LOCK_FREE)
+                   hc_cv_c11_atomic_bool_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_CHAR_LOCK_FREE)
+                   hc_cv_c11_atomic_char_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_CHAR16_T_LOCK_FREE)
+                   hc_cv_c11_atomic_char16_t_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_CHAR32_T_LOCK_FREE)
+                   hc_cv_c11_atomic_char32_t_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_WCHAR_T_LOCK_FREE)
+                   hc_cv_c11_atomic_wchar_t_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_SHORT_LOCK_FREE)
+                   hc_cv_c11_atomic_short_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_INT_LOCK_FREE)
+                   hc_cv_c11_atomic_int_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_LONG_LOCK_FREE)
+                   hc_cv_c11_atomic_long_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_LLONG_LOCK_FREE)
+                   hc_cv_c11_atomic_llong_lock_free="$c11_lock_free_value"
+
+  HC_GET_C11_LOCK_FREE_VALUE(ATOMIC_POINTER_LOCK_FREE)
+                   hc_cv_c11_atomic_pointer_lock_free="$c11_lock_free_value"
+
+  if test "$hc_error" != "no"; then
+    AC_MSG_ERROR( [Please correct the above error(s) and try again] )
+  fi
+
+else
+
+  hc_cv_c11_atomic_bool_lock_free="0"
+  hc_cv_c11_atomic_char_lock_free="0"
+  hc_cv_c11_atomic_char16_t_lock_free="0"
+  hc_cv_c11_atomic_char32_t_lock_free="0"
+  hc_cv_c11_atomic_wchar_t_lock_free="0"
+  hc_cv_c11_atomic_short_lock_free="0"
+  hc_cv_c11_atomic_int_lock_free="0"
+  hc_cv_c11_atomic_long_lock_free="0"
+  hc_cv_c11_atomic_llong_lock_free="0"
+  hc_cv_c11_atomic_pointer_lock_free="0"
+
+fi
 
 #----------------------------------------------#
 #  Check if C99 flexible arrays are supported  #
@@ -2543,6 +2608,17 @@ fi
 AC_DEFINE_UNQUOTED( [MAX_CPU_ENGINES],  ${hc_cv_opt_num_cpu_engines} )
 AC_DEFINE_UNQUOTED( [HOST_ARCH],       "${target_cpu}" )
 
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_BOOL_LOCK_FREE],     ${hc_cv_c11_atomic_bool_lock_free}     )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_CHAR_LOCK_FREE],     ${hc_cv_c11_atomic_char_lock_free}     )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_CHAR16_T_LOCK_FREE], ${hc_cv_c11_atomic_char16_t_lock_free} )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_CHAR32_T_LOCK_FREE], ${hc_cv_c11_atomic_char32_t_lock_free} )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_WCHAR_T_LOCK_FREE],  ${hc_cv_c11_atomic_wchar_t_lock_free}  )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_SHORT_LOCK_FREE],    ${hc_cv_c11_atomic_short_lock_free}    )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_INT_LOCK_FREE],      ${hc_cv_c11_atomic_int_lock_free}      )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_LONG_LOCK_FREE],     ${hc_cv_c11_atomic_long_lock_free}     )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_LLONG_LOCK_FREE],    ${hc_cv_c11_atomic_llong_lock_free}    )
+AC_DEFINE_UNQUOTED( [C11_ATOMIC_POINTER_LOCK_FREE],  ${hc_cv_c11_atomic_pointer_lock_free}  )
+
 AC_CACHE_SAVE()
 
 AC_MSG_NOTICE( [                                         ] )
@@ -2591,7 +2667,6 @@ test "$hc_cv_have_gcc_diag_pragma"         = "yes"  &&  AC_DEFINE(HAVE_GCC_DIAG_
 test "$hc_cv_have_gcc_diag_pushpop"        = "yes"  &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
 test "$hc_cv_have_gcc_unused_func_warning" = "yes"  &&  AC_DEFINE(HAVE_GCC_UNUSED_FUNC_WARNING)
 test "$hc_cv_have_gcc_set_unused_warning"  = "yes"  &&  AC_DEFINE(HAVE_GCC_SET_UNUSED_WARNING)
-test "$hc_cv_atomic_lock_free_defined_ok"  = "yes"  &&  AC_DEFINE(ATOMIC_LOCK_FREE_DEFINED_OK)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

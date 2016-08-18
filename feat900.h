@@ -81,7 +81,7 @@
 #define FEATURE_INTEGRATED_3270_CONSOLE
 //#define FEATURE_INTEGRATED_ASCII_CONSOLE
 #define FEATURE_INTERLOCKED_ACCESS_FACILITY                     /*810*/
-#if CAN_IAF2 != CAN_IAF2_ATOMICS_UNAVAILABLE
+#if CAN_IAF2 != IAF2_ATOMICS_UNAVAILABLE
    /* Feature is available on z processors                           */
    #define FEATURE_INTERLOCKED_ACCESS_FACILITY_2
 #endif
