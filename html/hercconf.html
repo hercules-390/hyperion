@@ -509,12 +509,12 @@ a real System/390.  The configuration file is an ASCII text file.
     and each value must be separated from the other with a single comma.
     <p>
     <b>Please also note</b> that not all systems support being able to modify
-    all three values. That is, not all values may be able to be changed, and it
-    is system dependent which values you can change and which values you cannot.
+    all three values. That is, not all values may be modifiable. It is operating
+    system dependent which values you can change and which values you cannot.
     On Windows for example, the <code><i>count</i></code> value is ignored
     and cannot be changed from its default value of 10. Other systems may
     ignore one or more or all three values and use platform defaults instead.
-    This is entirely system dependent. Check you system's documentation for details
+    This is entirely system dependent. Check your system's documentation for details
     regarding which values can be changed and which cannot as well as how to
     adjust your system's default values.
     <p>
@@ -529,9 +529,13 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="CPUMODEL"></a>
 <dt><code>CPUMODEL &nbsp; <em>xxxx</em></code>
 <dd><p>
-    Specifies the 4 hexadecimal digit CPU machine type number
-    stored by the STIDP instruction
-    <i>Note: Prior to ESA/390 this was known as the CPU model number</i>
+    Specifies the 4 hexadecimal digit CPU machine type number (known prior
+    to ESA/390 as the model number) stored by the STIDP instruction.
+    <p>
+    <i><b>Note:</b></i> Hercules makes no attempt to emulate all aspects of,
+    or features of, a given CPU model. The CPUMODEL statement defines a purely
+    cosmetic value only. It defines only the value that the STIDP (Store CPU
+    ID) instruction stores, and nothing more.
     <p>
 
 <a name="CPUPRIO"></a>
