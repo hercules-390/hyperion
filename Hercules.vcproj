@@ -2556,6 +2556,18 @@
 						</File>
 					</Filter>
 					<Filter
+						Name="VS2008"
+						>
+						<File
+							RelativePath=".\Hercules.sln"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules.vcproj"
+							>
+						</File>
+					</Filter>
+					<Filter
 						Name="VS2010"
 						>
 						<File
@@ -2580,6 +2592,22 @@
 						</File>
 						<File
 							RelativePath=".\Hercules_VS2012.vcxproj"
+							>
+						</File>
+					</Filter>
+					<Filter
+						Name="VS2015"
+						>
+						<File
+							RelativePath=".\Hercules_VS2015.sln"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules_VS2015.vcxproj"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules_VS2015.vcxproj.filters"
 							>
 						</File>
 					</Filter>
