@@ -851,7 +851,7 @@
   @REM  Only set VERSION if we're actually building something
 
   call :ifallorclean  %extra_nmake_args%
-  if defined @ (
+  if not defined # (
     call :set_VERSION
     if %rc% NEQ 0 (
       set "rc=1"
