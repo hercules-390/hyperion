@@ -728,7 +728,7 @@ void ARCH_DEP(diag224_call) (int r1, int r2, REGS *regs)
 {
 RADR              abs;                 /* abs addr of data area      */
 BYTE             *p;                   /* pointer to the data area   */
-unsigned int      ptyp, i;             /* work                       */
+unsigned int      len, ptyp, i;        /* work                       */
 
     // FIXME:  This function is probably incomplete.
     //         See linux/arch/s390/hypfs/hypfs_diag.c
@@ -738,37 +738,39 @@ unsigned int      ptyp, i;             /* work                       */
     abs = APPLY_PREFIXING( regs->GR_L( r2 ), regs->PX );
 
     /* Program check if data area is not on a page boundary */
-    if ((abs & PAGEFRAME_BYTEMASK) != 0x000)
+    if ((abs & PAGEFRAME_BYTEMASK) != 0)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
+    /* Calculate length of data to be stored */
+    len = 16 + ((MAX_SCCB_PTYP + 1) * 16);
+
     /* Program check if data area is outside main storage */
-    if (abs > regs->mainlim)
+    if (abs > regs->mainlim || len > PAGEFRAME_PAGESIZE)
         ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
-
-
-
-
 
     /* Mark page referenced */
     STORAGE_KEY( abs, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
 
-    /* Point to DIAG 224 data area */
+    /* Point to DIAG 224 return area */
     p = regs->mainstor + abs;
 
-    /* First byte contains the number of entries - 1 */
-    *p = MAX_SCCB_PTYP;
+    /*
+    ** The first byte of the first 16-byte entry contains the total number
+    ** of 16-byte entries minus 1 that immediately follows the first entry.
+    ** The remaining 15 bytes of the first 16-byte entry are binary zeros.
+    ** Each of the remaining entries following the first one contains the
+    ** EBCDIC name of each processor type.
+    */
 
-    /* Clear the next 15 bytes */
-    memset( p+1, 0, 16-1 );
+    *p = MAX_SCCB_PTYP;         /* (number of entries which follows-1) */
+    memset( p+1, 0, 16-1 );     /* (pad first entry with binary zeros) */
 
-    /* Set the 6 possible entries */
     for (ptyp=0; ptyp <= MAX_SCCB_PTYP; ptyp++)
     {
-        p += 16;
-        memcpy( p, ptyp2long( ptyp ), 16 );
-        /* Convert to EBCDIC */
+        p += 16;                              /* point to next entry   */
+        memcpy( p, ptyp2long( ptyp ), 16 );   /* move in ASCII value   */
         for (i=0; i < 16; i++)
-            p[i] = host_to_guest( p[i] );
+            p[i] = host_to_guest( p[i] );     /* convert it to EBCDIC  */
     }
 
 } /* end function diag224_call */
