@@ -20,7 +20,7 @@ interrupt, the restart new PSW having been set up in the previous step.
 The script regains control when all CPUs have entered the stopped state.
 The remainder of the script inspects storage, registers, etc., to
 display data that are later inspected.  The session log is then
-processed to check the results against with known good values.
+processed to check the results against known good values.
 
 You can create test cases in several ways:
 
@@ -129,7 +129,7 @@ limitations relative to HLASM that you should be aware of:
       constants to assemble floating point constants.  The file
       dc-float.asm contains, in no particular order, a number of
       constants suitable for cut-and-paste.  This file was generated
-      from the HLASM listing file from an assembly the float constants.
+      from the HLASM listing file from an assembly of float constants.
 
 *     Input is variable length ASCII.  Continuation is specified by a
       backslash at the end of a line.  The alternate format for macro
@@ -207,7 +207,7 @@ perhaps ../hyperion/tests
 
 -e <word>
 Specify the default extension for the input test files.  tst is the
-default.  The -e flag is active for all -f flags until the next -e flag
+default.  The -e flag is active for all -f flags until the next -e flag,
 if any.
 
 -f <word>
@@ -227,8 +227,7 @@ passed to Hercules.
 
 -p <word>
 Specify the library path for loadable modules, i.e., device managers.
-This is passed to Hercules.  Nota bene:  Specifying this flag will prevent
-the crypto module from being loaded.
+This is passed to Hercules.
 
 -q
 Pass "quiet" to redtest to suppress details about test cases.
