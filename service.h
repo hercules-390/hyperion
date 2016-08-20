@@ -256,22 +256,24 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_CPF4_OMISION_GR_ALTERATION_370             0x80
 #define SCCB_CPF5_GUEST_WAIT_STATE_ASSIST               0x40
 
-/* Definitions for processor type code */
+/*-------------------------------------------------------------------*/
+/* Processor type codes  (mostly for diag 224)                       */
+/*-------------------------------------------------------------------*/
+/* PROGRAMMING NOTE: if you define/add a new value to the below,     */
+/* be sure to ALSO update the 'ptypes' table in 'hsccmd.c'!          */
+/*-------------------------------------------------------------------*/
 #define SCCB_PTYP_CP                                    0
-#define SCCB_PTYP_ICF                                   1
-#define SCCB_PTYP_IFA                                   2
+#define SCCB_PTYP_UNKNOWN                               1
+#define SCCB_PTYP_ZAAP                                  2
 #define SCCB_PTYP_IFL                                   3
-#define SCCB_PTYP_SUP                                   5
-#define SCCB_PTYP_MAX                                   5 /*(maximum value)*/
+#define SCCB_PTYP_ICF                                   4
+#define SCCB_PTYP_ZIIP                                  5
+#define MAX_SCCB_PTYP /*(see above PROGRAMMING NOTE!)*/ 5
 
-/* processor type macro */
-#define PTYPSTR(i) ( \
-        sysblk.ptyp[(i)] == SCCB_PTYP_CP  ? "CP" :  \
-        sysblk.ptyp[(i)] == SCCB_PTYP_ICF ? "CF" :  \
-        sysblk.ptyp[(i)] == SCCB_PTYP_IFA ? "AP" :  \
-        sysblk.ptyp[(i)] == SCCB_PTYP_IFL ? "IL" :  \
-        sysblk.ptyp[(i)] == SCCB_PTYP_SUP ? "IP" :  \
-        "<unknown processor type>")
+/*-------------------------------------------------------------------*/
+/* Processor type macro                                              */
+/*-------------------------------------------------------------------*/
+#define PTYPSTR(cpu_num)        ptyp2short( sysblk.ptyp[(cpu_num)] )
 
 /* Macro converts event type to event mask */
 #define EVDMASK(_type) \

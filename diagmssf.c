@@ -258,16 +258,6 @@ typedef struct _DIAG204_X_PART_CPU {
         BYTE    resv3[40];
     } DIAG204_X_PART_CPU;
 
-static const char diag224_cputable[]=
-{
-    "CP              "
-    "ICF             "
-    "ZAAP            "
-    "IFL             "
-    "*UNKNOWN*       "
-    "ZIIP            "
-};
-
 #endif /*!defined(_DIAGMSSF_C)*/
 
 
@@ -738,41 +728,48 @@ void ARCH_DEP(diag224_call) (int r1, int r2, REGS *regs)
 {
 RADR              abs;                 /* abs addr of data area      */
 BYTE             *p;                   /* pointer to the data area   */
-unsigned int      i;                   /* loop index                 */
+unsigned int      ptyp, i;             /* work                       */
 
-//FIXME : this is probably incomplete.
-//        see linux/arch/s390/hypfs/hypfs_diag.c
-    UNREFERENCED(r1);
+    // FIXME:  This function is probably incomplete.
+    //         See linux/arch/s390/hypfs/hypfs_diag.c
 
-    abs = APPLY_PREFIXING (regs->GR_L(r2), regs->PX);
+    UNREFERENCED( r1 );
+
+    abs = APPLY_PREFIXING( regs->GR_L( r2 ), regs->PX );
 
     /* Program check if data area is not on a page boundary */
-    if ( (abs & PAGEFRAME_BYTEMASK) != 0x000)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    if ((abs & PAGEFRAME_BYTEMASK) != 0x000)
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* Program check if data area is outside main storage */
-    if ( abs > regs->mainlim )
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    if (abs > regs->mainlim)
+        ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
+
+
+
+
+
+    /* Mark page referenced */
+    STORAGE_KEY( abs, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Point to DIAG 224 data area */
     p = regs->mainstor + abs;
 
-    /* Mark page referenced */
-    STORAGE_KEY(abs, regs) |= STORKEY_REF | STORKEY_CHANGE;
-
     /* First byte contains the number of entries - 1 */
-    *p = 5;
+    *p = MAX_SCCB_PTYP;
 
     /* Clear the next 15 bytes */
-    memset (p + 1, 0, 15);
+    memset( p+1, 0, 16-1 );
 
     /* Set the 6 possible entries */
-    p += 16;
-    memcpy(p,diag224_cputable,sizeof(diag224_cputable)-1);
-
-    /* Convert to EBCDIC */
-    for (i = 0; i < sizeof(diag224_cputable); i++)
-        p[i] = host_to_guest(p[i]);
+    for (ptyp=0; ptyp <= MAX_SCCB_PTYP; ptyp++)
+    {
+        p += 16;
+        memcpy( p, ptyp2long( ptyp ), 16 );
+        /* Convert to EBCDIC */
+        for (i=0; i < 16; i++)
+            p[i] = host_to_guest( p[i] );
+    }
 
 } /* end function diag224_call */
 

@@ -2856,6 +2856,53 @@ char *basedir;
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* Processor types table and associated query functions              */
+/*-------------------------------------------------------------------*/
+struct PTYPTAB
+{
+    const BYTE  ptyp;           // 1-byte processor type (service.h)
+    const char* shortname;      // 2-character short name (Hercules)
+    const char* longname;       // 16-character long name (diag 224)
+};
+typedef struct PTYPTAB PTYPTAB;
+
+static PTYPTAB ptypes[] =
+{
+    { SCCB_PTYP_CP,      "CP", "CP              " },  // 0
+    { SCCB_PTYP_UNKNOWN, "??", "                " },  // 1 (unknown == blanks)
+    { SCCB_PTYP_ZAAP,    "AP", "ZAAP            " },  // 2
+    { SCCB_PTYP_IFL,     "IL", "IFL             " },  // 3
+    { SCCB_PTYP_ICF,     "CF", "ICF             " },  // 4
+    { SCCB_PTYP_ZIIP,    "IP", "ZIIP            " },  // 5
+};
+
+DLL_EXPORT const char* ptyp2long( BYTE ptyp )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (ptypes[i].ptyp == ptyp)
+            return ptypes[i].longname;
+    return "                ";              // 16 blanks
+}
+
+DLL_EXPORT const char* ptyp2short( BYTE ptyp )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (ptypes[i].ptyp == ptyp)
+            return ptypes[i].shortname;
+    return "??";
+}
+
+DLL_EXPORT BYTE short2ptyp( const char* shortname )
+{
+    unsigned int i;
+    for (i=0; i < _countof( ptypes ); i++)
+        if (strcasecmp( ptypes[i].shortname, shortname ) == 0)
+            return ptypes[i].ptyp;
+    return SCCB_PTYP_UNKNOWN;
+}
 
 /*-------------------------------------------------------------------*/
 /* engines command                                                   */
@@ -2863,7 +2910,6 @@ char *basedir;
 int engines_cmd(int argc, char *argv[], char *cmdline)
 {
 char *styp;                           /* -> Engine type string     */
-char *styp_values[] = {"CP","CF","AP","IL","??","IP"}; /* type values */
 BYTE ptyp;                           /* Processor engine type     */
 int  cpu,count;
 BYTE c;
@@ -2881,33 +2927,34 @@ char *strtok_str = NULL;
             count = 1;
             if (isdigit(styp[0]))
             {
-                if (sscanf(styp, "%d%c", &count, &c) != 2
-                    || c != '*' || count < 1)
+                if (0
+                    || sscanf(styp, "%d%c", &count, &c) != 2
+                    || c != '*'
+                    || count < 1
+                )
                 {
+                    // "Invalid syntax %s for %s"
                     WRMSG( HHC01456, "E", styp, argv[0] );
                     return -1;
                 }
                 styp = strchr(styp,'*') + 1;
             }
-            if ( CMD(styp,cp,2) )
-                ptyp = SCCB_PTYP_CP;
-            else if ( CMD(styp,cf,2) )
-                ptyp = SCCB_PTYP_ICF;
-            else if ( CMD(styp,il,2) )
-                ptyp = SCCB_PTYP_IFL;
-            else if ( CMD(styp,ap,2) )
-                ptyp = SCCB_PTYP_IFA;
-            else if ( CMD(styp,ip,2) )
-                ptyp = SCCB_PTYP_SUP;
+                 if (CMD( styp, CP, 2)) ptyp = short2ptyp( "CP" );
+            else if (CMD( styp, CF, 2)) ptyp = short2ptyp( "CF" );
+            else if (CMD( styp, IL, 2)) ptyp = short2ptyp( "IL" );
+            else if (CMD( styp, AP, 2)) ptyp = short2ptyp( "AP" );
+            else if (CMD( styp, IP, 2)) ptyp = short2ptyp( "IP" );
             else
             {
+                // "Invalid value %s specified for %s"
                 WRMSG( HHC01451, "E", styp, argv[0] );
                 return -1;
             }
             while (count-- > 0 && cpu < sysblk.maxcpu)
             {
                 sysblk.ptyp[cpu] = ptyp;
-                WRMSG(HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, styp_values[ptyp]);
+                // "Processor %s%02X: engine %02X type %1d set: %s"
+                WRMSG( HHC00827, "I", PTYPSTR(cpu), cpu, cpu, ptyp, ptyp2short( ptyp ));
                 cpu++;
             }
             styp = strtok_r(NULL,",",&strtok_str );
@@ -2915,6 +2962,7 @@ char *strtok_str = NULL;
     }
     else
     {
+        // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
@@ -8352,9 +8400,14 @@ int qproc_cmd(int argc, char *argv[], char *cmdline)
         mipsrate = 0;
         for ( i = k = 0; i < sysblk.maxcpu; i++ )
         {
-            if ( IS_CPU_ONLINE(i) &&
-                ( sysblk.ptyp[i] == SCCB_PTYP_CP || sysblk.ptyp[i] == SCCB_PTYP_IFA ) &&
-                 sysblk.regs[i]->cpustate == CPUSTATE_STARTED )
+            if (1
+                && IS_CPU_ONLINE(i)
+                && (0
+                    || sysblk.ptyp[i] == SCCB_PTYP_CP
+                    || sysblk.ptyp[i] == SCCB_PTYP_ZAAP
+                   )
+                && sysblk.regs[i]->cpustate == CPUSTATE_STARTED
+            )
             {
                 k++;
                 cpupct += sysblk.regs[i]->cpupct;

@@ -7087,7 +7087,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 tle += sizeof(TLECNTNR);
 
                 /* For each type of CPU */
-                for (cputype = 0; cputype <= SCCB_PTYP_MAX; cputype++)
+                for (cputype = 0; cputype <= MAX_SCCB_PTYP; cputype++)
                 {
                     tlecpu = (TLECPU *)tle;
 

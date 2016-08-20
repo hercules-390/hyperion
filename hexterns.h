@@ -353,6 +353,9 @@ HAO_DLL_IMPORT void hao_command(char *command); /* process hao command */
 int qproc_cmd(int argc, char *argv[], char *cmdline);
 extern int g_numcpu;  /* Number of CPUs         */
 extern int g_maxcpu;  /* Maximum number of CPUs */
+HCMD_DLL_IMPORT const char* ptyp2long( BYTE ptyp );        // diag224_call()
+HCMD_DLL_IMPORT const char* ptyp2short( BYTE ptyp );       // PTYPSTR()
+HCMD_DLL_IMPORT BYTE short2ptyp( const char* shortname );  // engines_cmd()
 
 /* Functions in module hscpufun.c (so PTT debugging patches can access them) */
 HCPU_DLL_IMPORT int stopall_cmd (int argc, char *argv[], char *cmdline);

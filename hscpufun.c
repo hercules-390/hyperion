@@ -385,8 +385,8 @@ int  rest_loadparm = FALSE;
     }
 
     /* Check that target processor type allows IPL */
-    if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
-     || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
+    if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_ZAAP
+     || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_ZIIP)
     {
         WRMSG(HHC00818, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu);
         return -1;
@@ -564,8 +564,8 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(cmdline);
 
     /* Check that target processor type allows IPL */
-    if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_IFA
-     || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_SUP)
+    if (sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_ZAAP
+     || sysblk.ptyp[sysblk.pcpu] == SCCB_PTYP_ZIIP)
     {
         // "Processor %s%02X: not eligible for ipl nor restart"
         WRMSG(HHC00818, "E", PTYPSTR(sysblk.pcpu), sysblk.pcpu);
