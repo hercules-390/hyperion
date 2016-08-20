@@ -804,6 +804,11 @@
     <None Include="_build.tail" />
     <None Include="_dynamic_version" />
     <None Include="_dynamic_version.cmd" />
+    <None Include="tests\stfl.assemble" />
+    <None Include="tests\stfl.listing" />
+    <None Include="tests\stfl.core" />
+    <None Include="tests\stfl.tst" />
+    <None Include="tests\mkcore.rexx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cache.h" />

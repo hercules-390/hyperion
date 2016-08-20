@@ -1436,7 +1436,13 @@
     <None Include="util\zzsacard.bin">
       <Filter>Other Files\Utilities</Filter>
     </None>
+    <None Include="tests\asmtst.xedit">
+      <Filter>Other Files\tests</Filter>
+    </None>
     <None Include="tests\awsbsf.aws">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\bldhtc.exec">
       <Filter>Other Files\tests</Filter>
     </None>
     <None Include="tests\hetbsf.het">
@@ -1445,7 +1451,22 @@
     <None Include="tests\Makefile.am">
       <Filter>Other Files\tests</Filter>
     </None>
+    <None Include="tests\mkcore.rexx">
+      <Filter>Other Files\tests</Filter>
+    </None>
     <None Include="tests\README">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\redtest.rexx">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\runtest">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\runtest.cmd">
+      <Filter>Other Files\tests</Filter>
+    </None>
+    <None Include="tests\tests.conf">
       <Filter>Other Files\tests</Filter>
     </None>
     <None Include="tests\a.core">
@@ -1499,23 +1520,8 @@
     <None Include="tests\st.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
-    <None Include="tests\asmtst.xedit">
-      <Filter>Other Files\tests\scripts</Filter>
-    </None>
-    <None Include="tests\bldhtc.exec">
-      <Filter>Other Files\tests\scripts</Filter>
-    </None>
-    <None Include="tests\redtest.rexx">
-      <Filter>Other Files\tests\scripts</Filter>
-    </None>
-    <None Include="tests\runtest">
-      <Filter>Other Files\tests\scripts</Filter>
-    </None>
-    <None Include="tests\runtest.cmd">
-      <Filter>Other Files\tests\scripts</Filter>
-    </None>
-    <None Include="tests\tests.conf">
-      <Filter>Other Files\tests\scripts</Filter>
+    <None Include="tests\stfl.core">
+      <Filter>Other Files\tests\core</Filter>
     </None>
     <None Include="tests\agf.assemble">
       <Filter>Other Files\tests\scripts\assemble</Filter>
@@ -1556,6 +1562,9 @@
     <None Include="tests\sske.assemble">
       <Filter>Other Files\tests\scripts\assemble</Filter>
     </None>
+    <None Include="tests\stfl.assemble">
+      <Filter>Other Files\tests\scripts\assemble</Filter>
+    </None>
     <None Include="tests\agf.listing">
       <Filter>Other Files\tests\scripts\assemble\listing</Filter>
     </None>
@@ -1593,6 +1602,9 @@
       <Filter>Other Files\tests\scripts\assemble\listing</Filter>
     </None>
     <None Include="tests\sske.listing">
+      <Filter>Other Files\tests\scripts\assemble\listing</Filter>
+    </None>
+    <None Include="tests\stfl.listing">
       <Filter>Other Files\tests\scripts\assemble\listing</Filter>
     </None>
     <None Include="tests\agf.tst">
@@ -1686,6 +1698,9 @@
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\sske390.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\stfl.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\timeout.tst">

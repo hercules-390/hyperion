@@ -215,6 +215,7 @@ EXTRA_DIST =				\
 	 mhi.assemble			\
 	 mhi.listing			\
 	 mhi.tst				\
+	 mkcore.rexx			\
 	 mvcle.assemble			\
 	 mvcle.listing			\
 	 mvcle.tst				\
@@ -248,6 +249,10 @@ EXTRA_DIST =				\
 	 sske.tst				\
 	 sske370.tst			\
 	 sske390.tst			\
+	 stfl.assemble			\
+	 stfl.core				\
+	 stfl.listing			\
+	 stfl.tst				\
 	 stfle.txt				\
 	 stidp.txt				\
 	 stsi.txt				\

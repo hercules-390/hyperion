@@ -2897,7 +2897,23 @@
 				Name="tests"
 				>
 				<File
+					RelativePath=".\tests\asmtst.xedit"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\awsbsf.aws"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\bldhtc.exec"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\bldhtc.rexx"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\cvttst.rexx"
 					>
 				</File>
 				<File
@@ -2909,7 +2925,27 @@
 					>
 				</File>
 				<File
+					RelativePath=".\tests\mkcore.rexx"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\README"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\redtest.rexx"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\runtest"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\runtest.cmd"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\tests.conf"
 					>
 				</File>
 				<Filter
@@ -2983,34 +3019,14 @@
 						RelativePath=".\tests\st.core"
 						>
 					</File>
+					<File
+						RelativePath=".\tests\stfl.core"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="scripts"
 					>
-					<File
-						RelativePath=".\tests\asmtst.xedit"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\bldhtc.exec"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\redtest.rexx"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\runtest"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\runtest.cmd"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\tests.conf"
-						>
-					</File>
 					<Filter
 						Name="txt"
 						>
@@ -3690,6 +3706,10 @@
 							RelativePath=".\tests\sske.assemble"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\stfl.assemble"
+							>
+						</File>
 						<Filter
 							Name="listing"
 							>
@@ -3743,6 +3763,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\sske.listing"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\stfl.listing"
 								>
 							</File>
 						</Filter>
@@ -3872,6 +3896,10 @@
 						</File>
 						<File
 							RelativePath=".\tests\sske390.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\stfl.tst"
 							>
 						</File>
 						<File
