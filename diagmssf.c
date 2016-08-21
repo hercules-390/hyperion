@@ -636,8 +636,8 @@ U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
         get_lparname(partxinfo->partname);
         get_sysname(partxinfo->cpcname);
         get_systype(partxinfo->osname);
-        STORE_DW(partxinfo->cssize,sysblk.mainsize);
-        STORE_DW(partxinfo->essize,sysblk.xpndsize);
+        STORE_DW( partxinfo->cssize, sysblk.mainsize >> SHIFT_MEGABYTE );
+        STORE_DW( partxinfo->essize, sysblk.xpndsize >> SHIFT_MEGABYTE );
         get_sysplex(partxinfo->gr_name);
 
         /* hercules cpu's */
