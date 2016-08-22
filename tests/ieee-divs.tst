@@ -5,7 +5,7 @@
 
 sysclear
 archmode esame
-loadcore $(testpath)/ieee-divs.core
+loadcore "$(testpath)/ieee-divs.core"
 runtest .1
 
 r 420.20       # Display short BFP results in test log

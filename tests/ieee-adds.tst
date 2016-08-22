@@ -33,7 +33,7 @@
 #
 sysclear
 archmode esame
-loadcore $(testpath)/ieee-adds.core
+loadcore "$(testpath)/ieee-adds.core"
 runtest .1
 
 *Compare

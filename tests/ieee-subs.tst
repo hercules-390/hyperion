@@ -8,7 +8,7 @@
 *
 sysclear
 archmode esame
-loadcore $(testpath)/ieee-subs.core
+loadcore "$(testpath)/ieee-subs.core"
 runtest .1
 
 *Compare

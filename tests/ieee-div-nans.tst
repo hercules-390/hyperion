@@ -5,7 +5,7 @@
 
 sysclear
 archmode esame
-loadcore $(testpath)/ieee-div-nans.core
+loadcore "$(testpath)/ieee-div-nans.core"
 runtest .1
 
 r 400.40       # Display short BFP results in test log

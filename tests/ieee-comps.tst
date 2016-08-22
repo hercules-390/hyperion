@@ -9,7 +9,7 @@
 
 sysclear
 archmode esame
-loadcore $(testpath)/ieee-comps.core
+loadcore "$(testpath)/ieee-comps.core"
 runtest .1
 
 # the following symbol definitions must match the first digit of the corresponding 

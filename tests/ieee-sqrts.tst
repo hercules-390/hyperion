@@ -44,7 +44,7 @@
 #
 sysclear
 archmode esame
-loadcore $(testpath)/ieee-sqrts.core
+loadcore "$(testpath)/ieee-sqrts.core"
 runtest .1
 
 *Compare

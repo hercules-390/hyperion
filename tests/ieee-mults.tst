@@ -6,7 +6,7 @@
 
 sysclear
 archmode esame
-loadcore $(testpath)/ieee-mults.core
+loadcore "$(testpath)/ieee-mults.core"
 runtest .1
 
 *Compare

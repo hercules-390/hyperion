@@ -11,6 +11,6 @@
 
 defsym  tapecuu     590                 # just a device number
 defsym  ftype       aws                 # tape filename filetype
-defsym  tapefile    $(testpath)/$(ftype)bsf.$(ftype)
+defsym  tapefile    "$(testpath)/$(ftype)bsf.$(ftype)"
 
-script $(testpath)/tapebsf.subtst
+script "$(testpath)/tapebsf.subtst"

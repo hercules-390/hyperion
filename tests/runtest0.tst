@@ -19,6 +19,6 @@ defsym  maxdur   0.4    #  Expected test duration, give or take.
 *
 * ----------------------------------------------------------------------------
 *
-script $(testpath)/runtest.subtst
+script "$(testpath)/runtest.subtst"
 *
 * ----------------------------------------------------------------------------
