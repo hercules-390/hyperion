@@ -465,6 +465,9 @@
     <ClCompile Include="archlvl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="_archdep_templ.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="assist.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -1679,6 +1682,9 @@
     <None Include="tests\pr.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\pr.subtst">
+      <Filter>Other Files\tests\scripts\tst\subtst</Filter>
+    </None>
     <None Include="tests\runtest0.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2634,7 +2640,7 @@
     <Text Include="tests\popcnt.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
-    <Text Include="tests\prtest.txt">
+    <Text Include="tests\printer.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
     <Text Include="tests\ptf.txt">

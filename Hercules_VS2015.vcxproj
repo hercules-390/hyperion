@@ -277,6 +277,7 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="_archdep_templ.c" />
     <ClCompile Include="archlvl.c" />
     <ClCompile Include="assist.c" />
     <ClCompile Include="awstape.c" />
@@ -764,6 +765,7 @@
     <None Include="tests\pfpo-esa.listing" />
     <None Include="tests\pfpo-esa.tst" />
     <None Include="tests\pr.tst" />
+    <None Include="tests\pr.subtst" />
     <None Include="tests\README" />
     <None Include="tests\redtest.rexx" />
     <None Include="tests\runtest" />
@@ -1083,7 +1085,7 @@
     <Text Include="tests\mvcos.txt" />
     <Text Include="tests\mxtr.txt" />
     <Text Include="tests\popcnt.txt" />
-    <Text Include="tests\prtest.txt" />
+    <Text Include="tests\printer.txt" />
     <Text Include="tests\ptf.txt" />
     <Text Include="tests\res40002.txt" />
     <Text Include="tests\rnsbg.txt" />

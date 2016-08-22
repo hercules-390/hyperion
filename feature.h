@@ -449,7 +449,7 @@ z900_ ## _name
 #define PSA PSA_900
 #define PSA_SIZE 8192
 #define IA  IA_G
-#define PX  PX_L
+#define PX  PX_G
 #define CR(_r)  CR_G(_r)
 #define GR(_r)  GR_G(_r)
 #define GR_A(_r, _regs) ((_regs)->psw.amode64 ? (_regs)->GR_G((_r)) : (_regs)->GR_L((_r)))

@@ -226,7 +226,8 @@ EXTRA_DIST =				\
 	 pfpo-esa.tst			\
 	 popcnt.txt				\
 	 pr.tst					\
-	 prtest.txt				\
+	 pr.subtst				\
+	 printer.txt			\
 	 ptf.txt				\
 	 README					\
 	 redtest.rexx			\

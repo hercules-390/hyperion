@@ -64,7 +64,10 @@ end
 
 say 'Done' done 'tests. ' msg
 If catast > 0
-   Then say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
+   Then do
+     say ""
+     say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
+   end
 if done \= stardone then say 'Tests malformed. ' done '*Testcase orders met, but' stardone '*Done orders met.'
 exit fails.1
 
@@ -293,6 +296,7 @@ end
 If \havewait & \nowait
    Then
       Do
+         say ""
          say '>>>>> line' lineno': No wait state encountered.'
          rv = rv + 1
       end
@@ -306,7 +310,12 @@ Select
 end
 
 If \quiet | rv \= 0
-   Then say 'Test' testcase'. ' oks 'OK compares. ' msg
+   Then do
+     If rv \= 0 then say ""
+     If rv \= 0 then say '>>>>> Test' testcase'. ' oks 'OK compares. ' msg
+                else say       'Test' testcase'. ' oks 'OK compares. ' msg
+     If rv \= 0 then say ""
+   end
 
 fail = rv \= 0
 fails.fail = fails.fail + 1           /* Ok or fail                  */
@@ -548,6 +557,7 @@ If arg(1)
    Then oks = oks + 1
    Else
       Do
+         say ""
          say ! arg(2)
          do ? = 3 to arg()
             say !! arg(?)

@@ -893,6 +893,10 @@
 						Name="Source Files"
 						>
 						<File
+							RelativePath=".\_archdep_templ.c"
+							>
+						</File>
+						<File
 							RelativePath=".\archlvl.c"
 							>
 						</File>
@@ -3563,7 +3567,7 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\prtest.txt"
+							RelativePath=".\tests\printer.txt"
 							>
 						</File>
 						<File
@@ -3927,6 +3931,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\cmd-rv-4K-64.subtst"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\pr.subtst"
 								>
 							</File>
 							<File

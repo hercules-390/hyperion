@@ -330,6 +330,7 @@
     <ClCompile Include="cardrdr.c" />
     <ClCompile Include="printer.c" />
     <ClCompile Include="sockdev.c" />
+    <ClCompile Include="_archdep_templ.c" />
     <ClCompile Include="archlvl.c" />
     <ClCompile Include="assist.c" />
     <ClCompile Include="bldcfg.c" />
@@ -663,7 +664,7 @@
     <None Include="tests\maer.txt" />
     <None Include="tests\mvcos.txt" />
     <None Include="tests\mxtr.txt" />
-    <None Include="tests\prtest.txt" />
+    <None Include="tests\printer.txt" />
     <None Include="tests\rnsbg.txt" />
     <None Include="tests\rrdtr.txt" />
     <None Include="tests\rrxtr.txt" />

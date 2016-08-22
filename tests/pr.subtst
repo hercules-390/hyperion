@@ -1,0 +1,57 @@
+#------------------------------------------------------------------------
+# Prefix test.  Hand written.
+#------------------------------------------------------------------------
+#
+# This file was put into the public domain 2015-10-13 by John P.
+# Hartmann. You can use it for anything you like, as long as this
+# notice remains.
+#
+#------------------------------------------------------------------------
+
+*Testcase $(arch) prefix register and real/absolute storage set/display
+
+sysclear
+archmode $(arch)
+mainsize 8m
+numcpu 1
+
+*Compare
+
+pr
+*Prefix 0
+
+r 0=01
+r 4000=02
+
+abs 0.4
+*Want 01000000
+
+abs 4000.4
+*Want 02000000
+
+pr 4000
+*Prefix 4000
+
+abs 0.4
+*Want 01000000
+
+abs 4000.4
+*Want 02000000
+
+r   0.4
+*Want 02000000
+
+r   4000.4
+*Want 01000000
+
+pr 800000
+# PROGRAMMING NOTE: because Hercules is usually built with
+# FEATURE_INTERPRETIVE_EXECUTION the formatted real address
+# (F_RADR) in Addressing exception messages is 64-bits wide
+# for all archmodes, even for archmode ESA/390 and S/370.
+*Error HHC02290E A:0000000000800000  Addressing exception
+
+pr fffff
+*Prefix $(fffff_pfx)
+
+*Done nowait

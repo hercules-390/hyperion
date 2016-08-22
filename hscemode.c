@@ -17,6 +17,72 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 
 #include "hercules.h"
 
+/*-------------------------------------------------------------------*/
+/*    architecture dependent 'pr_cmd' prefix command handler         */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( archdep_pr_cmd )( REGS *regs, int argc, char *argv[] )
+{
+    U64   px;
+    char  buf[64];
+
+    if (argc > 1)
+    {
+        /* Parse requested new prefix register value */
+        if (!sscanf( argv[1], "%"SCNx64, &px ))
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1], "" );
+            return -1;
+        }
+
+        /* Set ignored bits to zero and zero those bits that must be */
+        px &= PX_MASK;
+
+        if (px > regs->mainlim)
+        {
+            // PROGRAMMING NOTE: 'F_RADR' and 'RADR' are very likely
+            // 64-bit due to FEATURE_INTERPRETIVE_EXECUTION normally
+            // being #defined, causing _FEATURE_ZSIE to be #defined.
+
+            MSGBUF( buf, "A:"F_RADR"  Addressing exception", (RADR) px );
+            WRMSG( HHC02290, "E", buf );
+            return -1;
+        }
+
+        regs->PX = px;              /* set NEW prefix register value */
+    }
+    else
+        px = regs->PX;              /* retrieve CURRENT prefix value */
+
+    // "Prefix register: %s"
+    MSGBUF( buf, F_RADR, (RADR) px );   /* Format the prefix address */
+    WRMSG( HHC02277, "I", buf );        /* and then show it to them  */
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Compile ARCH_DEP() functions for other build architectures...     */
+/*-------------------------------------------------------------------*/
+
+#if !defined(_GEN_ARCH)             // (first time here?)
+
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2      // (set next build architecture)
+ #include "hscemode.c"              // (compile ourselves again)
+#endif
+
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3      // (set next build architecture)
+ #include "hscemode.c"              // (compile ourselves again)
+#endif
+
+
+/*-------------------------------------------------------------------*/
+/*       NON-architecure-dependent code from here onward             */
+/*-------------------------------------------------------------------*/
+
 /* Issue generic Device not found error message */
 static inline int devnotfound_msg(U16 lcss,U16 devnum)
 {
@@ -412,69 +478,46 @@ char buf[384];
 /*-------------------------------------------------------------------*/
 /* pr command - display prefix register                              */
 /*-------------------------------------------------------------------*/
-int pr_cmd(int argc, char *argv[], char *cmdline)
+int pr_cmd( int argc, char *argv[], char *cmdline )
 {
-REGS *regs;
-char buf[64];
-U64 newpx;
+    REGS  *regs;
+    int    cpu, rc;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
-    obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
+    /* Command affects whatever the panel's current "target" cpu is. */
+    cpu = sysblk.pcpu;
 
-    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    if (!IS_CPU_ONLINE( cpu ))
     {
-        release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        return 0;
-    }
-    regs = sysblk.regs[sysblk.pcpu];
-
-    if (1 < argc)                     /* Setting prefix              */
-    {
-      U64 testpx;
-
-      if (!sscanf(argv[1], "%"SCNx64, &newpx))
-      {
-        release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        WRMSG(HHC02205, "E", argv[1], "");
+        // "Processor %s%02X: processor is not %s"
+        WRMSG( HHC00816, "W", PTYPSTR( cpu ), cpu, "online" );
         return -1;
-      }
-      /* As SPX ignores non-page address bits, so should we here.    */
-      if (regs->arch_mode == ARCH_900)
-      {
-        newpx &= 0x7fffe000;
-        testpx = newpx + 0x1000;      /* Prefix is two pages         */
-      }
-      else
-      {
-        newpx &= 0x7ffff000;
-        testpx = newpx;               /* Prefix is one page          */
-      }
-      if (testpx > regs->mainlim)
-      {
-        release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        MSGBUF( buf, "A:"F_RADR"  Addressing exception", testpx );
-        WRMSG( HHC02290, "E", buf );
-        return -1;
-      }
     }
 
-    if ( regs->arch_mode == ARCH_900 )
+    regs = sysblk.regs[ cpu ];
+    obtain_lock( &sysblk.cpulock[ cpu ]);
+
+    switch( regs->arch_mode )
     {
-       if (1 < argc) regs->PX_G = newpx;           /* Setting prefix */
-       MSGBUF( buf, "%16.16"PRIX64, (U64)regs->PX_G);
+#if defined( _370 )
+    case ARCH_370:
+        rc = s370_archdep_pr_cmd( regs, argc, argv ); break;
+#endif
+#if defined( _390 )
+    case ARCH_390:
+        rc = s390_archdep_pr_cmd( regs, argc, argv ); break;
+#endif
+#if defined( _900 )
+    case ARCH_900:
+        rc = z900_archdep_pr_cmd( regs, argc, argv ); break;
+#endif
+    default:
+        rc = -1; break;
     }
-    else
-    {
-       if (1 < argc) regs->PX_L = newpx;           /* Setting prefix */
-       MSGBUF( buf, "%8.8"PRIX32, (U32)regs->PX_L);
-    }
-    release_lock(&sysblk.cpulock[sysblk.pcpu]);
 
-    WRMSG(HHC02277, "I", buf);
-
-    return 0;
+    release_lock( &sysblk.cpulock[ cpu ]);
+    return rc;
 }
 
 
@@ -2303,3 +2346,4 @@ int icount_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*defined(OPTION_INSTRUCTION_COUNTING)*/
 
+#endif // !defined(_GEN_ARCH)

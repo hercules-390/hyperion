@@ -348,6 +348,9 @@
     <ClCompile Include="sockdev.c">
       <Filter>Source Files\Hercules\Devices\Unit Record\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="_archdep_templ.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="archlvl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -1337,7 +1340,7 @@
     <None Include="tests\mxtr.txt">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
-    <None Include="tests\prtest.txt">
+    <None Include="tests\printer.txt">
       <Filter>Other Files\tests\scripts</Filter>
     </None>
     <None Include="tests\rnsbg.txt">

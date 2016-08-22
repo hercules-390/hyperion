@@ -8,8 +8,8 @@
 /*  can include emulation support                                    */
 /*                                                                   */
 /*  FEATURE_XXXX is defined per architecture mode, and               */
-/*  _FEATURE_XXXX is defined across all architectures                */
-/*  if FEATURE_ XXXX is defined for any architecture mode.           */
+/*  _FEATURE_XXXX is defined for ALL architecture modes when         */
+/*  FEATURE_XXXX is defined for ANY architecture mode.               */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 

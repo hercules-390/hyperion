@@ -395,6 +395,7 @@ libhercu_la_LIBADD =  \
 #
 
 libherc_la_SOURCES =  \
+	_archdep_templ.c  \
 	archlvl.c         \
 	assist.c          \
 	bldcfg.c          \
