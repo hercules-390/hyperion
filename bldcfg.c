@@ -83,7 +83,9 @@ int     devtmax;                        /* Max number device threads */
     /* XPNDSIZE 0                       # Expanded storage size      */
     sysblk.xpndsize = 0;
 
-    sysblk.maxcpu = MAX_CPU_ENGINES;
+    /* Default sysblk.maxcpy to 8 according to previous MAX_CPU_ENGINES default */
+    sysblk.maxcpu = 8;
+
 #ifdef    _FEATURE_VECTOR_FACILITY
     sysblk.numvec = sysblk.maxcpu;
 #else  //!_FEATURE_VECTOR_FACILITY
