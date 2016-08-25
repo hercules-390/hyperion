@@ -17,6 +17,22 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
+/* Maximum CPU Engines                                               */
+/*-------------------------------------------------------------------*/
+
+#ifndef MAX_CPU_ENGINES
+  #ifdef HAVE___UINT128_T
+    #define MAX_CPU_ENGINES     128
+  #else
+    #define MAX_CPU_ENGINES     64
+  #endif
+#endif
+
+#define DEFAULT_MAXCPU          8       /*  Default sysblk.maxcpu
+                                            to 8 according to old
+                                            MAX_CPU_ENGINES default  */
+
+/*-------------------------------------------------------------------*/
 /* Miscellaneous system related constants we could be missing...     */
 /*-------------------------------------------------------------------*/
 

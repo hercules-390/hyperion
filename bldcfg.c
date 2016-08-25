@@ -73,18 +73,29 @@ int build_config (const char *hercules_cnf)
 int     i;                              /* Array subscript           */
 int     devtmax;                        /* Max number device threads */
 
-    /* From impl.c, using system defaults of:
+    /*      From impl.c, using system defaults of:
      *
      * LPARNUM  1                       # LPAR 1 with LPAR ID 01
      * CPUIDFMT 0                       # CPU ID format 0
-     *
+     * XPNDSIZE 0                       # Expanded storage size
      */
 
-    /* XPNDSIZE 0                       # Expanded storage size      */
     sysblk.xpndsize = 0;
 
-    /* Default sysblk.maxcpy to 8 according to previous MAX_CPU_ENGINES default */
-    sysblk.maxcpu = 8;
+    /* PROGRAMMING NOTE: previously, we would set sysblk.maxcpu to
+       MAX_CPU_ENGINES, but now we keep the two values independent
+       from one another. MAX_CPU_ENGINES defines the maximum MAXCPU
+       value (which is the absolute physical maximum number of CPUs
+       that this particular build of Hercules can support), whereas
+       'maxcpu' defines the maximum number of emulated CPUs the user
+       wishes their virtual mainframe to have and defines the upper
+       limit for numcpu. In other words, maxcpu defines the maximum
+       value that numcpu can be, and MAX_CPU_ENGINES is the maximum
+       value that maxcpu can be. Thus the DEFAULT_MAXCPU value was
+       introduced to define a default value for 'maxcpu' that could
+       be set to a value completely different from MAX_CPU_ENGINES.
+    */
+    sysblk.maxcpu = DEFAULT_MAXCPU;     /* (see PROGRAMMING NOTE) */
 
 #ifdef    _FEATURE_VECTOR_FACILITY
     sysblk.numvec = sysblk.maxcpu;

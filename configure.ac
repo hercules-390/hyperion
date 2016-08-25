@@ -858,6 +858,8 @@ AC_CACHE_SAVE()
 #   Checks for types...
 ###############################################################################
 
+AC_CHECK_TYPES([__int128_t,__uint128_t])
+
 AC_CHECK_TYPES( u_int8_t,   [hc_cv_have_u_int8_t=yes],   [hc_cv_have_u_int8_t=no]                              )
 AC_CHECK_TYPES( useconds_t, [hc_cv_have_useconds_t=yes], [hc_cv_have_useconds_t=no]                            )
 AC_CHECK_TYPES( id_t,       [hc_cv_have_id_t=yes],       [hc_cv_have_id_t=no]                                  )
