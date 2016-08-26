@@ -45,7 +45,7 @@
     #define MAX_CPU_ENGINES     64
  #else
     typedef __uint128_t         CPU_BITMAP;
- // ZZ FIXME: No printf format support for __int128 yet, so we will incorrectly display...
+ // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
     #define F_CPU_BITMAP        "%16.16"PRIX64
  #endif
 

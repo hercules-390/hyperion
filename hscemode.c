@@ -1134,8 +1134,15 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             WRMSG( HHC00815, "I", PTYPSTR(first), first, PTYPSTR(last), last );
     }
 
+
+    // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
     WRMSG( HHC00870, "I", sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask );
+
+    // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
     WRMSG( HHC00871, "I", sysblk.sync_mask, sysblk.syncing ? "sync in progress" : "" );
+
+
+
     WRMSG( HHC00872, "I", test_lock(&sysblk.sigplock) ? "" : "not ");
     WRMSG( HHC00873, "I", test_lock(&sysblk.todlock) ? "" : "not ");
     WRMSG( HHC00874, "I", test_lock(&sysblk.mainlock) ? "" : "not ", sysblk.mainowner);

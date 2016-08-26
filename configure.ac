@@ -858,11 +858,12 @@ AC_CACHE_SAVE()
 #   Checks for types...
 ###############################################################################
 
-AC_CHECK_TYPES([__int128_t,__uint128_t])
+AC_CHECK_TYPES(__int128_t,  [hc_cv_have_int128_t=yes],   [hc_cv_have_int128_t=no]   )
+AC_CHECK_TYPES(__uint128_t, [hc_cv_have_u_int128_t=yes], [hc_cv_have_u_int128_t=no] )
+AC_CHECK_TYPES( u_int8_t,   [hc_cv_have_u_int8_t=yes],   [hc_cv_have_u_int8_t=no]   )
+AC_CHECK_TYPES( useconds_t, [hc_cv_have_useconds_t=yes], [hc_cv_have_useconds_t=no] )
+AC_CHECK_TYPES( id_t,       [hc_cv_have_id_t=yes],       [hc_cv_have_id_t=no]       )
 
-AC_CHECK_TYPES( u_int8_t,   [hc_cv_have_u_int8_t=yes],   [hc_cv_have_u_int8_t=no]                              )
-AC_CHECK_TYPES( useconds_t, [hc_cv_have_useconds_t=yes], [hc_cv_have_useconds_t=no]                            )
-AC_CHECK_TYPES( id_t,       [hc_cv_have_id_t=yes],       [hc_cv_have_id_t=no]                                  )
 AC_CHECK_TYPES( u_char,     [hc_cv_have_u_char=yes],     [hc_cv_have_u_char=no],
 [
     #include <sys/types.h>
@@ -2120,18 +2121,26 @@ AC_ARG_ENABLE( fthreads,
     [hc_cv_opt_fthreads=$hc_cv_is_windows]
 )
 
+if test "$hc_cv_have_u_int128_t" = "yes"; then
+  hc_cv_max_cpu_engines=128
+else
+  hc_cv_max_cpu_engines=64
+fi
+
+hc_cv_default_num_cpu_engines=8
+
 AC_ARG_ENABLE( multi-cpu,
 
     AC_HELP_STRING( [--enable-multi-cpu=yes|no|NUMBER],
 
-        [enable/disable multi-cpu support (1-128, default 128)]
+        [enable/disable multi-cpu support (yes=8,no=1,NUMBER=1-64/128,default=64/128)]
     ),
     [
         case "${enableval}" in
-        yes)             hc_cv_opt_num_cpu_engines=8                  ;;
-        no)              hc_cv_opt_num_cpu_engines=1                  ;;
+        yes)             hc_cv_opt_num_cpu_engines=$hc_cv_default_num_cpu_engines  ;;
+        no)              hc_cv_opt_num_cpu_engines=1                               ;;
         *)
-            if test 0 -lt "${enableval}" -a 128 -ge "${enableval}"
+            if test 0 -lt "${enableval}" -a "$hc_cv_max_cpu_engines" -ge "${enableval}"
             then
                 hc_cv_opt_num_cpu_engines=${enableval}
             else
@@ -2141,7 +2150,7 @@ AC_ARG_ENABLE( multi-cpu,
             ;;
         esac
     ],
-    [hc_cv_opt_num_cpu_engines=128]
+    [hc_cv_opt_num_cpu_engines=$hc_cv_max_cpu_engines]
 )
 
 AC_ARG_ENABLE( interlocked-access-facility-2,
