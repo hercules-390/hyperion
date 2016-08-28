@@ -645,11 +645,7 @@ static BYTE sendto_client( TELNET* tn, const BYTE* buf, unsigned int len )
     if (len > 0)
     {
         tn->send_err = FALSE;
-
-        if (tn->devclass == 'K')
-            telnet_printf( tn->ctl, "%s", buf );
-        else // (tn->devclass == 'D' || tn->devclass == 'P')
-            telnet_send( tn->ctl, buf, len );
+        telnet_send( tn->ctl, buf, len );
 
         if (!tn->send_err && tn->devclass == 'D')
             telnet_iac( tn->ctl, TELNET_EOR );
