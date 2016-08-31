@@ -656,12 +656,12 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(convert_fix32_to_bfp_ext_reg)
  UNDEF_INST(convert_fix32_to_bfp_long_reg)
  UNDEF_INST(convert_fix32_to_bfp_short_reg)
- UNDEF_INST(convert_fix64_to_bfp_ext_reg);
- UNDEF_INST(convert_fix64_to_bfp_long_reg);
- UNDEF_INST(convert_fix64_to_bfp_short_reg);
- UNDEF_INST(convert_bfp_ext_to_fix64_reg);
- UNDEF_INST(convert_bfp_long_to_fix64_reg);
- UNDEF_INST(convert_bfp_short_to_fix64_reg);
+ UNDEF_INST(convert_fix64_to_bfp_ext_reg)
+ UNDEF_INST(convert_fix64_to_bfp_long_reg)
+ UNDEF_INST(convert_fix64_to_bfp_short_reg)
+ UNDEF_INST(convert_bfp_ext_to_fix64_reg)
+ UNDEF_INST(convert_bfp_long_to_fix64_reg)
+ UNDEF_INST(convert_bfp_short_to_fix64_reg)
  UNDEF_INST(divide_bfp_ext_reg)
  UNDEF_INST(divide_bfp_long)
  UNDEF_INST(divide_bfp_long_reg)
@@ -981,7 +981,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
 
 
 #if !defined(FEATURE_STORE_FACILITY_LIST)
- UNDEF_INST(store_facility_list);
+ UNDEF_INST(store_facility_list)
 #endif /*!defined(FEATURE_STORE_FACILITY_LIST) */
 
 
@@ -1336,68 +1336,68 @@ char operands[64]
 
 DISASM_TYPE(none);
   UNREFERENCED(inst);
-  DISASM_PRINT("%c",',');
+  DISASM_PRINT("%c",',')
 
 DISASM_TYPE(E);
     UNREFERENCED(inst);
-    DISASM_PRINT("%c",',');
+    DISASM_PRINT("%c",',')
 
 
 DISASM_TYPE(RR);
 int r1, r2;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
-    DISASM_PRINT("%d,%d",r1,r2);
+    DISASM_PRINT("%d,%d",r1,r2)
 
 
 // "Mnemonic   R1"
 DISASM_TYPE(RR_R1);
 int r1;
     r1 = inst[1] >> 4;
-    DISASM_PRINT("%d",r1);
+    DISASM_PRINT("%d",r1)
 
 DISASM_TYPE(RR_SVC);
-    DISASM_PRINT("%d",inst[1]);
+    DISASM_PRINT("%d",inst[1])
 
 DISASM_TYPE(RRE);
 int r1, r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d",r1,r2);
+    DISASM_PRINT("%d,%d",r1,r2)
 
 // "Mnemonic   R1"
 DISASM_TYPE(RRE_R1);
 int r1;
     r1 = inst[3] >> 4;
-    DISASM_PRINT("%d",r1);
+    DISASM_PRINT("%d",r1)
 
 DISASM_TYPE(RRF_R);
 int r1,r3,r2;
     r1 = inst[2] >> 4;
     r3 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,r3,r2);
+    DISASM_PRINT("%d,%d,%d",r1,r3,r2)
 
 DISASM_TYPE(RRF_M);
 int m3,r1,r2;
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,m3,r2);
+    DISASM_PRINT("%d,%d,%d",r1,m3,r2)
 
 DISASM_TYPE(RRF_M3);
 int m3,r1,r2;
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,r2,m3);
+    DISASM_PRINT("%d,%d,%d",r1,r2,m3)
 
 DISASM_TYPE(RRF_M4);
 int m4,r1,r2;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,r2,m4);
+    DISASM_PRINT("%d,%d,%d",r1,r2,m4)
 
 DISASM_TYPE(RRF_MM);
 int m3,m4,r1,r2;
@@ -1405,7 +1405,7 @@ int m3,m4,r1,r2;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d,%d",r1,m3,r2,m4);
+    DISASM_PRINT("%d,%d,%d,%d",r1,m3,r2,m4)
 
 DISASM_TYPE(RRF_RM);
 int r3,m4,r1,r2;
@@ -1413,14 +1413,14 @@ int r3,m4,r1,r2;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d,%d",r1,r3,r2,m4);
+    DISASM_PRINT("%d,%d,%d,%d",r1,r3,r2,m4)
 
 DISASM_TYPE(RRR);
 int r1,r2,r3;
     r3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,r2,r3);
+    DISASM_PRINT("%d,%d,%d",r1,r2,r3)
 
 DISASM_TYPE(RX);
 int r1,x2,b2,d2;
@@ -1428,7 +1428,7 @@ int r1,x2,b2,d2;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2);
+    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
 DISASM_TYPE(RXE);
 int r1,x2,b2,d2;
@@ -1436,7 +1436,7 @@ int r1,x2,b2,d2;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2);
+    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
 DISASM_TYPE(RXY);
 int r1,x2,b2,d2;
@@ -1444,7 +1444,7 @@ int r1,x2,b2,d2;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2);
+    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
 DISASM_TYPE(RXF);
 int r1,r3,x2,b2,d2;
@@ -1453,7 +1453,7 @@ int r1,r3,x2,b2,d2;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2);
+    DISASM_PRINT("%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2)
 
 DISASM_TYPE(RS);
 int r1,r3,b2,d2;
@@ -1461,7 +1461,7 @@ int r1,r3,b2,d2;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2);
+    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
 
 // "Mnemonic   R1,D2(B2)"
 DISASM_TYPE(RS_R1D2B2);
@@ -1469,7 +1469,7 @@ int r1,b2,d2;
     r1 = inst[1] >> 4;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d)",r1,d2,b2);
+    DISASM_PRINT("%d,%d(%d)",r1,d2,b2)
 
 DISASM_TYPE(RSE);
 int r1,r3,b2,d2;
@@ -1477,7 +1477,7 @@ int r1,r3,b2,d2;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2);
+    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
 
 DISASM_TYPE(RSY);
 int r1,r3,b2,d2;
@@ -1485,7 +1485,7 @@ int r1,r3,b2,d2;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2);
+    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
 
 DISASM_TYPE(RSY_M3);
 int r1,b2,d2,m3;
@@ -1493,54 +1493,54 @@ int r1,b2,d2,m3;
     m3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d),%d",r1,d2,b2,m3);
+    DISASM_PRINT("%d,%d(%d),%d",r1,d2,b2,m3)
 
 DISASM_TYPE(RSL);
 int l1,b1,d1;
     l1 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d,%d)",d1,l1+1,b1);
+    DISASM_PRINT("%d(%d,%d)",d1,l1+1,b1)
 
 DISASM_TYPE(RSI);
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2);
+    DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2)
 
 DISASM_TYPE(RI);
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d",r1,i2);
+    DISASM_PRINT("%d,%d",r1,i2)
 
 DISASM_TYPE(RI_B);
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,*%+d",r1,i2*2);
+    DISASM_PRINT("%d,*%+d",r1,i2*2)
 
 DISASM_TYPE(RIE);
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2);
+    DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2)
 
 DISASM_TYPE(RIE_RRI);
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d,%d",r1,r3,i2);
+    DISASM_PRINT("%d,%d,%d",r1,r3,i2)
 
 DISASM_TYPE(RIE_RIM);
 int r1,i2,m3;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
-    DISASM_PRINT("%d,%d,%d",r1,i2,m3);
+    DISASM_PRINT("%d,%d,%d",r1,i2,m3)
 
 DISASM_TYPE(RIE_RRIM);
 int r1,r2,i4,m3;
@@ -1548,7 +1548,7 @@ int r1,r2,i4,m3;
     r2 = inst[1] & 0x0F;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
-    DISASM_PRINT("%d,%d,%d,*%+d",r1,r2,m3,i4*2);
+    DISASM_PRINT("%d,%d,%d,*%+d",r1,r2,m3,i4*2)
 
 DISASM_TYPE(RIE_RMII);
 int r1,m3,i4,i2;
@@ -1556,7 +1556,7 @@ int r1,m3,i4,i2;
     m3 = inst[1] & 0x0F;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
     i2 = inst[4];
-    DISASM_PRINT("%d,%d,%d,*%+d",r1,i2,m3,i4*2);
+    DISASM_PRINT("%d,%d,%d,*%+d",r1,i2,m3,i4*2)
 
 DISASM_TYPE(RIE_RRIII);
 int r1,r2,i3,i4,i5;
@@ -1565,14 +1565,14 @@ int r1,r2,i3,i4,i5;
     i3 = inst[2];
     i4 = inst[3];
     i5 = inst[4];
-    DISASM_PRINT("%d,%d,%d,%d,%d",r1,r2,i3,i4,i5);
+    DISASM_PRINT("%d,%d,%d,%d,%d",r1,r2,i3,i4,i5)
 
 DISASM_TYPE(RIL);
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    DISASM_PRINT("%d,%"PRId32,r1,i2);
+    DISASM_PRINT("%d,%"PRId32,r1,i2)
 
 DISASM_TYPE(RIL_A);
 int r1,i2;
@@ -1580,7 +1580,7 @@ int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    DISASM_PRINT("%d,*%+"PRId64,r1,i2*Two_S64);
+    DISASM_PRINT("%d,*%+"PRId64,r1,i2*Two_S64)
 
 DISASM_TYPE(RIS);
 int r1,i2,m3,b4,d4;
@@ -1589,7 +1589,7 @@ int r1,i2,m3,b4,d4;
     b4 = inst[2] >> 4;
     d4 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = inst[4];
-    DISASM_PRINT("%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4);
+    DISASM_PRINT("%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4)
 
 DISASM_TYPE(RRS);
 int r1,r2,m3,b4,d4;
@@ -1598,34 +1598,34 @@ int r1,r2,m3,b4,d4;
     b4 = inst[2] >> 4;
     d4 = (inst[2] & 0x0F) << 8 | inst[3];
     m3 = inst[4] >> 4;
-    DISASM_PRINT("%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4);
+    DISASM_PRINT("%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4)
 
 DISASM_TYPE(SI);
 int i2,b1,d1;
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d),%d",d1,b1,i2);
+    DISASM_PRINT("%d(%d),%d",d1,b1,i2)
 
 DISASM_TYPE(SIY);
 int i2,b1,d1;
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d),%d",d1,b1,i2);
+    DISASM_PRINT("%d(%d),%d",d1,b1,i2)
 
 DISASM_TYPE(SIL);
 int b1,d1,i2;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = (S16)(((U16)inst[4] << 8) | inst[5]);
-    DISASM_PRINT("%d(%d),%d",d1,b1,i2);
+    DISASM_PRINT("%d(%d),%d",d1,b1,i2)
 
 DISASM_TYPE(S);
 int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d)",d2,b2);
+    DISASM_PRINT("%d(%d)",d2,b2)
 
 DISASM_TYPE(SS);
 int l1,l2,b1,d1,b2,d2;
@@ -1635,7 +1635,7 @@ int l1,l2,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2);
+    DISASM_PRINT("%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2)
 
 DISASM_TYPE(SS_L);
 int l1,b1,d1,b2,d2;
@@ -1644,7 +1644,7 @@ int l1,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d,%d),%d(%d)",d1,l1+1,b1,d2,b2);
+    DISASM_PRINT("%d(%d,%d),%d(%d)",d1,l1+1,b1,d2,b2)
 
 // "Mnemonic   D1(B1),D2(L2,B2)"
 DISASM_TYPE(SS_L2);
@@ -1654,7 +1654,7 @@ int l2,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2);
+    DISASM_PRINT("%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2)
 
 DISASM_TYPE(SS_R);
 int r1,r3,b2,d2,b4,d4;
@@ -1664,7 +1664,7 @@ int r1,r3,b2,d2,b4,d4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     b4 = inst[4] >> 4;
     d4 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d,%d,%d(%d),%d(%d)",r1,r3,d2,b2,d4,b4);
+    DISASM_PRINT("%d,%d,%d(%d),%d(%d)",r1,r3,d2,b2,d4,b4)
 
 // "Mnemonic   D1(R1,B1),D2(B2),R3"
 DISASM_TYPE(SS_R3);
@@ -1675,7 +1675,7 @@ int r1,r3,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d,%d),%d(%d),%d",d1,r1,b1,d2,b2,r3);
+    DISASM_PRINT("%d(%d,%d),%d(%d),%d",d1,r1,b1,d2,b2,r3)
 
 // "Mnemonic   R1,D2(B2),R3,D4(B4)"
 DISASM_TYPE(SS_RSRS);
@@ -1686,7 +1686,7 @@ int r1,r3,b2,d2,b4,d4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     b4 = inst[4] >> 4;
     d4 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d,%d(%d),%d,%d(%d)",r1,d2,b2,r3,d4,b4);
+    DISASM_PRINT("%d,%d(%d),%d,%d(%d)",r1,d2,b2,r3,d4,b4)
 
 // "Mnemonic   D1(L1,B1),D2(B2),I3"
 DISASM_TYPE(SS_I);
@@ -1697,7 +1697,7 @@ int l1,i3,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3);
+    DISASM_PRINT("%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3)
 
 DISASM_TYPE(SSE);
 int b1,d1,b2,d2;
@@ -1705,7 +1705,7 @@ int b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d),%d(%d)",d1,b1,d2,b2);
+    DISASM_PRINT("%d(%d),%d(%d)",d1,b1,d2,b2)
 
 DISASM_TYPE(SSF);
 int r3,b1,d1,b2,d2;
@@ -1714,7 +1714,7 @@ int r3,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d),%d(%d),%d",d1,b1,d2,b2,r3);
+    DISASM_PRINT("%d(%d),%d(%d),%d",d1,b1,d2,b2,r3)
 
 DISASM_TYPE(SSF_RSS);
 int r3,b1,d1,b2,d2;
@@ -1723,7 +1723,7 @@ int r3,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2);
+    DISASM_PRINT("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2)
 
 DISASM_TYPE(VST);
 int vr3,rt2,vr1,rs2;
@@ -1731,19 +1731,19 @@ int vr3,rt2,vr1,rs2;
     rt2 = inst[2] & 0x0F;
     vr1 = inst[3] >> 4;
     rs2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d(%d)",vr1,vr3,rs2,rt2);
+    DISASM_PRINT("%d,%d,%d(%d)",vr1,vr3,rs2,rt2)
 
 DISASM_TYPE(VR);
 int vr1,fr3,gr2;
     fr3 = inst[2] >> 4;
     vr1 = inst[3] >> 4;
     gr2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",vr1,fr3,gr2);
+    DISASM_PRINT("%d,%d,%d",vr1,fr3,gr2)
 
 DISASM_TYPE(VS);
 int rs2;
     rs2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d",rs2);
+    DISASM_PRINT("%d",rs2)
 
 DISASM_TYPE(VRSE);
 int vr1,vr3,d2,b2;
@@ -1751,13 +1751,13 @@ int vr1,vr3,d2,b2;
     vr1 = inst[3] >> 4;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d,%d,%d(%d)",vr1,vr3,d2,b2);
+    DISASM_PRINT("%d,%d,%d(%d)",vr1,vr3,d2,b2)
 
 DISASM_TYPE(S_NW);
 int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d)",d2,b2);
+    DISASM_PRINT("%d(%d)",d2,b2)
 
 
 /*----------------------------------------------------------------------------*/
