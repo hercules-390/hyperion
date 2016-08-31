@@ -405,6 +405,8 @@ HSYS_DLL_IMPORT void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
 HSYS_DLL_IMPORT void *(*debug_sclp_event_data)      (void *, void *, REGS *);
 
 #else
+#define system_command                  NULL
+#define daemon_task                     NULL
 void *panel_command (void *cmdline);
 void panel_display (void);
 void *replace_opcode (int arch, zz_func inst, int opcode1, int opcode2);
