@@ -311,8 +311,13 @@ ALIGN_16 BYTE   blkend[16];             /* eye-end                   */\
   #define      HPCALLOC(t,a)    PVALLOC(a)
   #define      HPCFREE(t,a)     PVFREE(a)
   #define      HPAGESIZE        getpagesize
-  #define      MLOCK            mlock
-  #define      MUNLOCK          munlock
+  #if defined(HAVE_MLOCK)
+    #define    MLOCK            mlock
+    #define    MUNLOCK          munlock
+  #else
+    #define    MLOCK            __noop
+    #define    MUNLOCK          __noop
+  #endif
 
 #else // defined( OPTION_CALLOC_GUESTMEM )
 
