@@ -82,20 +82,13 @@ int     devtmax;                        /* Max number device threads */
 
     sysblk.xpndsize = 0;
 
-    /* PROGRAMMING NOTE: previously, we would set sysblk.maxcpu to
-       MAX_CPU_ENGINES, but now we keep the two values independent
-       from one another. MAX_CPU_ENGINES defines the maximum MAXCPU
-       value (which is the absolute physical maximum number of CPUs
-       that this particular build of Hercules can support), whereas
-       'maxcpu' defines the maximum number of emulated CPUs the user
-       wishes their virtual mainframe to have and defines the upper
-       limit for numcpu. In other words, maxcpu defines the maximum
-       value that numcpu can be, and MAX_CPU_ENGINES is the maximum
-       value that maxcpu can be. Thus the DEFAULT_MAXCPU value was
-       introduced to define a default value for 'maxcpu' that could
-       be set to a value completely different from MAX_CPU_ENGINES.
-    */
-    sysblk.maxcpu = DEFAULT_MAXCPU;     /* (see PROGRAMMING NOTE) */
+    /* Set sysblk.maxcpu to our preferred default value, if possible */
+#if (PREF_DEF_MAXCPU <= MAX_CPU_ENGINES)
+    sysblk.maxcpu = PREF_DEF_MAXCPU;
+#else
+    WARNING( "sysblk.maxcpu reduced from " QSTR( PREF_DEF_MAXCPU ) " to " QSTR( MAX_CPU_ENGINES ))
+    sysblk.maxcpu = MAX_CPU_ENGINES;
+#endif
 
 #ifdef    _FEATURE_VECTOR_FACILITY
     sysblk.numvec = sysblk.maxcpu;
