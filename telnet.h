@@ -115,6 +115,37 @@ enum telnet_state_t
 };
 
 /*-------------------------------------------------------------------*/
+/*                         Event codes                               */
+/*-------------------------------------------------------------------*/
+enum telnet_event_code_t
+{
+    TELNET_EV_DATA = 0,         /* non-telnet data received from peer*/
+    TELNET_EV_SEND,             /* raw data needs to be sent to peer */
+    TELNET_EV_IAC,              /* generic IAC command received      */
+    TELNET_EV_WILL,             /* WILL option negotiation received  */
+    TELNET_EV_WONT,             /* WONT option neogitation received  */
+    TELNET_EV_DO,               /* DO option negotiation received    */
+    TELNET_EV_DONT,             /* DONT option negotiation received  */
+    TELNET_EV_SUBNEGOTIATION,   /* sub-negotiation data received     */
+    TELNET_EV_TTYPE,            /* TTYPE command has been received   */
+    TELNET_EV_ENVIRON,          /* ENVIRON command has been received */
+    TELNET_EV_WARNING,          /* recoverable error has occured     */
+    TELNET_EV_ERROR             /* non-recoverable error has occured */
+};
+
+/*-------------------------------------------------------------------*/
+/*                   Event warning/error codes                       */
+/*-------------------------------------------------------------------*/
+enum telnet_error_t
+{
+    TELNET_EOK = 0,             /* no error                          */
+    TELNET_ENOMEM,              /* memory allocation failure         */
+    TELNET_EOVERFLOW,           /* data exceeds buffer size          */
+    TELNET_EPROTOCOL,           /* invalid sequence of special bytes */
+    TELNET_ENEGOTIATION,        /* negotiation failed                */
+};
+
+/*-------------------------------------------------------------------*/
 /*                         Typedefs                                  */
 /*-------------------------------------------------------------------*/
 typedef struct telnet_t                 telnet_t;
@@ -281,37 +312,6 @@ struct telnet_neg_queue_t
 #define TELNET_FLAG_PASSIVE_NEG     (0)
 #define TELNET_FLAG_ACTIVE_NEG      (1 << 7)
 #define TELNET_FLAG_PROXY_MODE      (1 << 6)
-
-/*-------------------------------------------------------------------*/
-/*                         Event codes                               */
-/*-------------------------------------------------------------------*/
-enum telnet_event_code_t
-{
-    TELNET_EV_DATA = 0,         /* non-telnet data received from peer*/
-    TELNET_EV_SEND,             /* raw data needs to be sent to peer */
-    TELNET_EV_IAC,              /* generic IAC command received      */
-    TELNET_EV_WILL,             /* WILL option negotiation received  */
-    TELNET_EV_WONT,             /* WONT option neogitation received  */
-    TELNET_EV_DO,               /* DO option negotiation received    */
-    TELNET_EV_DONT,             /* DONT option negotiation received  */
-    TELNET_EV_SUBNEGOTIATION,   /* sub-negotiation data received     */
-    TELNET_EV_TTYPE,            /* TTYPE command has been received   */
-    TELNET_EV_ENVIRON,          /* ENVIRON command has been received */
-    TELNET_EV_WARNING,          /* recoverable error has occured     */
-    TELNET_EV_ERROR             /* non-recoverable error has occured */
-};
-
-/*-------------------------------------------------------------------*/
-/*                   Event warning/error codes                       */
-/*-------------------------------------------------------------------*/
-enum telnet_error_t
-{
-    TELNET_EOK = 0,             /* no error                          */
-    TELNET_ENOMEM,              /* memory allocation failure         */
-    TELNET_EOVERFLOW,           /* data exceeds buffer size          */
-    TELNET_EPROTOCOL,           /* invalid sequence of special bytes */
-    TELNET_ENEGOTIATION,        /* negotiation failed                */
-};
 
 /*-------------------------------------------------------------------*/
 /*                  Environ command information                      */
