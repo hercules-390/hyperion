@@ -337,7 +337,7 @@ U32 i;                                  /* Loop Index                */
         return NULL;
     }
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return NULL );
 }
 
 /*-------------------------------------------------------------------*/

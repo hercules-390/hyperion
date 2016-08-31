@@ -199,8 +199,6 @@ U32   code;
         /* Power Off: exit hercules */
         exit(0);
 
-        UNREACHABLE_CODE();
-
 #if defined(FEATURE_HYPERVISOR) || defined(FEATURE_EMULATE_VM)
     case 0x044:
     /*---------------------------------------------------------------*/
@@ -626,7 +624,7 @@ U32   code;
     /* Diagnose FF8: Simulate Loop                                   */
     /*---------------------------------------------------------------*/
         while(1);
-        UNREACHABLE_CODE();
+        /* (never reached) */
 
     case 0xFFC:
     /*---------------------------------------------------------------*/

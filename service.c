@@ -1396,7 +1396,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             ARCH_DEP(checkstop_config)();
             RELEASE_INTLOCK(regs);
             longjmp(regs->progjmp,SIE_NO_INTERCEPT);
-            UNREACHABLE_CODE();
+            UNREACHABLE_CODE( return );
 
     case SCLP_READ_CHP_INFO:
 

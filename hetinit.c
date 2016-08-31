@@ -96,7 +96,6 @@ main( int argc, char *argv[] )
             case 'h':
                 usage( pgm );
                 goto exit;
-            UNREACHABLE_CODE();
 
             case 'i':
                 o_iehinitt = TRUE;
@@ -111,7 +110,6 @@ main( int argc, char *argv[] )
             default:
                 usage( pgm );
                 goto exit;
-            UNREACHABLE_CODE();
         }
     }
 

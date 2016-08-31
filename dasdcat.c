@@ -360,7 +360,7 @@ int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
 
         rec++;
     }
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return -1 );
 }
 
 int do_cat(CIFBLK *cif, char *file)

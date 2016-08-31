@@ -21,11 +21,15 @@
 /*-------------------------------------------------------------------*/
 
 #ifdef _MSVC_
-  #define UNREACHABLE_CODE()        __assume(0)
+  #define UNREACHABLE_CODE(ret)     __assume(0)
 #elif defined(__GNUC__)
-  #define UNREACHABLE_CODE()        __builtin_unreachable()
+  #define UNREACHABLE_CODE(ret)     __builtin_unreachable()
 #else
-  #define UNREACHABLE_CODE()
+  /* For compilers that don't support UNREACHABLE_CODE(), define
+     a macro whose argument is a return statement that will never
+     be reached.
+  */
+  #define UNREACHABLE_CODE(ret)     ret
 #endif
 
 /*-------------------------------------------------------------------*/

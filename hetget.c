@@ -690,8 +690,7 @@ main( int argc, char *argv[] )
 
             case 'h':
                 usage( pgm );
-                exit( 1 );
-            UNREACHABLE_CODE();
+                return 1;
 
             case 'n':
                 opts.flags |= O_NL;
@@ -707,8 +706,7 @@ main( int argc, char *argv[] )
 
             default:
                 usage( pgm );
-                exit( 1 );
-            UNREACHABLE_CODE();
+                return 1;
         }
     }
 

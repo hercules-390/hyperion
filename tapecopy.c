@@ -888,7 +888,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     close_tape (devfd);
 
     EXIT( RC_SUCCESS );
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return RC_SUCCESS );
 
 } /* end function main */
 

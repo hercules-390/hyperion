@@ -258,7 +258,7 @@ int main( int argc, char **argv )
         }
     }
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return -1 );
 }
 
 #endif // defined(BUILD_HERCIFC)

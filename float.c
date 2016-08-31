@@ -5081,7 +5081,7 @@ U64     msj, lsj;
             /* less than zero */
 
             ARCH_DEP(program_interrupt) (regs, PGM_SQUARE_ROOT_EXCEPTION);
-            UNREACHABLE_CODE();
+            UNREACHABLE_CODE( return );
         } else {
             /* normalize operand */
             normal_ef(&fl);

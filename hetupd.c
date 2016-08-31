@@ -422,8 +422,7 @@ main( int argc, char *argv[] )
 
             case 'h':                               /* Print usage          */
                 usage( pgm );
-                exit( 1 );
-            UNREACHABLE_CODE();
+                return 1;
 
             case 'r':                               /* Rechunk              */
                 o_compress = FALSE;
@@ -448,8 +447,7 @@ main( int argc, char *argv[] )
 
             default:                                /* Print usage          */
                 usage( pgm );
-                exit( 1 );
-            UNREACHABLE_CODE();
+                return 1;
         }
     }
 
@@ -469,8 +467,7 @@ main( int argc, char *argv[] )
 
         default:
             usage( pgm );
-            exit( 1 );
-        UNREACHABLE_CODE();
+            return 1;
     }
     o_sname = argv[ optind ] ;
 

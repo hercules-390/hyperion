@@ -3079,7 +3079,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
     } // end for(;;)
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return -1 );
 }
 
 // ====================================================================

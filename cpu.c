@@ -1839,7 +1839,7 @@ register int    *caplocked = &sysblk.caplocked[cpu];
 
     } while (1);
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return NULL );
 
 } /* end function cpu_thread */
 

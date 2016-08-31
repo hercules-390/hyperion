@@ -2869,5 +2869,5 @@ int generic_tmhcall ( GENTMH_PARMS* pGenParms )
         }
     }
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return -1 );
 }

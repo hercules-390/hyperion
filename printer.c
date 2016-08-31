@@ -1090,7 +1090,6 @@ char            wbuf[150];
             write_buffer(dev, nls, coun, unitstat);
             if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
-            return;
         }
         else  /*code >  0x80*/ /* chan control */
         {
@@ -1108,9 +1107,8 @@ char            wbuf[150];
             SKIP_TO_CHAN();
             if (*unitstat == 0)
                 *unitstat = CSW_CE | CSW_DE;
-            return;
         }
-        UNREACHABLE_CODE();
+        return;
 
     case 0x63:
     /*---------------------------------------------------------------*/

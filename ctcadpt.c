@@ -1491,7 +1491,7 @@ static void*  CTCT_ListenThread( void* argp )
         // Hercules tries to connect).  This will also be fixed RSN.
     }
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return NULL );
 }
 
 // ====================================================================
@@ -2530,7 +2530,7 @@ static void*  CTCE_ListenThread( void* argp )
         // Hercules tries to connect).  This will also be fixed RSN.
     }
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return NULL );
 }
 
 //

@@ -298,7 +298,7 @@ static BOOL WINAPI console_ctrl_handler( DWORD signo )
             return FALSE;  // (not handled; call next signal handler)
     }
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return FALSE );
 }
 
 /*-------------------------------------------------------------------*/
@@ -369,7 +369,7 @@ static LRESULT CALLBACK MainWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             return DefWindowProc( hWnd, msg, wParam, lParam );
     }
 
-    UNREACHABLE_CODE();
+    UNREACHABLE_CODE( return 0 );
 }
 
 // Create invisible message handling window...
