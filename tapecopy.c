@@ -135,7 +135,7 @@ static void delayed_exit (int exit_code)
     usleep(100000);
     exit(exit_code);
 }
-#define  EXIT(rc)   delayed_exit(rc)   /* (use this macro to exit)   */
+#define DELAYED_EXIT(rc)  delayed_exit(rc) /* use this macro to exit */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to print tape status                                   */
@@ -298,7 +298,7 @@ int read_scsi_tape (int devfd, void *buf, size_t bufsize, struct mtget* mtget)
         }
         // "Tape %s: Error reading tape: errno=%d: %s"
         FWRMSG( stderr, HHC02705, "E", devnamein, errno, strerror( errno ));
-        EXIT( RC_ERROR_READING_DATA );
+        DELAYED_EXIT( RC_ERROR_READING_DATA );
     }
 
     return(len);
@@ -331,7 +331,7 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
             // "File %s: Error reading %s header: rc=%d, errno=%d: %s"
             FWRMSG( stderr, HHC02707, "E", filenamein, "AWS eumulated tape file",
                 rc, errno, strerror( errno ));
-            EXIT( RC_ERROR_READING_AWS_HEADER );
+            DELAYED_EXIT( RC_ERROR_READING_AWS_HEADER );
         } /* end if(rc) */
 
         /* Interpret the block header */
@@ -348,7 +348,7 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
             // "File %s: Block too large for %s tape: block size=%d, maximum=%d"
             FWRMSG( stderr, HHC02708, "E", filenamein, "AWS emulated",
                 count_read+blksize, (int)bufsize );
-            EXIT( RC_ERROR_AWSTAPE_BLOCK_TOO_LARGE );
+            DELAYED_EXIT( RC_ERROR_AWSTAPE_BLOCK_TOO_LARGE );
         } /* end if(count) */
 
         /* Read data block */
@@ -358,7 +358,7 @@ int read_aws_disk (int diskfd, void *buf, size_t bufsize)
             // "File %s: Error reading %s data block: rc=%d, errno=%d: %s"
             FWRMSG( stderr, HHC02709, "E", filenamein, "AWS emulated tape",
                 rc, errno, strerror( errno ));
-            EXIT( RC_ERROR_READING_DATA );
+            DELAYED_EXIT( RC_ERROR_READING_DATA );
         } /* end if(rc) */
 
         bufptr += blksize;
@@ -384,7 +384,7 @@ int write_scsi_tape (int devfd, void *buf, size_t len)
         // "Tape %s: Error writing data block: rc=%d, errno=%d: %s"
         FWRMSG( stderr, HHC02710, "E", devnameout,
             rc, errno, strerror( errno ));
-        EXIT( RC_ERROR_WRITING_DATA );
+        DELAYED_EXIT( RC_ERROR_WRITING_DATA );
     } /* end if(rc) */
 
     bytes_written += rc;
@@ -419,7 +419,7 @@ int write_aws_disk (int diskfd, void *buf, size_t len)
         // "File %s: Error writing %s header: rc=%d, errno=%d: %s"
         FWRMSG( stderr, HHC02711, "E", filenameout, "AWS emulated tape file",
             rc, errno, strerror( errno ));
-        EXIT( RC_ERROR_WRITING_OUTPUT_AWS_HEADER_BLOCK );
+        DELAYED_EXIT( RC_ERROR_WRITING_OUTPUT_AWS_HEADER_BLOCK );
     } /* end if(rc) */
 
     bytes_written += rc;
@@ -435,7 +435,7 @@ int write_aws_disk (int diskfd, void *buf, size_t len)
         // "File %s: Error writing %s data block: rc=%d, errno=%d: %s"
         FWRMSG( stderr, HHC02712, "E", filenameout, "AWS emulated tape",
             rc, errno, strerror( errno ));
-        EXIT( RC_ERROR_WRITING_DATA );
+        DELAYED_EXIT( RC_ERROR_WRITING_DATA );
     } /* end if(rc) */
 
     bytes_written += rc;
@@ -459,7 +459,7 @@ int write_tapemark_scsi_tape (int devfd)
         // "Tape %s: Error writing tapemark: rc=%d, errno=%d: %s"
         FWRMSG( stderr, HHC02713, "E", devnameout,
             rc, errno, strerror( errno ));
-        EXIT( RC_ERROR_WRITING_TAPEMARK );
+        DELAYED_EXIT( RC_ERROR_WRITING_TAPEMARK );
     }
     return(rc);
 
@@ -488,7 +488,7 @@ int write_tapemark_aws_disk (int diskfd)
         // "File %s: Error writing %s tapemark: rc=%d, errno=%d: %s"
         FWRMSG( stderr, HHC02714, "E", filenameout, "AWS emulated",
             rc, errno, strerror( errno ));
-        EXIT( RC_ERROR_WRITING_TAPEMARK );
+        DELAYED_EXIT( RC_ERROR_WRITING_TAPEMARK );
     } /* end if(rc) */
 
     bytes_written += rc;
@@ -527,7 +527,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
        (either AWS disk file or SCSI tape device)
     */
     if ((argc < 2) || (argv[1] == NULL))
-        EXIT( print_usage());
+        DELAYED_EXIT( print_usage());
 
     if (0
         || ( strlen( argv[1] ) > 5 && strnfilenamecmp( argv[1], "/dev/",   5 ) == 0 )
@@ -569,11 +569,11 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         }
     }
     else
-        EXIT( print_usage());
+        DELAYED_EXIT( print_usage());
 
     /* Check input arguments and disallow tape-to-tape or disk-to-disk copy */
     if ((!devnamein && !devnameout) || (!filenamein && !filenameout))
-        EXIT( print_usage());
+        DELAYED_EXIT( print_usage());
 
     /* Open the SCSI tape device */
     if (devnamein)
@@ -591,7 +591,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         // "Tape %s: Error opening: errno=%d: %s"
         FWRMSG( stderr, HHC02715, "E", (devnamein ? devnamein : devnameout),
             errno, strerror( errno ));
-        EXIT( RC_ERROR_OPENING_SCSI_DEVICE );
+        DELAYED_EXIT( RC_ERROR_OPENING_SCSI_DEVICE );
     }
 
     usleep(50000);
@@ -605,7 +605,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         // "Tape %s: Error setting attributes: rc=%d, errno=%d: %s"
         FWRMSG( stderr, HHC02716, "E", (devnamein ? devnamein : devnameout),
             rc, errno, strerror( errno ));
-        EXIT( RC_ERROR_SETTING_SCSI_VARBLK_PROCESSING );
+        DELAYED_EXIT( RC_ERROR_SETTING_SCSI_VARBLK_PROCESSING );
     }
 
     usleep(50000);
@@ -619,7 +619,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         // "Tape %s: Error rewinding: rc=%d, errno=%d: %s"
         FWRMSG( stderr, HHC02717, "E", (devnamein ? devnamein : devnameout),
             rc, errno, strerror( errno ));
-        EXIT( RC_ERROR_REWINDING_SCSI );
+        DELAYED_EXIT( RC_ERROR_REWINDING_SCSI );
     }
 
     usleep(50000);
@@ -627,7 +627,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
     /* Obtain the tape status */
     rc = obtain_status ((devnamein ? devnamein : devnameout), devfd, &mtget);
     if (rc < 0)
-        EXIT( RC_ERROR_OBTAINING_SCSI_STATUS );
+        DELAYED_EXIT( RC_ERROR_OBTAINING_SCSI_STATUS );
 
     /* Display tape status information */
     for (i = 0; tapeinfo[i].t_type != 0
@@ -685,7 +685,7 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         // "File %s: Error opening: errno=%d: %s"
         FWRMSG( stderr, HHC02720, "E", (filenamein ? filenamein : filenameout),
             errno, strerror( errno ));
-        EXIT( RC_ERROR_OPENING_AWS_FILE );
+        DELAYED_EXIT( RC_ERROR_OPENING_AWS_FILE );
     }
 
     /* Copy blocks from input to output */
@@ -882,12 +882,12 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
         // "Tape %s: Error rewinding: rc=%d, errno=%d: %s"
         FWRMSG( stderr, HHC02717, "E", (devnamein ? devnamein : devnameout),
             rc, errno, strerror( errno ));
-        EXIT( RC_ERROR_REWINDING_SCSI );
+        DELAYED_EXIT( RC_ERROR_REWINDING_SCSI );
     }
 
     close_tape (devfd);
 
-    EXIT( RC_SUCCESS );
+    DELAYED_EXIT( RC_SUCCESS );
     UNREACHABLE_CODE( return RC_SUCCESS );
 
 } /* end function main */
