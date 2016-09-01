@@ -29,7 +29,8 @@
 #endif
 
 #define PREF_DEF_MAXCPU           8     /*  Default sysblk.maxcpu
-                                            to 8 according to old ?  */
+                                            to 8 according to old
+                                            MAX_CPU_ENGINES default  */
 
 /*-------------------------------------------------------------------*/
 /* Miscellaneous system related constants we could be missing...     */
