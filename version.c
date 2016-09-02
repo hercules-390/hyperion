@@ -720,8 +720,10 @@ static const char *build_info[] = {
       "=C11"
     #elif CAN_IAF2 == IAF2_MICROSOFT_INTRINSICS
       "=msvcIntrinsics"
-    #elif CAN_IAF2 == IAF2_GCC_CLANG_INTRINSICS
-      "=gccIntrinsics"
+    #elif CAN_IAF2 == IAF2_ATOMIC_INTRINSICS
+      "=atomicIntrinsics"
+    #elif CAN_IAF2 == IAF2_SYNC_BUILTINS
+      "=syncBuiltins"
     #else
       "=UNKNOWN"
     #endif

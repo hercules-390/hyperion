@@ -472,6 +472,8 @@ AH_TEMPLATE( [C11_ATOMIC_INT_LOCK_FREE],     [Define to 'stdatomics.h' ATOMIC_*_
 AH_TEMPLATE( [C11_ATOMIC_LONG_LOCK_FREE],    [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
 AH_TEMPLATE( [C11_ATOMIC_LLONG_LOCK_FREE],   [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
 AH_TEMPLATE( [C11_ATOMIC_POINTER_LOCK_FREE], [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
+AH_TEMPLATE( [HAVE_ATOMIC_INTRINSICS],       [Define if '__atomic_xor_fetch' and friends are available] )
+AH_TEMPLATE( [HAVE_SYNC_BUILTINS],           [Define if '__sync_xor_and_fetch' and friends are available] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -741,7 +743,6 @@ AC_CHECK_DECLS( IFNAMSIZ,             [hc_cv_have_ifnamsiz=yes],            [hc_
 AC_CHECK_DECLS( LOGIN_NAME_MAX,       [hc_cv_have_login_name_max=yes],      [hc_cv_have_login_name_max=no],      [#include <limits.h>] )
 AC_CHECK_DECLS( _SC_NPROCESSORS_CONF, [hc_cv_have_sc_nprocessors_conf=yes], [hc_cv_have_sc_nprocessors_conf=no], [#include <unistd.h>] )
 AC_CHECK_DECLS( _SC_NPROCESSORS_ONLN, [hc_cv_have_sc_nprocessors_onln=yes], [hc_cv_have_sc_nprocessors_onln=no], [#include <unistd.h>] )
-
 AC_CHECK_DECLS( SIOCSIFNETMASK,       [hc_cv_have_siocsifnetmask=yes],      [hc_cv_have_siocsifnetmask=no],      [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCSIFBRDADDR,       [hc_cv_have_siocsifbrdaddr=yes],      [hc_cv_have_siocsifbrdaddr=no],      [#include <linux/sockios.h>] )
 AC_CHECK_DECLS( SIOCSIFHWADDR,        [hc_cv_have_siocsifhwaddr=yes],       [hc_cv_have_siocsifhwaddr=no],       [#include <linux/sockios.h>] )
@@ -981,9 +982,6 @@ AC_CHECK_FUNCS( mlockall )
 AC_CHECK_FUNCS( pvalloc )
 AC_CHECK_FUNCS( valloc )
 AC_CHECK_FUNCS( posix_memalign )
-
-
-
 
 AC_CHECK_FUNCS( vsscanf,
                [hc_cv_have_vsscanf=yes],
@@ -1249,33 +1247,86 @@ AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
     ]
 )
 
+#---------------------------------------------------#
+#  Check if atomic '__sync' builtins are available  #
+#---------------------------------------------------#
+
+# Note: We purposely do *NOT* check for GCC. We don't
+# care if the compiler is GCC or CLANG. Either is ok.
+
+AC_CACHE_CHECK( [if atomic '_sync' builtins are available],
+
+    [hc_cv_sync_builtins_available],
+    [
+        AC_COMPILE_IFELSE(
+        [
+            static unsigned char  b = 0;
+            static unsigned char *p = &b;
+            void main()
+            {
+                __sync_or_and_fetch  ( p, 0xFF );
+                __sync_and_and_fetch ( p, 0x00 );
+                __sync_xor_and_fetch ( p, 0xAC );
+            }
+        ],
+        [hc_cv_sync_builtins_available=yes],
+        [hc_cv_sync_builtins_available=no] )
+    ]
+)
+
+#------------------------------------------------#
+#  Check if '__atomic' intrinsics are available  #
+#------------------------------------------------#
+
+# Note: We purposely do *NOT* check for GCC. We don't
+# care if the compiler is GCC or CLANG. Either is ok.
+
+AC_CACHE_CHECK( [if '__atomic' intrinsics are available],
+
+    [hc_cv_atomic_intrinsics_available],
+    [
+        AC_COMPILE_IFELSE(
+        [
+            static unsigned char  b = 0;
+            static unsigned char *p = &b;
+            void main()
+            {
+                __atomic_or_fetch  ( p, 0xFF, __ATOMIC_SEQ_CST );
+                __atomic_and_fetch ( p, 0x00, __ATOMIC_SEQ_CST );
+                __atomic_xor_fetch ( p, 0xAC, __ATOMIC_SEQ_CST );
+            }
+        ],
+        [hc_cv_atomic_intrinsics_available=yes],
+        [hc_cv_atomic_intrinsics_available=no] )
+    ]
+)
+
 #---------------------------------------#
 #  Check if C11 atomics are available   #
 #---------------------------------------#
+
+# Note: We purposely do *NOT* check for GCC. We don't
+# care if the compiler is GCC or CLANG. Either is ok.
 
 AC_CACHE_CHECK( [if C11 atomics are available],
 
     [hc_cv_c11_atomics_available],
     [
-        if test "$GCC" = "yes"; then
-            AC_COMPILE_IFELSE(
-            [
-                #if !defined(HAVE_STDATOMIC_H) || defined(__STDC_NO_ATOMICS__)
-                  #error C11 atomics are not available
-                #else
-                  #include <stdatomic.h>
-                  #if defined(ATOMIC_CHAR_LOCK_FREE)
-                    #define C11_ATOMICS_ARE_AVAILABLE
-                  #else
-                    #error C11 atomics are not available
-                  #endif
-                #endif
-            ],
-            [hc_cv_c11_atomics_available=yes],
-            [hc_cv_c11_atomics_available=no] )
-        else
-            hc_cv_c11_atomics_available=no
-        fi
+        AC_COMPILE_IFELSE(
+        [
+            #if !defined(HAVE_STDATOMIC_H) || defined(__STDC_NO_ATOMICS__)
+              #error C11 atomics are not available
+            #else
+              #include <stdatomic.h>
+              #if defined(ATOMIC_CHAR_LOCK_FREE)
+                #define C11_ATOMICS_ARE_AVAILABLE
+              #else
+                #error C11 atomics are not available
+              #endif
+            #endif
+        ],
+        [hc_cv_c11_atomics_available=yes],
+        [hc_cv_c11_atomics_available=no] )
     ]
 )
 
@@ -2673,11 +2724,13 @@ test "$hc_cv_ena_ipv6"                    = "yes"  &&  AC_DEFINE(ENABLE_IPV6)
 test "$hc_cv_have_full_keepalive"         = "yes"  &&  AC_DEFINE(HAVE_FULL_KEEPALIVE)
 test "$hc_cv_have_partial_keepalive"      = "yes"  &&  AC_DEFINE(HAVE_PARTIAL_KEEPALIVE)
 test "$hc_cv_have_basic_keepalive"        = "yes"  &&  AC_DEFINE(HAVE_BASIC_KEEPALIVE)
+test "$hc_cv_atomic_intrinsics_available" = "yes"  &&  AC_DEFINE(HAVE_ATOMIC_INTRINSICS)
+test "$hc_cv_sync_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SYNC_BUILTINS)
 test "$enable_interlocked_access_facility_2" = "no" && AC_DEFINE(DISABLE_IAF2)
-test "$hc_cv_have_gcc_diag_pragma"         = "yes"  &&  AC_DEFINE(HAVE_GCC_DIAG_PRAGMA)
-test "$hc_cv_have_gcc_diag_pushpop"        = "yes"  &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
-test "$hc_cv_have_gcc_unused_func_warning" = "yes"  &&  AC_DEFINE(HAVE_GCC_UNUSED_FUNC_WARNING)
-test "$hc_cv_have_gcc_set_unused_warning"  = "yes"  &&  AC_DEFINE(HAVE_GCC_SET_UNUSED_WARNING)
+test "$hc_cv_have_gcc_diag_pragma"         = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PRAGMA)
+test "$hc_cv_have_gcc_diag_pushpop"        = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
+test "$hc_cv_have_gcc_unused_func_warning" = "yes" &&  AC_DEFINE(HAVE_GCC_UNUSED_FUNC_WARNING)
+test "$hc_cv_have_gcc_set_unused_warning"  = "yes" &&  AC_DEFINE(HAVE_GCC_SET_UNUSED_WARNING)
 
 if test $hc_cv_have_sa_sigaction != yes ||
    test $hc_cv_have_sigusr1      != yes ||

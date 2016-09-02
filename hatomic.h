@@ -100,9 +100,10 @@
 #define ALWAYS_ATOMIC       2
 
 #define IAF2_ATOMICS_UNAVAILABLE    0
-#define IAF2_MICROSOFT_INTRINSICS   1
-#define IAF2_GCC_CLANG_INTRINSICS   2
-#define IAF2_C11_STANDARD_ATOMICS   3
+#define IAF2_C11_STANDARD_ATOMICS   1
+#define IAF2_MICROSOFT_INTRINSICS   2
+#define IAF2_ATOMIC_INTRINSICS      3
+#define IAF2_SYNC_BUILTINS          4
 
 #if !defined( DISABLE_IAF2 )
   #if defined( C11_ATOMICS_AVAILABLE )
@@ -112,8 +113,10 @@
     #else
       #if defined( _MSVC_ )
         #define CAN_IAF2    IAF2_MICROSOFT_INTRINSICS
-      #elif defined( __GNUC__ )
-        #define CAN_IAF2    IAF2_GCC_CLANG_INTRINSICS
+      #elif defined( HAVE_ATOMIC_INTRINSICS )
+        #define CAN_IAF2    IAF2_ATOMIC_INTRINSICS
+      #elif defined( HAVE_SYNC_BUILTINS )
+        #define CAN_IAF2    IAF2_SYNC_BUILTINS
       #else
         #define CAN_IAF2    IAF2_ATOMICS_UNAVAILABLE
       #endif
@@ -121,8 +124,10 @@
   #else  /* !C11_ATOMICS_AVAILABLE */
     #if defined( _MSVC_ )
       #define CAN_IAF2      IAF2_MICROSOFT_INTRINSICS
-    #elif defined( __GNUC__ )
-      #define CAN_IAF2      IAF2_GCC_CLANG_INTRINSICS
+    #elif defined( HAVE_ATOMIC_INTRINSICS )
+      #define CAN_IAF2      IAF2_ATOMIC_INTRINSICS
+    #elif defined( HAVE_SYNC_BUILTINS )
+      #define CAN_IAF2      IAF2_SYNC_BUILTINS
     #else
       #define CAN_IAF2      IAF2_ATOMICS_UNAVAILABLE
     #endif
@@ -137,9 +142,12 @@
 #elif CAN_IAF2 == IAF2_C11_STANDARD_ATOMICS
   #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                 \
     (atomic_fetch_ ## op( (_Atomic BYTE*)ptr, imm ) fallback imm)
-#elif CAN_IAF2 == IAF2_GCC_CLANG_INTRINSICS
+#elif CAN_IAF2 == IAF2_ATOMIC_INTRINSICS
   #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                 \
     (__atomic_ ## op ## _fetch( ptr, imm, __ATOMIC_SEQ_CST ))
+#elif defined( HAVE_SYNC_BUILTINS )
+  #define H_ATOMIC_OP( ptr, imm, op, Op, fallback )                 \
+    (__sync_ ## op ## _and_fetch( ptr, imm ))
 #elif CAN_IAF2 == IAF2_MICROSOFT_INTRINSICS
   /* Microsoft functions, as per Fish                            */
 
