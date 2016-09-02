@@ -48,7 +48,7 @@
 /*-------------------------------------------------------------------*/
 #if !defined(_MSVC_)
   #if !defined(__noop)
-    #define __noop(...)     do{;}while(0)   /*  (i.e. do nothing)    */
+    #define __noop(...)     0           /* a function that returns 0 */
   #endif
 #endif
 
