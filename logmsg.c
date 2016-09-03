@@ -456,12 +456,16 @@ static void _flog_write_pipe( FILE* f, char* msg )
     {
         fprintf( f, "%s", msg );   /* (write msg to screen) */
 
-        // PROGRAMMING NOTE: the external GUI receives messages
-        // not only via its logfile stream but also via its stderr
-        // stream as well so we skip the logfile write in order to
-        // prevent duplicate messages.
-
-        if (sysblk.shutdown && !extgui)
+        if (1
+            && sysblk.shutdown
+#ifdef EXTERNALGUI
+            // PROGRAMMING NOTE: the external GUI receives messages
+            // not only via its logfile stream but also via its
+            // stderr stream as well, so we skip the logfile write
+            // in order to prevent duplicate messages.
+            && !extgui
+#endif
+        )
         {
             // Note: call does nothing if no logfile exists.
             logger_timestamped_logfile_write( msg, len );
