@@ -59,8 +59,8 @@
 
 #if !_ENABLE_TRACING_STMTS_IMPL
   #define VERIFY(a)       ((void)(a))
-  #define ASSERT          __noop
-  #define TRACE           __noop
+  #define ASSERT(a)
+  #define TRACE(...)
 #else /* _ENABLE_TRACING_STMTS_IMPL */
   #if defined( _MSVC_ )
     #define TRACE(...) do { \
