@@ -155,7 +155,7 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
   #define PTT_QETH_TRACE( _string, _tr1, _tr2, _tr3) \
           PTT(PTT_CL_INF, _string, _tr1, _tr2, _tr3)
 #else
-  #define PTT_QETH_TRACE            __noop
+  #define PTT_QETH_TRACE(...)   // (do nothing)
 #endif
 
 /* DBGTRC statements controlled by dev stmt "debug" option */
@@ -188,7 +188,7 @@ static void DBGTRC( DEVBLK* dev, char* fmt, ... )
   #define MPC_DUMP_DATA(_str,_adr,_len,_dir)  \
     mpc_display_stuff( dev, _str, _adr, _len, _dir )
 #else
-  #define MPC_DUMP_DATA         __noop
+  #define MPC_DUMP_DATA(...)    // (do nothing)
 #endif // QETH_DUMP_DATA
 
 
