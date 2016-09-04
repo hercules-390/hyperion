@@ -647,7 +647,14 @@ static BYTE sendto_client( TELNET* tn, const BYTE* buf, unsigned int len )
         tn->send_err = FALSE;
 
         if (tn->devclass == 'K')
+        {
+            /* PROGRAMMING NOTE: the constty_execute_ccw() function
+               that calls us ensures the buffer it passes to us is
+               always null terminated so the below telnet_printf
+               does not print garbage past the end of actual data.
+            */
             telnet_printf( tn->ctl, "%s", buf );
+        }
         else // (tn->devclass == 'D' || tn->devclass == 'P')
             telnet_send( tn->ctl, buf, len );
 
@@ -4129,9 +4136,18 @@ BYTE    stat;                           /* Unit status               */
     /*---------------------------------------------------------------*/
     /* WRITE, AUTO CARRIER RETURN                                    */
     /*---------------------------------------------------------------*/
+    {
+        /* PROGRAMMING NOTE: we use (dev->bufsize-2) to ensure we
+           always have room to append a '\n' newline as well as a
+           null byte to terminate the buffer. This is needed since
+           sendto_client() always calls telnet_printf() for console
+           tty devices to ensure that any CR and/or LF get properly
+           translated by libtelnet before being sent to the client.
+        */
+        U32 bufsize = (U32)(dev->bufsize-2);   /* reserve extra room */
 
         /* Calculate number of bytes to write and set residual count */
-        num = (count < (U32)dev->bufsize) ? count : (U32)dev->bufsize;
+        num = (count < bufsize) ? count : bufsize;
         *residual = count - num;
 
         /* Translate data in channel buffer to ASCII */
@@ -4152,13 +4168,13 @@ BYTE    stat;                           /* Unit status               */
         {
             /* Append newline if required */
             if (code == 0x09)
-            {
-                if (len < (U32)dev->bufsize)
-                    iobuf[len++] = '\n';
-            }
+                iobuf[len++] = '\n';
         }
 
-        /* Send the data to the client */
+        /* Ensure buffer is always null terminated */
+        iobuf[len++] = 0;
+
+        /* Send the data to the client (via telnet_printf) */
         if (!sendto_client( dev->tn, iobuf, len ))
         {
             /* Return with Unit Check status if the send failed */
@@ -4170,6 +4186,7 @@ BYTE    stat;                           /* Unit status               */
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
         break;
+    }
 
     case 0x03:
     /*---------------------------------------------------------------*/
@@ -4249,9 +4266,9 @@ BYTE    stat;                           /* Unit status               */
     /* AUDIBLE ALARM                                                 */
     /*---------------------------------------------------------------*/
     {
-        static BYTE bell = '\a';    //  "Ding!"  (ring the bell)
+        static BYTE bell[2] = {'\a','\0'};  // "Ding!" (ring the bell)
 
-        if (!sendto_client( dev->tn, &bell, 1 ))
+        if (!sendto_client( dev->tn, bell, 1 ))
         {
             /* Return with Unit Check status if the send failed */
             dev->sense[0] = SENSE_EC;
