@@ -315,8 +315,8 @@ ALIGN_16 BYTE   blkend[16];             /* eye-end                   */\
     #define    MLOCK            mlock
     #define    MUNLOCK          munlock
   #else
-    #define    MLOCK            0
-    #define    MUNLOCK          0
+    #define    MLOCK(a,b)       0
+    #define    MUNLOCK(a,b)     0
   #endif
 
 #else // defined( OPTION_CALLOC_GUESTMEM )
@@ -338,8 +338,8 @@ ALIGN_16 BYTE   blkend[16];             /* eye-end                   */\
       #define  MLOCK            mlock
       #define  MUNLOCK          munlock
     #else
-      #define  MLOCK            0
-      #define  MUNLOCK          0
+      #define  MLOCK(a,b)       0
+      #define  MUNLOCK(a,b)     0
     #endif
 
   #endif /* defined(_MSVC_) */
