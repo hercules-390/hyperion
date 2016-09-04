@@ -4172,7 +4172,7 @@ BYTE    stat;                           /* Unit status               */
         }
 
         /* Ensure buffer is always null terminated */
-        iobuf[len++] = 0;
+        iobuf[len] = 0;
 
         /* Send the data to the client (via telnet_printf) */
         if (!sendto_client( dev->tn, iobuf, len ))
