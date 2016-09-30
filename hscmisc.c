@@ -798,6 +798,13 @@ char    *s;                             /* Alteration value pointer  */
 BYTE    delim;                          /* Operand delimiter         */
 BYTE    c;                              /* Character work area       */
 
+    if (!operand)
+    {
+        // "Missing or invalid argument(s)"
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+
     rc = sscanf(operand, "%"SCNx64"%c%"SCNx64"%c",
                 &opnd1, &delim, &opnd2, &c);
 
