@@ -2216,6 +2216,14 @@ char    absorr[8];                      /* Uppercase command         */
     UNREFERENCED(argc);
     UNREFERENCED(cmdline);
 
+    /* We require only one operand */
+    if (argc != 2)
+    {
+        // "Missing or invalid argument(s)"
+        WRMSG( HHC17000, "E" );
+        return;
+    }
+
     /* Convert command to uppercase */
     for (i = 0; argv[0][i]; i++)
         absorr[i] = toupper(argv[0][i]);
