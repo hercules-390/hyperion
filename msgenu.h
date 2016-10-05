@@ -364,6 +364,7 @@ Examples:
 #define HHC00347 "%s"
 #define HHC00348 "CCKD file: invalid value %d for %s"
 #define HHC00349 "CCKD file: invalid cckd keyword: %s"
+#define HHC00350 "CCKD file: invalid numeric value %s"
 
 #define HHC00352 "%1d:%04X CCKD file %s: opened bit is on, use -f"
 #define HHC00353 "%1d:%04X CCKD file %s: check disk errors"

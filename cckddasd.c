@@ -5683,44 +5683,62 @@ int   rc;
         op = strchr (op, ',');
         if (op) *op++ = '\0';
 
-        /* Check for keyword = value */
+        /* Check for "keyword=value" */
         if ((p = strchr (kw, '=')))
         {
             *p++ = '\0';
+            c = 0;
             rc = sscanf (p, "%d%c", &val, &c);
         }
-        else rc = 0;
 
-        /* Parse the keyword */
-        if ( CMD(kw,help,4 ) )
+        /* If p == NULL, then just keyword syntax (no "=value") */
+        if (!p)
         {
-            if (!cmd) return 0;
-            cckd_command_help();
+            /* Parse the keyword */
+            if ( CMD(kw,help,4 ) )
+            {
+                if (!cmd) return 0;
+                cckd_command_help();
+            }
+            else if ( CMD(kw,stats,4) )
+            {
+                if (!cmd) return 0;
+                cckd_command_stats ();
+            }
+            else if ( CMD(kw,opts,4) )
+            {
+                if (!cmd) return 0;
+                cckd_command_opts();
+            }
+            else if ( CMD(kw,debug,5) )
+            {
+                if (!cmd) return 0;
+                cckd_command_debug();
+            }
+            else
+            {
+                // "CCKD file: invalid cckd keyword: %s"
+                WRMSG( HHC00349, "E", kw );
+                cckd_command_help ();
+                return -1;
+            }
         }
-        else if ( CMD(kw,stats,4) )
+        /* If rc != 1 || c != 0 then either a non-numeric "=value"
+           was skipped (sscanf %d failed) and/or something follows
+           the numeric "=value" (sscanf %c succeeded)
+        */
+        else if (rc != 1 || c != 0)
         {
-            if (!cmd) return 0;
-            cckd_command_stats ();
-        }
-        else if ( CMD(kw,opts,4) )
-        {
-            if (!cmd) return 0;
-            cckd_command_opts();
-        }
-        else if ( CMD(kw,debug,5) )
-        {
-            if (!cmd) return 0;
-            cckd_command_debug();
-        }
-        else if (rc != 1)
-        {
-            WRMSG(HHC00348, "E", val, kw);
+            // "CCKD file: invalid numeric value %s"
+            WRMSG( HHC00350, "E", p );
             return -1;
         }
+        /* If rc == 1 && c == 0, then "keyword=value" syntax */
         else if ( CMD(kw,comp,4) )
         {
             if (val < -1 || (val > 0 && (val & ~cckdblk.comps)))
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5734,6 +5752,7 @@ int   rc;
                 opts = 1;
                 break;
             default: /* unsupported algorithm */
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5742,6 +5761,7 @@ int   rc;
         {
             if (val < -1 || val > 9)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5755,6 +5775,7 @@ int   rc;
         {
             if (val < CCKD_MIN_RA || val > CCKD_MAX_RA)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5768,6 +5789,7 @@ int   rc;
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5781,6 +5803,7 @@ int   rc;
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5794,6 +5817,7 @@ int   rc;
         {
             if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5807,6 +5831,7 @@ int   rc;
         {
             if (val < 1 || val > 60)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5820,6 +5845,7 @@ int   rc;
         {
             if (val < -8 || val > 8)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5833,6 +5859,7 @@ int   rc;
         {
             if (val < 0 || val > 1)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5846,6 +5873,7 @@ int   rc;
         {
             if (val < -1 || val > CCKD_MAX_FREEPEND)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5859,6 +5887,7 @@ int   rc;
         {
             if (val < 0 || val > 1)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5872,6 +5901,7 @@ int   rc;
         {
             if (val < 0 || val > CCKD_MAX_TRACE)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5903,6 +5933,7 @@ int   rc;
                     {
                         char buf[64];
                         MSGBUF( buf, "calloc(%d, %d)", val, (int)sizeof(CCKD_TRACE));
+                        // "%1d:%04X CCKD file: error in function %s: %s"
                         WRMSG (HHC00303, "E", 0, 0, buf, strerror(errno));
                     }
                 }
@@ -5913,6 +5944,7 @@ int   rc;
         {
             if (val < 0 || val > 1)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5926,6 +5958,7 @@ int   rc;
         {
             if (val < 0 || val > 1)
             {
+                // "CCKD file: value %d invalid for %s"
                 WRMSG(HHC00348, "E", val, kw);
                 return -1;
             }
@@ -5982,12 +6015,14 @@ int   rc;
         }
         else
         {
+            // "CCKD file: invalid cckd keyword: %s"
             WRMSG(HHC00349, "E", kw);
             if (!cmd) return -1;
             cckd_command_help ();
             op = NULL;
         }
     }
+    /* end while (op) */
 
     if (cmd && opts)
         cckd_command_opts();
