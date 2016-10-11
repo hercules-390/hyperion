@@ -94,11 +94,12 @@ static void dumpbuf( const char* pfx, const BYTE* addr, int len, BYTE ebcdic )
     if (len)
     {
         char* dump = NULL;
+        const char* ccaddr = (const char*) addr;
 
         if (ebcdic)
-            hexdumpe16( pfx, &dump, addr, 0, len, 0, 4, 4 );
+            hexdumpe16( pfx, &dump, ccaddr, 0, len, 0, 4, 4 );
         else
-            hexdumpa16( pfx, &dump, addr, 0, len, 0, 4, 4 );
+            hexdumpa16( pfx, &dump, ccaddr, 0, len, 0, 4, 4 );
 
         if (dump)
         {
