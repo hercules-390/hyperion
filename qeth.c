@@ -3563,7 +3563,9 @@ U32 num;                                /* Number of bytes to move   */
 
         /* Display various information, maybe */
         if( grp->debug )
+        {
             MPC_DUMP_DATA( "SII", iobuf, num, ' ' );
+        }
 
         break;
 
