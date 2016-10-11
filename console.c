@@ -3417,14 +3417,6 @@ TELNET                *tn;              /* Telnet Control Block      */
 
             if (csock < 0)
             {
-#if 0 // fishtest
-
-                // "COMM: accept() failed: %s"
-                CONERROR( HHC90509, "D", strerror( HSO_errno ));
-                continue;
-
-#else // fishtest
-
                 // (use same technique as pselect error above)
 
                 int accept_errno = HSO_errno; // (preserve orig errno)
@@ -3466,8 +3458,6 @@ TELNET                *tn;              /* Telnet Control Block      */
                     usleep( 50000 ); // (wait a bit; maybe it'll fix itself??)
                 }
                 continue;
-
-#endif // fishtest
             }
 
             /* Allocate Telnet Control Block for this client */
