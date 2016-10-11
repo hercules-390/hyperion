@@ -3398,7 +3398,7 @@ TELNET                *tn;              /* Telnet Control Block      */
             else
                 issue_errmsg = 1;
 
-            if ( issue_errmsg && EINTR != select_errno )
+            if (issue_errmsg && EINTR != select_errno)
             {
                 // "COMM: pselect() failed: %s"
                 CONERROR( HHC90508, "D", strerror( select_errno ));
@@ -3416,9 +3416,57 @@ TELNET                *tn;              /* Telnet Control Block      */
 
             if (csock < 0)
             {
+#if 0 // fishtest
+
                 // "COMM: accept() failed: %s"
                 CONERROR( HHC90509, "D", strerror( HSO_errno ));
                 continue;
+
+#else // fishtest
+
+                // (use same technique as pselect error above)
+
+                int accept_errno = HSO_errno; // (preserve orig errno)
+                static int issue_errmsg = 1;  // (prevents msgs flood)
+
+                if (HSO_EMFILE == accept_errno)
+                {
+                    // Don't issue message more frequently
+                    // than once every second or so, just in
+                    // case the condition that's causing it
+                    // keeps reoccurring over and over...
+
+                    static struct timeval  prev = {0,0};
+                           struct timeval  curr;
+                           struct timeval  diff;
+
+                    gettimeofday( &curr, NULL );
+                    timeval_subtract( &prev, &curr, &diff );
+
+                    // Has it been longer than one second
+                    // since we last issued this message?
+
+                    if (diff.tv_sec >= 1)
+                    {
+                        issue_errmsg = 1;
+                        prev.tv_sec  = curr.tv_sec;
+                        prev.tv_usec = curr.tv_usec;
+                    }
+                    else
+                        issue_errmsg = 0;   // (prevents msgs flood)
+                }
+                else
+                    issue_errmsg = 1;
+
+                if (issue_errmsg && EINTR != accept_errno)
+                {
+                    // "COMM: accept() failed: %s"
+                    CONERROR( HHC90509, "D", strerror( accept_errno ));
+                    usleep( 50000 ); // (wait a bit; maybe it'll fix itself??)
+                }
+                continue;
+
+#endif // fishtest
             }
 
             /* Allocate Telnet Control Block for this client */
