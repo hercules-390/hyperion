@@ -29,29 +29,31 @@ td {
       VLINK="#008040" ALINK="#000000">
 <h1 id="pagetop">Telnet/tn3270 Console How-To for Hercules Version 4</h1>
 <hr noshade>
-<p>Hercules Version 4 has been used with the following tn3270 and telnet applications.  
-Click on each name to view settings and other considerations for using that application with Hercules.</p>
+<p>Hercules Version 4 has been used with the following tn3270 and telnet
+applications. Click on each name to view settings and other considerations
+for using that application with Hercules.</p>
     <ul>
         <li><a href="#x3270">x3270 / c3270 / wc3270 tn3270</a> - Windows, Linux; no license fee</li>
         <li><a href="#OSXtn3270">Tn3270 for the Macintosh</a> - OS X (multiple versions); no license fee</li>
         <li><a href="#Vistatn3270">Vista tn3270</a> - Windows; nominal license fee</li>
         <li><a href="#ZOCTerminal">ZOC Terminal</a> - Windows, OS X; nominal license fee</li>
+        <li><a href="#PuTTY">PuTTY Telnet</a> - Windows, Linux; no license fee</li>
     </ul>
     <ul>
-        <li><a href="#PuTTY">PuTTY Telnet</a> - Windows, Linux; no license fee</li>
-        <li><a href="#Windows10">Windows Telnet, XP and newer</a> - Windows 10 has been used, others are likely to work</li>
+        <li><a href="#nixtelnet">Linux telnet</a> - The default Linux telnet client works well OOTB</li>
+        <li><a href="#Windows">Windows Telnet</a> - Windows has been used, others are likely to work</li>
         <li><a href="#WindowsNT">Windows NT Telnet</a> - Windows NT only</li>
     </ul>
 <p>
-    The above list is neither an endorsement of those products nor a recommendation to use them.  
-    If wish to share your experience with a different telnet and/or tn3270 application, 
-    please post that experience to the 
-    <a href="https://groups.yahoo.com/neo/groups/hercules-390/info" target="_blank">Hercules-390</a> 
-    Yahoo group.
-    Other telnet client applications that comply with the following RFCs should work.  
+    The above list is neither an endorsement of those products nor a recommendation
+    to use them. If wish to share your experience with a different telnet and/or
+    tn3270 application, please post that experience to the
+    <a href="https://groups.yahoo.com/neo/groups/hercules-390/info" target="_blank">Hercules-390</a>
+    Yahoo group. Other telnet client applications that comply with the following
+    RFCs should work.
 </p>
 <p>
-    Remember that local echo needs to be set on for telnet connections.  
+    Remember that <b>local echo</b> needs to be set on for telnet connections.
 </p>
 <table style="border-style:none">
     <tr style="border-style:none;text-align:center">
@@ -88,22 +90,22 @@ Click on each name to view settings and other considerations for using that appl
 <br />
 <h4 id="x3270">x3270 / c3270 / wc3270</h4>
 <p>
-    The x3270 family of tn3270 applications are available without charge 
+    The x3270 family of tn3270 applications are available without charge
     from <a href="http://x3270.bgp.nu/" target="_blank">x3270.bgp.nu</a>.
-    RPM's exist for many Linux distributions that use Redhat Package Manager files; 
+    RPM's exist for many Linux distributions that use Redhat Package Manager files;
     <a href="https://www.rpmfind.net/linux/rpm2html/search.php?query=x3270" target="_blank">check here for a list</a>.
     It is also packaged for <a href="https://packages.debian.org/search?keywords=x3270" target="_blank">Debian</a>
     and <a href="http://packages.ubuntu.com/search?keywords=x3270" target="_blank">Ubuntu</a>,
-    and the .deb packages can often be used with other Debian-based Linux distributions.  
-    They are licensed under the BSD license as shown on the 
+    and the .deb packages can often be used with other Debian-based Linux distributions.
+    They are licensed under the BSD license as shown on the
     <a href="http://x3270.bgp.nu/license.html">x3270 license page</a>.
 </p>
 <p>
-    The packaged installation files available for Linux distributions are 
+    The packaged installation files available for Linux distributions are
     several minor releases older than the current stable release.
     You may wish to build x3270 from source even when an installation package
-    exists for your Linux distribution.  
-    Build instructions for a variety of environments are in the 
+    exists for your Linux distribution.
+    Build instructions for a variety of environments are in the
     Documentation - Miscelaneous page of the x3270 web site.
 </p>
 <p>
@@ -116,12 +118,12 @@ Click on each name to view settings and other considerations for using that appl
 </ul>
 
 <p>
-    Start an x3270 session and connect to Hercules with the following.  
+    Start an x3270 session and connect to Hercules with the following.
 </p><blockquote>
     <pre>
 Windows: "c:\Program Files\wc3270\wc3270" -port nnnn -model 32xx-x hostname
 
-Linux:   x3270 -port nnnn -model 32xx-x hostname 
+Linux:   x3270 -port nnnn -model 32xx-x hostname
     </pre>
 </blockquote>
 <p>
@@ -133,7 +135,7 @@ Linux:   x3270 -port nnnn -model 32xx-x hostname
         <td>
             <p>
                 This must match the port named in the Hercules configuration file
-                CNSLPORT statement. 
+                CNSLPORT statement.
             </p>
         </td>
     </tr>
@@ -149,14 +151,14 @@ Linux:   x3270 -port nnnn -model 32xx-x hostname
                 <li>3279-3</li>
             </ul>
             <p>
-                Unless you know that the application program running 
+                Unless you know that the application program running
                 under Hercules to which you will attach supports large
-                screen sizes, specify 3279-2 or 3278-2 to select a 24 x 80 screen size. 
+                screen sizes, specify 3279-2 or 3278-2 to select a 24 x 80 screen size.
             </p>
             <p>
                 There's nothing wrong with a bit of trial and error here.
                 Try other screen sizes to see what works.
-                But start with a model 2. 
+                But start with a model 2.
             </p>
         </td>
     </tr>
@@ -169,7 +171,7 @@ Linux:   x3270 -port nnnn -model 32xx-x hostname
                 This identifies the ip address of the Hercules system and optionally the 3270 device in the Hercules configuration
                 to which this session should connect.</p>
             <p>
-                You can specify a host name, IPv4 address, or IPv6 address.&nbsp; Most commonly, you&#39;ll use localhost for the host name.&nbsp;  
+                You can specify a host name, IPv4 address, or IPv6 address.&nbsp; Most commonly, you'll use localhost for the host name.&nbsp;
             </p>
             <p>
                 If a hexadecimal number is provided before the host name, the session will try to
@@ -179,8 +181,8 @@ Linux:   x3270 -port nnnn -model 32xx-x hostname
                 any available 3270 device that names that group.
             </p>
             <p>
-                If no name or number is provided before the host name, 
-                the session will connect to any available 3270 device. 
+                If no name or number is provided before the host name,
+                the session will connect to any available 3270 device.
             </p>
         </td>
     </tr>
@@ -203,15 +205,15 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
 <br />
 <h4 id="OSXtn3270">tn3270 for the Macintosh</h4>
 <p>
-    Tn3270 for the Macintosh is available without charge from Brown University at 
+    Tn3270 for the Macintosh is available without charge from Brown University at
     <a href="https://www.brown.edu/cis/tn3270/" target="_blank">https://www.brown.edu/cis/tn3270/</a>.
-    According to the web site as of May, 2016, 
+    According to the web site as of May, 2016,
     the current version of this tn3270 application can be used with
-    OS X 10.3.9 "Panther" through OS X 10.9 "Mavericks" 
-    on POWER PC and Intel-based systems.  
+    OS X 10.3.9 "Panther" through OS X 10.9 "Mavericks"
+    on POWER PC and Intel-based systems.
 </p>
 <p>
-    Older versions of tn3270 exist for older Macintosh systems.  
+    Older versions of tn3270 exist for older Macintosh systems.
 </p>
 <p>
     This author does not have access to a Mac and regrets being unable to provide configuration options.
@@ -224,15 +226,15 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
 <br />
 <h4 id="Vistatn3270">Vista tn3270</h4>
 <p>
-    Vista tn3270 is a Windows application written and maintained by Tom Brennan, 
-    and is used by members of the Hercules community.  
+    Vista tn3270 is a Windows application written and maintained by Tom Brennan,
+    and is used by members of the Hercules community.
     You can learn more about it at <a href="http://www.tombrennansoftware.com/" target="_blank">Tom Brennan Software</a>.
-    The screenshots are worth a look.  
+    The screenshots are worth a look.
 </p>
 <p>
-    Complete installation and setup instructions are included in the 
+    Complete installation and setup instructions are included in the
     <a href="http://hercdoc.glanzmann.org/V400/HerculesInstallation.pdf" target="_blank">Hercules Installation Guide</a> for Hercules Version 4
-    starting on page 123.  
+    starting on page 123.
 </p>
 <p>
     <a href="#pagetop">Return to top of page</a>
@@ -241,10 +243,10 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
 
 <br /><h4 id="ZOCTerminal">ZOC Terminal</h4>
 <p>
-    ZOC Terminal, available for Windows and Macintosh, is offered by Emtec Innovative Software 
-    and is used by members of the Hercules community.  
+    ZOC Terminal, available for Windows and Macintosh, is offered by Emtec Innovative Software
+    and is used by members of the Hercules community.
     You can learn more about it at the <a href="http://www.emtec.com/zoc/" target="_blank">ZOC Terminal</a> web site.
-    The screenshots are worth a look.  
+    The screenshots are worth a look.
 </p>
 <p>
     This author does not have access to a Mac and regrets being unable to provide configuration options.
@@ -256,25 +258,25 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
 
 <br /><h4 id="PuTTY">PuTTY Telnet</h4>
 <p>
-    PuTTY version 0.67 has been tested on Windows and version 0.63 
-    has been tested on Debian 8.4.  Other recent versions of PuTTY should work as well.  
+    PuTTY version 0.67 has been tested on Windows and version 0.63
+    has been tested on Debian 8.4.  Other recent versions of PuTTY should work as well.
 </p>
 <p>
-    PuTTY source and Windows builds are available without charge and 
+    PuTTY source and Windows builds are available without charge and
     can be obtained from <a href="http://www.putty.org" target="_blank">putty.org</a>.
-    RPM's exist for many Linux distributions that use Redhat Package Manager files; 
+    RPM's exist for many Linux distributions that use Redhat Package Manager files;
     <a href="https://www.rpmfind.net/linux/rpm2html/search.php?query=putty" target="_blank">check here for a list</a>.
-    It is also packaged for 
-    <a href="https://packages.debian.org/search?keywords=putty" target="_blank">Debian</a> 
-    and 
-    <a href="https://apps.ubuntu.com/cat/applications/oneiric/putty/" target="_blank">Ubuntu</a>, 
-    and the .deb packages can often be used on other linux distributions based on 
-    Debian.  
-    It is distributed under the MIT license, 
+    It is also packaged for
+    <a href="https://packages.debian.org/search?keywords=putty" target="_blank">Debian</a>
+    and
+    <a href="https://apps.ubuntu.com/cat/applications/oneiric/putty/" target="_blank">Ubuntu</a>,
+    and the .deb packages can often be used on other linux distributions based on
+    Debian.
+    It is distributed under the MIT license,
     as shown on <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/licence.html" target="_blank">
     PuTTY's license page</a>.
 </p>
-<p> 
+<p>
     The following options must be set for correct operation.&nbsp; Click on the page name to open a screen shot in a new browser window:
 </p>
 <blockquote>
@@ -310,11 +312,11 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
     </table>
 </blockquote>
 <p>
-    Other options may be set as you wish.  
-    Because mainframes that used printer-keyboards used continuous forms, 
-    and "scrolling back" through the console log meant thumbing through a 
-    stack of continuous forms paper, you may wish to set the size of the 
-    window and the lines of scroll back on the Windows page to accomodate your preferences.  
+    Other options may be set as you wish.
+    Because mainframes that used printer-keyboards used continuous forms,
+    and "scrolling back" through the console log meant thumbing through a
+    stack of continuous forms paper, you may wish to set the size of the
+    window and the lines of scroll back on the Windows page to accomodate your preferences.
 </p>
 <p>
     <a href="#pagetop">Return to top of page</a>
@@ -322,35 +324,42 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
 
 
 <br />
-<h4 id="Windows10">Windows Telnet</h4>
+<h4 id="nixtelnet">Linux telnet</h4>
 <p>
-    The Telnet client included with Windows 10 is known to have been 
-    used successfully with Hercules Version 4.  
-    The clients included with Windows XP, Vista, 7, 8, and 8.1 appear to be 
-    the same program as that included with Windows 10, 
-    so the you should be able to set up a connection using the information below.  
-    Please post any diffiuclties to the 
-    <a href="https://groups.yahoo.com/neo/groups/hercules-390/info" target="_blank">Hercules-390</a> 
+    Virtually all Linux distributions come with a default telnet client
+    that should work well out of the box.
+    No special configuration should be needed.
+</p>
+
+
+<br />
+<h4 id="Windows">Windows Telnet</h4>
+<p>
+    The Telnet client included with Windows is known to have been
+    used successfully with Hercules Version 4. The telnet clients
+    included with Windows XP, Vista, 7, 8, 8.1 and 10 appear to
+    all be the same program, so the you should be able to set up a
+    connection using the information below. Please post any diffiuclties to the
+    <a href="https://groups.yahoo.com/neo/groups/hercules-390/info" target="_blank">Hercules-390</a>
     Yahoo group, noting the symptoms, Windows version and error messages.
 </p>
 <p>
-    One settings change is needed to use the Windows Telnet client application 
-    with Hercules Version 4: set localecho.
-    The defaults for the remaining settings will work.  See the session sample below
-    for an example.
+    One settings change is needed to use the Windows Telnet client with
+    Hercules Version 4: '<b>set localecho</b>'. The defaults for the
+    remaining settings should work.  Refer to the sample session below.
 </p>
 <p>
-    Window size and scroll-back are controlled by the command prompt window that Telnet
-    is running in.  You can use the set logfile and set logging commands to record 
-    the Telnet session to a file.  
+    Window size and scroll-back are controlled by the command prompt window
+    that Telnet is running in.  You can use the set logfile and set logging
+    commands to record the Telnet session to a file.
 </p>
 <p>
-    Unlike PuTTY, it is difficult to set up a connection profile to pre-define the localecho
-    setting, the window size, and scroll-back.  For this reason, PuTTY is probably a better 
-    choice. 
+    It is difficult to set up a connection profile to pre-define the
+    <b>localecho</b> setting, the window size, and scroll-back.  For this
+    reason, <a href="#PuTTY">PuTTY</a> is probably a better choice.
 </p>
 <blockquote>
-<img src="images/telnetwin10.png" border="0" alt="Windows 10 Telnet settings" />
+<img src="images/telnetwin.png" border="0" alt="Windows 10 Telnet settings" />
 </blockquote>
 <p>
     <a href="#pagetop">Return to top of page</a>
@@ -360,26 +369,28 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
 <br />
 <h4 id="WindowsNT">Windows NT Telnet</h4>
 <p>
-    There are many reasons not to use Windows NT Telnet to connect to Hercules.  Specifically:
+    There are many reasons not to use Windows NT Telnet to connect to Hercules.
+    Specifically:
 </p>
 <ul style="">
     <li style="margin-bottom:10px">
-        There are better solutions.  <a href="#PuTTY">PuTTY</a> for example.  
+        There are better solutions.  <a href="#PuTTY">PuTTY</a> for example.
     </li>
     <li style="margin-bottom:10px">
-        Windows NT Telnet is licensed by Microsoft for use only when you have a valid Windows NT license.  
-        If you find a copy floating around on the Internet, it's not properly licensed.  
+        Windows NT Telnet is licensed by Microsoft for use only when you have a
+        valid Windows NT license. If you find a copy floating around on the Internet,
+        it's not properly licensed.
     </li>
     <li style="margin-bottom:10px">
         If you do find it on the Internet, beware of the "gifts" that may have been added to the code.
     </li>
     <li>
-        If you copy it from your NT installation CD, help does not work on Windows 10.  
-        And Hercules is not supported on Windows NT.  
+        If you copy it from your NT installation CD, help does not work on Windows 10.
+        And Hercules is not supported on Windows NT.
     </li>
 </ul>
 <p>
-    If, after all that, you decide to crank up your NT workstation 
+    If, after all that, you decide to crank up your NT workstation
     to Telnet to Hercules on a more modern system, here's how you do it:
 </p>
 <blockquote>
@@ -391,14 +402,14 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
         <td style="padding:15px 15px 15px 15px">
             <p>
                 <em>Host Name:</em>
-                You can use "@ccuu" following the host name to 
+                You can use "@ccuu" following the host name to
                 connect to a specific printer-keyboard address in the Hercules configuration file.  Example:
             </p>
             <pre>
                 localhost@001f
             </pre>
             <p>
-                <em>Port:</em> must match the value of the CNSLPORT statement in the Hercules configuration file.  
+                <em>Port:</em> must match the value of the CNSLPORT statement in the Hercules configuration file.
                 Although a drop-down box is shown, you can just type in a port number
             </p>
             <p>
@@ -412,7 +423,7 @@ Linux:   x3270 -port 3270 -model 3229-2 localhost
         </td>
         <td style="padding:15px 15px 15px 15px">
             <p>
-                <em>Local echo</em> must be checked under <em>Terminal Options</em>.
+                <em><b>Local echo</b></em> must be checked under <em>Terminal Options</em>.
             </p>
             <p>
                 <em>VT100/ANSI</em> must be selected for <em>Emulation</em>.

@@ -89,7 +89,7 @@
   #define DUMPBUF(  _msg,       _addr, _len, _ebcdic )  \
           dumpbuf( #_msg "D +", _addr, _len, _ebcdic )
 
-static void dumpbuf( const char* pfx, const BYTE* addr, int len, BYTE ebcdic )
+static void dumpbuf( const char* pfx, const void* addr, int len, BYTE ebcdic )
 {
     if (len)
     {
@@ -243,14 +243,12 @@ static const telnet_telopt_t   telnet_opts[] =
 
     //     (option)               (us)        (them)
 
+    {  TELNET_TELOPT_TTYPE,   TELNET_WONT,  TELNET_DO    }, // (BOTH)
+
+//  {  TELNET_TELOPT_ECHO,    TELNET_WONT,  TELNET_DO    }, // TTY
+
 //  {  TELNET_TELOPT_BINARY,  TELNET_WILL,  TELNET_DO    }, // TN3270
-//  {  TELNET_TELOPT_BINARY,  TELNET_WONT,  TELNET_DONT  }, // TTY
-
-    {  TELNET_TELOPT_SGA,     TELNET_WILL,  TELNET_DO    },
-    {  TELNET_TELOPT_TTYPE,   TELNET_WONT,  TELNET_DO    },
-
 //  {  TELNET_TELOPT_EOR,     TELNET_WILL,  TELNET_DO    }, // TN3270
-//  {  TELNET_TELOPT_EOR,     TELNET_WONT,  TELNET_DONT  }, // TTY
 
     { -1, 0, 0 }    /*****  REQUIRED END OF TABLE MARKER *****/
 };
@@ -339,7 +337,7 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
         /* Enable "Suppress Go Aheads" when asked */
         else if (ev->neg.telopt == TELNET_TELOPT_SGA)
         {
-            ; // (ignore)
+            ; // (ignore; we always suppress go-aheads anyway)
         }
 
         /* Refuse to enable TTYPE option when asked */
@@ -445,7 +443,7 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
 
         else if (ev->neg.telopt == TELNET_TELOPT_SGA)
         {
-            ; // (ignore)
+            ; // (ignore; we expect them to always suppress go-aheads anyway)
         }
 
         /* Ask them to SEND us their TTYPE when they're willing to */
@@ -2255,6 +2253,24 @@ static void negotiate_ttype( TELNET* tn )
         */
         tn->do_tn3270 = 0;
         tn->devclass = 'K';
+
+        /* Request the client to go into line-at-a-time mode by telling
+           the client we won't be echoing characters back to it and that
+           it should instead do all echoing itself.  This should cause
+           it to stop sending us one character at a time and instead to
+           only send us complete lines always ending with a <CR><LF>.
+
+           This has the desired side effect of also enabling both local
+           echoing and local EDITING on the client side as well.  That
+           is to say, if the user presses the backspace key, the client
+           should erase the previous character from both the screen and
+           from its local internal buffer as well.  Then when the enter
+           key is then pressed, the line it sends to us is sent already
+           without those characters so Hercules needs to do nothing.
+        */
+        telnet_negotiate( tn->ctl, TELNET_WONT, TELNET_TELOPT_ECHO );
+        telnet_negotiate( tn->ctl, TELNET_DO,   TELNET_TELOPT_ECHO );
+
         return;
     }
 
@@ -2533,6 +2549,10 @@ BYTE    buf[ BUFLEN_3270 ];             /* Temporary recv() buffer   */
         return (CSW_ATTN | CSW_UC | CSW_DE);
     }
 
+    // "%s COMM: received %d bytes"
+    CONDEBUG2( HHC90501, "D", dev->tn->clientid, rc );
+    DUMPBUF(   HHC90501, buf, rc, 1 );
+
     /* Pass received bytes to libtelnet for processing */
     telnet_recv( dev->tn->ctl, buf, rc );
 
@@ -2550,10 +2570,6 @@ BYTE    buf[ BUFLEN_3270 ];             /* Temporary recv() buffer   */
     /* Return zero status if record is incomplete */
     if (!dev->tn->got_eor)
         return 0;
-
-    // "%s COMM: received %d bytes"
-    CONDEBUG2( HHC90501, "D", dev->tn->clientid, dev->rlen3270 );
-    DUMPBUF(   HHC90501, dev->buf, dev->rlen3270, 1 );
 
     /* Set the read pending indicator and return attention status */
     dev->readpending = 1;
@@ -2691,6 +2707,10 @@ BYTE    buf[BUFLEN_1052];               /* Receive buffer            */
         return (CSW_ATTN | CSW_UC);
     }
 
+    // "%s COMM: received %d bytes"
+    CONDEBUG2( HHC90501, "D", dev->tn->clientid, num );
+    DUMPBUF(   HHC90501, buf, num, 0 );
+
     /* Pass received data to libtelnet for processing */
     telnet_recv( dev->tn->ctl, buf, num );
 
@@ -2726,10 +2746,6 @@ BYTE    buf[BUFLEN_1052];               /* Receive buffer            */
     /* Return zero status if CRLF was not yet received */
     if (!dev->tn->got_eor)
         return 0;
-
-    // "%s COMM: received %d bytes"
-    CONDEBUG2( HHC90501, "D", dev->tn->clientid, dev->keybdrem );
-    DUMPBUF(   HHC90501, dev->buf, dev->keybdrem, 0 );
 
     /* Strip off the CRLF sequence */
     dev->keybdrem -= 2;
@@ -2846,6 +2862,10 @@ size_t                  logoheight;     /* Logo file number of lines */
         /* Read client telnet negotiation data */
         if ((rc = recv( csock, buf, sizeof( buf ), 0 )) > 0)
         {
+            // "%s COMM: received %d bytes"
+            CONDEBUG2( HHC90501, "D", tn->clientid, rc );
+            DUMPBUF(   HHC90501, buf, rc, tn->do_tn3270 ? 1 : 0 );
+
             /* Pass data to libtelnet to pass to our event handler */
             telnet_recv( ctl, (BYTE*) buf, rc );
         }
