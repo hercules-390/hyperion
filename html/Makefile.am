@@ -110,7 +110,7 @@ images_sources =                        \
     images/telnetputtyconndata.png      \
     images/telnetputtysession.png       \
     images/telnetputtyterminal.png      \
-    images/telnetwin10.png              \
+    images/telnetwin.png                \
     images/telnetwinntconnect.png       \
     images/telnetwinnttermpref.png      \
     images/translucentoffd.gif          \
