@@ -229,16 +229,19 @@ static void  negotiate_ttype( TELNET* tn );
 /*  the telnet options can be changed at any time by simply calling  */
 /*  the telnet_negotiate() function with your new WILL/WONT/DO/DONT  */
 /*  value for that option and then handling the corresponding event  */
-/*  appropriately depending on how the other side responded.         */
+/*  appropriately depending on how the other side responds.          */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 static const telnet_telopt_t   telnet_opts[] =
 {
     //--------------------------------------------------------------
-    // PROGRAMMING NOTE: TELNET_TELOPT_BINARY and TELNET_TELOPT_EOR
-    // are negotiated manually for each connection once their TTYPE
-    // is known. For terminal types begining with "IBM-" we operate
-    // in BINARY+EOR mode. For all other terminal types, we don't.
+    // PROGRAMMING NOTE: the TELNET_TELOPT_BINARY, TELNET_TELOPT_EOR
+    // and TELNET_TELOPT_ECHO options are negotiated manually for each
+    // connection (via the libtelnet "telnet_negotiate" function) once
+    // the terminal type (TTYPE) is known. For 3270 terminals begining
+    // with "IBM-" we operate in BINARY+EOR mode. For all other types
+    // we don't and negotiate the TELNET_TELOPT_ECHO option instead.
+    // Refer the the "negotiate_ttype" function for more information.
     //--------------------------------------------------------------
 
     //     (option)               (us)        (them)
