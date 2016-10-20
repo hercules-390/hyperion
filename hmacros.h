@@ -15,6 +15,7 @@
 #define _HMACROS_H
 
 #include "hercules.h"
+#include "dbgtrace.h"
 
 /*-------------------------------------------------------------------*/
 /*      UNREACHABLE_CODE         code that should NEVER be reached   */
@@ -22,14 +23,8 @@
 
 #ifdef _MSVC_
   #define UNREACHABLE_CODE(ret)     __assume(0)
-#elif defined(__GNUC__)
-  #define UNREACHABLE_CODE(ret)     __builtin_unreachable()
-#else
-  /* For compilers that don't support UNREACHABLE_CODE(), define
-     a macro whose argument is a return statement that will never
-     be reached.
-  */
-  #define UNREACHABLE_CODE(ret)     ret
+#else                        
+  #define UNREACHABLE_CODE(ret)     BREAK_INTO_DEBUGGER(); ret
 #endif
 
 /*-------------------------------------------------------------------*/
