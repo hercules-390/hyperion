@@ -2622,15 +2622,16 @@ if test "$hc_cv_auto_optimize" = "yes"; then
         # Set CPU type
         hc_cv_optimization_flags="$hc_cv_optimization_flags -march=$hc_cv_intel_cpu_type"
 
-        # Align 128-bit values
-        AS_VERSION_COMPARE( $hc_gcc_level, "3.0.0", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
-                                                    [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
-                                                    [hc_cv_optimization_flags="$hc_cv_optimization_flags -m128bit-long-double"] )
+        # Dynamically inline small block string operations
+        # (subroutine calls still made for large area calls)
+        #
+        # Note: option introduced in GCC 4.3 Release Series, but it
+        # is unclear which 4.3 version so we test for 4.4 or greater.
+        # See:  https://gcc.gnu.org/gcc-4.3/changes.html
 
-        # Dynamically inline small block string operations (subroutine calls still made for large area calls)
         if test "$hc_cv_is_apple" != "yes"; then
-           AS_VERSION_COMPARE( $hc_gcc_level, "4.1.2", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
-                                                       [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
+           AS_VERSION_COMPARE( $hc_gcc_level, "4.4.0", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
+                                                       [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"],
                                                        [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"] )
         fi
 
