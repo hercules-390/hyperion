@@ -1960,7 +1960,7 @@ Examples:
 #define HHC05050 "%1d:%04X CTCE: Error creating socket: %s"
 #define HHC05051 "%1d:%04X CTCE: TCP_NODELAY error for socket (port %d): %s"
 #define HHC05052 "%1d:%04X CTCE: Error binding to socket (port %d): %s"
-#define HHC05053 "%1d:%04X CTCE: Connect error :%d -> %s:%d, %s"
+#define HHC05053 "%1d:%04X CTCE: Connect error :%d -> %s:%d, retry is possible"
 #define HHC05054 "%1d:%04X CTCE: Started outbound connection :%d -> %s:%d"
 #define HHC05055 "%1d:%04X CTCE: Incorrect number of parameters"
 #define HHC05056 "%1d:%04X CTCE: Invalid port number: %s"

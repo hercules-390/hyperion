@@ -122,6 +122,11 @@ static void     CTCE_Trace( const DEVBLK*             pDEVBLK,
                             const BYTE*               pCTCE_Buf,
                             const BYTE*               pUnitStat );
 
+static int      CTCE_Connect_Timeout( int                    sockfd,
+                                      const struct sockaddr* saptr,
+                                      const socklen_t        salen,
+                                      const int              usec );
+
 static int      VMNET_Init( DEVBLK *dev, int argc, char *argv[] );
 
 static int      VMNET_Write( DEVBLK *dev, BYTE *iobuf,
@@ -1968,15 +1973,17 @@ void  CTCE_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // at the other side and vice-versa
         parm.addr.sin_port = htons(pDEVBLK->ctce_rport + 1 );
         parm.addr.sin_addr = pDEVBLK->ctce_ipaddr;
-        rc = connect( parm.listenfd[0],
+        
+        // We connect() but with a timeout value of 1000000 usec = 1 sec 
+        rc = CTCE_Connect_Timeout( parm.listenfd[0],
             ( struct sockaddr * )&parm.addr,
-            sizeof( parm.addr) );
+            sizeof( parm.addr), 1000000 );
 
         // if connection was not successful, then we may retry later on when the other side becomes ready.
         if( rc < 0 )
         {
-            WRMSG( HHC05053, "I",  /* CTCE: Connect error :%d -> %s:%d, %s */
-                CTCX_DEVNUM( pDEVBLK ), pDEVBLK->ctce_lport, remaddr, pDEVBLK->ctce_rport + 1, strerror( HSO_errno ) );
+            WRMSG( HHC05053, "I",  /* CTCE: Connect error :%d -> %s:%d, retry is possible */
+                CTCX_DEVNUM( pDEVBLK ), pDEVBLK->ctce_lport, remaddr, pDEVBLK->ctce_rport + 1 );
         }
         else  // successfully connected to the other end
         {
@@ -3431,3 +3438,53 @@ Action
     return;
 }
 
+// ---------------------------------------------------------------------
+// CTCE_connect_timeout
+// ---------------------------------------------------------------------
+//
+// connect but with a timeout parameter.
+//
+
+int CTCE_Connect_Timeout(int                    sockfd,
+                         const struct sockaddr* saptr,
+                         const socklen_t        salen,
+                         const int              usec)
+{
+    int                   rc;                    // connect return code
+    fd_set                read_set, write_set;   // socket sets for select
+    static struct timeval connect_timeout;       // max connect wait time
+
+    // Switch to non-blocking mode during the next connect.
+    socket_set_blocking_mode( sockfd, 0 ) ;
+    rc = connect( sockfd, saptr, salen );
+
+    // In case connect() did not complete immediately then we prepare
+    // the select() to wait for the specified amount of time.
+    if( rc < 0 )
+    {
+        FD_ZERO ( &read_set );
+        FD_SET( sockfd, &read_set );
+        write_set = read_set ;
+        connect_timeout.tv_sec = 0;
+        connect_timeout.tv_usec = usec;
+
+        // Then we issue select() until it returns a real error.
+        // A zero return code means the select() timed out,
+        // a positive one signifies the connect() took place.
+        do
+        {
+            rc = select( sockfd + 1, &read_set, &write_set, NULL,
+          		   usec ? &connect_timeout : NULL );
+        } while( (rc < 0) && ( HSO_errno == HSO_EINTR ) );
+
+        if( rc == 0 )
+        {
+            close_socket( sockfd ) ;
+            rc = -1;
+        }
+    }
+
+    // Switch back to original non-blocking mode and return
+    socket_set_blocking_mode( sockfd, 1 ) ;
+    return rc;
+}
