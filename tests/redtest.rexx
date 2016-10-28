@@ -64,10 +64,7 @@ end
 
 say 'Done' done 'tests. ' msg
 If catast > 0
-   Then do
-     say ""
-     say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
-   end
+   Then say '>>>>>' catast 'test failed catastrophically.  Bug in Hercules or test case is likely. <<<<<'
 if done \= stardone then say 'Tests malformed. ' done '*Testcase orders met, but' stardone '*Done orders met.'
 exit fails.1
 
@@ -296,7 +293,6 @@ end
 If \havewait & \nowait
    Then
       Do
-         say ""
          say '>>>>> line' lineno': No wait state encountered.'
          rv = rv + 1
       end
@@ -310,12 +306,7 @@ Select
 end
 
 If \quiet | rv \= 0
-   Then do
-     If rv \= 0 then say ""
-     If rv \= 0 then say '>>>>> Test' testcase'. ' oks 'OK compares. ' msg
-                else say       'Test' testcase'. ' oks 'OK compares. ' msg
-     If rv \= 0 then say ""
-   end
+   Then say 'Test' testcase'. ' oks 'OK compares. ' msg
 
 fail = rv \= 0
 fails.fail = fails.fail + 1           /* Ok or fail                  */
@@ -332,7 +323,7 @@ return
 /*********************************************************************/
 
 lookahead:
-do forever
+do while lines(in) > 0
    unprocessed = readline()
    If wordpos(?msg, 'HHC00809I HHC00803I') > 0
       Then leave
@@ -557,7 +548,6 @@ If arg(1)
    Then oks = oks + 1
    Else
       Do
-         say ""
          say ! arg(2)
          do ? = 3 to arg()
             say !! arg(?)

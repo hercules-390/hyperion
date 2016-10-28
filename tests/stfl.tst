@@ -8,7 +8,7 @@
 * This test case program checks on ESA hardware.
 sysclear
 archmode z
-loadcore "$(testpath)/stfl.core"
+loadcore $(testpath)/stfl.core
 *Program 6
 runtest
 gpr
@@ -34,5 +34,13 @@ r 240.10
 # STFLE on a zPDT with the latest(?) code to emulate an EC12
 # returns 3 doublewords
 # FF20FFF3 FC7CE000 00000000 00000000 00000000 00000000
-# BC12:
+
+# STFLE on a 2827 (EC12) z/OS under VM 6.3 returns 3 doublewords
+# FB6BFFFB FCFFF840 003C0000 00000000 00000000 00000000
+
+# BC12 2828: z/VM 5.4
 # FB6BFFFB FCFFF840 000C0000 00000000
+
+# z13
+# FFBBFFFB FC7CE540 A05E8000 00000000
+# D8000000 00000000 00000000 00000000
