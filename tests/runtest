@@ -273,12 +273,22 @@ fi
 # set -x
 
 echo Files: $files
-echo defsym testpath $dir|cat - $files >$wfn.testin
-rv=$?
-if [ $rv -ne 0 ] ; then
-        echo Unable to build input file rv=$rv
-        exit $rv
-fi
+echo msglvl -debug +emsgloc >  $wfn.testin
+echo defsym testpath $dir   >> $wfn.testin
+file_patterns_array=($files)
+for file_pattern in "${file_patterns_array[@]}"; do
+    for file in $file_pattern; do
+        echo ostailor null  >> $wfn.testin
+        echo numcpu 1       >> $wfn.testin
+        echo mainsize 2     >> $wfn.testin
+        cat $file           >> $wfn.testin
+        rv=$?
+        if [ $rv -ne 0 ] ; then
+            echo Unable to build input file rv=$rv
+            exit $rv
+        fi
+    done
+done
 if [ -n "$repeat" ] ; then
         echo Repeating $repeat
         while [ 0 -lt $repeat ]
@@ -308,7 +318,7 @@ fi
 # Read entire file to allow redtest.rexx to parse the features list
 if [ $rv -eq 0 ] ; then
    platform=$(uname -s)
-   vars="platform=$platform ptrsize=$ptrsize $vars"
+   vars="platform=$platform $vars"
    rexx $dir/redtest.rexx $wfn.out $vars $rest
    rv=$?
 fi
