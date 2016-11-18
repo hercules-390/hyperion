@@ -1344,6 +1344,9 @@ int initialize_utility( int argc, char* argv[],
     char*  strtok_str;                  /* Work (strtok_r context)   */
     char   namedesc[256];               /* Message build work area   */
 
+    setvbuf( stderr, NULL, _IONBF, 0 );
+    setvbuf( stdout, NULL, _IONBF, 0 );
+
 #if defined(EXTERNALGUI)
 
     /* If the last argument is "EXTERNALGUI" it means we're running
@@ -1356,12 +1359,6 @@ int initialize_utility( int argc, char* argv[],
         /* Remove the "EXTERNALGUI" argument from the command-line */
         argv[argc-1] = NULL;
         argc--;
-
-        /* Set stdout & stderr streams to unbuffered so we don't have
-           to flush them all the time in order to ensure consistent
-           sequence of log messages. */
-        setvbuf( stderr, NULL, _IONBF, 0 );
-        setvbuf( stdout, NULL, _IONBF, 0 );
     }
 #endif // defined(EXTERNALGUI)
 
@@ -1412,7 +1409,7 @@ int initialize_utility( int argc, char* argv[],
     free( exename );
 
     /* Display version, copyright, and build date */
-    display_version( stderr, 0, namedesc+10 );
+    display_version( stdout, 0, namedesc+10 );
 
     return argc;
 }

@@ -68,7 +68,7 @@ void snap(int comp, void *data, int len) {
     else
         // "SHOWTRK Decompressed track header and data"
         WRMSG( HHC90404, "I" );
-    data_dump(data, len);
+    data_dump(data, len); printf("\n");
     if (pausesnap) {
         // "Press enter to continue"
         WRMSG( HHC02601, "A" );
@@ -265,7 +265,7 @@ BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int xop) {
     if (rh->klen && xop) {
         // "Track %d rec[%02X/%d] kl[%d]"
         WRMSG( HHC02606, "I", trk, rh->rec, rh->rec, rh->klen );
-        data_dump(buf, rh->klen);
+        data_dump(buf, rh->klen); printf("\n");
     }
     return (BYTE *)buf + rh->klen;          /* skip past KEY field */
 }
@@ -280,7 +280,7 @@ int     dl;
     if (dl && xop) {
         // "Track %d rec[%02X/%d] dl[%d]"
         WRMSG( HHC02607, "I", trk, rh->rec, rh->rec, dl );
-        data_dump(buf, dl);
+        data_dump(buf, dl); printf("\n");
     }
     return buf + dl;                        /* skip past DATA field */
 }
@@ -406,6 +406,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     INITIALIZE_UTILITY( UTILITY_NAME, "CCKD diagnostic program", &pgm );
 
+    printf("\n");
+
     /* parse the arguments */
     argc--;
     argv++ ;
@@ -481,9 +483,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
     readpos(fd, &devhdr, 0, sizeof(devhdr));
     if (cmd_devhdr) {
-        fprintf(stderr, "\nDEVHDR - %d (decimal) bytes:\n",
+        printf("\nDEVHDR - %d (decimal) bytes:\n",
                 (int)sizeof(devhdr));
-        data_dump(&devhdr, sizeof(devhdr));
+        data_dump(&devhdr, sizeof(devhdr)); printf("\n");
     }
 
     /*---------------------------------------------------------------*/
@@ -540,9 +542,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /*---------------------------------------------------------------*/
     readpos(fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof(cdevhdr));
     if (cmd_cdevhdr) {
-        fprintf(stderr, "\nCDEVHDR - %d (decimal) bytes:\n",
+        printf("\nCDEVHDR - %d (decimal) bytes:\n",
                 (int)sizeof(cdevhdr));
-        data_dump(&cdevhdr, sizeof(cdevhdr));
+        data_dump(&cdevhdr, sizeof(cdevhdr)); printf("\n");
     }
 
     /*---------------------------------------------------------------*/
@@ -563,9 +565,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     readpos(fd, l1, CCKD_L1TAB_POS, n * CCKD_L1ENT_SIZE);
     /* L1TAB itself is not adjusted for endian-ness                  */
     if (cmd_l1tab) {
-        fprintf(stderr, "\nL1TAB - %d (0x%X) bytes:\n",
+        printf("\nL1TAB - %d (0x%X) bytes:\n",
                 (int)(n * CCKD_L1ENT_SIZE), (unsigned int)(n * CCKD_L1ENT_SIZE));
-        data_dump(l1, n * CCKD_L1ENT_SIZE);
+        data_dump(l1, n * CCKD_L1ENT_SIZE); printf("\n");
     }
 
     /*---------------------------------------------------------------*/
@@ -574,11 +576,11 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (cmd_offset) {
         bulk = makbuf(op_length, "BULK");
         readpos(fd, bulk, op_offset, op_length);
-        fprintf(stderr,
+        printf(
             "\nIMAGE OFFSET %d (0x%8.8X) "
             "of length %d (0x%8.8X) bytes:\n",
             op_offset, op_offset, op_length, op_length);
-        data_dump(bulk, op_length);
+        data_dump(bulk, op_length); printf("\n");
         free(bulk);
         bulk = NULL;
     }
@@ -613,7 +615,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* display CKD CCHH or relative track data                       */
     /*---------------------------------------------------------------*/
     if ((cmd_cchh) || (cmd_tt)) {
-        fprintf(stderr,
+        printf(
                 "CC %d HH %d = reltrk %d; "
                 "L1 index = %d, L2 index = %d\n"
                 "L1 index %d = L2TAB offset %d (0x%8.8X)\n",
@@ -624,34 +626,33 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         readpos(fd, l2, l2taboff,
                 cdevhdr.numl2tab * sizeof(CCKD_L2ENT));
         if (cmd_l2tab) {
-            fprintf(stderr,
+            printf(
                    "\nL2TAB - %d (decimal) bytes\n",
                    (int)(cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
-            data_dump(l2, (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)) );
+            data_dump(l2, (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)) ); printf("\n");
         }
-        fprintf(stderr, "\nL2 index %d = L2TAB entry %d bytes\n",
+        printf("\nL2 index %d = L2TAB entry %d bytes\n",
                l2ndx, (int)sizeof(CCKD_L2ENT) );
-        data_dump(&l2[l2ndx], sizeof(CCKD_L2ENT) );
+        data_dump(&l2[l2ndx], sizeof(CCKD_L2ENT) ); printf("\n");
         trkhdroff = l2[l2ndx].pos;
         imglen = l2[l2ndx].len;
         if (swapend) {
             cckd_swapend4((char *)&trkhdroff);
             cckd_swapend4((char *)&imglen);
         }
-        fprintf(stderr, "\nTRKHDR offset %d (0x%8.8X); "
+        printf("\nTRKHDR offset %d (0x%8.8X); "
                 "length %d (0x%4.4X)\n",
                 (int)trkhdroff, (int)trkhdroff, imglen, imglen);
         tbuf = makbuf(imglen, "TRKHDR+DATA");
         readpos(fd, tbuf, trkhdroff, imglen);
-        fprintf(stderr, "\nTRKHDR track %d\n", trk);
-        data_dump(tbuf, sizeof(CKDDASD_TRKHDR) );
+        printf("\nTRKHDR track %d\n", trk);
+        data_dump(tbuf, sizeof(CKDDASD_TRKHDR) ); printf("\n");
         if (cmd_trkdata) showtrk(tbuf, imglen, trk, cmd_hexdump);
         free(l2); free(tbuf);
         l2 = NULL; tbuf = NULL;
     }
 
     /* Close file, exit */
-    fprintf(stderr, "\n");
     clean();
     return cckd_diag_rc;
 }
