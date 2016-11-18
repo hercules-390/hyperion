@@ -340,9 +340,10 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
     <code>default</code> specifies traditional Hercules codepage mapping.
+
     <p>
 
-    Other supported codepage mappings are:
+    Other supported predefined codepage mappings are:
     <p>
 
     <blockquote>
@@ -350,6 +351,7 @@ a real System/390.  The configuration file is an ASCII text file.
         <tr>
           <th rowspan=2>Mapping</th>
           <th colspan=2>Description</th>
+          <th rowspan=2>Transparent?</th>
         </tr>
         <tr>
           <th>ASCII</th>
@@ -358,88 +360,150 @@ a real System/390.  The configuration file is an ASCII text file.
         <tr><td align="center"><code>437/037</code></td>
             <td>437 PC United States</td>
             <td>037 United States/Canada</td>
+            <td><center>no</center></td>
+        </tr>
+
         <tr><td align="center"><code>437/500</code></td>
             <td>437 PC United States</td>
             <td>500 International</td>
+            <td><center>no</center></td>
         </tr>
+
         <tr><td align="center"><code>437/1047</code></td>
             <td>437 PC United States</td>
             <td>1047 Open Systems Latin 1</td>
+            <td><center>no</center></td>
         </tr>
+
         <tr><td align="center"><code>819/037</code></td>
             <td>819 ISO-8859-1</td>
             <td>037 United States/Canada</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/037v2</code></td>
             <td>819 ISO-8859-1</td>
             <td>037 United States/Canada version 2</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/273</code></td>
             <td>819 ISO-8859-1</td>
             <td>273 Austria/Germany</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/277</code></td>
             <td>819 ISO-8859-1</td>
             <td>277 Denmark/Norway</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/278</code></td>
             <td>819 ISO-8859-1</td>
             <td>278 Finland/Sweden</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/280</code></td>
             <td>819 ISO-8859-1</td>
             <td>280 Italy</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/284</code></td>
             <td>819 ISO-8859-1</td>
             <td>284 Spain</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/285</code></td>
             <td>819 ISO-8859-1</td>
             <td>285 United Kingdom</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/297</code></td>
             <td>819 ISO-8859-1</td>
             <td>297 France</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/500</code></td>
             <td>819 ISO-8859-1</td>
             <td>500 International</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>819/1047</code></td>
             <td>819 ISO-8859-1</td>
             <td>1047 Open Systems Latin 1</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>850/273</code></td>
             <td>850 PC Latin 1</td>
             <td>273 Austria/Germany</td>
+            <td><center>YES</center></td>
         </tr>
+
         <tr><td align="center"><code>850/1047</code></td>
             <td>850 PC Latin 1</td>
             <td>1047 Open Systems Latin 1</td>
+            <td><center>no</center></td>
         </tr>
+
         <tr><td align="center"><code>1252/037</code></td>
             <td>1252 Windows Latin 1</td>
             <td>037 United States/Canada</td>
+            <td><center>no</center></td>
         </tr>
+
         <tr><td align="center"><code>1252/037v2</code></td>
             <td>1252 Windows Latin 1</td>
             <td>037 United States/Canada version 2</td>
+            <td><center>no</center></td>
         </tr>
+
         <tr><td align="center"><code>1252/1047</code></td>
             <td>1252 Windows Latin 1</td>
             <td>1047 Open Systems Latin 1</td>
+            <td><center>no</center></td>
         </tr>
+
         <tr><td align="center"><code>1252/1140</code></td>
             <td>1252 Windows Latin 1</td>
             <td>1140 United States/Canada with Euro</td>
+            <td><center>YES</center></td>
         </tr>
+
+        <tr><td align="center"><code>ISOANSI/037</code></td>
+            <td>ISO ANSI</td>
+            <td>037 United States/Canada</td>
+            <td><center>YES</center></td>
+        </tr>
+
     </table>
     </blockquote>
     <p>
 
+    The transparency column indicates whether translating from
+    ASCII to EBCDIC (or vice versa) and back again yields results
+    identical to the original text.
+
+    <p>
+
     If no codepage is specified then the environment variable HERCULES_CP
-    will be inspected. The default codepage mapping is <code>default</code>.
+    will be inspected. If the environment variable is not found then
+    the traditional non-transparent <code>default</code> codepage mapping
+    is used.
+
+    <p>
+
+    Other codepages can be defined by means of the <code>cp_updt</code>
+    panel command (which is supported as a configuration file statement
+    as well). Enter the panel command <code>help cp_updt</code> for more
+    information.
 
     <p>
 
