@@ -46,7 +46,8 @@ you may misinterpret the manual.  As IBM do not publish the suite the
 developers use to validate a new CPU model, you will need to find a
 friend who has access to "real iron".  This real iron could be z/PDT.
 
-There are two routes to obtaining an object module and validation script
+To obtain an object module for real iron test, you would likely upload
+the .asm file and assemble it on CMS.  To run a test
 for z/CMS:  From an ASSEMBLE file using an assembler or from a .tst file
 by the cvttst.rexx utility (very much still in the development phase).
 
