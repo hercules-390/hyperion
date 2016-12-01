@@ -287,4 +287,4 @@ EXTRA_DIST =				\
 	txt2tst.rexx\
 	wild.assemble\
 	wild.listing\
-	wild.tst\
+	wild.tst

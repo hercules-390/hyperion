@@ -2836,7 +2836,7 @@ AC_SUBST(HQA_INC)
 
 AC_CACHE_SAVE()
 
-AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile man/Makefile m4/Makefile decNumber/Makefile] )
+AC_OUTPUT( [ Makefile util/Makefile html/Makefile crypto/Makefile man/Makefile m4/Makefile decNumber/Makefile tests/Makefile ] )
 
 ###############################################################################
 #   (end-of-file)
