@@ -1,4 +1,4 @@
-ASMA Ver. 0.2.0                                                                                     28 Nov 2016 17:37:43  Page     1
+ASMA Ver. 0.2.0                                                                                     29 Nov 2016 18:25:00  Page     1
 
  LOC       OBJECT CODE      ADDR1   ADDR2   STMT
 
@@ -27,7 +27,7 @@ ASMA Ver. 0.2.0                                                                 
 000214  B2B2 0060                   000060    23  lpswe stop
 000218                                        24  ltorg
 000218                                        25  end
-ASMA Ver. 0.2.0                                                                                     28 Nov 2016 17:37:43  Page     2
+ASMA Ver. 0.2.0                                                                                     29 Nov 2016 18:25:00  Page     2
 
      SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
 
@@ -35,12 +35,12 @@ GO                  U    000200       1    16  12
 IMAGE               1    000000     536     0
 MHI                 J    000000     536     7   9  11  13  15   8
 STOP                X    000060       4    10  23
-ASMA Ver. 0.2.0                                                                                     28 Nov 2016 17:37:43  Page     3
+ASMA Ver. 0.2.0                                                                                     29 Nov 2016 18:25:00  Page     3
 
 MACRO   DEFN  REFERENCES
 
 No defined macros
-ASMA Ver. 0.2.0                                                                                     28 Nov 2016 17:37:43  Page     4
+ASMA Ver. 0.2.0                                                                                     29 Nov 2016 18:25:00  Page     4
 
    DESC    SYMBOL  SIZE    POS      ADDR
 
@@ -49,7 +49,7 @@ Entry: 0
 Image      IMAGE    536  000-217  000-217
   Region            536  000-217  000-217
     CSECT  MHI      536  000-217  000-217
-ASMA Ver. 0.2.0                                                                                     28 Nov 2016 17:37:43  Page     5
+ASMA Ver. 0.2.0                                                                                     29 Nov 2016 18:25:00  Page     5
 
    STMT  FILE NAME
 
