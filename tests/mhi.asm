@@ -7,11 +7,11 @@
 mhi start 0
  using mhi,0
  org mhi+x'60' Unused bcmode stuff as scratch
-stop dc x'00020000',f'0',ad(0)
+stop dc x'0002 0000',f'0',ad(0)
  org mhi+x'1a0' Restart
- dc x'0000000180000000',ad(go)
+ dc x'0000 0001 8000 0000',ad(go)
  org mhi+x'1d0' Program
- dc x'0002000180000000',ad(x'deaddead')
+ dc x'0002 0001 8000 0000',ad(x'deaddead')
  org mhi+x'200'
 go equ *
  la 2,x'21'

@@ -287,4 +287,15 @@ EXTRA_DIST =				\
 	txt2tst.rexx\
 	wild.assemble\
 	wild.listing\
-	wild.tst
+	wild.tst\
+	makefile
+
+# The following rule requires the environment APATH to be set to the
+# location of SATK before making, for example:
+# export APATH=/usr/data/src/SATK/tools
+
+# You can clone SATK from
+# git@github.com:s390guy/SATK.git
+
+%.core: %.asm
+	ASMPATH=. MACLIB=mac ${APATH}/asma.py -l $*.list -i $@ $<
