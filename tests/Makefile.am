@@ -1,21 +1,3 @@
-dist_pkgdata_DATA =			\
-	 a.core					\
-	 b.core					\
-	 bctr.core				\
-	 cpu0off.core			\
-	 ieee-adds.core			\
-	 ieee-comps.core		\
-	 ieee-div-nans.core		\
-	 ieee-divs.core			\
-	 ieee-mults.core		\
-	 ieee-sqrts.core		\
-	 ieee-subs.core			\
-	 l.core					\
-	 la.core				\
-	 la2.core				\
-	 mvc.core				\
-	 sieve.core				\
-	 st.core
 
 EXTRA_DIST =				\
 	 agf.assemble			\
@@ -52,6 +34,7 @@ EXTRA_DIST =				\
 	 cmd-rv.subtst			\
 	 comments.txt			\
 	 cpsdr.txt				\
+	 cpu0off.core			\
 	 csst.txt				\
 	 cvttst.rexx			\
 	 csxtr.assemble			\
@@ -75,24 +58,31 @@ EXTRA_DIST =				\
 	 hetbsf.tst				\
 	 iedtr.txt				\
 	 ieee-adds.asm			\
+	 ieee-adds.core			\
 	 ieee-adds.list			\
 	 ieee-adds.tst			\
 	 ieee-comps.asm			\
+	 ieee-comps.core		\
 	 ieee-comps.list		\
 	 ieee-comps.tst			\
 	 ieee-div-nans.asm		\
+	 ieee-div-nans.core		\
 	 ieee-div-nans.list		\
 	 ieee-div-nans.tst		\
 	 ieee-divs.asm			\
+	 ieee-divs.core			\
 	 ieee-divs.list			\
 	 ieee-divs.tst			\
 	 ieee-mults.asm			\
+	 ieee-mults.core		\
 	 ieee-mults.list		\
 	 ieee-mults.tst			\
 	 ieee-sqrts.asm			\
+	 ieee-sqrts.core		\
 	 ieee-sqrts.list		\
 	 ieee-sqrts.tst			\
 	 ieee-subs.asm			\
+	 ieee-subs.core			\
 	 ieee-subs.list			\
 	 ieee-subs.tst			\
 	 ilc.assemble			\
