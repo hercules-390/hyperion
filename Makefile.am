@@ -6,30 +6,30 @@
 AUTOMAKE_OPTIONS = foreign 1.5
 
 ACLOCAL_AMFLAGS = \
-	-I autoconf   \
+	-I autoconf	\
 	-I m4
 
 lns=@LN_S@
 
 # NOte! Due to inter-module dependencies the sequence
-#       (ordering) of the SUBDIRS list is important!
+#		  (ordering) of the SUBDIRS list is important!
 
-SUBDIRS =       \
-	decNumber   \
-	m4          \
-	util        \
-	html        \
-	man         \
-	.           \
-	crypto      \
-    tests
+SUBDIRS =		 \
+	decNumber	 \
+	m4			 \
+	util 		 \
+	html 		 \
+	man			 \
+	. 			 \
+	crypto		 \
+	 tests
 
 LDADD = @LIBS@
 
 DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir))
 
-AM_CPPFLAGS =                  \
-	-I$(top_srcdir)             \
+AM_CPPFLAGS =						 \
+	-I$(top_srcdir)				  \
 	-I$(top_srcdir)/decNumber   \
 	-I@HQA_INC@
 
@@ -66,54 +66,54 @@ endif
 # even be *attempted* to be "built" if support for building dynamic modules
 # doesn't even exist on the system doing the building.
 
-dynamic_SRC =   \
-	dyngui.c    \
-	dyninst.c   \
-	hdteq.c     \
-	s37x.c      \
+dynamic_SRC =	 \
+	dyngui.c	 \
+	dyninst.c	 \
+	hdteq.c 	 \
+	s37x.c		 \
 	s37xmod.c
 
-dyndev_SRC =    \
-	awstape.c   \
-	cardpch.c   \
-	cardrdr.c   \
+dyndev_SRC =	 \
+	awstape.c	 \
+	cardpch.c	 \
+	cardrdr.c	 \
 	comm3705.c  \
 	commadpt.c  \
 	con1052c.c  \
-	console.c   \
+	console.c	 \
 	ctc_ctci.c  \
-	ctc_lcs.c   \
-	ctc_ptp.c   \
-	ctcadpt.c   \
+	ctc_lcs.c	 \
+	ctc_ptp.c	 \
+	ctcadpt.c	 \
 	faketape.c  \
-	ftlib.c     \
-	hchan.c     \
-	hetlib.c    \
-	hettape.c   \
-	mpc.c       \
-	omatape.c   \
-	printer.c   \
-	qeth.c      \
-	resolve.c   \
+	ftlib.c 	 \
+	hchan.c 	 \
+	hetlib.c	 \
+	hettape.c	 \
+	mpc.c		 \
+	omatape.c	 \
+	printer.c	 \
+	qeth.c		 \
+	resolve.c	 \
 	scsitape.c  \
-	sllib.c     \
-	sockdev.c   \
+	sllib.c 	 \
+	sockdev.c	 \
 	tapeccws.c  \
-	tapedev.c   \
-	telnet.c    \
-	tuntap.c    \
-	w32ctca.c   \
+	tapedev.c	 \
+	telnet.c	 \
+	tuntap.c	 \
+	w32ctca.c	 \
 	w32stape.c  \
 	zfcp.c
 
-# -module         :  create a dlopen'able module
-# -no-undefined   :  required on all platform that do not allow
-#                    shared modules to have undefined symbols
-# $(LDADD)        :  Misc Linker flags set by autoconf
-# -export-dynamic :  so dlsym works (to be verified -
-#                    not sure whether it is necessary)
-# -avoid-version  :  needed.. Otherwise libtool gives crazy names
-#                    to Windows DLLs
+# -module			:	create a dlopen'able module
+# -no-undefined	:	required on all platform that do not allow
+#							shared modules to have undefined symbols
+# $(LDADD)			:	Misc Linker flags set by autoconf
+# -export-dynamic :	so dlsym works (to be verified -
+#							not sure whether it is necessary)
+# -avoid-version	:	needed.. Otherwise libtool gives crazy names
+#							to Windows DLLs
 #
 
 if BUILD_SHARED
@@ -125,36 +125,36 @@ endif
 if OPTION_DYNAMIC_LOAD
 
   DYNSRC  =
-  LTDL    =  ltdl.c
+  LTDL	 =  ltdl.c
 
   DYNMOD_LD_FLAGS = \
-	-module         \
+	-module 		  \
 	-no-undefined   \
-	$(XSTATIC)      \
+	$(XSTATIC) 	  \
 	-export-dynamic \
 	-avoid-version
 
   DYNMOD_LD_ADD =   \
-	libherc.la      \
-	libhercs.la     \
-	libhercu.la     \
+	libherc.la 	  \
+	libhercs.la	  \
+	libhercu.la	  \
 	$(LDADD)
 
-  LIB_LD_FLAGS =    \
+  LIB_LD_FLAGS =	  \
 	-export-dynamic \
-	 $(XSTATIC)     \
+	 $(XSTATIC)	  \
 	 -no-undefined  \
 	 -avoid-version
 
 else
 
-  DYNSRC           =  $(dyndev_SRC)
-  LTDL             =
+  DYNSRC 			 =  $(dyndev_SRC)
+  LTDL				 =
   DYNMOD_LD_FLAGS  =
-  DYNMOD_LD_ADD    =
+  DYNMOD_LD_ADD	 =
 
-  LIB_LD_FLAGS =    \
-	$(XSTATIC)      \
+  LIB_LD_FLAGS =	  \
+	$(XSTATIC) 	  \
 	-no-undefined   \
 	-avoid-version
 
@@ -166,19 +166,19 @@ endif
 
 HERCLIBS =
 
-HERCLIBS2 =     \
+HERCLIBS2 = 	 \
 	libhercs.la \
 	libhercu.la \
 	libherct.la \
 	libhercd.la \
 	libherc.la
 
-HERCMODS =      \
+HERCMODS =		 \
 	altcmpsc.la \
-	dyngui.la   \
+	dyngui.la	 \
 	dyninst.la  \
-	hdteq.la    \
-	hdtptp.la   \
+	hdteq.la	 \
+	hdtptp.la	 \
 	hdtqeth.la  \
 	hdtzfcp.la  \
 	hdt1052c.la \
@@ -204,29 +204,29 @@ endif
 # unless support for building dynamic modules exists on the build system
 
 bin_PROGRAMS =  \
-	cckdcdsk    \
-	cckdcomp    \
-	cckddiag    \
-	cckdswap    \
-	dasdcat     \
-	dasdconv    \
-	dasdcopy    \
-	dasdinit    \
-	dasdisup    \
-	dasdload    \
-	dasdls      \
-	dasdpdsu    \
-	dasdseq     \
-	dmap2hrc    \
-	hercules    \
-	hetget      \
-	hetinit     \
-	hetmap      \
-	hetupd      \
-	tapecopy    \
-	tapemap     \
-	tapesplt    \
-	vmfplc2     \
+	cckdcdsk	 \
+	cckdcomp	 \
+	cckddiag	 \
+	cckdswap	 \
+	dasdcat 	 \
+	dasdconv	 \
+	dasdcopy	 \
+	dasdinit	 \
+	dasdisup	 \
+	dasdload	 \
+	dasdls		 \
+	dasdpdsu	 \
+	dasdseq 	 \
+	dmap2hrc	 \
+	hercules	 \
+	hetget		 \
+	hetinit 	 \
+	hetmap		 \
+	hetupd		 \
+	tapecopy	 \
+	tapemap 	 \
+	tapesplt	 \
+	vmfplc2 	 \
 	$(HERCIFC)  \
 	$(HERCLIN)
 
@@ -331,15 +331,15 @@ libhercs_la_LIBADD  = $(LDADD)
 #
 
 libherct_la_SOURCES = \
-	hetlib.c          \
-	ftlib.c           \
+	hetlib.c			 \
+	ftlib.c 			 \
 	sllib.c
 
 libherct_la_LDFLAGS = $(LIB_LD_FLAGS)
 
 libherct_la_LIBADD =  \
-	$(LDADD)          \
-	libhercs.la       \
+	$(LDADD)			 \
+	libhercs.la		 \
 	libhercu.la
 
 #
@@ -347,20 +347,20 @@ libherct_la_LIBADD =  \
 #
 
 libhercd_la_SOURCES = \
-	cache.c           \
-	cckddasd.c        \
-	cckdutil.c        \
-	ckddasd.c         \
-	dasdtab.c         \
-	dasdutil.c        \
-	fbadasd.c         \
+	cache.c 			 \
+	cckddasd.c 		 \
+	cckdutil.c 		 \
+	ckddasd.c			 \
+	dasdtab.c			 \
+	dasdutil.c 		 \
+	fbadasd.c			 \
 	shared.c
 
 libhercd_la_LDFLAGS = $(LIB_LD_FLAGS)
 
 libhercd_la_LIBADD =  \
-	$(LDADD)          \
-	libhercs.la       \
+	$(LDADD)			 \
+	libhercs.la		 \
 	libhercu.la
 
 #
@@ -368,27 +368,27 @@ libhercd_la_LIBADD =  \
 #
 
 libhercu_la_SOURCES = \
-	codepage.c        \
-	hdl.c             \
-	hexdumpe.c        \
-	hostinfo.c        \
-	hscutl.c          \
-	hscutl2.c         \
-	hsocket.c         \
-	hthreads.c        \
-	logger.c          \
-	logmsg.c          \
-	memrchr.c         \
-	parser.c          \
-	pttrace.c         \
-	version.c         \
-	$(FTHREADS)       \
+	codepage.c 		 \
+	hdl.c				 \
+	hexdumpe.c 		 \
+	hostinfo.c 		 \
+	hscutl.c			 \
+	hscutl2.c			 \
+	hsocket.c			 \
+	hthreads.c 		 \
+	logger.c			 \
+	logmsg.c			 \
+	memrchr.c			 \
+	parser.c			 \
+	pttrace.c			 \
+	version.c			 \
+	$(FTHREADS)		 \
 	$(LTDL)
 
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 
 libhercu_la_LIBADD =  \
-	$(LDADD)          \
+	$(LDADD)			 \
 	libhercs.la
 
 #
@@ -397,106 +397,106 @@ libhercu_la_LIBADD =  \
 
 libherc_la_SOURCES =  \
 	_archdep_templ.c  \
-	archlvl.c         \
-	assist.c          \
-	bldcfg.c          \
-	cgibin.c          \
-	channel.c         \
-	chsc.c            \
-	clock.c           \
-	cmdtab.c          \
-	cmpsc_2012.c      \
-	cmpscdbg.c        \
-	cmpscdct.c        \
-	cmpscget.c        \
-	cmpscmem.c        \
-	cmpscput.c        \
-	config.c          \
-	control.c         \
-	cpu.c             \
-	crypto.c          \
-	dat.c             \
-	decimal.c         \
-	dfp.c             \
-	diagmssf.c        \
-	diagnose.c        \
-	dyn76.c           \
-	ecpsvm.c          \
-	esame.c           \
-	external.c        \
-	fillfnam.c        \
-	float.c           \
-	general1.c        \
-	general2.c        \
-	general3.c        \
-	hao.c             \
-	hconsole.c        \
-	hdiagf18.c        \
-	history.c         \
-	hRexx.c           \
-	hRexx_o.c         \
-	hRexx_r.c         \
-	hsccmd.c          \
-	hscemode.c        \
-	hscloc.c          \
-	hscmisc.c         \
-	hscpufun.c        \
-	httpserv.c        \
-	ieee.c            \
-	impl.c            \
-	io.c              \
-	ipl.c             \
-	loadmem.c         \
-	loadparm.c        \
-	losc.c            \
-	machchk.c         \
-	opcode.c          \
-	panel.c           \
-	pfpo.c            \
-	plo.c             \
-	qdio.c            \
-	scedasd.c         \
-	scescsi.c         \
-	script.c          \
-	service.c         \
-	sie.c             \
+	archlvl.c			 \
+	assist.c			 \
+	bldcfg.c			 \
+	cgibin.c			 \
+	channel.c			 \
+	chsc.c				 \
+	clock.c 			 \
+	cmdtab.c			 \
+	cmpsc_2012.c		 \
+	cmpscdbg.c 		 \
+	cmpscdct.c 		 \
+	cmpscget.c 		 \
+	cmpscmem.c 		 \
+	cmpscput.c 		 \
+	config.c			 \
+	control.c			 \
+	cpu.c				 \
+	crypto.c			 \
+	dat.c				 \
+	decimal.c			 \
+	dfp.c				 \
+	diagmssf.c 		 \
+	diagnose.c 		 \
+	dyn76.c 			 \
+	ecpsvm.c			 \
+	esame.c 			 \
+	external.c 		 \
+	fillfnam.c 		 \
+	float.c 			 \
+	general1.c 		 \
+	general2.c 		 \
+	general3.c 		 \
+	hao.c				 \
+	hconsole.c 		 \
+	hdiagf18.c 		 \
+	history.c			 \
+	hRexx.c 			 \
+	hRexx_o.c			 \
+	hRexx_r.c			 \
+	hsccmd.c			 \
+	hscemode.c 		 \
+	hscloc.c			 \
+	hscmisc.c			 \
+	hscpufun.c 		 \
+	httpserv.c 		 \
+	ieee.c				 \
+	impl.c				 \
+	io.c 				 \
+	ipl.c				 \
+	loadmem.c			 \
+	loadparm.c 		 \
+	losc.c				 \
+	machchk.c			 \
+	opcode.c			 \
+	panel.c 			 \
+	pfpo.c				 \
+	plo.c				 \
+	qdio.c				 \
+	scedasd.c			 \
+	scescsi.c			 \
+	script.c			 \
+	service.c			 \
+	sie.c				 \
 	SoftFloat-specialise.c \
-	SoftFloat.c       \
-	sr.c              \
-	stack.c           \
-	strsignal.c       \
-	timer.c           \
-	trace.c           \
-	vector.c          \
-	vm.c              \
-	vmd250.c          \
-	vstore.c          \
-	w32util.c         \
-	xstore.c          \
+	SoftFloat.c		 \
+	sr.c 				 \
+	stack.c 			 \
+	strsignal.c		 \
+	timer.c 			 \
+	trace.c 			 \
+	vector.c			 \
+	vm.c 				 \
+	vmd250.c			 \
+	vstore.c			 \
+	w32util.c			 \
+	xstore.c			 \
 	$(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
-	ltdl.c            \
-	memrchr.c         \
-	$(dynamic_SRC)    \
-	$(dyndev_SRC)     \
-	$(extra_SRC)      \
+	ltdl.c				 \
+	memrchr.c			 \
+	$(dynamic_SRC)	 \
+	$(dyndev_SRC) 	 \
+	$(extra_SRC)		 \
 	$(fthreads_SRC)
 
 libherc_la_LDFLAGS = $(LIB_LD_FLAGS)
 
-libherc_la_LIBADD =   \
-	libhercs.la       \
-	libhercu.la       \
-	libherct.la       \
-	libhercd.la       \
+libherc_la_LIBADD =	 \
+	libhercs.la		 \
+	libhercu.la		 \
+	libherct.la		 \
+	libhercd.la		 \
 	decNumber/libdecNumber.la \
 	$(LDADD)
 
 #
-#  THIS is the hercules executable.
-#  hdlmain.c is requires so that dlopen(self) retrieves
-#  the 'main' hdl symbols
+#	THIS is the hercules executable.
+#	hdlmain.c is requires so that dlopen(self) retrieves
+#	the 'main' hdl symbols
 #
 
 if OPTION_DYNAMIC_LOAD
@@ -508,46 +508,46 @@ HDEPS =
 
 else
 
-HLDFLAGS =                  \
-	-dlopen self            \
-	-dlopen dyngui.la       \
-	-dlopen dyninst.la      \
-	-dlopen s37x.la         \
-	-dlopen hdteq.la        \
-	-dlopen hdt1403.la      \
-	-dlopen hdt3420.la      \
-	-dlopen hdt2703.la      \
-	-dlopen hdt3705.la      \
-	-dlopen hdt3088.la      \
-	-dlopen hdt3270.la      \
-	-dlopen hdt3505.la      \
-	-dlopen hdt3525.la      \
-	-dlopen hdtqeth.la      \
-	-dlopen hdtzfcp.la      \
-	-dlopen hdt1052c.la     \
-	-dlopen hdtptp.la       \
+HLDFLAGS =						 \
+	-dlopen self				 \
+	-dlopen dyngui.la		 \
+	-dlopen dyninst.la		 \
+	-dlopen s37x.la			 \
+	-dlopen hdteq.la 		 \
+	-dlopen hdt1403.la		 \
+	-dlopen hdt3420.la		 \
+	-dlopen hdt2703.la		 \
+	-dlopen hdt3705.la		 \
+	-dlopen hdt3088.la		 \
+	-dlopen hdt3270.la		 \
+	-dlopen hdt3505.la		 \
+	-dlopen hdt3525.la		 \
+	-dlopen hdtqeth.la		 \
+	-dlopen hdtzfcp.la		 \
+	-dlopen hdt1052c.la 	 \
+	-dlopen hdtptp.la		 \
 	-dlopen altcmpsc.la
 
-HDEPS =                     \
-	dyngui.la               \
-	dyninst.la              \
-	s37x.la                 \
-	hdteq.la                \
-	hdt1403.la              \
-	hdt3420.la              \
-	hdt2703.la              \
-	hdt3705.la              \
-	hdt3088.la              \
-	hdt3270.la              \
-	hdt3505.la              \
-	hdt3525.la              \
-	hdtqeth.la              \
-	hdtzfcp.la              \
-	hdt1052c.la             \
-	hdtptp.la               \
-	altcmpsc.la             \
-	libherc.la              \
-	libherct.la             \
+HDEPS =							 \
+	dyngui.la					 \
+	dyninst.la 				 \
+	s37x.la 					 \
+	hdteq.la					 \
+	hdt1403.la 				 \
+	hdt3420.la 				 \
+	hdt2703.la 				 \
+	hdt3705.la 				 \
+	hdt3088.la 				 \
+	hdt3270.la 				 \
+	hdt3505.la 				 \
+	hdt3525.la 				 \
+	hdtqeth.la 				 \
+	hdtzfcp.la 				 \
+	hdt1052c.la				 \
+	hdtptp.la					 \
+	altcmpsc.la				 \
+	libherc.la 				 \
+	libherct.la				 \
 	libhercd.la
 
 endif
@@ -555,43 +555,43 @@ endif
 else
 
 HLDFLAGS =
-HDEPS    =
+HDEPS 	=
 
 endif
 
 hercules_SOURCES =  \
-	bootstrap.c     \
+	bootstrap.c	  \
 	hdlmain.c
 
-hercules_LDADD =    \
-	libherc.la      \
-	libhercs.la     \
+hercules_LDADD =	  \
+	libherc.la 	  \
+	libhercs.la	  \
 	$(LDADD)
 
 hercules_LDFLAGS = $(HLDFLAGS)
 
 hercules_DEPENDENCIES = \
-	libherc.la      \
-	libhercs.la     \
+	libherc.la 	  \
+	libhercs.la	  \
 	$(HDEPS)
 
 if BUILD_SHARED
 
 herclin_SOURCES =   \
-	hdlmain.c       \
+	hdlmain.c		  \
 	herclin.c
 
 
-herclin_LDADD =     \
-	libherc.la      \
-	libhercs.la     \
+herclin_LDADD =	  \
+	libherc.la 	  \
+	libhercs.la	  \
 	$(LDADD)
 
 herclin_LDFLAGS = $(HLDFLAGS)
 
-herclin_DEPENDENCIES =  \
-	libherc.la      \
-	libhercs.la     \
+herclin_DEPENDENCIES =	\
+	libherc.la 	  \
+	libhercs.la	  \
 	$(HDEPS)
 
 endif
@@ -609,381 +609,381 @@ tools_ADDLIBS = $(HERCLIBS2) $(LDADD) hdlmain.o
 endif
 
 if BUILD_HERCIFC
-hercifc_SOURCES    = hercifc.c
-hercifc_LDADD      = $(tools_ADDLIBS)
-hercifc_LDFLAGS    = $(tools_LD_FLAGS)
+hercifc_SOURCES	 = hercifc.c
+hercifc_LDADD		 = $(tools_ADDLIBS)
+hercifc_LDFLAGS	 = $(tools_LD_FLAGS)
 endif
 
-dasdinit_SOURCES   = dasdinit.c
-dasdinit_LDADD     = $(tools_ADDLIBS)
-dasdinit_LDFLAGS   = $(tools_LD_FLAGS)
+dasdinit_SOURCES	 = dasdinit.c
+dasdinit_LDADD 	 = $(tools_ADDLIBS)
+dasdinit_LDFLAGS	 = $(tools_LD_FLAGS)
 
-dasdisup_SOURCES   = dasdisup.c
-dasdisup_LDADD     = $(tools_ADDLIBS)
-dasdisup_LDFLAGS   = $(tools_LD_FLAGS)
+dasdisup_SOURCES	 = dasdisup.c
+dasdisup_LDADD 	 = $(tools_ADDLIBS)
+dasdisup_LDFLAGS	 = $(tools_LD_FLAGS)
 
-dasdload_SOURCES   = dasdload.c
-dasdload_LDADD     = $(tools_ADDLIBS)
-dasdload_LDFLAGS   = $(tools_LD_FLAGS)
+dasdload_SOURCES	 = dasdload.c
+dasdload_LDADD 	 = $(tools_ADDLIBS)
+dasdload_LDFLAGS	 = $(tools_LD_FLAGS)
 
-dasdconv_SOURCES   = dasdconv.c
-dasdconv_LDADD     = $(tools_ADDLIBS)
-dasdconv_LDFLAGS   = $(tools_LD_FLAGS)
+dasdconv_SOURCES	 = dasdconv.c
+dasdconv_LDADD 	 = $(tools_ADDLIBS)
+dasdconv_LDFLAGS	 = $(tools_LD_FLAGS)
 
-dasdls_SOURCES     = dasdls.c
-dasdls_LDADD       = $(tools_ADDLIBS)
-dasdls_LDFLAGS     = $(tools_LD_FLAGS)
+dasdls_SOURCES 	 = dasdls.c
+dasdls_LDADD		 = $(tools_ADDLIBS)
+dasdls_LDFLAGS 	 = $(tools_LD_FLAGS)
 
-dasdcat_SOURCES    = dasdcat.c
-dasdcat_LDADD      = $(tools_ADDLIBS)
-dasdcat_LDFLAGS    = $(tools_LD_FLAGS)
+dasdcat_SOURCES	 = dasdcat.c
+dasdcat_LDADD		 = $(tools_ADDLIBS)
+dasdcat_LDFLAGS	 = $(tools_LD_FLAGS)
 
-dasdpdsu_SOURCES   = dasdpdsu.c
-dasdpdsu_LDADD     = $(tools_ADDLIBS)
-dasdpdsu_LDFLAGS   = $(tools_LD_FLAGS)
+dasdpdsu_SOURCES	 = dasdpdsu.c
+dasdpdsu_LDADD 	 = $(tools_ADDLIBS)
+dasdpdsu_LDFLAGS	 = $(tools_LD_FLAGS)
 
-dasdseq_SOURCES    = dasdseq.c
-dasdseq_LDADD      = $(tools_ADDLIBS)
-dasdseq_LDFLAGS    = $(tools_LD_FLAGS)
+dasdseq_SOURCES	 = dasdseq.c
+dasdseq_LDADD		 = $(tools_ADDLIBS)
+dasdseq_LDFLAGS	 = $(tools_LD_FLAGS)
 
-tapecopy_SOURCES   = tapecopy.c scsiutil.c
-tapecopy_LDADD     = $(tools_ADDLIBS)
-tapecopy_LDFLAGS   = $(tools_LD_FLAGS)
-tapecopy_CFLAGS    = $(AM_CFLAGS)
+tapecopy_SOURCES	 = tapecopy.c scsiutil.c
+tapecopy_LDADD 	 = $(tools_ADDLIBS)
+tapecopy_LDFLAGS	 = $(tools_LD_FLAGS)
+tapecopy_CFLAGS	 = $(AM_CFLAGS)
 
-tapemap_SOURCES    = tapemap.c
-tapemap_LDADD      = $(tools_ADDLIBS)
-tapemap_LDFLAGS    = $(tools_LD_FLAGS)
+tapemap_SOURCES	 = tapemap.c
+tapemap_LDADD		 = $(tools_ADDLIBS)
+tapemap_LDFLAGS	 = $(tools_LD_FLAGS)
 
-tapesplt_SOURCES   = tapesplt.c
-tapesplt_LDADD     = $(tools_ADDLIBS)
-tapesplt_LDFLAGS   = $(tools_LD_FLAGS)
+tapesplt_SOURCES	 = tapesplt.c
+tapesplt_LDADD 	 = $(tools_ADDLIBS)
+tapesplt_LDFLAGS	 = $(tools_LD_FLAGS)
 
-cckdcdsk_SOURCES   = cckdcdsk.c
-cckdcdsk_LDADD     = $(tools_ADDLIBS)
-cckdcdsk_LDFLAGS   = $(tools_LD_FLAGS)
+cckdcdsk_SOURCES	 = cckdcdsk.c
+cckdcdsk_LDADD 	 = $(tools_ADDLIBS)
+cckdcdsk_LDFLAGS	 = $(tools_LD_FLAGS)
 
-cckdcomp_SOURCES   = cckdcomp.c
-cckdcomp_LDADD     = $(tools_ADDLIBS)
-cckdcomp_LDFLAGS   = $(tools_LD_FLAGS)
+cckdcomp_SOURCES	 = cckdcomp.c
+cckdcomp_LDADD 	 = $(tools_ADDLIBS)
+cckdcomp_LDFLAGS	 = $(tools_LD_FLAGS)
 
-cckddiag_SOURCES   = cckddiag.c
-cckddiag_LDADD     = $(tools_ADDLIBS)
-cckddiag_LDFLAGS   = $(tools_LD_FLAGS)
+cckddiag_SOURCES	 = cckddiag.c
+cckddiag_LDADD 	 = $(tools_ADDLIBS)
+cckddiag_LDFLAGS	 = $(tools_LD_FLAGS)
 
-dasdcopy_SOURCES   = dasdcopy.c
-dasdcopy_LDADD     = $(tools_ADDLIBS)
-dasdcopy_LDFLAGS   = $(tools_LD_FLAGS)
+dasdcopy_SOURCES	 = dasdcopy.c
+dasdcopy_LDADD 	 = $(tools_ADDLIBS)
+dasdcopy_LDFLAGS	 = $(tools_LD_FLAGS)
 
-cckdswap_SOURCES   = cckdswap.c
-cckdswap_LDADD     = $(tools_ADDLIBS)
-cckdswap_LDFLAGS   = $(tools_LD_FLAGS)
+cckdswap_SOURCES	 = cckdswap.c
+cckdswap_LDADD 	 = $(tools_ADDLIBS)
+cckdswap_LDFLAGS	 = $(tools_LD_FLAGS)
 
-hetget_SOURCES     = hetget.c
-hetget_LDADD       = $(tools_ADDLIBS)
-hetget_LDFLAGS     = $(tools_LD_FLAGS)
+hetget_SOURCES 	 = hetget.c
+hetget_LDADD		 = $(tools_ADDLIBS)
+hetget_LDFLAGS 	 = $(tools_LD_FLAGS)
 
-hetinit_SOURCES    = hetinit.c
-hetinit_LDADD      = $(tools_ADDLIBS)
-hetinit_LDFLAGS    = $(tools_LD_FLAGS)
+hetinit_SOURCES	 = hetinit.c
+hetinit_LDADD		 = $(tools_ADDLIBS)
+hetinit_LDFLAGS	 = $(tools_LD_FLAGS)
 
-hetmap_SOURCES     = hetmap.c
-hetmap_LDADD       = $(tools_ADDLIBS)
-hetmap_LDFLAGS     = $(tools_LD_FLAGS)
+hetmap_SOURCES 	 = hetmap.c
+hetmap_LDADD		 = $(tools_ADDLIBS)
+hetmap_LDFLAGS 	 = $(tools_LD_FLAGS)
 
-hetupd_SOURCES     = hetupd.c
-hetupd_LDADD       = $(tools_ADDLIBS)
-hetupd_LDFLAGS     = $(tools_LD_FLAGS)
+hetupd_SOURCES 	 = hetupd.c
+hetupd_LDADD		 = $(tools_ADDLIBS)
+hetupd_LDFLAGS 	 = $(tools_LD_FLAGS)
 
-dmap2hrc_SOURCES   = dmap2hrc.c
-dmap2hrc_LDADD     = $(tools_ADDLIBS)
-dmap2hrc_LDFLAGS   = $(tools_LD_FLAGS)
+dmap2hrc_SOURCES	 = dmap2hrc.c
+dmap2hrc_LDADD 	 = $(tools_ADDLIBS)
+dmap2hrc_LDFLAGS	 = $(tools_LD_FLAGS)
 
-vmfplc2_SOURCES    = vmfplc2.c
-vmfplc2_LDADD      = $(tools_ADDLIBS)
-vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
+vmfplc2_SOURCES	 = vmfplc2.c
+vmfplc2_LDADD		 = $(tools_ADDLIBS)
+vmfplc2_LDFLAGS	 = $(tools_LD_FLAGS)
 
 #
 # Files that are not 'built' per-se
 # Also contains some WIN32 only source files
 #
 
-EXTRA_DIST =                    \
-	_build                      \
-	_build.bat                  \
-	_build.tail                 \
-	_dynamic_version            \
-	_dynamic_version.cmd        \
-	_TODO.txt                   \
-	all-all.jobs                \
-	autoconf/config.guess       \
-	autoconf/config.rpath       \
-	autoconf/config.sub         \
-	autoconf/depcomp            \
-	autoconf/hercules.m4        \
-	autoconf/install-sh         \
-	autoconf/libtool.m4         \
-	autoconf/ltdl.m4            \
-	autoconf/ltmain.sh          \
-	autoconf/missing            \
-	autoconf/mkinstalldirs      \
-	autoconf/README             \
-	autogen.sh                  \
-	bldlvlck                    \
-	build_pch.c                 \
-	BUILDING                    \
-	CHANGES                     \
-	configure.ac                \
-	conspawn.c                  \
-	COPYRIGHT                   \
-	debug-all.jobs              \
-	dynmake.bat                 \
-	getopt.c                    \
-	hercdasd.ico                \
-	hercdasd.rc                 \
-	herclogo.txt                \
-	hercmisc.ico                \
-	hercmisc.rc                 \
-	hercprod.rc                 \
-	herctape.ico                \
-	herctape.rc                 \
-	hercules.cnf                \
-	hercules.cnf.rexx           \
-	hercules.ico                \
-	hercules.m4                 \
-	Hercules.sln                \
-	Hercules.vcproj             \
-	Hercules.vcxproj            \
-	Hercules.vcxproj.filters    \
-	Hercules_VS2010.sln         \
-	Hercules_VS2012.sln         \
-	Hercules_VS2012.vcxproj     \
-	hercver.rc2                 \
-	INSTALL                     \
-	license_dyn76.txt           \
-	makefile-dllmod.msvc        \
-	Makefile.am                 \
-	makefile.bat                \
-	makefile.msvc               \
-	msvc.makefile.includes/BZIP2_DIR.msvc       \
-	msvc.makefile.includes/BZIP2_FLAGS.msvc     \
-	msvc.makefile.includes/BZIP2_RULES.msvc     \
-	msvc.makefile.includes/CONFIG.msvc          \
-	msvc.makefile.includes/DEBUG_RETAIL.msvc    \
-	msvc.makefile.includes/HERC_FLAGS.msvc      \
-	msvc.makefile.includes/HQA_DIR.msvc         \
-	msvc.makefile.includes/HQA_FLAGS.msvc       \
-	msvc.makefile.includes/IPV6_FLAGS.msvc      \
-	msvc.makefile.includes/MOD_RULES1.msvc      \
-	msvc.makefile.includes/MOD_RULES2.msvc      \
-	msvc.makefile.includes/MODULES.msvc         \
-	msvc.makefile.includes/OBJ_CODE.msvc        \
-	msvc.makefile.includes/OUTDIR_RULES.msvc    \
-	msvc.makefile.includes/OUTPUT_DIRS.msvc     \
-	msvc.makefile.includes/PCRE_DIR.msvc        \
-	msvc.makefile.includes/PCRE_FLAGS.msvc      \
-	msvc.makefile.includes/PCRE_RULES.msvc      \
-	msvc.makefile.includes/PRIM_RULES.msvc      \
-	msvc.makefile.includes/REXX_DIRS.msvc       \
-	msvc.makefile.includes/REXX_FLAGS.msvc      \
-	msvc.makefile.includes/REXX_RULES.msvc      \
-	msvc.makefile.includes/ZLIB_DIR.msvc        \
-	msvc.makefile.includes/ZLIB_FLAGS.msvc      \
-	msvc.makefile.includes/ZLIB_RULES.msvc      \
-	README.AIX                  \
-	README.APL360               \
-	README.BSD                  \
-	README.CMPSC                \
-	README.COMMADPT             \
-	README.DECNUMBER            \
-	README.DYNMOD               \
-	README.ECPSVM               \
-	README.HAO                  \
-	README.HDL                  \
-	README.HERCLOGO             \
-	README.HQA                  \
-	README.HRAF                 \
-	README.IOARCH               \
-	README.ISSUES               \
-	README.md                   \
-	README.MINGW                \
-	README.MSVC                 \
-	README.NETWORKING           \
-	README.OSX                  \
-	README.PTT                  \
-	README.REXX                 \
-	README.RUNTEST              \
-	README.RXVT4APL             \
-	README.S37X                 \
-	README.SETUID               \
-	README.SOFTFLOAT            \
-	README.SUN                  \
-	README.TAPE                 \
-	README.TELNET               \
-	README.WIN64                \
-	RELEASE.NOTES               \
-	retail-all.jobs             \
-	scripts/cmpsc.cnf           \
-	scripts/cmpsc.rexx          \
-	scripts/hbasic1.rexx        \
-	scripts/hbasic2.rex         \
-	scripts/hbasic3.cmd         \
-	scripts/hbasic4.rx          \
-	scripts/hbasic5.ext1        \
-	scripts/hcommand.rexx       \
-	scripts/hexecio.rexx        \
-	scripts/hlinein.rexx        \
-	scripts/hrecurs.rexx        \
-	SoftFloat-2b.zip            \
+EXTRA_DIST =						  \
+	_build							  \
+	_build.bat 					  \
+	_build.tail					  \
+	_dynamic_version 			  \
+	_dynamic_version.cmd		  \
+	_TODO.txt						  \
+	all-all.jobs					  \
+	autoconf/config.guess		  \
+	autoconf/config.rpath		  \
+	autoconf/config.sub 		  \
+	autoconf/depcomp 			  \
+	autoconf/hercules.m4		  \
+	autoconf/install-sh 		  \
+	autoconf/libtool.m4 		  \
+	autoconf/ltdl.m4 			  \
+	autoconf/ltmain.sh			  \
+	autoconf/missing 			  \
+	autoconf/mkinstalldirs 	  \
+	autoconf/README				  \
+	autogen.sh 					  \
+	bldlvlck						  \
+	build_pch.c					  \
+	BUILDING						  \
+	CHANGES 						  \
+	configure.ac					  \
+	conspawn.c 					  \
+	COPYRIGHT						  \
+	debug-all.jobs				  \
+	dynmake.bat					  \
+	getopt.c						  \
+	hercdasd.ico					  \
+	hercdasd.rc					  \
+	herclogo.txt					  \
+	hercmisc.ico					  \
+	hercmisc.rc					  \
+	hercprod.rc					  \
+	herctape.ico					  \
+	herctape.rc					  \
+	hercules.cnf					  \
+	hercules.cnf.rexx			  \
+	hercules.ico					  \
+	hercules.m4					  \
+	Hercules.sln					  \
+	Hercules.vcproj				  \
+	Hercules.vcxproj 			  \
+	Hercules.vcxproj.filters	  \
+	Hercules_VS2010.sln 		  \
+	Hercules_VS2012.sln 		  \
+	Hercules_VS2012.vcxproj	  \
+	hercver.rc2					  \
+	INSTALL 						  \
+	license_dyn76.txt			  \
+	makefile-dllmod.msvc		  \
+	Makefile.am					  \
+	makefile.bat					  \
+	makefile.msvc 				  \
+	msvc.makefile.includes/BZIP2_DIR.msvc 		\
+	msvc.makefile.includes/BZIP2_FLAGS.msvc		\
+	msvc.makefile.includes/BZIP2_RULES.msvc		\
+	msvc.makefile.includes/CONFIG.msvc 			\
+	msvc.makefile.includes/DEBUG_RETAIL.msvc 	\
+	msvc.makefile.includes/HERC_FLAGS.msvc		\
+	msvc.makefile.includes/HQA_DIR.msvc			\
+	msvc.makefile.includes/HQA_FLAGS.msvc 		\
+	msvc.makefile.includes/IPV6_FLAGS.msvc		\
+	msvc.makefile.includes/MOD_RULES1.msvc		\
+	msvc.makefile.includes/MOD_RULES2.msvc		\
+	msvc.makefile.includes/MODULES.msvc			\
+	msvc.makefile.includes/OBJ_CODE.msvc			\
+	msvc.makefile.includes/OUTDIR_RULES.msvc 	\
+	msvc.makefile.includes/OUTPUT_DIRS.msvc		\
+	msvc.makefile.includes/PCRE_DIR.msvc			\
+	msvc.makefile.includes/PCRE_FLAGS.msvc		\
+	msvc.makefile.includes/PCRE_RULES.msvc		\
+	msvc.makefile.includes/PRIM_RULES.msvc		\
+	msvc.makefile.includes/REXX_DIRS.msvc 		\
+	msvc.makefile.includes/REXX_FLAGS.msvc		\
+	msvc.makefile.includes/REXX_RULES.msvc		\
+	msvc.makefile.includes/ZLIB_DIR.msvc			\
+	msvc.makefile.includes/ZLIB_FLAGS.msvc		\
+	msvc.makefile.includes/ZLIB_RULES.msvc		\
+	README.AIX 					  \
+	README.APL360 				  \
+	README.BSD 					  \
+	README.CMPSC					  \
+	README.COMMADPT				  \
+	README.DECNUMBER 			  \
+	README.DYNMOD 				  \
+	README.ECPSVM 				  \
+	README.HAO 					  \
+	README.HDL 					  \
+	README.HERCLOGO				  \
+	README.HQA 					  \
+	README.HRAF					  \
+	README.IOARCH 				  \
+	README.ISSUES 				  \
+	README.md						  \
+	README.MINGW					  \
+	README.MSVC					  \
+	README.NETWORKING			  \
+	README.OSX 					  \
+	README.PTT 					  \
+	README.REXX					  \
+	README.RUNTEST				  \
+	README.RXVT4APL				  \
+	README.S37X					  \
+	README.SETUID 				  \
+	README.SOFTFLOAT 			  \
+	README.SUN 					  \
+	README.TAPE					  \
+	README.TELNET 				  \
+	README.WIN64					  \
+	RELEASE.NOTES 				  \
+	retail-all.jobs				  \
+	scripts/cmpsc.cnf			  \
+	scripts/cmpsc.rexx			  \
+	scripts/hbasic1.rexx		  \
+	scripts/hbasic2.rex 		  \
+	scripts/hbasic3.cmd 		  \
+	scripts/hbasic4.rx			  \
+	scripts/hbasic5.ext1		  \
+	scripts/hcommand.rexx		  \
+	scripts/hexecio.rexx		  \
+	scripts/hlinein.rexx		  \
+	scripts/hrecurs.rexx		  \
+	SoftFloat-2b.zip 			  \
 	util/CMPSC.txt
 
 #
 # Source Header files. No 'build' for those
 #
 
-noinst_HEADERS =            \
-	cache.h                 \
-	ccfixme.h               \
-	ccnowarn.h              \
-	chain.h                 \
-	chsc.h                  \
-	clock.h                 \
-	cmdtab.h                \
-	cmpsc.h                 \
-	cmpscbit.h              \
-	cmpscdbg.h              \
-	cmpscdct.h              \
-	cmpscget.h              \
-	cmpscmem.h              \
-	cmpscput.h              \
-	cnsllogo.h              \
-	codepage.h              \
-	comm3705.h              \
-	commadpt.h              \
-	cpuint.h                \
-	ctc_ptp.h               \
-	ctcadpt.h               \
-	dasdblks.h              \
-	dasdtab.h               \
-	dat.h                   \
-	dbgtrace.h              \
-	devtype.h               \
-	ecpsvm.h                \
-	esa390.h                \
-	esa390io.h              \
-	extstring.h             \
-	feat370.h               \
-	feat390.h               \
-	feat900.h               \
-	featall.h               \
-	featchk.h               \
-	feature.h               \
-	fillfnam.h              \
-	fthreads.h              \
-	ftlib.h                 \
-	getopt.h                \
-	hatomic.h               \
-	hbyteswp.h              \
-	hchan.h                 \
-	hconsole.h              \
-	hconsts.h               \
-	hdiagf18.h              \
-	hdl.h                   \
-	herc_getopt.h           \
-	hercifc.h               \
-	hercules.h              \
-	hercwind.h              \
-	herror.h                \
-	hetlib.h                \
-	hexdumpe.h              \
-	hextapi.h               \
-	hexterns.h              \
-	hifr.h                  \
-	hinlines.h              \
-	history.h               \
-	hmacros.h               \
-	hmalloc.h               \
-	hostinfo.h              \
-	hostopts.h              \
-	hqadefs.h               \
-	hqainc.h                \
-	hRexx.h                 \
-	hRexxapi.h              \
-	hscutl.h                \
-	hsocket.h               \
-	hstdinc.h               \
-	hstdint.h               \
-	hstructs.h              \
-	hthreads.h              \
-	httpmisc.h              \
-	htypes.h                \
-	inline.h                \
-	linklist.h              \
-	logger.h                \
-	ltdl.h                  \
-	machdep.h               \
-	memrchr.h               \
-	mpc.h                   \
-	msgenu.h                \
-	opcode.h                \
-	parser.h                \
-	printfmt.h              \
-	pttrace.h               \
-	qdio.h                  \
-	qeth.h                  \
-	resolve.h               \
-	scsitape.h              \
-	scsiutil.h              \
-	service.h               \
-	shared.h                \
-	sllib.h                 \
-	sockdev.h               \
-	SoftFloat-macros.h      \
-	SoftFloat-milieu.h      \
+noinst_HEADERS =				 \
+	cache.h 					 \
+	ccfixme.h					 \
+	ccnowarn.h 				 \
+	chain.h 					 \
+	chsc.h						 \
+	clock.h 					 \
+	cmdtab.h					 \
+	cmpsc.h 					 \
+	cmpscbit.h 				 \
+	cmpscdbg.h 				 \
+	cmpscdct.h 				 \
+	cmpscget.h 				 \
+	cmpscmem.h 				 \
+	cmpscput.h 				 \
+	cnsllogo.h 				 \
+	codepage.h 				 \
+	comm3705.h 				 \
+	commadpt.h 				 \
+	cpuint.h					 \
+	ctc_ptp.h					 \
+	ctcadpt.h					 \
+	dasdblks.h 				 \
+	dasdtab.h					 \
+	dat.h						 \
+	dbgtrace.h 				 \
+	devtype.h					 \
+	ecpsvm.h					 \
+	esa390.h					 \
+	esa390io.h 				 \
+	extstring.h				 \
+	feat370.h					 \
+	feat390.h					 \
+	feat900.h					 \
+	featall.h					 \
+	featchk.h					 \
+	feature.h					 \
+	fillfnam.h 				 \
+	fthreads.h 				 \
+	ftlib.h 					 \
+	getopt.h					 \
+	hatomic.h					 \
+	hbyteswp.h 				 \
+	hchan.h 					 \
+	hconsole.h 				 \
+	hconsts.h					 \
+	hdiagf18.h 				 \
+	hdl.h						 \
+	herc_getopt.h 			 \
+	hercifc.h					 \
+	hercules.h 				 \
+	hercwind.h 				 \
+	herror.h					 \
+	hetlib.h					 \
+	hexdumpe.h 				 \
+	hextapi.h					 \
+	hexterns.h 				 \
+	hifr.h						 \
+	hinlines.h 				 \
+	history.h					 \
+	hmacros.h					 \
+	hmalloc.h					 \
+	hostinfo.h 				 \
+	hostopts.h 				 \
+	hqadefs.h					 \
+	hqainc.h					 \
+	hRexx.h 					 \
+	hRexxapi.h 				 \
+	hscutl.h					 \
+	hsocket.h					 \
+	hstdinc.h					 \
+	hstdint.h					 \
+	hstructs.h 				 \
+	hthreads.h 				 \
+	httpmisc.h 				 \
+	htypes.h					 \
+	inline.h					 \
+	linklist.h 				 \
+	logger.h					 \
+	ltdl.h						 \
+	machdep.h					 \
+	memrchr.h					 \
+	mpc.h						 \
+	msgenu.h					 \
+	opcode.h					 \
+	parser.h					 \
+	printfmt.h 				 \
+	pttrace.h					 \
+	qdio.h						 \
+	qeth.h						 \
+	resolve.h					 \
+	scsitape.h 				 \
+	scsiutil.h 				 \
+	service.h					 \
+	shared.h					 \
+	sllib.h 					 \
+	sockdev.h					 \
+	SoftFloat-macros.h		 \
+	SoftFloat-milieu.h		 \
 	SoftFloat-specialise.h  \
-	SoftFloat-types.h       \
-	SoftFloat.h             \
-	sr.h                    \
-	tapedev.h               \
-	targetver.h             \
-	telnet.h                \
-	tt32api.h               \
-	tt32if.h                \
-	tuntap.h                \
-	version.h               \
-	vmd250.h                \
-	vstore.h                \
-	w32ctca.h               \
-	w32dl.h                 \
-	w32mtio.h               \
-	w32stape.h              \
-	w32util.h               \
-	zfcp.h                  \
+	SoftFloat-types.h		 \
+	SoftFloat.h				 \
+	sr.h 						 \
+	tapedev.h					 \
+	targetver.h				 \
+	telnet.h					 \
+	tt32api.h					 \
+	tt32if.h					 \
+	tuntap.h					 \
+	version.h					 \
+	vmd250.h					 \
+	vstore.h					 \
+	w32ctca.h					 \
+	w32dl.h 					 \
+	w32mtio.h					 \
+	w32stape.h 				 \
+	w32util.h					 \
+	zfcp.h						 \
 	$(extra_dynamic_SRC)
 
-cckd:                       \
-	cckdcdsk$(EXEEXT)       \
-	cckdcomp$(EXEEXT)       \
-	cckddiag$(EXEEXT)       \
-	cckdswap$(EXEEXT)       \
-	cckd2ckd$(EXEEXT)       \
+cckd: 							 \
+	cckdcdsk$(EXEEXT)		 \
+	cckdcomp$(EXEEXT)		 \
+	cckddiag$(EXEEXT)		 \
+	cckdswap$(EXEEXT)		 \
+	cckd2ckd$(EXEEXT)		 \
 	dasdcopy$(EXEEXT)
 
 #########################################################
-#               B U I L D   R U L E S  . . .
+#					 B U I L D	 R U L E S	. . .
 #########################################################
 #
-#             ***  PROGRAMMING NOTE!  ***
+#				  ***  PROGRAMMING NOTE!  ***
 #
-#   The tabs in the BELOW build rules ARE significant!
+#	 The tabs in the BELOW build rules ARE significant!
 #
-#   (the preceding assignment statements can use blanks)
+#	 (the preceding assignment statements can use blanks)
 #
-#   Not all make programs accept (handle correctly)
-#   make files that use blanks instead of tabs in their
-#   build rules. Thus in order to remain compatible
-#   with older make programs the below build rules
-#   MUST use *tabs* and NOT BLANKS!
+#	 Not all make programs accept (handle correctly)
+#	 make files that use blanks instead of tabs in their
+#	 build rules. Thus in order to remain compatible
+#	 with older make programs the below build rules
+#	 MUST use *tabs* and NOT BLANKS!
 #
 #########################################################
 
@@ -1039,11 +1039,11 @@ uninstall-hook:
 # whenever the interface to SoftFloat-specialise is changed.
 
 .libs/SoftFloat.o:  SoftFloat-specialise.h
-.libs/ieee.o:       SoftFloat-specialise.h
+.libs/ieee.o:		  SoftFloat-specialise.h
 
 check:
 if APPLE
 	$(top_srcdir)/tests/runtest $(top_srcdir)/tests
 else
-	$(top_srcdir)/tests/runtest -p .libs $(top_srcdir)/tests
+	$(top_srcdir)/tests/runtest -p .libs -d $(top_srcdir)/tests
 endif
