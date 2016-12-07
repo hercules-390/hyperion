@@ -68,10 +68,24 @@
 
 #if !defined KMCTR_PBLENS
 #define KMCTR_PBLENS
-static int kmctr_pblens[29] =
+static const int kmctr_wrap[32] =
 {
-   [1] = 8, 16, 24, [9] = 32, 40, 48,
-   [18] = 16, 24, 32, [26] = 48, 56, 64,
+   [9] = 1, 1, 1,
+   [26] = 1, 1, 1,
+};
+static const int kmctr_keylengths[32] =
+{
+   [1] = 8, 16, 24,
+   [9] = 8, 16, 24,
+   [18] = 16, 24, 32,
+   [26] = 16, 24, 32,
+};
+static const int kmctr_pblens[32] =
+{
+   [1] = 8, 16, 24,
+   [9] = 32, 40, 48,
+   [18] = 16, 24, 32,
+   [26] = 48, 56, 64,
 };
 #endif
 
@@ -2774,6 +2788,7 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   int r1_is_not_r2;
   int r1_is_not_r3;
   int r2_is_not_r3;
+  int fc;
   int tfc;
   int wrap;
 
@@ -2789,10 +2804,13 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   }
 
   /* Initialize values */
+  fc = GR0_fc(regs);
   tfc = GR0_tfc(regs);
-  wrap = GR0_wrap(regs);
-  keylen = (tfc - 17) * 8 + 8;
-  parameter_blocklen = kmctr_pblens[tfc];
+  wrap = kmctr_wrap[fc];
+  keylen = kmctr_keylengths[fc];
+  parameter_blocklen = kmctr_pblens[fc];
+  logmsg("Feature code %d wrap %d keylen %d pblen %d\n",
+   tfc, wrap, keylen, parameter_blocklen);
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
