@@ -880,11 +880,11 @@
 
   @REM Delete any leftover work files from previous run
 
-  if exist %wfn%.temp del /f %wfn%.temp
-  if exist %wfn%.tst  del /f %wfn%.tst
-  if exist %wfn%.rc   del /f %wfn%.rc
-  if exist %wfn%.out  del /f %wfn%.out
-  if exist %wfn%.txt  del /f %wfn%.txt
+  if exist %wfn%.temp    del /f %wfn%.temp
+  if exist %wfn%.testin  del /f %wfn%.testin
+  if exist %wfn%.rc      del /f %wfn%.rc
+  if exist %wfn%.out     del /f %wfn%.out
+  if exist %wfn%.txt     del /f %wfn%.txt
 
 
   @REM Build test script consisting of all *.tst files concatenated together
