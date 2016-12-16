@@ -1,0 +1,233 @@
+-----------------------------------------------------------------------
+
+
+                         Building Hercules
+
+Copyright 2016 by Stephen R. Orso.  This work is licensed under the Creative 
+Commons Attribution-ShareAlike 4.0 International License.  To view a copy of
+this license, visit  http://creativecommons.org/licenses/by-sa/4.0/ or send 
+a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+
+To build Hercules from source, perform the following steps:
+
+1. Ensure your computer has the required versions of the software
+   packages needed to build Hercules.  
+
+2. Install any of the optional packages you wish to use with Hercules.
+
+3. Build the recommended directory structure for a Hercules build
+
+4. Obtain SoftFloat 3a For Hercules and build it using the instructions
+   included with that package.  A pre-built set of binaries exists for
+   Windows.  
+
+5. Obtain and build Hercules using the README specific to your 
+   platform.
+
+
+Please Note:  UNIX-like operating systems, including descendants of 
+AT&T System V UNIX, GNU/Linux, BSD, and OS/X, are collectively referred
+in these readme files as "UNIX."  While The Open Group owns the 
+trademark to UNIX and has several pages describing how that trademark
+may be used, it would be wise of The Open Group to remember two words: 
+
+   kleenex and ketchup.
+
+
+REQUIRED SOFTWARE PACKAGES
+
+   The required packages vary by host system type, UNIX or Windows.  
+
+   UNIX: You will need the packages required to configure, compile,
+      link, and install a C application.  Either gcc or clang may be
+      used.  You will also need automake, autoconf, and a few other 
+      utilities.  README.BuildUNIX provides details about the packages
+      and versions required.  Most required packages are available with
+      many UNIX distributions, but you may need to build from source to
+      get the version you require.  
+
+   Windows: You will need Visual Studio 2015 Community Edition, an
+      appropriate Windows Software Development Kit (SDK), and the file 
+      win32.mak from the Windows 7.1 SDK.  README.BuildWIN has
+      specifics, URLs to obtain the needed software, and instructions
+      for installing win32.mak.  
+
+   Both UNIX and Windows: You will need CMake to build Softfloat 3a For
+      Hercules, and Windows builders will need it to build the PCRE
+      package.  Version 3.2.0 or higher is required.  
+
+
+OPTIONAL SOFTWARE PACKAGES
+
+   REXX interpreters
+   
+     You must install a REXX interpreter if you plan to do any of the
+     following:
+     
+       - Use runtest - to run one or more Hercules test scripts from 
+            the tests directory.
+       - (UNIX) perform a "make check" after the build.  
+       - Use REXX program files in RC scripts, on the Hercules console,
+            or in the configuration file.  All of these are described
+            in chapter 14 of the Hercules - User Reference Guide for 
+            Version 4.00.  
+    
+     If you are not sure, install one or both REXX interpreters if your
+     host system does not have one of them installed already.  Your
+     choices are: 
+    
+     - ooRexx: Open Object REXX, an open source derivative of a subset 
+          of the IBM program product Object REXX.  Find it at:
+         
+          http://ooRexx.org
+    
+     - Regina Rexx, an open source REXX interpreter that may be found 
+          here:
+         
+          http://regina-rexx.sourceforge.net/index.html
+
+     Source and installable executables are available for Windows and 
+     many UNIX distributions.  
+     
+   Disk and Tape Compression Libraries
+   
+     To reduce storage requirements, emulated disk and tape volumes may
+     compressed on the fly.  Compression has its own disk space versus
+     system performance trade-off, and you are in the best position to 
+     decide whether to compress volumes.  
+     
+     For file and volume interchange purposes, it is recommended that 
+     you instal both compression libraries and enable their use when 
+     building Hercules.  Even if you do not compress the volumes you 
+     use with Hercules, having the capability lets you work with a
+     compressed voluem you may have received from someone else.  
+     
+     Note that tape volume compression is specified in the HETINIT host
+     command that creates the emulated tape, and the compression type, 
+     bzip2 or zlib, is specified in the Hercules command devinit or
+     attach.  Disk volume compression is specified exclusively in the
+     DASDINIT host command that initialized the emulated disk. 
+     
+     Note also that a few of the test scripts specifically test 
+     compression, so a Hercules built without compression will cause
+     those tests to fail.  
+             
+     Either or both of of the following compression libraries can be
+     used with Hercules.  
+     
+     - zlib: Can be used by Hercules to compress both disk and tape 
+          volumes.  Available in the software repositories for many 
+          UNIX distributions.  Obtain source at: 
+         
+          http://www.zlib.net   
+     
+     - libbz2 Can be used by Hercules to compress both disk and tape 
+          volumes.  Available in the software repositories for many 
+          UNIX distributions.  Obtain source at: 
+         
+          http://www.bzip.org/
+
+   (Windows only) Perl Compatible Regular Expression Support
+   
+     If you are building on Windows and plan to use the Hercules
+     Automated Operator (HAO) capability, you must install the PCRE
+     package to provide regular expression support for HAO.  
+     
+     On UNIX systems, the Hercules Automated Operator uses the regular
+     expression support built into the host system.  
+     
+     You can obtain PCRE here:
+         
+	     http://www.airesoft.co.uk/pcre
+          
+     Download version 8.20.  
+
+          
+RECOMMENDED DIRECTORY STRUCTURE
+
+   The following recommended directory structure is used for an 
+   out-of-source build for UNIX.  (Windows is built in-source, but
+   all build activities are in directories separate from the Hercules
+   source and distribution materials.)
+
+   <topdir>/hyperion/             # Hyperion source (see Note 1.)
+           /winbuild/             # Windows-only: support packages
+           /SoftFloat-3a          # SoftFloat 3a For Hercules source
+           /<arch>/hyperion/      # Hyperion build/install directory
+           /<arch>/s3fh           # S3FH install dir
+                                  # ..includes copyright notices
+           /<arch>/s3fh/lib       # contains S3FH s3fhFloat.lib
+           /<arch>/s3fh/include   # contains S3FH public headers
+           /<arch>/s3fh.release   # S3FH Release build dir
+           /<arch>/s3fh.debug     # S3FH Debug build dir
+
+   Nonce error for UNIX users: the current development state of
+   the UNIX build process does not allow for builds using other than
+   the above structure.  This will be addressed.  
+   
+   Windows users will need to turn the slashes the other way.  
+   
+   The winbuild directory is the top of a tree containing three packages
+   commonly available in UNIX but which must be installed for Hercules
+   on Windows.  
+   
+   <topdir> can be anything you wish, but Hercules is suggested.  This
+   directory can be placed anywhere you have read-write permissions,
+   consistent with common sense and the requirements of your host
+   system.  
+   
+   Replace <arch> as follows:
+   - Windows: You must use the value of the %PROCESSOR-ARCHITECTURE% 
+     environment variable.  If you do not, you will need to follow
+     the instructions in README.BuildWIN to point the build process at
+     the SoftFloat 3a For Hercules Library.  
+   - UNIX: It is recommended but not required to use the value returned
+     by uname -m.
+
+   Other directory structures might be used, but you are on your 
+   own.  The above structure is the supported structure.   
+
+
+BUILD SOFTFLOAT 3A FOR HERCULES
+
+   Windows users who wish to avoid building SoftFloat 3a For Hercules
+   may instead download a zip file containing binaries and public 
+   headers in the correct directory structure from here:
+   
+      https://github.com/hercules-390/SoftFloat-3a/releases/download/v1.0.0/s3fh.zip
+
+   You can find source for SoftFloat 3a For Hercules here:
+   
+      https://github.com/hercules-390/SoftFloat-3a/releases/latest 
+   
+   The document BUILDING in that repository has the build instructions.
+
+   You only need to build SoftFloat 3a For Hercules once, even if you
+   build Hercules multiple times.  A rebuild of SoftFloat 3a For 
+   Hercules is required only if you are recreating the entire build
+   directory structure, are developing SoftFloat 3a For Hercules, or
+   need an updated version of the package.  
+
+   Note that while SoftFloat 3a For Hercules is based on John Hauser's 
+   SoftFloat package, version 3a, it is not the same as that package.
+   it has been modified as needed to implement the specifics of IBM's
+   implementation of binary floating point arithmetic based on the 
+   IEEE 754 standard.  (Note that IBM implements elements of both the
+   1985 and 2008 versions of IEEE 754.)
+
+   
+BUILD HERCULES FOR YOUR HOST PLATFORM
+
+Instructions for this can be found in the following host platform
+specific README files:
+
+   README.BuildUNIX - For all UNIX-like platforms, including OS/X
+   
+   README.BuildWIN - For all supported versions of Windows, both 
+      32-bit and 64-bit.
+
+
+Rewritten by Stephen Orso, stephen.orso@yahoo.com, late 2016.  
+
+-----------------------------------------------------------------------
