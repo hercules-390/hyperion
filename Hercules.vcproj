@@ -1269,14 +1269,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-specialise.c"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat.c"
-							>
-						</File>
-						<File
 							RelativePath=".\sr.c"
 							>
 						</File>
@@ -1645,23 +1637,11 @@
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-macros.h"
+							RelativePath=".\softfloat_types.h"
 							>
 						</File>
 						<File
-							RelativePath=".\SoftFloat-milieu.h"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat-specialise.h"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat-types.h"
-							>
-						</File>
-						<File
-							RelativePath=".\SoftFloat.h"
+							RelativePath=".\softfloat.h"
 							>
 						</File>
 						<File
@@ -1693,14 +1673,6 @@
 							>
 						</File>
 					</Filter>
-				</Filter>
-				<Filter
-					Name="Original SoftFloat-2b"
-					>
-					<File
-						RelativePath=".\SoftFloat-2b.zip"
-						>
-					</File>
 				</Filter>
 				<Filter
 					Name="altcmpsc"
@@ -1893,10 +1865,6 @@
 					</File>
 					<File
 						RelativePath=".\README.SETUID"
-						>
-					</File>
-					<File
-						RelativePath=".\README.SOFTFLOAT"
 						>
 					</File>
 					<File
@@ -2459,6 +2427,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\msvc.makefile.includes\EXTPKG_DIRS.msvc"
+							>
+						</File>
+						<File
+							RelativePath=".\msvc.makefile.includes\EXTPKG_FLAGS.msvc"
+							>
+						</File>
+						<File
 							RelativePath=".\msvc.makefile.includes\DEBUG_RETAIL.msvc"
 							>
 						</File>
@@ -2968,35 +2944,99 @@
 						>
 					</File>
 					<File
+						 RelativePath=".\tests\bfp-001-divtoint.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-002-loadr.core"
+						>
+                    </File>
+					<File
+						 RelativePath=".\tests\bfp-003-loadfpi.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-004-cvttolog.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-005-cvttolog64.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-006-cvttofix.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-007-cvttofix64.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-008-cvtfrlog.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-009-cvtfrlog64.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-010-cvtfrfix.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-011-cvtfrfix64.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-012-loadtest.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-013-comps.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-014-divide.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-015-sqrt.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-016-add.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-017-loadl.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-018-subtract.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-019-multiply.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-020-multlonger.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-021-multadd.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-022-multsub.core"
+						>
+					</File>
+					<File
+						 RelativePath=".\tests\bfp-023-threads.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\cpu0off.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-adds.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-comps.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-div-nans.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-divs.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-mults.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-sqrts.core"
-						>
-					</File>
-					<File
-						RelativePath=".\tests\ieee-subs.core"
 						>
 					</File>
 					<File
@@ -3786,6 +3826,98 @@
 							RelativePath=".\tests\awsbsf.tst"
 							>
 						</File>
+                        <File
+                             RelativePath=".\tests\bfp-001-divtoint.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-002-loadr.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-003-loadfpi.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-004-cvttolog.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-005-cvttolog64.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-006-cvttofix.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-007-cvttofix64.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-008-cvtfrlog.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-009-cvtfrlog64.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-010-cvtfrfix.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-011-cvtfrfix64.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-012-loadtest.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-013-comps.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-014-divide.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-015-sqrt.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-016-add.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-017-loadl.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-018-subtract.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-019-multiply.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-020-multlonger.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-021-multadd.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-022-multsub.tst"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-023-threads.sptst"
+                            >
+                        </File>
 						<File
 							RelativePath=".\tests\cipher.tst"
 							>
@@ -3808,34 +3940,6 @@
 						</File>
 						<File
 							RelativePath=".\tests\hetbsf.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-adds.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-comps.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-div-nans.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-divs.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-mults.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-sqrts.tst"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-subs.tst"
 							>
 						</File>
 						<File
@@ -3950,69 +4054,193 @@
 					<Filter
 						Name="asm"
 						>
-						<File
-							RelativePath=".\tests\dc-float.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-adds.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-comps.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-div-nans.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-divs.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-mults.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-sqrts.asm"
-							>
-						</File>
-						<File
-							RelativePath=".\tests\ieee-subs.asm"
-							>
-						</File>
+       					<File
+                             RelativePath=".\tests\bfp-001-divtoint.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-002-loadr.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-003-loadfpi.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-004-cvttolog.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-005-cvttolog64.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-006-cvttofix.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-007-cvttofix64.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-008-cvtfrlog.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-009-cvtfrlog64.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-010-cvtfrfix.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-011-cvtfrfix64.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-012-loadtest.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-013-comps.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-014-divide.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-015-sqrt.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-016-add.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-017-loadl.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-018-subtract.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-019-multiply.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-020-multlonger.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-021-multadd.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-022-multsub.asm"
+                            >
+                        </File>
+                        <File
+                             RelativePath=".\tests\bfp-023-threads.asm"
+                            >
+                        </File>
 						<Filter
 							Name="list"
 							>
-							<File
-								RelativePath=".\tests\ieee-adds.list"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-comps.list"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-div-nans.list"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-divs.list"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-mults.list"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-sqrts.list"
-								>
-							</File>
-							<File
-								RelativePath=".\tests\ieee-subs.list"
-								>
-							</File>
+                            <File
+                                 RelativePath=".\tests\bfp-001-divtoint.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-002-loadr.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-003-loadfpi.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-004-cvttolog.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-005-cvttolog64.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-006-cvttofix.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-007-cvttofix64.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-008-cvtfrlog.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-009-cvtfrlog64.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-010-cvtfrfix.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-011-cvtfrfix64.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-012-loadtest.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-013-comps.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-014-divide.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-015-sqrt.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-016-add.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-017-loadl.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-018-subtract.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-019-multiply.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-020-multlonger.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-021-multadd.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-022-multsub.list"
+                                >
+                            </File>
+                            <File
+                                 RelativePath=".\tests\bfp-023-threads.list"
+                                >
+                            </File>
 						</Filter>
 					</Filter>
 				</Filter>

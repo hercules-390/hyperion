@@ -6,8 +6,16 @@
 #
 #  Handles support for ZLIB compression
 #
+#  Modified by Stephen Orso to use either ..\winbuild\zlib or winbuld\zlib
+#  as default directories.    
+#
+#  If ZLIB_DIR is defined, it is used,
+#  Else if ..\winbuild\zlib is found, it is used
+#  Else if winbuild\zlib is found, it is used,
+#  Else no zlib support is generated.  
+#
 # ***************************************************************************
-
+#
 # ---------------------------------------------------------------------
 # To enable ZLIB compression, first make sure you have the ZLIB dll
 # installed on your system (downloadable from http://www.zlib.net),
@@ -27,44 +35,51 @@
 # ZLIB_DIR = C:\winbuild\zlib\win32_32
 # ---------------------------------------------------------------------
 
-!IFNDEF ZLIB_DIR
-# Undefined: use default value, if it exists.
-# ZLIB_DIR defaults to winbuild\zlib relative to current directory
-!IF "$(CPU)" == "i386" && EXIST(winbuild\zlib\win32_32)
-# Avoid breaking existing builds, use win32_32 subdir if it exists
-ZLIB_DIR = winbuild\zlib\win32_32
-!ELSEIF "$(CPU)" == "i386" && EXIST(winbuild\zlib)
-ZLIB_DIR = winbuild\zlib
-!ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\zlib\x64)
-ZLIB_DIR = winbuild\zlib\x64
-!ENDIF
-!ELSE
-# Defined: use explicit directory or subdirectory
-# unless "NONE" is specified or it doesn't exist.
-!IF "$(ZLIB_DIR)" == "NONE"
-!UNDEF ZLIB_DIR
-!ELSE
-!IF "$(CPU)" == "i386"
-!IF !EXIST($(ZLIB_DIR))
-!UNDEF ZLIB_DIR
-!ENDIF
-!ELSEIF "$(CPU)" == "AMD64"
-!IF EXIST($(ZLIB_DIR)\x64)
-ZLIB_DIR = $(ZLIB_DIR)\x64
-!ENDIF
-!ENDIF
-!ENDIF
+
+ZLIB_ARCH=
+!IF "$(CPU)" == "AMD64"
+ZLIB_ARCH=\x64
 !ENDIF
 
-!IFDEF ZLIB_DIR
-!IF !EXIST("$(ZLIB_DIR)\include\zlib.h")
-!ERROR ZLIB_DIR "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
-!ELSEIF !EXIST("$(ZLIB_DIR)\lib\zdll.lib")
-!ERROR ZLIB_DIR "$(ZLIB_DIR)\lib\zdll.lib" does not exist. Check ZLIB_DIR
-!ELSEIF !EXIST("$(ZLIB_DIR)\zlib1.dll")
-!ERROR ZLIB_DIR "$(ZLIB_DIR)\zlib1.dll" does not exist. Check ZLIB_DIR
+
+!IFNDEF ZLIB_DIR    # undefined.  Test possible default directories
+
+!   IF EXIST(..\winbuild\zlib$(ZLIB_ARCH))
+ZLIB_DIR=..\winbuild\zlib$(ZLIB_ARCH)
+!   ELSEIF EXIST(winbuild\zlib$(ZLIB_ARCH))
+ZLIB_DIR=winbuild\zlib$(ZLIB_ARCH)
+!   ENDIF
+
+!   IF EXIST($(ZLIB_DIR)\win32_32)  # Avoid breaking existing builds, use win32_32 subdir if it exists
+ZLIB_DIR=$(ZLIB_DIR)\win32_32
+!   ENDIF
+
+!ELSE               # defined.  Use specified directory
+
+!   IF "$(ZLIB_DIR)" == "NONE"
+!      UNDEF ZLIB_DIR
+!   ELSE
+ZLIB_DIR=$(ZLIB_DIR)$(ZLIB_ARCH)
+!      IF !EXIST($(ZLIB_DIR))
+!         UNDEF ZLIB_DIR
+!      ENDIF
+
+!   ENDIF
+
 !ENDIF
-!MESSAGE ZLIB support will be included from "$(ZLIB_DIR)"
+
+# ZLIB_DIR now points to specified or default zlib directory with any
+# needed suffix for a 64-bit build.  
+
+!IFDEF ZLIB_DIR
+!   IF !EXIST("$(ZLIB_DIR)\include\zlib.h")
+!      ERROR File "$(ZLIB_DIR)\include\zlib.h" does not exist. Check ZLIB_DIR
+!   ELSEIF !EXIST("$(ZLIB_DIR)\lib\zdll.lib")
+!      ERROR File "$(ZLIB_DIR)\lib\zdll.lib" does not exist. Check ZLIB_DIR
+!   ELSEIF !EXIST("$(ZLIB_DIR)\zlib1.dll")
+!      ERROR File "$(ZLIB_DIR)\zlib1.dll" does not exist. Check ZLIB_DIR
+!   ENDIF
+!   MESSAGE ZLIB support will be included from "$(ZLIB_DIR)"
 !ELSE
-!MESSAGE ZLIB support will not be generated
+!   MESSAGE ZLIB support will not be generated "$(ZLIB_DIR)" "$(ZLIB_ARCH)"
 !ENDIF

@@ -1,216 +1,455 @@
-/* SoftFloat.h (C) John R. Hauser, 1998-2002                         */
-/*             (C) Copyright "Fish" (David B. Trout), 2011           */
-/*             This module is part of the SoftFloat package.         */
-/*                                                                   */
-/*             Released under "The Q Public License Version 1"       */
-/*             (http://www.hercules-390.org/herclic.html)            */
-/*             as modifications to Hercules.                         */
-
-/* This module is a SLIGHTLY modified version of John R. Hauser's    */
-/* original 'SoftFloat.h' module, and is largely copyright by him.   */
-/* I (i.e. "Fish", David B. Trout) simply enhanced it to interface   */
-/* with the Hercules emulator by passing along a void* pointer to    */
-/* a generic "context" structure rather than use global variables    */
-/* the way it was originally written. It is 99.9999% John's work.    */
-/* Refer to the documents "SoftFloat.txt", "SoftFloat-source.txt",   */
-/* and "SoftFloat-history.txt" for detailed SoftFloat information.   */
-/* Fish note: 'FLOATX80' support was removed as we don't need it.    */
-
-
-/* SoftFloat was repackaged to reside in the main source path        */
-/* to provide FULL CROSS PLATFORM build compatibility.               */
-/* To make evident the SoftFloat rePackaging standardized names      */
-/* were used                                                         */
-/* mileu.h was renamed to SoftFloat-milieu.h and all the sources     */
-/* were modified accordingly.                                        */
-/* no other modifications were made                                  */
-/* no reason to clutter the copyright stuff for such a minor change  */
-/*                                                                   */
-/* the original unmodified SoftFloat package is still distributed    */
-/* in zipped format here as SoftFloat-2b.zip                         */
 
 /*============================================================================
 
-This C header file is part of the SoftFloat IEC/IEEE Floating-point Arithmetic
-Package, Release 2b.
+This C header file is part of the SoftFloat IEEE Floating-Point Arithmetic
+Package, Release 3a, by John R. Hauser.
 
-Written by John R. Hauser.  This work was made possible in part by the
-International Computer Science Institute, located at Suite 600, 1947 Center
-Street, Berkeley, California 94704.  Funding was partially provided by the
-National Science Foundation under grant MIP-9311980.  The original version
-of this code was written as part of a project to build a fixed-point vector
-processor in collaboration with the University of California at Berkeley,
-overseen by Profs. Nelson Morgan and John Wawrzynek.  More information
-is available through the Web page `http://www.cs.berkeley.edu/~jhauser/
-arithmetic/SoftFloat.html'.
+Copyright 2011, 2012, 2013, 2014 The Regents of the University of California.
+All rights reserved.
 
-THIS SOFTWARE IS DISTRIBUTED AS IS, FOR FREE.  Although reasonable effort has
-been made to avoid it, THIS SOFTWARE MAY CONTAIN FAULTS THAT WILL AT TIMES
-RESULT IN INCORRECT BEHAVIOR.  USE OF THIS SOFTWARE IS RESTRICTED TO PERSONS
-AND ORGANIZATIONS WHO CAN AND WILL TAKE FULL RESPONSIBILITY FOR ALL LOSSES,
-COSTS, OR OTHER PROBLEMS THEY INCUR DUE TO THE SOFTWARE, AND WHO FURTHERMORE
-EFFECTIVELY INDEMNIFY JOHN HAUSER AND THE INTERNATIONAL COMPUTER SCIENCE
-INSTITUTE (possibly via similar legal warning) AGAINST ALL LOSSES, COSTS, OR
-OTHER PROBLEMS INCURRED BY THEIR CUSTOMERS AND CLIENTS DUE TO THE SOFTWARE.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-Derivative works are acceptable, even for commercial purposes, so long as
-(1) the source code for the derivative work includes prominent notice that
-the work is derivative, and (2) the source code includes prominent notice with
-these four paragraphs for those parts of this code that are retained.
+ 1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions, and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions, and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+ 3. Neither the name of the University nor the names of its contributors may
+    be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS "AS IS", AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, ARE
+DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
-#ifndef _SOFTFLOAT_H_
-#define _SOFTFLOAT_H_
+/*============================================================================
+Modifications to comply with IBM IEEE Binary Floating Point, as defined
+in the z/Architecture Principles of Operation, SA22-7832-10, by
+Stephen R. Orso.  Said modifications identified by compilation conditioned
+on preprocessor variable IBM_IEEE.
+All such modifications placed in the public domain by Stephen R. Orso
+=============================================================================*/
+
+/*============================================================================
+| Note:  If SoftFloat is made available as a general library for programs to
+| use, it is strongly recommended that a platform-specific version of this
+| header, "softfloat.h", be created that folds in "softfloat_types.h" and that
+| eliminates all dependencies on compile-time macros.
+*============================================================================*/
+
+
+#ifndef softfloat_h
+#define softfloat_h 1
+
+#if !defined(false) 
+#include <stdbool.h> 
+#endif
+#if !defined(int32_t) 
+#include <stdint.h>             /* C99 standard integers */ 
+#endif
+
+#include "softfloat_types.h"
+
+/****************************************************************************************/
+/*                                                                                      */
+#define IBM_IEEE            /* Compile Softfloat to be compliant with with IBM IEEE     */
+/*                                                                                      */
+/****************************************************************************************/
+
+#ifdef IBM_IEEE
+
+ /* We never need anything fancy from softfloat_raiseFlag(), so there is no need    */
+ /* to call a function.  A macro that does the logical or is quite sufficient.      */
+
+# define softfloat_raiseFlags(flags) softfloat_exceptionFlags |= flags
+
+# ifndef SF_THREAD_LOCAL
+#  if __STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__
+#   define SF_THREAD_LOCAL _Thread_local
+
+#  elif defined _WIN32 && (          /* Windows platform and             */      \
+        defined _MSC_VER ||          /* ..Visual Studio C or             */      \
+        defined __ICL ||             /* ..Intel C or                     */      \
+        defined __DMC__ ||           /* ..Digital Mars C or              */      \
+        defined __BORLANDC__ )       /* ..Borland (Embarcadero) C        */
+#   define SF_THREAD_LOCAL __declspec(thread) 
+
+/* note that ICC (linux) and Clang are reportedly covered by __GNUC__   */
+#  elif defined __GNUC__ ||          /* ..GNG C or variants or           */      \
+        defined __SUNPRO_C ||        /* ..SunPro (Oracle) C or           */      \
+        defined __xlC__              /* ..IBM C                          */
+#   define SF_THREAD_LOCAL __thread
+
+#  else
+#   error "Cannot define SF_THREAD_LOCAL.  No Softfloat thread safety."
+#   define SF_THREAD_LOCAL ""
+#  endif /* compiler detection*/
+# endif  /* SF_THREAD_LOCAL  */
+
+#endif /* IBM_IEEE  */
 
 /*----------------------------------------------------------------------------
-| The macro `FLOAT128' must be defined to enable the quadruple-precision
-| floating-point format `float128'.  If this macro is not defined, the
-| `float128' type will not be defined, and none of the functions that either
-| input or output the `float128' type will be defined.
+| Software floating-point underflow tininess-detection mode.
 *----------------------------------------------------------------------------*/
-#ifndef FLOAT128
-#define FLOAT128
+extern uint_fast8_t softfloat_detectTininess;
+enum {
+    softfloat_tininess_beforeRounding = 0,
+    softfloat_tininess_afterRounding  = 1
+};
+
+/*----------------------------------------------------------------------------
+| Software floating-point rounding mode.
+*----------------------------------------------------------------------------*/
+#ifdef IBM_IEEE 
+extern SF_THREAD_LOCAL  uint_fast8_t softfloat_roundingMode;
+#else
+extern uint_fast8_t softfloat_roundingMode;
+#endif  /* IBM_IEEE */
+enum {
+    softfloat_round_near_even = 0,
+    softfloat_round_minMag = 1,
+    softfloat_round_min = 2,
+    softfloat_round_max = 3,
+    softfloat_round_near_maxMag = 4
+#ifdef IBM_IEEE
+    , softfloat_round_stickybit = 5
+#endif /*  IBM_IEEE*/
+};
+
+/*----------------------------------------------------------------------------
+| Software floating-point exception flags.
+*----------------------------------------------------------------------------*/
+#ifdef IBM_IEEE
+extern SF_THREAD_LOCAL uint_fast8_t softfloat_exceptionFlags;
+#else
+extern  uint_fast8_t softfloat_exceptionFlags;
+#endif /*  IBM_IEEE  */
+enum {
+    softfloat_flag_inexact   =  1,
+    softfloat_flag_underflow =  2,
+    softfloat_flag_overflow  =  4,
+    softfloat_flag_infinite  =  8,
+    softfloat_flag_invalid   = 16
+#ifdef IBM_IEEE
+    , softfloat_flag_incremented = 32
+    , softfloat_flag_tiny = 64
+#endif  /*  IBM_IEEE   */
+};
+
+#ifdef IBM_IEEE
+/*----------------------------------------------------------------------------
+| Raw unbiased unbounded exponent and raw rounded significand, used for return
+| of scaled results following a trappable overflow or underflow.  Because
+| trappability is dependent on the caller's state, not Softfloat's, these
+| values are generated for every rounding.
+|
+| The 128-bit rounded significand is stored with the binary point between 
+| the second and third bits (from the left).  
+|
+|                  -----------------------------------------------
+| bit              | 0 1 V 2 3 4 5 6 7 8 9 10 11 12 13 14... 127 |
+| Place value      | 2 1 | fractional portion of significand     |
+|                  -----------------------------------------------
+|
+| Note: place value is one higher than the power of two for that digit position. 
+|
+| Examples:
+|   decimal 3 is represented as 11.000000000000000 ... 000
+|   decimal 1 is represented as 01.000000000000000 ... 000
+|
+| The exponent bias is reduced by one to account for this; the leftmost digit
+| appears only when rounding or arithmetic generate a carry into the 2's 
+| position. 
+|
+| The booleans softfloat_rawInexact and softfloat_rawIncre preserve the
+| status of the original result.  For non-trap results, the original result
+| is replaced by a non-finite value and Inexact and Incre are not returned.
+| When the scaled result is return, these booleans are used to update
+| the softfloat_exceptionFlags.
+|
+| softfloat_rawTiny is used by the scaled result routines to ensure a
+| renormalization of the scaled tiny result.  This avoids using the
+| softfloat_exceptionFlags value that reports tiny because that flag is part
+| of the external interface of Softfloat, not part of the internal state.
+|
+| The routines fxxx_returnScaledResult() uses these values to generate 
+| scaled results.
+*----------------------------------------------------------------------------*/
+
+  /* The following struct should really be in softfloat_types.h, but doing it here      */
+  /*   limits the modification footprint                                                */
+typedef struct {                /* fields needed to return a scaled result  */
+    uint_fast64_t Sig64;        /* Rounded significand bits 1-63    */
+    uint_fast64_t Sig0;         /* Rounded significand bits 64-128  */
+    int_fast16_t  Exp;          /* signed unbiased exponent         */
+    bool          Sign;         /* sign of result                   */
+    bool          Inexact;      /* Is raw result inexact            */
+    bool          Incre;        /* Was rounded result incremented   */
+    bool          Tiny;         /* Was rounded result a subnormal   */
+        } softfloat_raw_t;
+
+extern SF_THREAD_LOCAL softfloat_raw_t softfloat_raw;
+
+float32_t  f32_scaledResult(int_fast16_t);      /* return scaled float32 result     */
+float64_t  f64_scaledResult(int_fast16_t);      /* return scaled float64 result     */
+float128_t f128_scaledResult(int_fast16_t);     /* return scaled float128 result    */
+
+#endif /* IBM_IEEE  */
+
+
+
+/*----------------------------------------------------------------------------
+| Routine to raise any or all of the software floating-point exception flags.
+*----------------------------------------------------------------------------*/
+
+/* IBM_IEEE versions of Softfloat do not require function functionality; all
+   traps are detected and managed by the caller.  A macro (above) defines 
+   the logical or that is at the core of softfloat_raiseFlags()              */
+
+#ifndef IBM_IEEE
+void softfloat_raiseFlags( uint_fast8_t );
 #endif
 
 /*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point types.
+| Integer-to-floating-point conversion routines.
 *----------------------------------------------------------------------------*/
-typedef unsigned int float32;
-typedef unsigned long long float64;
-#ifdef FLOAT128
-typedef struct {
-    unsigned long long low, high;
-} float128;
+float32_t ui32_to_f32( uint32_t );
+float64_t ui32_to_f64( uint32_t );
+#ifdef SOFTFLOAT_FAST_INT64
+extFloat80_t ui32_to_extF80( uint32_t );
+float128_t ui32_to_f128( uint32_t );
+#endif
+void ui32_to_extF80M( uint32_t, extFloat80_t * );
+void ui32_to_f128M( uint32_t, float128_t * );
+float32_t ui64_to_f32( uint64_t );
+float64_t ui64_to_f64( uint64_t );
+#ifdef SOFTFLOAT_FAST_INT64
+extFloat80_t ui64_to_extF80( uint64_t );
+float128_t ui64_to_f128( uint64_t );
+#endif
+void ui64_to_extF80M( uint64_t, extFloat80_t * );
+void ui64_to_f128M( uint64_t, float128_t * );
+float32_t i32_to_f32( int32_t );
+float64_t i32_to_f64( int32_t );
+#ifdef SOFTFLOAT_FAST_INT64
+extFloat80_t i32_to_extF80( int32_t );
+float128_t i32_to_f128( int32_t );
+#endif
+void i32_to_extF80M( int32_t, extFloat80_t * );
+void i32_to_f128M( int32_t, float128_t * );
+float32_t i64_to_f32( int64_t );
+float64_t i64_to_f64( int64_t );
+#ifdef SOFTFLOAT_FAST_INT64
+extFloat80_t i64_to_extF80( int64_t );
+float128_t i64_to_f128( int64_t );
+#endif
+void i64_to_extF80M( int64_t, extFloat80_t * );
+void i64_to_f128M( int64_t, float128_t * );
+
+/*----------------------------------------------------------------------------
+| 32-bit (single-precision) floating-point operations.
+*----------------------------------------------------------------------------*/
+uint_fast32_t f32_to_ui32( float32_t, uint_fast8_t, bool );
+uint_fast64_t f32_to_ui64( float32_t, uint_fast8_t, bool );
+int_fast32_t f32_to_i32( float32_t, uint_fast8_t, bool );
+int_fast64_t f32_to_i64( float32_t, uint_fast8_t, bool );
+uint_fast32_t f32_to_ui32_r_minMag( float32_t, bool );
+uint_fast64_t f32_to_ui64_r_minMag( float32_t, bool );
+int_fast32_t f32_to_i32_r_minMag( float32_t, bool );
+int_fast64_t f32_to_i64_r_minMag( float32_t, bool );
+float64_t f32_to_f64( float32_t );
+#ifdef SOFTFLOAT_FAST_INT64
+extFloat80_t f32_to_extF80( float32_t );
+float128_t f32_to_f128( float32_t );
+#endif
+void f32_to_extF80M( float32_t, extFloat80_t * );
+void f32_to_f128M( float32_t, float128_t * );
+float32_t f32_roundToInt( float32_t, uint_fast8_t, bool );
+float32_t f32_add( float32_t, float32_t );
+float32_t f32_sub( float32_t, float32_t );
+float32_t f32_mul( float32_t, float32_t );
+float32_t f32_mulAdd( float32_t, float32_t, float32_t );
+float32_t f32_div( float32_t, float32_t );
+float32_t f32_rem( float32_t, float32_t );
+float32_t f32_sqrt( float32_t );
+bool f32_eq( float32_t, float32_t );
+bool f32_le( float32_t, float32_t );
+bool f32_lt( float32_t, float32_t );
+bool f32_eq_signaling( float32_t, float32_t );
+bool f32_le_quiet( float32_t, float32_t );
+bool f32_lt_quiet( float32_t, float32_t );
+bool f32_isSignalingNaN( float32_t );
+
+/*----------------------------------------------------------------------------
+| 64-bit (double-precision) floating-point operations.
+*----------------------------------------------------------------------------*/
+uint_fast32_t f64_to_ui32( float64_t, uint_fast8_t, bool );
+uint_fast64_t f64_to_ui64( float64_t, uint_fast8_t, bool );
+int_fast32_t f64_to_i32( float64_t, uint_fast8_t, bool );
+int_fast64_t f64_to_i64( float64_t, uint_fast8_t, bool );
+uint_fast32_t f64_to_ui32_r_minMag( float64_t, bool );
+uint_fast64_t f64_to_ui64_r_minMag( float64_t, bool );
+int_fast32_t f64_to_i32_r_minMag( float64_t, bool );
+int_fast64_t f64_to_i64_r_minMag( float64_t, bool );
+float32_t f64_to_f32( float64_t );
+#ifdef SOFTFLOAT_FAST_INT64
+extFloat80_t f64_to_extF80( float64_t );
+float128_t f64_to_f128( float64_t );
+#endif
+void f64_to_extF80M( float64_t, extFloat80_t * );
+void f64_to_f128M( float64_t, float128_t * );
+float64_t f64_roundToInt( float64_t, uint_fast8_t, bool );
+float64_t f64_add( float64_t, float64_t );
+float64_t f64_sub( float64_t, float64_t );
+float64_t f64_mul( float64_t, float64_t );
+float64_t f64_mulAdd( float64_t, float64_t, float64_t );
+float64_t f64_div( float64_t, float64_t );
+float64_t f64_rem( float64_t, float64_t );
+float64_t f64_sqrt( float64_t );
+bool f64_eq( float64_t, float64_t );
+bool f64_le( float64_t, float64_t );
+bool f64_lt( float64_t, float64_t );
+bool f64_eq_signaling( float64_t, float64_t );
+bool f64_le_quiet( float64_t, float64_t );
+bool f64_lt_quiet( float64_t, float64_t );
+bool f64_isSignalingNaN( float64_t );
+
+/*----------------------------------------------------------------------------
+| Rounding precision for 80-bit extended double-precision floating-point.
+| Valid values are 32, 64, and 80.
+*----------------------------------------------------------------------------*/
+extern uint_fast8_t extF80_roundingPrecision;
+
+/*----------------------------------------------------------------------------
+| 80-bit extended double-precision floating-point operations.
+*----------------------------------------------------------------------------*/
+#ifdef SOFTFLOAT_FAST_INT64
+uint_fast32_t extF80_to_ui32( extFloat80_t, uint_fast8_t, bool );
+uint_fast64_t extF80_to_ui64( extFloat80_t, uint_fast8_t, bool );
+int_fast32_t extF80_to_i32( extFloat80_t, uint_fast8_t, bool );
+int_fast64_t extF80_to_i64( extFloat80_t, uint_fast8_t, bool );
+uint_fast32_t extF80_to_ui32_r_minMag( extFloat80_t, bool );
+uint_fast64_t extF80_to_ui64_r_minMag( extFloat80_t, bool );
+int_fast32_t extF80_to_i32_r_minMag( extFloat80_t, bool );
+int_fast64_t extF80_to_i64_r_minMag( extFloat80_t, bool );
+float32_t extF80_to_f32( extFloat80_t );
+float64_t extF80_to_f64( extFloat80_t );
+float128_t extF80_to_f128( extFloat80_t );
+extFloat80_t extF80_roundToInt( extFloat80_t, uint_fast8_t, bool );
+extFloat80_t extF80_add( extFloat80_t, extFloat80_t );
+extFloat80_t extF80_sub( extFloat80_t, extFloat80_t );
+extFloat80_t extF80_mul( extFloat80_t, extFloat80_t );
+extFloat80_t extF80_div( extFloat80_t, extFloat80_t );
+extFloat80_t extF80_rem( extFloat80_t, extFloat80_t );
+extFloat80_t extF80_sqrt( extFloat80_t );
+bool extF80_eq( extFloat80_t, extFloat80_t );
+bool extF80_le( extFloat80_t, extFloat80_t );
+bool extF80_lt( extFloat80_t, extFloat80_t );
+bool extF80_eq_signaling( extFloat80_t, extFloat80_t );
+bool extF80_le_quiet( extFloat80_t, extFloat80_t );
+bool extF80_lt_quiet( extFloat80_t, extFloat80_t );
+bool extF80_isSignalingNaN( extFloat80_t );
+#endif
+uint_fast32_t extF80M_to_ui32( const extFloat80_t *, uint_fast8_t, bool );
+uint_fast64_t extF80M_to_ui64( const extFloat80_t *, uint_fast8_t, bool );
+int_fast32_t extF80M_to_i32( const extFloat80_t *, uint_fast8_t, bool );
+int_fast64_t extF80M_to_i64( const extFloat80_t *, uint_fast8_t, bool );
+uint_fast32_t extF80M_to_ui32_r_minMag( const extFloat80_t *, bool );
+uint_fast64_t extF80M_to_ui64_r_minMag( const extFloat80_t *, bool );
+int_fast32_t extF80M_to_i32_r_minMag( const extFloat80_t *, bool );
+int_fast64_t extF80M_to_i64_r_minMag( const extFloat80_t *, bool );
+float32_t extF80M_to_f32( const extFloat80_t * );
+float64_t extF80M_to_f64( const extFloat80_t * );
+void extF80M_to_f128M( const extFloat80_t *, float128_t * );
+void
+ extF80M_roundToInt(
+     const extFloat80_t *, uint_fast8_t, bool, extFloat80_t * );
+void extF80M_add( const extFloat80_t *, const extFloat80_t *, extFloat80_t * );
+void extF80M_sub( const extFloat80_t *, const extFloat80_t *, extFloat80_t * );
+void extF80M_mul( const extFloat80_t *, const extFloat80_t *, extFloat80_t * );
+void extF80M_div( const extFloat80_t *, const extFloat80_t *, extFloat80_t * );
+void extF80M_rem( const extFloat80_t *, const extFloat80_t *, extFloat80_t * );
+void extF80M_sqrt( const extFloat80_t *, extFloat80_t * );
+bool extF80M_eq( const extFloat80_t *, const extFloat80_t * );
+bool extF80M_le( const extFloat80_t *, const extFloat80_t * );
+bool extF80M_lt( const extFloat80_t *, const extFloat80_t * );
+bool extF80M_eq_signaling( const extFloat80_t *, const extFloat80_t * );
+bool extF80M_le_quiet( const extFloat80_t *, const extFloat80_t * );
+bool extF80M_lt_quiet( const extFloat80_t *, const extFloat80_t * );
+bool extF80M_isSignalingNaN( const extFloat80_t * );
+
+/*----------------------------------------------------------------------------
+| 128-bit (quadruple-precision) floating-point operations.
+*----------------------------------------------------------------------------*/
+#ifdef SOFTFLOAT_FAST_INT64
+uint_fast32_t f128_to_ui32( float128_t, uint_fast8_t, bool );
+uint_fast64_t f128_to_ui64( float128_t, uint_fast8_t, bool );
+int_fast32_t f128_to_i32( float128_t, uint_fast8_t, bool );
+int_fast64_t f128_to_i64( float128_t, uint_fast8_t, bool );
+uint_fast32_t f128_to_ui32_r_minMag( float128_t, bool );
+uint_fast64_t f128_to_ui64_r_minMag( float128_t, bool );
+int_fast32_t f128_to_i32_r_minMag( float128_t, bool );
+int_fast64_t f128_to_i64_r_minMag( float128_t, bool );
+float32_t f128_to_f32( float128_t );
+float64_t f128_to_f64( float128_t );
+extFloat80_t f128_to_extF80( float128_t );
+float128_t f128_roundToInt( float128_t, uint_fast8_t, bool );
+float128_t f128_add( float128_t, float128_t );
+float128_t f128_sub( float128_t, float128_t );
+float128_t f128_mul( float128_t, float128_t );
+float128_t f128_mulAdd( float128_t, float128_t, float128_t );
+float128_t f128_div( float128_t, float128_t );
+float128_t f128_rem( float128_t, float128_t );
+float128_t f128_sqrt( float128_t );
+bool f128_eq( float128_t, float128_t );
+bool f128_le( float128_t, float128_t );
+bool f128_lt( float128_t, float128_t );
+bool f128_eq_signaling( float128_t, float128_t );
+bool f128_le_quiet( float128_t, float128_t );
+bool f128_lt_quiet( float128_t, float128_t );
+bool f128_isSignalingNaN( float128_t );
+#endif
+uint_fast32_t f128M_to_ui32( const float128_t *, uint_fast8_t, bool );
+uint_fast64_t f128M_to_ui64( const float128_t *, uint_fast8_t, bool );
+int_fast32_t f128M_to_i32( const float128_t *, uint_fast8_t, bool );
+int_fast64_t f128M_to_i64( const float128_t *, uint_fast8_t, bool );
+uint_fast32_t f128M_to_ui32_r_minMag( const float128_t *, bool );
+uint_fast64_t f128M_to_ui64_r_minMag( const float128_t *, bool );
+int_fast32_t f128M_to_i32_r_minMag( const float128_t *, bool );
+int_fast64_t f128M_to_i64_r_minMag( const float128_t *, bool );
+float32_t f128M_to_f32( const float128_t * );
+float64_t f128M_to_f64( const float128_t * );
+void f128M_to_extF80M( const float128_t *, extFloat80_t * );
+void f128M_roundToInt( const float128_t *, uint_fast8_t, bool, float128_t * );
+void f128M_add( const float128_t *, const float128_t *, float128_t * );
+void f128M_sub( const float128_t *, const float128_t *, float128_t * );
+void f128M_mul( const float128_t *, const float128_t *, float128_t * );
+void
+ f128M_mulAdd(
+     const float128_t *, const float128_t *, const float128_t *, float128_t *
+ );
+void f128M_div( const float128_t *, const float128_t *, float128_t * );
+void f128M_rem( const float128_t *, const float128_t *, float128_t * );
+void f128M_sqrt( const float128_t *, float128_t * );
+bool f128M_eq( const float128_t *, const float128_t * );
+bool f128M_le( const float128_t *, const float128_t * );
+bool f128M_lt( const float128_t *, const float128_t * );
+bool f128M_eq_signaling( const float128_t *, const float128_t * );
+bool f128M_le_quiet( const float128_t *, const float128_t * );
+bool f128M_lt_quiet( const float128_t *, const float128_t * );
+bool f128M_isSignalingNaN( const float128_t * );
+
 #endif
 
-/*----------------------------------------------------------------------------
-| Function to initialize the global variables context.
-*----------------------------------------------------------------------------*/
-extern void init_globals( void* ctx );
-
-/*----------------------------------------------------------------------------
-| Functions to set/get global context values.
-*----------------------------------------------------------------------------*/
-extern int8   get_float_detect_tininess( void* ctx );
-extern void   set_float_detect_tininess( void* ctx, int8 mode );
-extern int8   get_float_rounding_mode( void* ctx );
-extern void   set_float_rounding_mode( void* ctx, int8 mode );
-extern uint32 get_exception_flags( void* ctx );
-extern void   set_exception_flags( void* ctx, uint32 flags );
-extern void   clear_exception_flags( void* ctx, uint32 flags );
-extern void   clear_all_exception_flags( void* ctx );
-
-/*----------------------------------------------------------------------------
-| Routine to raise any or all of the software IEC/IEEE floating-point
-| exception flags.
-*----------------------------------------------------------------------------*/
-extern void float_raise( void* ctx, uint32 flags );
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE integer-to-floating-point conversion routines.
-*----------------------------------------------------------------------------*/
-float32 int32_to_float32( void* ctx, int );
-float64 int32_to_float64( void* ctx, int );
-#ifdef FLOAT128
-float128 int32_to_float128( void* ctx, int );
-#endif
-float32 int64_to_float32( void* ctx, long long );
-float64 int64_to_float64( void* ctx, long long );
-#ifdef FLOAT128
-float128 int64_to_float128( void* ctx, long long );
-#endif
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE single-precision conversion routines.
-*----------------------------------------------------------------------------*/
-int float32_to_int32( void* ctx, float32 );
-int float32_to_int32_round_to_zero( void* ctx, float32 );
-long long float32_to_int64( void* ctx, float32 );
-long long float32_to_int64_round_to_zero( void* ctx, float32 );
-float64 float32_to_float64( void* ctx, float32 );
-#ifdef FLOAT128
-float128 float32_to_float128( void* ctx, float32 );
-#endif
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE single-precision operations.
-*----------------------------------------------------------------------------*/
-float32 float32_round_to_int( void* ctx, float32 );
-float32 float32_add( void* ctx, float32, float32 );
-float32 float32_sub( void* ctx, float32, float32 );
-float32 float32_mul( void* ctx, float32, float32 );
-float32 float32_div( void* ctx, float32, float32 );
-float32 float32_rem( void* ctx, float32, float32 );
-float32 float32_sqrt( void* ctx, float32 );
-char float32_eq( void* ctx, float32, float32 );
-char float32_le( void* ctx, float32, float32 );
-char float32_lt( void* ctx, float32, float32 );
-char float32_eq_signaling( void* ctx, float32, float32 );
-char float32_le_quiet( void* ctx, float32, float32 );
-char float32_lt_quiet( void* ctx, float32, float32 );
-char float32_is_signaling_nan( float32 );
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE double-precision conversion routines.
-*----------------------------------------------------------------------------*/
-int float64_to_int32( void* ctx, float64 );
-int float64_to_int32_round_to_zero( void* ctx, float64 );
-long long float64_to_int64( void* ctx, float64 );
-long long float64_to_int64_round_to_zero( void* ctx, float64 );
-float32 float64_to_float32( void* ctx, float64 );
-#ifdef FLOAT128
-float128 float64_to_float128( void* ctx, float64 );
-#endif
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE double-precision operations.
-*----------------------------------------------------------------------------*/
-float64 float64_round_to_int( void* ctx, float64 );
-float64 float64_add( void* ctx, float64, float64 );
-float64 float64_sub( void* ctx, float64, float64 );
-float64 float64_mul( void* ctx, float64, float64 );
-float64 float64_div( void* ctx, float64, float64 );
-float64 float64_rem( void* ctx, float64, float64 );
-float64 float64_sqrt( void* ctx, float64 );
-char float64_eq( void* ctx, float64, float64 );
-char float64_le( void* ctx, float64, float64 );
-char float64_lt( void* ctx, float64, float64 );
-char float64_eq_signaling( void* ctx, float64, float64 );
-char float64_le_quiet( void* ctx, float64, float64 );
-char float64_lt_quiet( void* ctx, float64, float64 );
-char float64_is_signaling_nan( float64 );
-
-#ifdef FLOAT128
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE quadruple-precision conversion routines.
-*----------------------------------------------------------------------------*/
-int float128_to_int32( void* ctx, float128 );
-int float128_to_int32_round_to_zero( void* ctx, float128 );
-long long float128_to_int64( void* ctx, float128 );
-long long float128_to_int64_round_to_zero( void* ctx, float128 );
-float32 float128_to_float32( void* ctx, float128 );
-float64 float128_to_float64( void* ctx, float128 );
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE quadruple-precision operations.
-*----------------------------------------------------------------------------*/
-float128 float128_round_to_int( void* ctx, float128 );
-float128 float128_add( void* ctx, float128, float128 );
-float128 float128_sub( void* ctx, float128, float128 );
-float128 float128_mul( void* ctx, float128, float128 );
-float128 float128_div( void* ctx, float128, float128 );
-float128 float128_rem( void* ctx, float128, float128 );
-float128 float128_sqrt( void* ctx, float128 );
-char float128_eq( void* ctx, float128, float128 );
-char float128_le( void* ctx, float128, float128 );
-char float128_lt( void* ctx, float128, float128 );
-char float128_eq_signaling( void* ctx, float128, float128 );
-char float128_le_quiet( void* ctx, float128, float128 );
-char float128_lt_quiet( void* ctx, float128, float128 );
-char float128_is_signaling_nan( float128 );
-
-#endif // FLOAT128
-
-#endif // _SOFTFLOAT_H_

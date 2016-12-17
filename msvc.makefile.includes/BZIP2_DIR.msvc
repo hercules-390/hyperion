@@ -6,6 +6,14 @@
 #
 #  Handles support for BZIP2 compression
 #
+#  Modified by Stephen Orso to use either ..\winbuild\bzip2 or winbuld\bzip2
+#  as default directories.    
+#
+#  If BZIP2_DIR is defined, it is used,
+#  Else if ..\winbuild\bzip2 is found, it is used
+#  Else if winbuild\bzip2 is found, it is used,
+#  Else no bzip2 support is generated.  
+#
 # ***************************************************************************
 
 # ---------------------------------------------------------------------
@@ -25,41 +33,47 @@
 # BZIP2_DIR = E:\MyProjects\bzip2
 # ---------------------------------------------------------------------
 
-!IFNDEF BZIP2_DIR
-# Undefined: use default value, if it exists.
-# BZIP2_DIR defaults to winbuild\bzip2 relative to current directory
-!IF "$(CPU)" == "i386" && EXIST(winbuild\bzip2)
-BZIP2_DIR = winbuild\bzip2
-!ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\bzip2\x64)
-BZIP2_DIR = winbuild\bzip2\x64
-!ENDIF
+!IF "$(CPU)" == "AMD64"    #Building for 64-bit?
+BZIP2_ARCH=\x64            #..yes, then use the x64 branch
 !ELSE
-# Defined: use explicit directory or subdirectory
-# unless "NONE" is specified or it doesn't exist.
-!IF "$(BZIP2_DIR)" == "NONE"
-!UNDEF BZIP2_DIR
-!ELSE
-!IF "$(CPU)" == "i386"
-!IF !EXIST($(BZIP2_DIR))
-!UNDEF BZIP2_DIR
-!ENDIF
-!ELSEIF "$(CPU)" == "AMD64"
-!IF EXIST($(BZIP2_DIR)\x64)
-BZIP2_DIR = $(BZIP2_DIR)\x64
-!ENDIF
-!ENDIF
-!ENDIF
+BZIP2_ARCH= 
 !ENDIF
 
-!IFDEF BZIP2_DIR
-!IF !EXIST("$(BZIP2_DIR)\bzlib.h")
-!ERROR BZIP2_DIR "$(BZIP2_DIR)\bzlib.h" does not exist. Check BZIP2_DIR
-!ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.lib")
-!ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.lib" does not exist. Check BZIP2_DIR
-!ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.dll")
-!ERROR BZIP2_DIR "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
+
+!IFNDEF BZIP2_DIR   # undefined.  Test possible default directories
+
+!   IF EXIST(..\winbuild\bzip2$(BZIP2_ARCH))
+BZIP2_DIR=..\winbuild\bzip2$(BZIP2_ARCH)
+!   ELSEIF EXIST(winbuild\bzip2$(BZIP2_ARCH))
+BZIP2_DIR=winbuild\bzip2$(BZIP2_ARCH)
+!   ENDIF
+
+!ELSE               # defined.  Use specified directory
+
+!   IF "$(BZIP2_DIR)" == "NONE"
+!      UNDEF BZIP2_DIR
+!   ELSE
+BZIP2_DIR=$(BZIP2_DIR)$(BZIP2_ARCH)
+!MESSAGE "**  " $(BZIP2_DIR)
+!      IF !EXIST($(BZIP2_DIR))
+!         UNDEF BZIP2_DIR
+!      ENDIF
+!   ENDIF
+
 !ENDIF
-!MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)" 
+
+# BZIP2_DIR now points to specified or default bzip2 directory with any
+# needed suffix for a 64-bit build.  
+
+!IFDEF BZIP2_DIR
+!   IF !EXIST("$(BZIP2_DIR)\bzlib.h")
+!      ERROR File "$(BZIP2_DIR)\bzlib.h" does not exist. Check BZIP2_DIR
+!   ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.lib")
+!      ERROR File "$(BZIP2_DIR)\libbz2.lib" does not exist. Check BZIP2_DIR
+!   ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.dll")
+!      ERROR File "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
+!   ENDIF
+!   MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)" 
 !ELSE
-!MESSAGE BZIP2 support will not be generated
+!   MESSAGE BZIP2 support will not be generated from "$(BZIP2_DIR)" 
 !ENDIF

@@ -131,8 +131,6 @@ hengine_OBJ = \
     $(O)hscmisc.obj  \
     $(O)httpserv.obj \
     $(O)ieee.obj     \
-    $(O)SoftFloat-specialise.obj \
-    $(O)SoftFloat.obj \
     $(O)impl.obj     \
     $(O)io.obj       \
     $(O)ipl.obj      \

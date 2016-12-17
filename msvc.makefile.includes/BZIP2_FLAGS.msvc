@@ -10,7 +10,7 @@
 
 !IFDEF BZIP2_DIR
 BZIP2_DLL = $(BZIP2_DIR)\libbz2.dll
-BZIP2_LIB = $(BZIP2_DIR)/libbz2.lib
+BZIP2_LIB = $(BZIP2_DIR)\libbz2.lib
 BZIP2_INC = $(BZIP2_DIR)
 LIBS      = $(LIBS) "$(BZIP2_LIB)"
 cflags    = $(cflags) /D HAVE_BZLIB_H /I"$(BZIP2_INC)"

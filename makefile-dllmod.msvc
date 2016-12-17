@@ -12,6 +12,7 @@ INCDIR = msvc.makefile.includes
 !INCLUDE $(INCDIR)\OUTPUT_DIRS.msvc
 !INCLUDE $(INCDIR)\MODULES.msvc
 !INCLUDE $(INCDIR)\OBJ_CODE.msvc
+!INCLUDE $(INCDIR)\EXTPKG_DIRS.msvc
 !INCLUDE $(INCDIR)\ZLIB_DIR.msvc
 !INCLUDE $(INCDIR)\BZIP2_DIR.msvc
 !INCLUDE $(INCDIR)\PCRE_DIR.msvc
@@ -35,6 +36,7 @@ INCDIR = msvc.makefile.includes
 
 # ---------------------------------------------------------------------
 !INCLUDE $(INCDIR)\DEBUG_RETAIL.msvc
+!INCLUDE $(INCDIR)\EXTPKG_FLAGS.msvc
 !INCLUDE $(INCDIR)\ZLIB_FLAGS.msvc
 !INCLUDE $(INCDIR)\BZIP2_FLAGS.msvc
 !INCLUDE $(INCDIR)\PCRE_FLAGS.msvc

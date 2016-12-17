@@ -39,6 +39,10 @@ OVERVIEW
    Should you wish to update the Windows Support Modules with a newer
    version of bzip2, pcre, or zlib, then the rests of this README will
    help you through the process.  
+   
+   The appendix details the process to create an installable executable
+   containing the Windows Support Modules using the NSIS tool.  The NSIS
+   script WSMInstScript.nsi is located in the Hercules utils directory.
 
 
 BUILD PROCESS OVERVIEW
@@ -396,4 +400,21 @@ BUILDING ZLIB
       <source_dir>\zlib.h                  --> winbuild\zlib\x64\include
 
       
-      
+APPENDIX: CREATE AN INSTALLER MODULE USING NSIS
+
+   A script to create an installable executable of the Windows Support
+   Modules, WSMInstScript.nsi, exists in the util directory of Hercules.
+   
+   Once you have built and tested the three Windows Support Modules, 
+   edit the script to point to your winbuild binary directory, which is 
+   now your "source" directory because the binaries you built are the 
+   source for the creation of an installer.  To do this, find the
+   !define command at the beginning of the script:
+   
+      !define         winbuild_source "c:\common\github\winbuild"
+
+   and change the quoted string to match your winbuild directory.
+   
+   
+   directory and run
+   the NSIS script compiler 

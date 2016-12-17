@@ -8,6 +8,21 @@
 #  Handles support for PCRE (Perl Compatible Regular Expressions),
 #  for MSVC, needed by HAO (Hercules Automatic Operator) facility
 #
+#  Modified by Stephen Orso to use either ..\winbuild\pcre or winbuld\pcre
+#  as default directories, and to test for the "normallly" named pcre
+#  libraries (no "3" suffix) in addition to libraries named with the
+#  "3" suffix.  
+#  
+#  If PCRE_DIR is defined, it is used,
+#  Else if ..\winbuild\pcre is found, it is used
+#  Else if winbuild\pcre is found, it is used,
+#  Else no pcre support is generated.  
+#
+#  If normally named libraries are found, they are used,
+#  Else if "3" suffixed (e.g., pcre3.dll), they are used,
+#  Else no pcre support is generated.  
+#
+#
 # ***************************************************************************
 
 # ---------------------------------------------------------------------
@@ -19,86 +34,99 @@
 # environment variable called "PCRE_DIR" pointing to that directory.
 # ---------------------------------------------------------------------
 
-!IFNDEF PCRE_DIR
-# Undefined: use default value, if it exists.
-# PCRE_DIR defaults to winbuild\pcre relative to current directory
-!IF "$(CPU)" == "i386" && EXIST(winbuild\pcre)
-PCRE_DIR = winbuild\pcre
-!ELSEIF "$(CPU)" == "AMD64" && EXIST(winbuild\pcre\x64)
-PCRE_DIR = winbuild\pcre\x64
-!ELSEIF "$(CPU)" == "IA64" && EXIST(winbuild\pcre\ia64)
-PCRE_DIR = winbuild\pcre\ia64
-!ELSEIF EXIST(winbuild\pcre)
-PCRE_DIR = winbuild\pcre
-!ENDIF
+!IF "$(CPU)" == "AMD64"    #Building for 64-bit?
+PCRE_ARCH = \x64      #..yes, then use the x64 branch
 !ELSE
-# Defined: use explicit directory or subdirectory
-# unless "NONE" is specified or it doesn't exist.
-!IF "$(PCRE_DIR)" == "NONE"
-!UNDEF PCRE_DIR
-!ELSE
-!IF "$(CPU)" == "i386"
-!IF !EXIST($(PCRE_DIR))
-!UNDEF PCRE_DIR
+PCRE_ARCH =
 !ENDIF
-!ELSEIF "$(CPU)" == "AMD64"
-!IF EXIST($(PCRE_DIR)\x64)
-PCRE_DIR = $(PCRE_DIR)\x64
-!ENDIF
-!ELSEIF "$(CPU)" == "IA64"
-!IF EXIST($(PCRE_DIR)\ia64)
-PCRE_DIR = $(PCRE_DIR)\ia64
-!ENDIF
-!ENDIF
-!ENDIF
+
+# Locate the directory containing pcre.  Choices are:
+# 1. Directory pointed to by PCRE_DIR environment variable
+# 2. ..\winbuild\pcre (same level as hyperion source directory
+# 3. winbuild\pcre    (obsolete: inside hyperion source directory)
+
+!IFNDEF PCRE_DIR     # no PCRE_DIR variable.  Check default directories.  
+
+!   IF EXIST(..\winbuild\pcre)
+PCRE_DIR = ..\winbuild\pcre$(PCRE_ARCH)
+!   ELSEIF EXIST(winbuild\pcre)
+PCRE_DIR = winbuild\pcre$(PCRE_ARCH)
+!   ENDIF
+
+!ELSE                # PCRE_DIR variable exists.  Use it if not NONE.
+
+!   IF "$(PCRE_DIR)" == "NONE"
+!      UNDEF PCRE_DIR
+!   ELSE
+PCRE_DIR = $(PCRE_DIR)$(PCRE_ARCH)
+!      IF !EXIST($(PCRE_DIR))
+!         ERROR Directory "$(PCRE_DIR)" does not exist. Check PCRE_DIR
+!         UNDEF PCRE_DIR
+!      ENDIF
+!   ENDIF
+
 !ENDIF
 
 !IFDEF PCRE_DIR
+
+# choose between \include, \inc, or parent for include files
+!  IF EXIST("$(PCRE_DIR)\include")
+PCRE_INCDIR   = $(PCRE_DIR)\include  
+!  ELSEIF EXIST("$(PCRE_DIR)\inc")
+PCRE_INCDIR   = $(PCRE_DIR)\inc
+!  ELSE
+PCRE_INCDIR   = $(PCRE_DIR)
+!  ENDIF
+
+# Set up import library and dll directory.  
+PCRE_LIBDIR   = $(PCRE_DIR)\lib
+PCRE_DLLDIR   = $(PCRE_DIR)\bin
+
+# Set up "new" dll and import library names.
 PCRE_INCNAME  = pcreposix.h
 PCRE_LIBNAME1 = pcre.lib
 PCRE_LIBNAME2 = pcreposix.lib
-PCRE_DLLNAME1 = pcre3.dll
-PCRE_DLLNAME2 = pcreposix3.dll
-!IF EXIST("$(PCRE_DIR)\include")
-PCRE_INCDIR   = $(PCRE_DIR)\include
-!ELSEIF EXIST("$(PCRE_DIR)\inc")
-PCRE_INCDIR   = $(PCRE_DIR)\inc
-!ELSE
-PCRE_INCDIR   = $(PCRE_DIR)
-!ENDIF
-PCRE_LIBDIR   = $(PCRE_DIR)\lib
-!IF "$(CPU)" == "AMD64" && EXIST($(PCRE_LIBDIR)\x64)
-PCRE_LIBDIR   = $(PCRE_LIBDIR)\x64
-!ELSEIF "$(CPU)" == "IA64" && EXIST($(PCRE_LIBDIR)\ia64)
-PCRE_LIBDIR   = $(PCRE_LIBDIR)\ia64
-!ENDIF
-!IF !EXIST("$(PCRE_LIBDIR)\$(PCRE_LIBNAME1)")
-PCRE_LIBNAME1 = pcre3.lib
-PCRE_LIBNAME2 = pcreposix3.lib
-!ENDIF
-PCRE_DLLDIR   = $(PCRE_DIR)\bin
-!IF "$(CPU)" == "AMD64" && EXIST($(PCRE_DLLDIR)\x64)
-PCRE_DLLDIR   = $(PCRE_DLLDIR)\x64
-!ELSEIF "$(CPU)" == "IA64" && EXIST($(PCRE_DLLDIR)\ia64)
-PCRE_DLLDIR   = $(PCRE_DLLDIR)\ia64
-!ENDIF
+PCRE_DLLNAME1 = pcre.dll
+PCRE_DLLNAME2 = pcreposix.dll
+
+# If new import library names do not exist, use "old" names
+# While the DLL name stored inside the import library must match
+# the DLL file name, there is no requirement that the import 
+# library name match anything.  Otherwise a single test would be
+# enough.  
+!  IF !EXIST("$(PCRE_LIBDIR)\$(PCRE_LIBNAME1)")
+PCRE_LIBNAME1=pcre3.lib
+PCRE_LIBNAME2=pcreposix3.lib
+!  ENDIF
+
+# If new dll names do not exist, use "old" names
+!  IF !EXIST("$(PCRE_DLLDIR)\$(PCRE_DLLNAME1)")
+PCRE_DLLNAME1=pcre3.dll
+PCRE_DLLNAME2=pcreposix3.dll
+!  ENDIF
+
+
 PCRE_INCPATH  = $(PCRE_INCDIR)\$(PCRE_INCNAME)
 PCRE_LIBPATH1 = $(PCRE_LIBDIR)\$(PCRE_LIBNAME1)
 PCRE_LIBPATH2 = $(PCRE_LIBDIR)\$(PCRE_LIBNAME2)
 PCRE_DLLPATH1 = $(PCRE_DLLDIR)\$(PCRE_DLLNAME1)
 PCRE_DLLPATH2 = $(PCRE_DLLDIR)\$(PCRE_DLLNAME2)
-!IF !EXIST("$(PCRE_INCPATH)")
-!ERROR PCRE_DIR "$(PCRE_INCPATH)" does not exist. Check PCRE_DIR
-!ELSEIF !EXIST("$(PCRE_LIBPATH1)")
-!ERROR PCRE_DIR "$(PCRE_LIBPATH1)" does not exist. Check PCRE_DIR
-!ELSEIF !EXIST("$(PCRE_LIBPATH2)")
-!ERROR PCRE_DIR "$(PCRE_LIBPATH2)" does not exist. Check PCRE_DIR
-!ELSEIF !EXIST("$(PCRE_DLLPATH1)")
-!ERROR PCRE_DIR "$(PCRE_DLLPATH1)" does not exist. Check PCRE_DIR
-!ELSEIF !EXIST("$(PCRE_DLLPATH2)")
-!ERROR PCRE_DIR "$(PCRE_DLLPATH2)" does not exist. Check PCRE_DIR
-!ENDIF
-!MESSAGE PCRE support will be included from "$(PCRE_DIR)"
+   
+!  IF !EXIST("$(PCRE_INCPATH)")
+!     ERROR File "$(PCRE_INCPATH)" does not exist. Check PCRE_DIR
+!  ELSEIF !EXIST("$(PCRE_LIBPATH1)")
+!     ERROR File "$(PCRE_LIBPATH1)" does not exist. Check PCRE_DIR
+!  ELSEIF !EXIST("$(PCRE_LIBPATH2)")
+!     ERROR File "$(PCRE_LIBPATH2)" does not exist. Check PCRE_DIR
+!  ELSEIF !EXIST("$(PCRE_DLLPATH1)")
+!     ERROR File "$(PCRE_DLLPATH1)" does not exist. Check PCRE_DIR
+!  ELSEIF !EXIST("$(PCRE_DLLPATH2)")
+!     ERROR File "$(PCRE_DLLPATH2)" does not exist. Check PCRE_DIR
+!  ENDIF
+
+!  MESSAGE PCRE support will be included from "$(PCRE_DIR)"
+
 !ELSE
-!MESSAGE PCRE support will not be generated
+!   MESSAGE PCRE support will not be generated.
 !ENDIF
+

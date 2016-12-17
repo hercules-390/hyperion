@@ -101,9 +101,6 @@
     <Filter Include="Source Files\Hercules\Emulation\Header Files">
       <UniqueIdentifier>{f51d88c3-27d4-412c-90ad-6ff18fab795f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Hercules\Original SoftFloat-2b">
-      <UniqueIdentifier>{9b5df174-4266-4323-9811-35ca1d6404bd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Hercules\altcmpsc">
       <UniqueIdentifier>{4cde36cf-d727-4a00-9669-231a6357136d}</UniqueIdentifier>
     </Filter>
@@ -744,12 +741,6 @@
     <ClCompile Include="sie.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SoftFloat-specialise.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SoftFloat.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sr.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -805,9 +796,6 @@
     </None>
     <None Include="decNumber\decNumber.def">
       <Filter>Source Files\Hercules\decNumber\Resource Files</Filter>
-    </None>
-    <None Include="SoftFloat-2b.zip">
-      <Filter>Source Files\Hercules\Original SoftFloat-2b</Filter>
     </None>
     <None Include=".gitattributes">
       <Filter>Resource Files</Filter>
@@ -903,9 +891,6 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.SETUID">
-      <Filter>Other Files\DOC\README</Filter>
-    </None>
-    <None Include="README.SOFTFLOAT">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.SUN">
@@ -1217,12 +1202,6 @@
     <None Include="retail-all.jobs">
       <Filter>Other Files\Build\msvc\runjobs.jobs</Filter>
     </None>
-    <None Include="Hercules.sln">
-      <Filter>Other Files\Build\msvc\VS2008</Filter>
-    </None>
-    <None Include="Hercules.vcproj">
-      <Filter>Other Files\Build\msvc\VS2008</Filter>
-    </None>
     <None Include="Hercules.vcxproj">
       <Filter>Other Files\Build\msvc\VS2010</Filter>
     </None>
@@ -1238,16 +1217,7 @@
     <None Include="Hercules_VS2012.vcxproj">
       <Filter>Other Files\Build\msvc\VS2012</Filter>
     </None>
-    <None Include="Hercules_VS2015.sln">
-      <Filter>Other Files\Build\msvc\VS2015</Filter>
-    </None>
-    <None Include="Hercules_VS2015.vcxproj">
-      <Filter>Other Files\Build\msvc\VS2015</Filter>
-    </None>
-    <None Include="Hercules_VS2015.vcxproj.filters">
-      <Filter>Other Files\Build\msvc\VS2015</Filter>
-    </None>
-      <None Include="_build">
+    <None Include="_build">
       <Filter>Other Files\Build\other</Filter>
     </None>
     <None Include="_build.bat">
@@ -1484,27 +1454,6 @@
     <None Include="tests\cpu0off.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
-    <None Include="tests\ieee-adds.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-comps.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-div-nans.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-divs.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-mults.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-sqrts.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
-    <None Include="tests\ieee-subs.core">
-      <Filter>Other Files\tests\core</Filter>
-    </None>
     <None Include="tests\l.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1634,27 +1583,6 @@
     <None Include="tests\hetbsf.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\ieee-adds.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-comps.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-div-nans.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-divs.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-mults.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-sqrts.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="tests\ieee-subs.tst">
-      <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
     <None Include="tests\ilc.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -1736,48 +1664,6 @@
     <None Include="tests\dc-float.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
-    <None Include="tests\ieee-adds.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-comps.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-div-nans.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-divs.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-mults.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-sqrts.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-subs.asm">
-      <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>
-    <None Include="tests\ieee-adds.list">
-      <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>
-    <None Include="tests\ieee-comps.list">
-      <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>
-    <None Include="tests\ieee-div-nans.list">
-      <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>
-    <None Include="tests\ieee-divs.list">
-      <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>
-    <None Include="tests\ieee-mults.list">
-      <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>
-    <None Include="tests\ieee-sqrts.list">
-      <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>
-    <None Include="tests\ieee-subs.list">
-      <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>
     <None Include="hercules.cnf">
       <Filter>Other Files\misc</Filter>
     </None>
@@ -1819,6 +1705,288 @@
     </None>
     <None Include="scripts\hrecurs.rexx">
       <Filter>Other Files\scripts</Filter>
+    </None>
+    <None Include="tests\bfp-023-threads.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-021-multadd.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-019-multiply.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-017-loadl.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-015-sqrt.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-013-comps.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-011-cvtfrfix64.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-009-cvtfrlog64.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-007-cvttofix64.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-005-cvttolog64.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-003-loadfpi.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-001-divtoint.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-001-divtoint.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-003-loadfpi.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-005-cvttolog64.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-007-cvttofix64.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-009-cvtfrlog64.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-011-cvtfrfix64.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-023-threads.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-021-multadd.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-019-multiply.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-017-loadl.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-015-sqrt.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-013-comps.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\bfp-023-threads.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-021-multadd.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-019-multiply.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-017-loadl.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-015-sqrt.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-013-comps.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-011-cvtfrfix64.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-009-cvtfrlog64.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-007-cvttofix64.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-005-cvttolog64.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-003-loadfpi.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-001-divtoint.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-003-loadfpi.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-007-cvttofix64.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-005-cvttolog64.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-009-cvtfrlog64.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-023-threads.sptst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-021-multadd.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-019-multiply.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-017-loadl.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-015-sqrt.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-013-comps.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-011-cvtfrfix64.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bfp-001-divtoint.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="msvc.makefile.includes\EXTPKG_DIRS.msvc">
+      <Filter>Other Files\Build\msvc\makefile includes</Filter>
+    </None>
+    <None Include="msvc.makefile.includes\EXTPKG_FLAGS.msvc">
+      <Filter>Other Files\Build\msvc\makefile includes</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -2186,18 +2354,6 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="service.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftFloat-macros.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftFloat-milieu.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftFloat-specialise.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftFloat-types.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SoftFloat.h">
