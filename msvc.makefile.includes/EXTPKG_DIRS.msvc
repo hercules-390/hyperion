@@ -1,0 +1,62 @@
+# ***************************************************************************
+#     EXTPKG_DIR.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) 2016 Copyright by Stephen R. Orso
+# --------------------------------------------------------------------------
+#
+#  Defines input libraries and paths for the external packages required to 
+#  build Hercules.
+#
+#  Package Libraries in this include file are required for successful builds.
+#
+#  This is different from ZLIB, BZIP2, PCRE, and the two REXX packages, 
+#  which are optional packages.
+#
+#  At present, only Softfloat 3a is set up as an external package.  
+#
+# ***************************************************************************
+
+# ---------------------------------------------------------------------
+# Specify the correct directory for Softfloat 3a
+# ---------------------------------------------------------------------
+
+!IFNDEF SFLIB_DIR
+# Undefined: use default value, if it exists.
+
+# SFLIB_DIR defaults to ..\$(PROCESSOR_ARCHITECTURE)\s3fh relative to current directory
+# Unfortunately, because VS is a 32-bit application, $(PROCESSOR_ARCHITECTURE) is 
+# always set to x86.  So we translate $(CPU) into the appropriate value for the 
+# SFLIB_DIR path.
+
+!IF "$(CPU)" == "AMD64"
+SFLIB_DIR = ..\AMD64\s3fh
+!ELSEIF "$(CPU)" == "i386"
+SFLIB_DIR = ..\x86\s3fh
+!ELSE
+!ERROR Softfloat detected invalid CPU value: "$(CPU)"
+!ENDIF
+!MESSAGE SoftFloat 3a install tree defaulted to "$(SFLIB_DIR)"
+
+!ELSE
+# Defined: use explicit directory or subdirectory
+# unless "NONE" is specified or it doesn't exist.
+!IF "$(SFLIB_DIR)" == "NONE"
+!UNDEF SFLIB_DIR
+!ERROR SFLIB_DIR set to "$(SFLIB_DIR)," SoftFloat 3a library required to build Hercules.  Build terminated. 
+!ELSE
+!MESSAGE SoftFloat 3a install tree set to "$(SFLIB_DIR)" from SFLIB_DIR environment variable
+!ENDIF   
+
+!ENDIF
+
+# check for the public headers and fail the build if they are missing.  We cannot test for the 
+# library yet because we do not know if this is a retail or debug build until after DEBUG_RETAIL.msvs,
+# which runs after all _DIR.msvc files.  
+
+!IFDEF SFLIB_DIR
+!IF !EXIST("$(SFLIB_DIR)\include\softfloat.h")
+!ERROR SFLIB_DIR "$(SFLIB_DIR)\include\softfloat.h" does not exist. Check $(SFLIB_DIR) contents.
+!ELSEIF !EXIST("$(SFLIB_DIR)\include\softfloat_types.h")
+!ERROR SFLIB_DIR "$(SFLIB_DIR)\include\softfloat_types.h" does not exist. Check $(SFLIB_DIR) contents.
+!ENDIF
+!ENDIF
