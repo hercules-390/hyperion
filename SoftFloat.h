@@ -69,7 +69,7 @@ All such modifications placed in the public domain by Stephen R. Orso
 /****************************************************************************************/
 
 #ifdef IBM_IEEE
-
+ 
  /* We never need anything fancy from softfloat_raiseFlag(), so there is no need    */
  /* to call a function.  A macro that does the logical or is quite sufficient.      */
 
