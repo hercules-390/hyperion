@@ -534,6 +534,32 @@ AC_CHECK_HEADER( pthread.h, [hc_cv_have_pthread_h=yes],
 AC_CACHE_SAVE()
 
 ###############################################################################
+#   Checks SoftFloat 3a For Hercules headers.  We check for softfloat_types.h
+#   because softfloat.h generates preprocessor errors that cause configure
+#   to generate some warning messages. 
+###############################################################################
+
+#AC_CHECK_HEADER( softfloat_types.h, [],
+#    [
+        hc_cv_alt_softfloat_location=../s3fh
+
+        AC_MSG_NOTICE( [looking for softfloat_types.h in ${hc_cv_alt_softfloat_location}/include] )
+
+        hc_temp=$CFLAGS
+        CFLAGS="$CFLAGS -I${hc_cv_alt_softfloat_location}/include"
+
+        AC_CHECK_HEADER( softfloat_types.h,
+            [hc_cv_have_softfloat_h=yes],
+            [hc_cv_have_softfloat_h=no]
+        )
+
+        CFLAGS=$hc_temp
+        AC_MSG_NOTICE( [You may ignore the two warnings above, "accepted by the compiler, rejected by the preprocessor!"] )
+
+#    ]
+#)
+
+###############################################################################
 #   Checks for optional (non-required) header files...
 ###############################################################################
 
@@ -2475,6 +2501,21 @@ if test "$hc_cv_have_full_keepalive"  != "yes"  &&
    AC_MSG_WARN( [WARNING: Support missing for TCP keepalive] )
 fi
 
+#------------------------------------------------------------------------------
+
+if test "$hc_cv_have_softfloat_h" = "no"; then
+    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_RESULT( [             ERROR: Required header 'softfloat_types.h' not found.  Check for ${hc_cv_alt_softfloat_location} directory] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [ Take note: SoftFloat-3a For Hercules must now be built separately.        ] )
+    AC_MSG_NOTICE( [ See https://github.com/hercules-390/SoftFloat-3a/blob/master/BUILDING.txt ] )
+    AC_MSG_NOTICE( [ for additional information.                                               ] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
+    hc_error=yes
+fi
+
 ###############################################################################
 # If any errors have been detected, then abort the configure at this time
 ###############################################################################
@@ -2684,6 +2725,11 @@ AC_DEFINE_UNQUOTED( [C11_ATOMIC_POINTER_LOCK_FREE],  ${hc_cv_c11_atomic_pointer_
 
 AC_CACHE_SAVE()
 
+AC_MSG_NOTICE( [-----------------------------------------] )
+AC_MSG_NOTICE( [                                         ] )
+AC_MSG_NOTICE( [ Package source directories:             ] )
+AC_MSG_NOTICE( [                                         ] )
+AC_MSG_NOTICE( [    SoftFloat:  ${hc_cv_alt_softfloat_location}  ] )
 AC_MSG_NOTICE( [                                         ] )
 AC_MSG_NOTICE( [ Package destination directory prefixes: ] )
 AC_MSG_NOTICE( [                                         ] )
@@ -2691,6 +2737,7 @@ AC_MSG_NOTICE( [    Libraries:  ${modexecdir}            ] )
 AC_MSG_NOTICE( [    Data:       \$(datadir)/hercules     ] )
 AC_MSG_NOTICE( [    Locale:     ${localedir}             ] )
 AC_MSG_NOTICE( [                                         ] )
+AC_MSG_NOTICE( [-----------------------------------------] )
 
 CPPFLAGS="$CPPFLAGS"' -DPKGDATADIR=\"$(pkgdatadir)\" -DMODULESDIR=\"$(modexecdir)\" -DHERC_LOCALEDIR=\"$(localedir)\"'
 
