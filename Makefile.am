@@ -24,7 +24,8 @@ SUBDIRS =       \
 	crypto      \
     tests
 
-LDADD = @LIBS@ -L$(abs_top_builddir)/../s3fh/lib -lSoftFloat
+# LDADD = @LIBS@ -L$(abs_top_builddir)/../s3fh/lib -lSoftFloat
+LDADD = @LIBS@
 
 DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir))
 

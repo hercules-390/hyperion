@@ -2855,6 +2855,11 @@ test  "$hc_cv_have_libbz2"         =  "yes"  &&  LIBS="$LIBS -lbz2"
 test  "$hc_cv_is_mingw" =  "yes"  &&  LIBS="$LIBS -lmsvcrt"
 test  "$hc_cv_is_mingw" =  "yes"  &&  LIBS="$LIBS -lws2_32"
 
+#      ------------ SoftFloat-3a For Hercules --------------
+
+LIBS="$LIBS -L\$(abs_top_builddir)/$hc_cv_alt_softfloat_location/lib -lSoftFloat"
+
+
 AC_CACHE_SAVE()
 
 #--------------------------------------------------------------------------------#
