@@ -24,7 +24,6 @@ SUBDIRS =       \
 	crypto      \
     tests
 
-# LDADD = @LIBS@ -L$(abs_top_builddir)/../s3fh/lib -lSoftFloat
 LDADD = @LIBS@
 
 DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir))
@@ -32,7 +31,7 @@ DYNAMIC_VERSION := $(shell $(top_srcdir)/_dynamic_version $(top_srcdir))
 AM_CPPFLAGS =                          \
 	-I$(top_srcdir)                    \
 	-I$(top_srcdir)/decNumber          \
-    -I$(abs_top_builddir)/../s3fh/include  \
+    -I@S3FH_INC@                       \
 	-I@HQA_INC@
 
 if BUILD_HERCIFC
@@ -938,8 +937,8 @@ noinst_HEADERS =            \
 	shared.h                \
 	sllib.h                 \
 	sockdev.h               \
-	softfloat_types.h       \
-	softfloat.h             \
+	@S3FH_INC@/softfloat_types.h       \
+	@S3FH_INC@/softfloat.h             \
 	sr.h                    \
 	tapedev.h               \
 	targetver.h             \
@@ -1033,10 +1032,10 @@ uninstall-hook:
 
 # PROGRAMMING NOTE: the following two rules cause only ieee.c to be
 # recompiled whenever the interface to Softfloat 3a is changed.
-# Changes to softfloat.h and softfloat-types.h are evidence of same.
+# Changes to softfloat.h and softfloat_types.h are evidence of same.
 
-.libs/ieee.o:    $(abs_top_builddir)/../s3fh/include/softfloat.h                 \
-                 $(abs_top_builddir)/../s3fh/include/softfloat_types.h
+.libs/ieee.o:    @S3FH_INC@/softfloat.h                 \
+                 @S3FH_INC@/softfloat_types.h
 
 check:
 if APPLE
