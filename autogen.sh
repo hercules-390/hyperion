@@ -2,7 +2,7 @@
 
 case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
   *c*,-n*) ECHO_N= ECHO_C='
-' ECHO_T='	' ;;
+' ECHO_T='      ' ;;
   *c*,*  ) ECHO_N=-n ECHO_C= ECHO_T= ;;
   *)       ECHO_N= ECHO_C='\c' ECHO_T= ;;
 esac
@@ -29,8 +29,15 @@ then
 
 All processing successfully completed.
 
-You may now run ./configure in order to create a custom Makefile
+Create the Hyperion build directory, if it does not exist, and then
+change directory to the Hyperion build directory and run configure
+in order to create a custom Makefile in the build directory structure
 that is suitable for your platform and environment.
+
+You can use the script "./DoConfigure" to do that using the defaults.
+Then change directory to the build directory and issue make, make check,
+and perhaps make install.
+
 EOF
       exit 0
 else

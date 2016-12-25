@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Create default Hyperion build directory, if it does not exist.
+# Then configure using the arguments.
+
+# Your current working directory MUST be the one where this file resides
+# DO NOT source this script.
+
+dodir () {
+if [ ! -d $1 ] ; then
+        mkdir $1
+        if [ $? -ne 0 ] ; then
+                echo "Cannot create directory '$1'.  Terminating."
+                exit 12
+        fi
+        echo "Created '$1'." >&2
+else
+        echo "'$1' exists." >&2
+
+fi
+}
+
+where=$PWD
+build=../$(uname -m)/hyperion
+dodir ../$(uname -m)
+dodir $build
+
+if [ $# -gt 0 ] ; then
+        echo "Arguments are  not supported by $0.  Perform configure manually." >&2
+        exit 16
+fi
+
+# I'm not that good with shells to pass the arguments to configure,
+# e.g., ../../hyperion --prefix=$HOME  --enable-optimization="-g -O2".
+# I doubt it is possible
+
+cd $build
+$where/configure
