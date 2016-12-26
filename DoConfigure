@@ -25,14 +25,9 @@ build=../$(uname -m)/hyperion
 dodir ../$(uname -m)
 dodir $build
 
-if [ $# -gt 0 ] ; then
-        echo "Arguments are  not supported by $0.  Perform configure manually." >&2
-        exit 16
-fi
-
 # I'm not that good with shells to pass the arguments to configure,
 # e.g., ../../hyperion --prefix=$HOME  --enable-optimization="-g -O2".
 # I doubt it is possible
 
 cd $build
-$where/configure
+$where/configure "$@"
