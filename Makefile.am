@@ -21,8 +21,7 @@ SUBDIRS =       \
 	html        \
 	man         \
 	.           \
-	crypto      \
-    tests
+	crypto
 
 LDADD = @LIBS@
 
