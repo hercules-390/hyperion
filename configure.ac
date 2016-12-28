@@ -474,6 +474,9 @@ AH_TEMPLATE( [C11_ATOMIC_LLONG_LOCK_FREE],   [Define to 'stdatomics.h' ATOMIC_*_
 AH_TEMPLATE( [C11_ATOMIC_POINTER_LOCK_FREE], [Define to 'stdatomics.h' ATOMIC_*_LOCK_FREE value] )
 AH_TEMPLATE( [HAVE_ATOMIC_INTRINSICS],       [Define if '__atomic_xor_fetch' and friends are available] )
 AH_TEMPLATE( [HAVE_SYNC_BUILTINS],           [Define if '__sync_xor_and_fetch' and friends are available] )
+AH_TEMPLATE( [VERS_MAJ],                     [Hardwired first component of version.] )
+AH_TEMPLATE( [VERS_INT],                     [Hardwired second component of version.] )
+AH_TEMPLATE( [VERS_MIN],                     [Hardwired third component of version.] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -1281,13 +1284,13 @@ AC_CACHE_CHECK( [if this is the broken 2.96 version of GCC],
         if test "$GCC" = "yes"; then
 
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
                     #if __GNUC__ == 2 && __GNUC_MINOR__ == 96
                       yes;
                     #else
                       int no;
                     #endif
-                ],
+                ] ],
                 [hc_cv_is_gcc_2_96=no],
                 [hc_cv_is_gcc_2_96=yes]
             )
@@ -1310,16 +1313,17 @@ AC_CACHE_CHECK( [if atomic '_sync' builtins are available],
     [hc_cv_sync_builtins_available],
     [
         AC_COMPILE_IFELSE(
-        [
-            static unsigned char  b = 0;
-            static unsigned char *p = &b;
-            void main()
-            {
-                __sync_or_and_fetch  ( p, 0xFF );
-                __sync_and_and_fetch ( p, 0x00 );
-                __sync_xor_and_fetch ( p, 0xAC );
-            }
-        ],
+                [ AC_LANG_SOURCE [
+                    static unsigned char  b = 0;
+                    static unsigned char *p = &b;
+                    void main()
+                    {
+                        __sync_or_and_fetch  ( p, 0xFF );
+                        __sync_and_and_fetch ( p, 0x00 );
+                        __sync_xor_and_fetch ( p, 0xAC );
+                    }
+                  ]
+                ],
         [hc_cv_sync_builtins_available=yes],
         [hc_cv_sync_builtins_available=no] )
     ]
@@ -1337,7 +1341,7 @@ AC_CACHE_CHECK( [if '__atomic' intrinsics are available],
     [hc_cv_atomic_intrinsics_available],
     [
         AC_COMPILE_IFELSE(
-        [
+        [ AC_LANG_SOURCE [
             static unsigned char  b = 0;
             static unsigned char *p = &b;
             void main()
@@ -1346,6 +1350,7 @@ AC_CACHE_CHECK( [if '__atomic' intrinsics are available],
                 __atomic_and_fetch ( p, 0x00, __ATOMIC_SEQ_CST );
                 __atomic_xor_fetch ( p, 0xAC, __ATOMIC_SEQ_CST );
             }
+          ]
         ],
         [hc_cv_atomic_intrinsics_available=yes],
         [hc_cv_atomic_intrinsics_available=no] )
@@ -1364,7 +1369,7 @@ AC_CACHE_CHECK( [if C11 atomics are available],
     [hc_cv_c11_atomics_available],
     [
         AC_COMPILE_IFELSE(
-        [
+        [ AC_LANG_SOURCE [
             #if !defined(HAVE_STDATOMIC_H) || defined(__STDC_NO_ATOMICS__)
               #error C11 atomics are not available
             #else
@@ -1375,6 +1380,7 @@ AC_CACHE_CHECK( [if C11 atomics are available],
                 #error C11 atomics are not available
               #endif
             #endif
+          ]
         ],
         [hc_cv_c11_atomics_available=yes],
         [hc_cv_c11_atomics_available=no] )
@@ -1464,9 +1470,9 @@ if test "$GCC" = "yes"; then
             CFLAGS="-Wall -Werror"
 
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
                     void logmsg(char*,...) __attribute__ ((format(printf,1,2)));
-                ],
+                ] ],
                 [hc_cv_attr_printf_supported=yes],
                 [hc_cv_attr_printf_supported=no]
             )
@@ -1496,9 +1502,9 @@ if test "$GCC" = "yes"; then
             CFLAGS="-Wall -Werror"
 
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
                     void conftest() __attribute__ ((regparm(1)));
-                ],
+                ] ],
                 [hc_cv_regparm_attr_supported=yes],
                 [hc_cv_regparm_attr_supported=no]
             )
@@ -1524,10 +1530,10 @@ if test "$GCC" = "yes"; then
             CFLAGS="-Wall -Werror"
 
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
                     /* Test an ancient diagnostic */
                     #pragma GCC diagnostic ignored "-Wformat"
-                ],
+                ] ],
                 [hc_cv_have_gcc_diag_pragma=yes],
                 [hc_cv_have_gcc_diag_pragma=no]
             )
@@ -1554,9 +1560,9 @@ if test "$hc_cv_have_gcc_diag_pragma" = "yes"  &&
             CFLAGS="-Wall -Werror"
 
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
                     #pragma GCC diagnostic push
-                ],
+                ] ],
                 [hc_cv_have_gcc_diag_pushpop=yes],
                 [hc_cv_have_gcc_diag_pushpop=no]
             )
@@ -1584,13 +1590,13 @@ if test "$GCC" = "yes"; then
             CFLAGS="-Wall -Werror"
 
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
                     static int unused() {return 1;}
                     int main(int argc, char **argv)
                     {
                         return 0;
                     }
-                ],
+                ] ],
                 [hc_cv_have_gcc_unused_func_warning=no],
                 [hc_cv_have_gcc_unused_func_warning=yes]
             )
@@ -1618,14 +1624,14 @@ if test "$GCC" = "yes"; then
             CFLAGS="-Wall -Werror"
 
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
                     int main(int argc, char **argv)
                     {
                         int rc;
                          rc = 2;
                         return 0;
                     }
-                ],
+                ] ],
                 [hc_cv_have_gcc_set_unused_warning=no],
                 [hc_cv_have_gcc_set_unused_warning=yes]
             )
@@ -1766,7 +1772,7 @@ if test "$GCC" = "yes"; then
             CFLAGS="-Wall -Werror"
 
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
                     #include <stdio.h>
                     #define MACRO(_x,_args...) printf(_x, ## _args)
                     int  main( int argc, char **argv, char **arge )
@@ -1774,7 +1780,7 @@ if test "$GCC" = "yes"; then
                         MACRO( "bare printf\n" );
                         return 0;
                     }
-                ],
+                ] ],
                 [hc_cv_pp_macro_arg_counting_broke=no],
                 [hc_cv_pp_macro_arg_counting_broke=yes]
             )
@@ -1864,7 +1870,7 @@ if test "$GCC" = "yes"; then
 # Note: The test program MUST start in column 1! Otherwise, the compilation
 # will fail when it's not supposed to.
             AC_COMPILE_IFELSE(
-                [
+                [ AC_LANG_SOURCE [
 /* If the following gets an error, then the
    "traditional" preprocessor is K&R C type.
    Otherwise if it compiles WITHOUT error
@@ -1878,7 +1884,7 @@ int main( int, char**, char** )
 {
   return 0;
 }
-                ],
+                ] ],
                 [hc_cv_traditional_cpp_is_K_AND_R_C_type=no],
                 [hc_cv_traditional_cpp_is_K_AND_R_C_type=yes]
             )
@@ -2747,6 +2753,9 @@ AC_DEFINE_UNQUOTED( [C11_ATOMIC_INT_LOCK_FREE],      ${hc_cv_c11_atomic_int_lock
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_LONG_LOCK_FREE],     ${hc_cv_c11_atomic_long_lock_free}     )
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_LLONG_LOCK_FREE],    ${hc_cv_c11_atomic_llong_lock_free}    )
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_POINTER_LOCK_FREE],  ${hc_cv_c11_atomic_pointer_lock_free}  )
+AC_DEFINE_UNQUOTED( [VERS_MAJ],                      "${VERS_MAJ}"                          )
+AC_DEFINE_UNQUOTED( [VERS_INT],                      "${VERS_INT}"                          )
+AC_DEFINE_UNQUOTED( [VERS_MIN],                      "${VERS_MIN}"                          )
 
 AC_CACHE_SAVE()
 
