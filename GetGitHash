@@ -1,0 +1,113 @@
+#!/bin/sh
+
+# Return git information in a form of -D flags
+
+# This  file was put into the public domain 2015-12-29 by
+# John  P.  Hartmann.  You can use it for anything you like,
+# as long as this notice remains.
+
+# This script is run in the top build directory from the makefile as it
+# is  read.   The relative path to the top source directory is provided
+# as  the  argument.   Produces  a  file  of  declares for inclusion in
+# version.c only.  Ensure that a null file exists initially.
+
+# Call  git  utilities  to  extrace the current commit hash and write a
+# string  that contains the defines required for version.c.  This works
+# only  in  an environment where git is installed and the repository is
+# cloned  from  github.   No output is produced if the git commands are
+# not available or the repository is not under git control.
+
+# When  git  "errors out" it sets exit status 128.  Only exit states up
+# to  127  are  portable  (and  you better let the top ones alone.  The
+# upshot is that we cannot just do git something.
+
+# You  can  test  this  in  the  source  directory  (where it lives) by
+# supplying . as the path to the build directory.
+
+outfile=commitinfo.h
+tempfile=temp.$outfile
+builddir=$PWD
+
+# Do not be tempted by man date in Linux
+id="/* Generated $(date -u) by $0 */"
+idlen=$(echo "$id" | wc -c)
+
+chicken ()
+{
+        echo "Cannot obtain git status:  $*." >&2
+}
+
+# Ensure file exists; so that make will resolve the dependency.
+
+if [ ! -r $outfile ] ; then touch $outfile; fi
+
+# Write dummy file up front so that there is always something
+(
+        echo "$id"
+        echo "#define COMMIT_COUNT 0"
+        echo "#define COMMIT_MESSAGE \"\""
+        echo "#define COMMIT_HASH \"\""
+        echo "#define COMMIT_UNTRACKED \"\""
+        echo "#define COMMIT_MODIFIED \"\""
+
+) >$tempfile
+
+dogit ()
+{
+        gitVersionString=$(git --version 2>/dev/null)
+        rv=$?
+        if [ $rv -eq 127 ] ; then chicken "git is not installed";
+        elif [ $rv -ne 0 ] ; then chicken "git --version return value $rv";
+        fi
+
+        if [ $rv -ne 0 ] ; then return; fi
+
+        # Go to top source directory
+        cd "$1"
+        commitCount=$(git log --pretty=oneline | wc -l)
+        # These cannot contain metacharacters
+        message=$(git log -n 1 --pretty=format:'%H %h %ai')
+        commit=$(echo $message | cut -d ' ' -f 1)
+        short=$(echo $message | cut -d ' ' -f 2)
+        time=$(echo $message | cut -d ' ' -f 3-5)
+
+        msg=$(git log -n 1 --pretty=format:'%s' | cut -c -70 | tr "'" '\"' )
+
+        changed=$(git status --porcelain | grep '^[^?!]' | wc -l)
+        new=$(git status --porcelain | grep '^?' | wc -l)
+
+        # Return to build directory
+        cd -
+
+        (
+                echo "$id"
+                echo "#define COMMIT_COUNT $commitCount"
+                echo "#define COMMIT_MESSAGE \"$msg\""
+                echo "#define COMMIT_HASH \"$commit\""
+                if [ 0 -eq $new ]
+                then
+                        echo "#define COMMIT_UNTRACKED \"\""
+                else
+                        echo "#define COMMIT_UNTRACKED \"  $new untracked files.\""
+                fi
+                if [ 0 -eq $changed ]
+                then
+                        echo "#define COMMIT_MODIFIED \"\""
+                else
+                        echo "#define COMMIT_MODIFIED \"  $changed added/modified/deleted files.\""
+                fi
+
+        ) >$tempfile
+}
+
+dogit $1
+
+cmp --quiet -i $idlen $outfile $tempfile
+rv=$?
+
+if [ $rv -eq 0 ] ;
+then
+        rm -f $tempfile
+else
+        mv $tempfile $outfile
+fi

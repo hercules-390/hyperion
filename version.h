@@ -16,7 +16,6 @@
 #define _HERCULES_H_
 
 #include "hercules.h"
-#include "_dynamic_version.h"  /* created by _dynamic_version script */
 
 #ifndef _VERSION_C_
 #ifndef _HUTIL_DLL_

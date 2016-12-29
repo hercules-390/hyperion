@@ -17,6 +17,7 @@
 
 #include "hercules.h"
 #include "machdep.h"
+#include "commitinfo.h"
 
 /*--------------------------------------------------*/
 /*   "Unusual" (i.e. noteworthy) build options...   */
@@ -767,13 +768,13 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
     if (f != stdout)
         if (httpfd)
             hprintf( httpfd, MSG( HHC01413, "I", prog, VERSION,
-                VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+                VERS_MAJ, VERS_INT, VERS_MIN, COMMIT_COUNT ));
         else
             fprintf( f, MSG( HHC01413, "I", prog, VERSION,
-                VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+                VERS_MAJ, VERS_INT, VERS_MIN, COMMIT_COUNT ));
     else
         WRMSG( HHC01413, "I", prog, VERSION,
-            VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD );
+            VERS_MAJ, VERS_INT, VERS_MIN, COMMIT_COUNT );
 
     /* Log Copyright */
 
@@ -786,6 +787,32 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
             fprintf( f, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
     else
         WRMSG( HHC01414, "I", HERCULES_COPYRIGHT );
+
+    /* Commit                                                        */
+
+    if (strlen(COMMIT_HASH))
+    {
+        if (f != stdout)
+            if (httpfd)
+                hprintf( httpfd, MSG( HHC01414, "I", "Commit " COMMIT_HASH "." ));
+            else
+                fprintf( f, MSG( HHC01414, "I", "Commit " COMMIT_HASH "." ));
+        else
+            WRMSG( HHC01414, "I", "Commit " COMMIT_HASH "." );
+    }
+
+    /* Updates not committed                                         */
+
+    if (strlen(COMMIT_MODIFIED COMMIT_UNTRACKED))
+    {
+        if (f != stdout)
+            if (httpfd)
+                hprintf( httpfd, MSG( HHC01414, "I", "After commit:" COMMIT_MODIFIED COMMIT_UNTRACKED ));
+            else
+                fprintf( f, MSG( HHC01414, "I", "After commit:" COMMIT_MODIFIED COMMIT_UNTRACKED ));
+        else
+            WRMSG( HHC01414, "I", "After commit:" COMMIT_MODIFIED COMMIT_UNTRACKED );
+    }
 
     /* Log build date/time */
 

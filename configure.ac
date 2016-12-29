@@ -2753,9 +2753,9 @@ AC_DEFINE_UNQUOTED( [C11_ATOMIC_INT_LOCK_FREE],      ${hc_cv_c11_atomic_int_lock
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_LONG_LOCK_FREE],     ${hc_cv_c11_atomic_long_lock_free}     )
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_LLONG_LOCK_FREE],    ${hc_cv_c11_atomic_llong_lock_free}    )
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_POINTER_LOCK_FREE],  ${hc_cv_c11_atomic_pointer_lock_free}  )
-AC_DEFINE_UNQUOTED( [VERS_MAJ],                      "${VERS_MAJ}"                          )
-AC_DEFINE_UNQUOTED( [VERS_INT],                      "${VERS_INT}"                          )
-AC_DEFINE_UNQUOTED( [VERS_MIN],                      "${VERS_MIN}"                          )
+AC_DEFINE_UNQUOTED( [VERS_MAJ],                      ${VERS_MAJ}                          )
+AC_DEFINE_UNQUOTED( [VERS_INT],                      ${VERS_INT}                          )
+AC_DEFINE_UNQUOTED( [VERS_MIN],                      ${VERS_MIN}                          )
 
 AC_CACHE_SAVE()
 
