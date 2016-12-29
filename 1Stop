@@ -114,11 +114,10 @@ echo "$sfdir installed and built."
 dodir ../$(uname -m)
 dodir $build
 
-if [ ! -x configure ] ; then
-        ./autogen.sh
-        rv=$?
-        if [ $rv -ne 0 ] ; then exit 18; fi
-fi
+# Do this blindly in case configure.am has changed.
+./autogen.sh
+rv=$?
+if [ $rv -ne 0 ] ; then exit 18; fi
 
 cd $build
 $where/configure "$@"
