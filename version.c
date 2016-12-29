@@ -329,12 +329,12 @@ static const char *build_info[] = {
     #if defined(__bgq__) || defined(__TOS_BGQ__)
         "/Q"
     #endif
-#elif defined(__FREEBSD__)                                          ||  \
+#elif defined(__FreeBSD__)                                          ||  \
       defined(__NetBSD__)                                           ||  \
       defined(__OpenBSD__)                                          ||  \
       defined(__bsdi__)                                             ||  \
       defined(__DragonFly__)
-    #if defined(__FREEBSD__)
+    #if defined(__FreeBSD__)
         "Free"
     #elif defined(__NetBSD__)
         "Net"
