@@ -9,6 +9,52 @@
 ###############################################################################
 
 AC_INIT(hercules.h)           # (package, version, bugreport email, etc)
+
+
+###############################################################################
+# Test for an in-source build and abort if such is attempted.  The
+# working directory for configure should be the build directory, not
+# the source directory.  If the working directory when configure is run
+# is the same as the path for configure, then we assume an in-source
+# build.  If configure.ac exists in the build directory, then we assume
+# an in-source build.
+###############################################################################
+
+AC_MSG_NOTICE( [build directory:    $(pwd)])
+AC_MSG_NOTICE( [source directory:   $(cd $(dirname $0) && pwd)] )
+if test "$(pwd)" = "$(cd $(dirname $0) && pwd)"; then
+    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [ ERROR: source and build directories cannot be the same.                   ] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [ In-source build detected.  Hercules must be built out of source.          ] )
+    AC_MSG_NOTICE( [ See https://github.com/hercules-390/hyperion/blob/master/README.BuildUNIX.txt ] )
+    AC_MSG_NOTICE( [ for additional information.                                               ] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
+    AC_MSG_ERROR([in source build detected, aborting configure...])
+fi
+
+if test -e $(pwd)/configure.ac; then
+    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [ ERROR: configure.ac found in build directory.  Suspect in-source build.   ] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [ Hercules must be built out of source.  If this is truly an out of source  ] )
+    AC_MSG_NOTICE( [ build, then remove configure.ac from the build directory.  See            ] )
+    AC_MSG_NOTICE( [ https://github.com/hercules-390/hyperion/blob/master/README.BuildUNIX.txt ] )
+    AC_MSG_NOTICE( [ for additional information.                                               ] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
+    AC_MSG_ERROR([in source build detected (configure.ac found), aborting configure...])
+fi
+
+###############################################################################
+# Building outside of the source directory.  Continue.
+###############################################################################
+
+
+
 AC_REVISION($Revision$)       # (the version of this configure.ac)
 AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxillary build tools)
 
@@ -226,6 +272,72 @@ if test "$hc_cv_is_aix" = "yes"; then
   LDFLAGS="$LDFLAGS -L/usr/local/lib"
   CPPFLAGS="$CPPFLAGS -I/usr/local/include -D_LARGE_FILES -D_LFS_LARGEFILE -D_LINUX_SOURCE_COMPAT"
 fi
+
+###############################################################################
+#   Checks SoftFloat 3a For Hercules headers.  If an alternate library
+#   test that one.  After successful tests, the path name is converted
+#   to an absolute path.
+###############################################################################
+
+AC_ARG_ENABLE( s3fh-altdir,
+
+    AC_HELP_STRING( [--enable-s3fh-altdir=DIR],
+
+        [define an alternate location for the s3fh directory. Specify a relative
+         path from the build directory or an absolute path.]
+    ),
+    [
+        hc_cv_s3fh_dir=${enableval}
+
+        if test -d "$hc_cv_s3fh_dir" ; then
+          if test -e "$hc_cv_s3fh_dir/include/softfloat.h"          \
+             -a   -e  "$hc_cv_s3fh_dir/include/softfloat_types.h"   \
+             -a   -e  "$hc_cv_s3fh_dir/lib/libSoftFloat.a"        ; then
+            AC_MSG_NOTICE( [using alternate directory "${hc_cv_s3fh_dir}" for SoftFloat-3a] )
+          else
+            AC_MSG_RESULT( [ERROR: --enable-s3fa-altdir= directory does not have SoftFloat-3a headers: $hc_cv_s3fh_dir] )
+            hc_cv_have_softfloat_h=no
+          fi
+        else
+          AC_MSG_RESULT( [ERROR: --enable-s3fa-altdir= directory not found: $hc_cv_s3fh_dir] )
+          hc_cv_have_softfloat_h=no
+        fi
+
+    ],
+    [
+        hc_cv_s3fh_dir=../s3fh
+    ]
+)
+hc_cv_s3fh_dir=$(cd "$(dirname "$hc_cv_s3fh_dir")" && pwd)/$(basename "$hc_cv_s3fh_dir")
+
+AC_MSG_NOTICE( [looking for softfloat_types.h in ${hc_cv_s3fh_dir}/include] )
+
+hc_temp=$CFLAGS
+CFLAGS="$CFLAGS -I${hc_cv_s3fh_dir}/include"
+
+AC_CHECK_HEADER( softfloat_types.h,
+    [hc_cv_have_softfloat_h=yes],
+    [hc_cv_have_softfloat_h=no]
+)
+
+CFLAGS=$hc_temp
+
+if test "$hc_cv_have_softfloat_h" = "no" ; then
+    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [ ERROR: Required header 'softfloat_types.h' not found.                     ] )
+    AC_MSG_NOTICE( [ Check for ${hc_cv_s3fh_dir} directory                                     ] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [ Take note: SoftFloat-3a For Hercules must now be built separately.        ] )
+    AC_MSG_NOTICE( [ See https://github.com/hercules-390/SoftFloat-3a/blob/master/BUILDING.txt ] )
+    AC_MSG_NOTICE( [ for additional information.                                               ] )
+    AC_MSG_NOTICE( [                                                                           ] )
+    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
+    AC_MSG_ERROR( [configure aborted...])
+else
+    AC_MSG_NOTICE( [You may ignore the two warnings above, "accepted by the compiler, rejected by the preprocessor!"] )
+fi
+
 
 # -----------------------------------------------------------------------------
 #  PROGRAMMING NOTE: The below 'AC_SUBST' macro causes AC_OUTPUT to replace
@@ -535,57 +647,6 @@ AC_CHECK_HEADER( pthread.h, [hc_cv_have_pthread_h=yes],
 )
 
 AC_CACHE_SAVE()
-
-###############################################################################
-#   Checks SoftFloat 3a For Hercules headers.  If an alternate library
-#   test that one.  After successful tests, the path name is converted
-#   to an absolute path.
-###############################################################################
-
-AC_ARG_ENABLE( s3fh-altdir,
-
-    AC_HELP_STRING( [--enable-s3fh-altdir=DIR],
-
-        [define an alternate location for the s3fh directory. Specify a relative
-         path from the build directory or an absolute path.]
-    ),
-    [
-        hc_cv_s3fh_dir=${enableval}
-
-        if test -d "$hc_cv_s3fh_dir" ; then
-          if test -e "$hc_cv_s3fh_dir/include/softfloat.h"          \
-             -a   -e  "$hc_cv_s3fh_dir/include/softfloat_types.h"   \
-             -a   -e  "$hc_cv_s3fh_dir/lib/libSoftFloat.a"        ; then
-            AC_MSG_NOTICE( [using alternate directory "${hc_cv_s3fh_dir}" for SoftFloat-3a] )
-          else
-            AC_MSG_RESULT( [ERROR: --enable-s3fa-altdir= directory does not have SoftFloat-3a headers: $hc_cv_s3fh_dir] )
-            hc_error=yes
-          fi
-        else
-          AC_MSG_RESULT( [ERROR: --enable-s3fa-altdir= directory not found: $hc_cv_s3fh_dir] )
-          hc_error=yes
-        fi
-
-    ],
-    [
-        hc_cv_s3fh_dir=../s3fh
-    ]
-)
-hc_cv_s3fh_dir=$(cd "$(dirname "$hc_cv_s3fh_dir")" && pwd)/$(basename "$hc_cv_s3fh_dir")
-
-AC_MSG_NOTICE( [looking for softfloat_types.h in ${hc_cv_s3fh_dir}/include] )
-
-hc_temp=$CFLAGS
-CFLAGS="$CFLAGS -I${hc_cv_s3fh_dir}/include"
-
-AC_CHECK_HEADER( softfloat_types.h,
-    [hc_cv_have_softfloat_h=yes],
-    [hc_cv_have_softfloat_h=no]
-)
-
-CFLAGS=$hc_temp
-AC_MSG_NOTICE( [You may ignore the two warnings above, "accepted by the compiler, rejected by the preprocessor!"] )
-
 
 ###############################################################################
 #   Checks for optional (non-required) header files...
@@ -2530,21 +2591,6 @@ if test "$hc_cv_have_full_keepalive"  != "yes"  &&
    test "$hc_cv_have_basic_keepalive" != "yes"; then
 
    AC_MSG_WARN( [WARNING: Support missing for TCP keepalive] )
-fi
-
-#------------------------------------------------------------------------------
-
-if test "$hc_cv_have_softfloat_h" = "no"; then
-    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
-    AC_MSG_NOTICE( [                                                                           ] )
-    AC_MSG_RESULT( [             ERROR: Required header 'softfloat_types.h' not found.  Check for ${hc_cv_s3fh_dir} directory] )
-    AC_MSG_NOTICE( [                                                                           ] )
-    AC_MSG_NOTICE( [ Take note: SoftFloat-3a For Hercules must now be built separately.        ] )
-    AC_MSG_NOTICE( [ See https://github.com/hercules-390/SoftFloat-3a/blob/master/BUILDING.txt ] )
-    AC_MSG_NOTICE( [ for additional information.                                               ] )
-    AC_MSG_NOTICE( [                                                                           ] )
-    AC_MSG_NOTICE( [---------------------------------------------------------------------------] )
-    hc_error=yes
 fi
 
 ###############################################################################
