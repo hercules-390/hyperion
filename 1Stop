@@ -115,13 +115,22 @@ dodir ../$(uname -m)
 dodir $build
 
 # Do this blindly in case configure.am has changed.
-./autogen.sh
+echo "Doing autogen.sh."
+./autogen.sh -q
 rv=$?
 if [ $rv -ne 0 ] ; then exit 18; fi
 
-cd $build
-$where/configure "$@"
+# Configure.  Go to build directory.
+
+cd "$build"
+
+# If no arguments are specified and config.log exists, it would be nice
+# get  the  arguments  used last time configure was run, but alas; they
+# are not shown quoted.  The shell cannotdo.
+
+$where/configure -q "$@"
 rv=$?
+
 if [ 0 -ne $rv ] ; then exit $rv ; fi
 
 make
