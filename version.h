@@ -16,6 +16,12 @@
 #define _HERCULES_H_
 
 #include "hercules.h"
+/* What follows is a relatively ugly kludge to let the Windows build  */
+/* catch up gracefully to the recent enhancements to the open source  */
+/* build.                                                             */
+#ifdef _MSVC_
+#include "_dynamic_version.h"
+#endif  /* _MSVC_  */
 
 #ifndef _VERSION_C_
 #ifndef _HUTIL_DLL_

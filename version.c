@@ -17,7 +17,19 @@
 
 #include "hercules.h"
 #include "machdep.h"
+
+/* What follows is a relatively ugly kludge to let the Windows build  */
+/* catch up gracefully to the recent enhancements to the open source  */
+/* build.                                                             */
+#ifdef _MSVC_
+#define COMMIT_COUNT 0
+#define COMMIT_MESSAGE ""
+#define COMMIT_HASH ""
+#define COMMIT_UNTRACKED ""
+#define COMMIT_MODIFIED ""
+#else
 #include "commitinfo.h"
+#endif  /* _MSVC_  */
 
 /*--------------------------------------------------*/
 /*   "Unusual" (i.e. noteworthy) build options...   */
