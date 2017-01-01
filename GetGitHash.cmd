@@ -72,8 +72,8 @@ if not exist %outfile% @echo off > %outfile%
         echo #define COMMIT_MODIFIED ""
 
 ) >%tempfile%
-@echo on
-gitkk --version >nul
+
+git --version >nul
 set "rv=%errorlevel%"
 if not "%rv%" == "0" (
     if "%rv%" == "9009" (
