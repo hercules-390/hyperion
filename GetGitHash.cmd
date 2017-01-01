@@ -50,12 +50,9 @@ set "minute=0%minute%"
 set "minute=%minute:~-2%
 set "second=0%second%"
 set "second=%second:~-2%"
-echo Day of week %dayofweek%
 set /a "dayofweek+=1"
-echo Day of week %dayofweek%
 
 for /f "tokens=%dayofweek%" %%a in ("Sun Mon Tue Wed Thu Fri Sat") do set "dayofweek=%%a"
-echo Day of week %dayofweek%
 for /f "tokens=%month%" %%a in ("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec") do set "month=%%a"
 
 set "datestring=%dayofweek% %month% %day% %hour%:%minute%:%second% %year%
@@ -67,7 +64,7 @@ if not exist %outfile% @echo off > %outfile%
 
 :: Write dummy file up front so that there is always something
 (
-        echo %id%"
+        echo %id%
         echo #define COMMIT_COUNT 0
         echo #define COMMIT_MESSAGE ""
         echo #define COMMIT_HASH ""
@@ -75,15 +72,17 @@ if not exist %outfile% @echo off > %outfile%
         echo #define COMMIT_MODIFIED ""
 
 ) >%tempfile%
-
-git --version >nul
+@echo on
+gitkk --version >nul
 set "rv=%errorlevel%"
-if "%rv%" == "127" (
-    echo git is not installed
-    exit /b %rc%
-) else if not "%rv%" == "0" (
-    echo git --version return value %rv%
-    exit /b %rc%
+if not "%rv%" == "0" (
+    if "%rv%" == "9009" (
+        echo Git for Windows is not installed
+    ) else (
+        echo git version return value %rv%
+    )
+    move /Y %tempfile% %outfile% >nul 2>&1
+    exit /b 0
 )
 
 pushd %1
@@ -156,6 +155,7 @@ for /F "tokens=*" %%a in ('!for_query!') do (
         )
     )
 )
+
 
 if "%rv%" == "1" (
     copy /Y %tempfile% %outfile% >nul
