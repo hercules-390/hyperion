@@ -20,6 +20,9 @@ $(PDBDIR):
 $(MAPDIR):
     if not exist "$(MAPDIR)\$(NULL)" mkdir $(MAPDIR)
 
+$(INCDIR):
+    if not exist "$(INCDIR)\$(NULL)" mkdir $(INCDIR)
+
 !IFDEF ASSEMBLY_LISTINGS
 $(ASMDIR):
     if not exist "$(ASMDIR)\$(NULL)" mkdir $(ASMDIR)

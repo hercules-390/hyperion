@@ -7,12 +7,12 @@
 #  Handles support for BZIP2 compression
 #
 #  Modified by Stephen Orso to use either ..\winbuild\bzip2 or winbuld\bzip2
-#  as default directories.    
+#  as default directories.
 #
 #  If BZIP2_DIR is defined, it is used,
 #  Else if ..\winbuild\bzip2 is found, it is used
 #  Else if winbuild\bzip2 is found, it is used,
-#  Else no bzip2 support is generated.  
+#  Else no bzip2 support is generated.
 #
 # ***************************************************************************
 
@@ -36,7 +36,7 @@
 !IF "$(CPU)" == "AMD64"    #Building for 64-bit?
 BZIP2_ARCH=\x64            #..yes, then use the x64 branch
 !ELSE
-BZIP2_ARCH= 
+BZIP2_ARCH=
 !ENDIF
 
 
@@ -54,7 +54,6 @@ BZIP2_DIR=winbuild\bzip2$(BZIP2_ARCH)
 !      UNDEF BZIP2_DIR
 !   ELSE
 BZIP2_DIR=$(BZIP2_DIR)$(BZIP2_ARCH)
-!MESSAGE "**  " $(BZIP2_DIR)
 !      IF !EXIST($(BZIP2_DIR))
 !         UNDEF BZIP2_DIR
 !      ENDIF
@@ -63,7 +62,7 @@ BZIP2_DIR=$(BZIP2_DIR)$(BZIP2_ARCH)
 !ENDIF
 
 # BZIP2_DIR now points to specified or default bzip2 directory with any
-# needed suffix for a 64-bit build.  
+# needed suffix for a 64-bit build.
 
 !IFDEF BZIP2_DIR
 !   IF !EXIST("$(BZIP2_DIR)\bzlib.h")
@@ -73,7 +72,7 @@ BZIP2_DIR=$(BZIP2_DIR)$(BZIP2_ARCH)
 !   ELSEIF !EXIST("$(BZIP2_DIR)\libbz2.dll")
 !      ERROR File "$(BZIP2_DIR)\libbz2.dll" does not exist. Check BZIP2_DIR
 !   ENDIF
-!   MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)" 
+!   MESSAGE BZIP2 support will be included from "$(BZIP2_DIR)"
 !ELSE
-!   MESSAGE BZIP2 support will not be generated from "$(BZIP2_DIR)" 
+!   MESSAGE BZIP2 support will not be generated from "$(BZIP2_DIR)"
 !ENDIF

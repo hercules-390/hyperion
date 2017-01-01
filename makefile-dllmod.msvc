@@ -5,19 +5,19 @@
 #
 # ***************************************************************************
 
-INCDIR = msvc.makefile.includes
+MSVCDIR = msvc.makefile.includes
 
 # ---------------------------------------------------------------------
-!INCLUDE $(INCDIR)\CONFIG.msvc
-!INCLUDE $(INCDIR)\OUTPUT_DIRS.msvc
-!INCLUDE $(INCDIR)\MODULES.msvc
-!INCLUDE $(INCDIR)\OBJ_CODE.msvc
-!INCLUDE $(INCDIR)\EXTPKG_DIRS.msvc
-!INCLUDE $(INCDIR)\ZLIB_DIR.msvc
-!INCLUDE $(INCDIR)\BZIP2_DIR.msvc
-!INCLUDE $(INCDIR)\PCRE_DIR.msvc
-!INCLUDE $(INCDIR)\REXX_DIRS.msvc
-!INCLUDE $(INCDIR)\HQA_DIR.msvc
+!INCLUDE $(MSVCDIR)\CONFIG.msvc
+!INCLUDE $(MSVCDIR)\OUTPUT_DIRS.msvc
+!INCLUDE $(MSVCDIR)\MODULES.msvc
+!INCLUDE $(MSVCDIR)\OBJ_CODE.msvc
+!INCLUDE $(MSVCDIR)\EXTPKG_DIRS.msvc
+!INCLUDE $(MSVCDIR)\ZLIB_DIR.msvc
+!INCLUDE $(MSVCDIR)\BZIP2_DIR.msvc
+!INCLUDE $(MSVCDIR)\PCRE_DIR.msvc
+!INCLUDE $(MSVCDIR)\REXX_DIRS.msvc
+!INCLUDE $(MSVCDIR)\HQA_DIR.msvc
 # ---------------------------------------------------------------------
 
 ###################################################
@@ -35,15 +35,15 @@ INCDIR = msvc.makefile.includes
 ###################################################
 
 # ---------------------------------------------------------------------
-!INCLUDE $(INCDIR)\DEBUG_RETAIL.msvc
-!INCLUDE $(INCDIR)\EXTPKG_FLAGS.msvc
-!INCLUDE $(INCDIR)\ZLIB_FLAGS.msvc
-!INCLUDE $(INCDIR)\BZIP2_FLAGS.msvc
-!INCLUDE $(INCDIR)\PCRE_FLAGS.msvc
-!INCLUDE $(INCDIR)\REXX_FLAGS.msvc
-!INCLUDE $(INCDIR)\IPV6_FLAGS.msvc
-!INCLUDE $(INCDIR)\HQA_FLAGS.msvc
-!INCLUDE $(INCDIR)\HERC_FLAGS.msvc
+!INCLUDE $(MSVCDIR)\DEBUG_RETAIL.msvc
+!INCLUDE $(MSVCDIR)\EXTPKG_FLAGS.msvc
+!INCLUDE $(MSVCDIR)\ZLIB_FLAGS.msvc
+!INCLUDE $(MSVCDIR)\BZIP2_FLAGS.msvc
+!INCLUDE $(MSVCDIR)\PCRE_FLAGS.msvc
+!INCLUDE $(MSVCDIR)\REXX_FLAGS.msvc
+!INCLUDE $(MSVCDIR)\IPV6_FLAGS.msvc
+!INCLUDE $(MSVCDIR)\HQA_FLAGS.msvc
+!INCLUDE $(MSVCDIR)\HERC_FLAGS.msvc
 # ---------------------------------------------------------------------
 
 !IFDEF DYNDIR
@@ -58,14 +58,14 @@ rcflags = $(rcflags) -D TARGETFILENAME=\"$(DYNMOD).dll\" -D MAX_CPU_ENGINES_STR=
 !ENDIF
 
 # ---------------------------------------------------------------------
-!INCLUDE $(INCDIR)\PRIM_RULES.msvc
-!INCLUDE $(INCDIR)\OUTDIR_RULES.msvc
-!INCLUDE $(INCDIR)\MOD_RULES1.msvc
-!INCLUDE $(INCDIR)\MOD_RULES2.msvc
-!INCLUDE $(INCDIR)\ZLIB_RULES.msvc
-!INCLUDE $(INCDIR)\BZIP2_RULES.msvc
-!INCLUDE $(INCDIR)\PCRE_RULES.msvc
-!INCLUDE $(INCDIR)\REXX_RULES.msvc
+!INCLUDE $(MSVCDIR)\PRIM_RULES.msvc
+!INCLUDE $(MSVCDIR)\OUTDIR_RULES.msvc
+!INCLUDE $(MSVCDIR)\MOD_RULES1.msvc
+!INCLUDE $(MSVCDIR)\MOD_RULES2.msvc
+!INCLUDE $(MSVCDIR)\ZLIB_RULES.msvc
+!INCLUDE $(MSVCDIR)\BZIP2_RULES.msvc
+!INCLUDE $(MSVCDIR)\PCRE_RULES.msvc
+!INCLUDE $(MSVCDIR)\REXX_RULES.msvc
 # ---------------------------------------------------------------------
 
 !IFDEF DYNDIR

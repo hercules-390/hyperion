@@ -39,8 +39,13 @@ rcflags = $(rcflags) -D _WIN64
 MAX_CPU_ENGINES = 8
 !ENDIF
 
+# Define variables that must be passed into the resource compiler and c compiler
 rcflags = $(rcflags) -D _MSVC_ -D "VERSION=$(VERSION)" -D VERS_MAJ=$(VERS_MAJ) -D VERS_INT=$(VERS_INT) -D VERS_MIN=$(VERS_MIN) -D VERS_BLD=$(VERS_BLD) /D MAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
 cflags  = $(cflags)  /D _MSVC_ /D "VERSION=$(VERSION)" -D VERS_MAJ=$(VERS_MAJ) -D VERS_INT=$(VERS_INT) -D VERS_MIN=$(VERS_MIN) -D VERS_BLD=$(VERS_BLD) /D MAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
+
+# Add include flags so that dynamically generated headers can be kept out of source
+rcflags = $(rcflags) /I$(INCDIR)
+cflags  = $(cflags) /I$(INCDIR)
 
 !IF DEFINED(CUSTOM_BUILD_STRING)
 cflags  = $(cflags)  /D CUSTOM_BUILD_STRING=\"$(CUSTOM_BUILD_STRING)\"

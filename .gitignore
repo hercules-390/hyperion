@@ -70,6 +70,7 @@ autoconf/compile
 /msvc.AMD64.map
 /msvc.AMD64.obj
 /msvc.AMD64.pdb
+/msvc.AMD64.inc
 /msvc.dllmod.bin
 /msvc.dllmod.cod
 /msvc.dllmod.map
@@ -139,16 +140,21 @@ autoconf/compile
 /*.idc
 /*.pdb
 /*.psess
+/*.suo
+/*.ncb
+/*.opendb
 /*BuildLog*
 /Hercules_VS*.opensdf
 /Hercules_VS*.sdf
-/Hercules_VS*.suo
+/Hercules*.user
 /msvc.*
 *.vcxproj.user
 .vs
 *.VC.db
 
 # Editors
+*.aps
+# Windows resource editor working files
 *.aus
 *.bak
 *~
@@ -156,5 +162,3 @@ autoconf/compile
 # QA Testing
 allTests.*
 
-# Dynamically generated files
-_dynamic_version.h

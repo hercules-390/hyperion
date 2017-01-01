@@ -17,16 +17,32 @@ all: allzlib alllibbz2 allpcre allrexx allHercules
     echo.
     echo -- Hercules build complete --
 
-allHercules: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) \
+allHercules: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR) $(INCDIR) \
+    dynheaders  \
     $(O)build_pch.pch \
     $(MODULES) \
     $(EXECUTABLES)
 
-clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
+# Create dynamic headers if not present nor current in $(incdir).  If
+# nmake is invoked by makefile.bat, then _dynamic_version.h will exist
+# the source directory.  If nmake is invoked directly, it needs to be
+# created and can then be moved into the include directory.  Messy, but
+# cleaner than poluting the source, and an improvement over the old
+# case where a direct nmake build skipped _dynamic_version.h creation.
+dynheaders:
+    if not exist _dynamic_version.h _dynamic_version.cmd /c
+    move /Y _dynamic_version.h $(INCDIR) >nul
+    cd $(INCDIR)
+    ..\GetGitHash.cmd ..
+    cd ..
+
+#clean: $(OBJDIR) $(EXEDIR) $(PDBDIR) $(MAPDIR) $(ASMDIR)
+clean:
     if exist $(OBJDIR)\*.* rmdir /s /q $(OBJDIR)
-    if exist $(EXEDIR)\*.* rmdir /s /q $(EXEDIR)
+    if exist $(EXEDIR)     rmdir /s /q $(EXEDIR)
     if exist $(PDBDIR)\*.* rmdir /s /q $(PDBDIR)
     if exist $(MAPDIR)\*.* rmdir /s /q $(MAPDIR)
+    if exist $(INCDIR)\*.* rmdir /s /q $(INCDIR)
 !IFDEF ASSEMBLY_LISTINGS
     if exist $(ASMDIR)\*.* rmdir /s /q $(ASMDIR)
 !ENDIF
