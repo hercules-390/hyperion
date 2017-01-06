@@ -18,15 +18,21 @@ To build Hercules from source, perform the following steps:
 
 2. Install any of the optional packages you wish to use with Hercules.
 
-3. Build the recommended directory structure for a Hercules build
+3. Obtain a copy of Hercules sources.
 
-4. Obtain SoftFloat 3a For Hercules and build it using the instructions
+4. Build the recommended directory structure for a Hercules build
+
+5. Obtain SoftFloat 3a For Hercules and build it using the instructions
    included with that package.  A pre-built set of binaries exists for
    Windows.
 
-5. Obtain and build Hercules using the README specific to your
+6. Obtain and build Hercules using the README specific to your
    platform.
 
+Steps 4, 5, and 6 will can be performed by using the 1Stop shell script
+or command included in the Hercules sources.  1Stop is described in the
+host platform-specific readme file, README.BuildUNIX.txt or
+README.BuildWIN.txt.
 
 Please Note:  UNIX-like operating systems, including descendants of
 AT&T System V UNIX, GNU/Linux, BSD, and OS/X, are collectively referred
@@ -50,9 +56,9 @@ REQUIRED SOFTWARE PACKAGES
       get the version you require.
 
    Windows: You will need Visual Studio 2015 Community Edition, an
-      appropriate Windows Software Development Kit (SDK), and the file
-      win32.mak from the Windows 7.1 SDK.  README.BuildWIN has
-      specifics, URLs to obtain the needed software, and instructions
+      appropriate Windows Software Development Kit (SDK), a git client,
+      and the file win32.mak from the Windows 7.1 SDK.  README.BuildWIN.txt
+      hase specifics, URLs to obtain the needed software, and instructions
       for installing win32.mak.
 
    Both UNIX and Windows: You will need CMake to build Softfloat 3a For
@@ -62,7 +68,7 @@ REQUIRED SOFTWARE PACKAGES
 
 OPTIONAL SOFTWARE PACKAGES
 
-   REXX interpreters
+   REXX interpreters (at least one is recommended)
 
      You must install a REXX interpreter if you plan to do any of the
      following:
@@ -92,7 +98,12 @@ OPTIONAL SOFTWARE PACKAGES
      Source and installable executables are available for Windows and
      many UNIX distributions.
 
-   Disk and Tape Compression Libraries
+   Disk and Tape Compression Libraries (recommended)
+
+     While disk and tape compression libraries are, strictly speaking,
+     option, and Hercules will build and run correctly without them,
+     may pre-built operating system distributions use compressed disks
+     and tapes.
 
      To reduce storage requirements, emulated disk and tape volumes may
      compressed on the fly.  Compression has its own disk space versus
@@ -145,6 +156,22 @@ OPTIONAL SOFTWARE PACKAGES
 
      Download version 8.20.
 
+   Stand Alone Tool Kit (SATK)
+
+     If you plan to develop Hercules further, SATK provides a very
+     functional mainframe assembler that runs on your workstation.
+     SATK generates object code in .core file format, which can be
+     used when developing test cases for any changes you may make
+     to Hercules.
+
+     Find SATK and its documentation here:
+
+        https://github.com/s390guy/satk
+
+     SATK requires Python, which may be found here:
+
+        https://www.python.org/
+
 
 RECOMMENDED DIRECTORY STRUCTURE
 
@@ -182,8 +209,8 @@ RECOMMENDED DIRECTORY STRUCTURE
    Replace <arch> as follows:
    - Windows: You must use the value of the %PROCESSOR-ARCHITECTURE%
      environment variable.  If you do not, you will need to follow
-     the instructions in README.BuildWIN to point the build process at
-     the SoftFloat 3a For Hercules Library.
+     the instructions in README.BuildWIN.txt to point the build process
+     at the SoftFloat 3a For Hercules Library.
    - UNIX: It is recommended but not required to use the value returned
      by uname -m.
 
@@ -194,20 +221,21 @@ RECOMMENDED DIRECTORY STRUCTURE
 BUILD SOFTFLOAT 3A FOR HERCULES
 
    Windows users who wish to avoid building SoftFloat 3a For Hercules
-   may instead download a zip file containing binaries and public
-   headers in the correct directory structure from here:
+   may instead download an installable file containing binaries and
+   public headers in the correct directory structure from here:
 
-      https://github.com/hercules-390/SoftFloat-3a/releases/download/v1.0.0/s3fh.zip
+      https://github.com/hercules-390/SoftFloat-3a/releases/download/v1.0.1/SF3a4Herc.exe
 
    You can find source for SoftFloat 3a For Hercules here:
 
       https://github.com/hercules-390/SoftFloat-3a/releases/latest
 
-   The document BUILDING in that repository has detailed build instructions.
+   The document BUILDING.txt in that repository has detailed build
+   instructions.
 
    To build SoftFloat on UNIX using the default directory structure and
-   configuration options, change directory to the SoftFloat source directory
-   and issue the command "1Stop".
+   configuration options, change directory to the SoftFloat source
+   directory and issue the command "1Stop".
 
    You only need to build SoftFloat 3a For Hercules once, even if you
    build Hercules multiple times.  A rebuild of SoftFloat 3a For
@@ -230,18 +258,11 @@ specific README files:
 
   For UNIX:
 
-   README.BuildUNIX - For all UNIX-like platforms, including OS/X
-
-   To ensure that SoftFloat-3a is installed, coonfigured, and built
-   using the default options and then configure Hyperion in the
-   default directory, $(uname -m)/hyperion, change directory to
-   the directory that contains this file and issue
-
-        ./DoConfigure <Hercules configure options>
+   README.BuildUNIX.txt - For all UNIX-like platforms, including OS/X
 
   For Windows:
 
-   README.BuildWIN - For all supported versions of Windows, both
+   README.BuildWIN.txt - For all supported versions of Windows, both
       32-bit and 64-bit.
 
 Rewritten by Stephen Orso, stephen.orso@yahoo.com, late 2016.

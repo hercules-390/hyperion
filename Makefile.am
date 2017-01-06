@@ -711,7 +711,10 @@ EXTRA_DIST =						  \
 	_build							  \
 	_build.bat 					  \
 	_build.tail					  \
+	1Stop 					  \
+	1Stop.cmd 					  \
 	GetGitHash 					  \
+	GetGitHash.cmd 					  \
 	_dynamic_version.cmd		  \
 	_TODO.txt						  \
 	all-all.jobs					  \
@@ -728,7 +731,7 @@ EXTRA_DIST =						  \
 	autoconf/mkinstalldirs 	  \
 	autoconf/README				  \
 	autogen.sh 					  \
-	bldlvlck						  \
+	util/bldlvlck						  \
 	build_pch.c					  \
 	BUILDING						  \
 	CHANGES 						  \
