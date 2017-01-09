@@ -30,6 +30,65 @@
  #undef   _GEN_ARCH
 #endif
 
+/*********************************************************************/
+/* Archaeologist's note:                                             */
+/*                                                                   */
+/* The  two following structures were added by Jan Jaeger 2010-08-29 */
+/* when he wrote this module.                                        */
+/*                                                                   */
+/* At  that  point  in  time,  z/Architecture  already had a slew of */
+/* additional  facilities,  including decimal floating point, though */
+/* not all of them were published by the date Jan wrote this.        */
+/*                                                                   */
+/* However,  judging  by  the  way the z/Architecture facilities are */
+/* defined  below, it would appear to be that the intent of ALS2 was */
+/* to  base  z architecture and that increasing numbers would be the */
+/* various level sets of the new models.                             */
+/*                                                                   */
+/* The only place I have been able to determine a dependency on ALS3 */
+/* is in dyncrypt.c where the presence of the various facilities are */
+/* tested  against  the bit map in the CPU.  Here ARCHLVL ESAME gets */
+/* you different bahaviour from ARCHLVL z.                           */
+/*                                                                   */
+/* If  ARCHLVL  ESAME  is  indeed  the  original  z,  then  the  ALC */
+/* instruction  et al.  should receive separate treatment in ESA and */
+/* ESAME  vs  z in that it is RXE in RSA and RXY in z (there are not */
+/* many  instructions that share this behaviour, but they are likely */
+/* to trip you on CMS in ESA mode.                                   */
+/*                                                                   */
+/* The  actual  feature  names  are  define in featxxx.h files.  The */
+/* conditinal definition of FEATURE_INTERLOCKED_ACCESS_FACILITY_2 in */
+/* feat900.h is my doing, out of ignorance at the time.              */
+/*                                                                   */
+/* In  the real world (that is, IBM's) feature membership is defined */
+/* in  Appendix B of the PoO, though the instruction definition also */
+/* includes the lack of the facility as causing a program exception. */
+/*                                                                   */
+/* You  may  wish  to contrast this defintion to the HLASM MACHINE() */
+/* option  in  SC26-4941-07  (somewhat  abbreviated  and paraphrased */
+/* here).                                                            */
+/*                                                                   */
+/* S370:  System/370  machine  instructions,  including those with a */
+/* vector facility.                                                  */
+/*                                                                   */
+/* S370XA:  System/370  extended  architecture machine instructions, */
+/* including  those  with  a  vector facility.  [370 I/O replaced by */
+/* XA.]                                                              */
+/*                                                                   */
+/* S390E:  ESA/370  and  ESA/390  architecture machine instructions, */
+/* including those with a vector facility.                           */
+/*                                                                   */
+/* ZSERIES: z/Architecture systems.                                  */
+/* ZSERIES-2: add long displacement facility.                        */
+/* ZSERIES-3: add z9-109 instructions.                               */
+/* ZSERIES-4: add z10 instructions.                                  */
+/* ZSERIES-5: add z196 instructions.                                 */
+/* ZSERIES-6: add zEC12 instructions.                                */
+/* ZSERIES-7: add z13 instructions.                                  */
+/*                                                                   */
+/*                                                    jph 2017-01-09 */
+/*********************************************************************/
+
 /* Layout of the facility table */
 #define FACILITY(_name, _mode, _fixed, _supp, _level) \
     { QSTR(_name), (STFL_ ## _name), (_mode), (_fixed), (_supp), (_level) },
