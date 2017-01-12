@@ -20,9 +20,9 @@ echo ""
 fi
 
 rm -f autogen.log
-oneutil aclocal -I m4 -I autoconf &&
-oneutil autoheader                &&
-oneutil automake --add-missing    &&
+oneutil aclocal -I m4 -I autoconf && \
+oneutil autoheader                && \
+oneutil automake --add-missing    && \
 oneutil autoconf
 
 R=$?
