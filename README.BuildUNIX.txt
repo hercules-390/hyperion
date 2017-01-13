@@ -83,8 +83,13 @@ OPTIONAL SOFTWARE PACKAGES
 
      libbz2          1.0.6 recommended
      zlib            1.2.8 recommended
-	 ooRexx          4.2.0 recommended
-	 Regina Rexx     3.9.1 recommended
+     ooRexx          4.2.0 recommended
+     Regina Rexx     3.9.1 recommended
+
+     Note that for all of the optional packages, you must install the
+     development libraries to integrate the package into Hercules.  To
+     use runtest and/or make check, you will need the run-time binaries
+     for one or both REXX interpreters.
 
   Compression libraries
 
