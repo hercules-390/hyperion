@@ -8,8 +8,6 @@ Commons Attribution-ShareAlike 4.0 International License.  To view a copy of
 this license, visit  http://creativecommons.org/licenses/by-sa/4.0/ or send
 a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
-If you are building on UNIX and are in a terrible hurry, see the shortcut
-to do everything at the end of this file.
 
 To build Hercules from source, perform the following steps:
 
@@ -191,9 +189,15 @@ RECOMMENDED DIRECTORY STRUCTURE
            /<arch>/s3fh.release   # S3FH Release build dir
            /<arch>/s3fh.debug     # S3FH Debug build dir
 
-   Nonce error for UNIX users: the current development state of
-   the UNIX build process does not allow for builds using other than
-   the above structure.  This will be addressed.
+   Two notes for for UNIX users:
+   1) If you wish to use a structure other than the above to store the
+      packages required to build Hercules, use symbolic links to map
+      your actual structure into the structure detailed above.
+   2) If, after having built Hercules, you elect to move the directory
+      structure, in other words, change <topdir>, delete the contents
+      of the build directories and rebuild Hercules.  Configure
+      populates the .deps directory of the build directory with full
+      path names and does not change them if the directory moves.
 
    Windows users will need to turn the slashes the other way.
 

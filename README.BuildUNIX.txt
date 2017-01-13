@@ -160,6 +160,17 @@ RECOMMENDED DIRECTORY STRUCTURE
    Other directory structures might be used, but you are on your
    own.  The above structure is the supported structure.
 
+   If, after having built Hercules, you elect to move the directory
+   structure, in other words, change <topdir>, delete the contents
+   of the build directories and rebuild Hercules.  Configure
+   populates the .deps directory of the build directory with full
+   path names and does not change them if the directory moves.
+
+   If you are using symbolic links to create the above structure, elect
+   to move the linked-do directories, and change the symbolic links
+   such that the above structure still exists, then there is no need
+   to delete the build directories and rebuild Hercules.
+
 
 PREPARING TO BUILD HERCULES
 
