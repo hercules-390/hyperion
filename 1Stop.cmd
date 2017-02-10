@@ -23,7 +23,7 @@ SETLOCAL EnableDelayedExpansion
 if /i "%PLATFORM%"=="X86" (
 
   set "build_arch=x86"
-  set "build_cmd=makefile.bat RETAILs makefile.msvc 32 %*"
+  set "build_cmd=makefile.bat RETAIL makefile.msvc 32 %*"
 
 ) else (
 
