@@ -205,7 +205,12 @@
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+static const BYTE   eighthex00[]    = {0x00,0x00,0x00,0x00,
+                                       0x00,0x00,0x00,0x00};
+
+static const BYTE   eighthexFF[]    = {0xff,0xff,0xff,0xff,
+                                       0xff,0xff,0xff,0xff};
+
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -836,7 +841,7 @@ int ckd_trklen (DEVBLK *dev, BYTE *buf)
 int             sz;                     /* Size so far               */
 
     for (sz = CKDDASD_TRKHDR_SIZE;
-         memcmp (buf + sz, &eighthexFF, 8) != 0; )
+         memcmp (buf + sz, eighthexFF, 8) != 0; )
     {
         /* add length of count, key, and data fields */
         sz += CKDDASD_RECHDR_SIZE +
@@ -1984,7 +1989,7 @@ int             ckdlen;                 /* Count+key+data length     */
     }
 
     /* Logically erase rest of track by writing end of track marker */
-    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, eighthexFF, 8, unitstat);
+    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, (BYTE *)eighthexFF, 8, unitstat);
     if (rc < 0) return -1;
 
     /* Return total count key and data size */
@@ -2062,7 +2067,7 @@ int             ckdlen;                 /* Count+key+data length     */
     }
 
     /* Logically erase rest of track by writing end of track marker */
-    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, eighthexFF, 8, unitstat);
+    rc = (dev->hnd->write) (dev, dev->bufcur, dev->bufoff, (BYTE *)eighthexFF, 8, unitstat);
     if (rc < 0) return -1;
 
     /* Set the device orientation fields */
@@ -3194,14 +3199,30 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         case 0x18: /* Prepare for Read Subsystem Data */
 
-            /* Command reject if bytes 1-5 not zero */
-            /* except when suborder is Query Host Access */
-            /* when only bytes 1-3 should be zero */
-            if (iobuf[6] == 0x1C)
-                j = 3;
-            else
-                j = 5;
-            if (memcmp(&iobuf[1], "\x00\x00\x00\x00\x00", j) != 0)
+            /* Validate fields */
+            if (
+                /* Reject if flag byte not zero */
+                iobuf[1]           ||
+
+                /* Reject if byte 7 invalid */
+                ((iobuf[6] != 0x01) &&
+                 iobuf[7]) ||
+                ((iobuf[6] == 0x01) &&
+                 (iobuf[7] > 0x00 && iobuf[7] < 0xff)) ||
+
+                /* Reject if bad settings for bytes 8-11 */
+                ((iobuf[6] == 0x00 ||
+//                iobuf[6] == 0x02 ||                       // TBD: For future support
+//                iobuf[6] == 0x04 ||                       // TBD: For future support
+                  iobuf[6] >= 0x06) &&
+                 mem_ne(iobuf+8, eighthex00, 4))   ||
+                (iobuf[6] == 0x01 &&
+//               (iobuf[8] >= 0x02 ||                       // TBD: For future support
+                  mem_ne(iobuf+9, eighthex00, 3))
+//               )                                          // TBD: For future support
+//              (iobuf[6] == 0x05 &&                        // TBD: For future support
+//               valid(cylinder,head)                       // TBD: Validate cylinder and head address in 8-11)
+                )
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_4);
