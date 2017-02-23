@@ -58,7 +58,7 @@ REQUIRED SOFTWARE PACKAGES
 
       Package     Minimum Version
 
-	  autoconf        2.64
+      autoconf        2.64
       automake        1.9
       flex            2.5
       gawk            3.0
@@ -68,9 +68,9 @@ REQUIRED SOFTWARE PACKAGES
       make            3.79
       perl            5.6
       sed             3.02
-	  cmake           3.2     (used for SoftFloat 3a For Hercules)
+      cmake           3.2     (used for SoftFloat 3a For Hercules)
 
-	  SoftFloat 3a For Hercules, from the Hercules-390 repository.
+      SoftFloat 3a For Hercules, from the Hercules-390 repository.
 
    Use your host system's package manager to verify that the above build
    tools are installed at the appropriate level.
@@ -97,14 +97,14 @@ OPTIONAL SOFTWARE PACKAGES
      library for either or both of bzip and/or zlib2.
 
      bzip: used for tape and disk compression.  If not available in
-	 your host system's package repositories, you may download and
-	 build from source using the following:
+     your host system's package repositories, you may download and
+     build from source using the following:
 
-	   http://www.bzip.org/
+       http://www.bzip.org/
 
-	 zlib2: used for tape and disk compression.  If not available in
-	 your host system's package repositories, you may download and
-	 build from source using the following:
+     zlib2: used for tape and disk compression.  If not available in
+     your host system's package repositories, you may download and
+     build from source using the following:
 
        http://www.zlib.net
 

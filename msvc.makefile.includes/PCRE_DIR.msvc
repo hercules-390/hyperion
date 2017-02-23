@@ -8,7 +8,7 @@
 #  Handles support for PCRE (Perl Compatible Regular Expressions),
 #  for MSVC, needed by HAO (Hercules Automatic Operator) facility
 #
-#  Modified by Stephen Orso to use either ..\winbuild\pcre or winbuld\pcre
+#  Modified by Stephen Orso to use either ..\winbuild\pcre or winbuild\pcre
 #  as default directories, and to test for the "normallly" named pcre
 #  libraries (no "3" suffix) in addition to libraries named with the
 #  "3" suffix.  

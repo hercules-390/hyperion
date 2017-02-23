@@ -155,7 +155,7 @@ OPTIONAL SOFTWARE PACKAGES
 
      You can obtain PCRE here:
 
-	     http://www.airesoft.co.uk/pcre
+         http://www.airesoft.co.uk/pcre
 
      Download version 8.20.
 

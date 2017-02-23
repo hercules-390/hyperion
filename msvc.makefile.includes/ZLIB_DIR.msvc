@@ -6,13 +6,13 @@
 #
 #  Handles support for ZLIB compression
 #
-#  Modified by Stephen Orso to use either ..\winbuild\zlib or winbuld\zlib
-#  as default directories.    
+#  Modified by Stephen Orso to use either ..\winbuild\zlib or winbuild\zlib
+#  as default directories.
 #
 #  If ZLIB_DIR is defined, it is used,
 #  Else if ..\winbuild\zlib is found, it is used
 #  Else if winbuild\zlib is found, it is used,
-#  Else no zlib support is generated.  
+#  Else no zlib support is generated.
 #
 # ***************************************************************************
 #
@@ -69,7 +69,7 @@ ZLIB_DIR=$(ZLIB_DIR)$(ZLIB_ARCH)
 !ENDIF
 
 # ZLIB_DIR now points to specified or default zlib directory with any
-# needed suffix for a 64-bit build.  
+# needed suffix for a 64-bit build.
 
 !IFDEF ZLIB_DIR
 !   IF !EXIST("$(ZLIB_DIR)\include\zlib.h")

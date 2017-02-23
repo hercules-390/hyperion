@@ -4,14 +4,14 @@
 # (c) 2016 Copyright by Stephen R. Orso
 # --------------------------------------------------------------------------
 #
-#  Set include and linkedit libraries for external packages required 
+#  Set include and linkedit libraries for external packages required
 #  to build Hercules.
 #
 #  At present, only Softfloat 3a is set up as an external package.
 #
-# Note that the packages set up in this file are REQUIRED for a 
-# successful build, and if any are missing, a message is issued and the 
-# build is terminated. 
+# Note that the packages set up in this file are REQUIRED for a
+# successful build, and if any are missing, a message is issued and the
+# build is terminated.
 #
 # ***************************************************************************
 
@@ -24,7 +24,7 @@ SFLIB_LIB = $(SFLIB_DIR)\lib\SoftFloat_D.lib
 !ENDIF
 
 !IF !EXIST("$(SFLIB_LIB)")
-!ERROR SFLIB_DIR "$(SFLIB_DIR)\lib\SoftFloat.lib" does not exist. Check "$(SFLIB_DIR)" contents.
+!ERROR SFLIB_DIR "$(SFLIB_LIB)" does not exist. Check "$(SFLIB_DIR)" contents.
 !ENDIF
 
 SFLIB_INC = $(SFLIB_DIR)/include

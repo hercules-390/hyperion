@@ -6,7 +6,7 @@
 #
 #  Handles support for BZIP2 compression
 #
-#  Modified by Stephen Orso to use either ..\winbuild\bzip2 or winbuld\bzip2
+#  Modified by Stephen Orso to use either ..\winbuild\bzip2 or winbuild\bzip2
 #  as default directories.
 #
 #  If BZIP2_DIR is defined, it is used,

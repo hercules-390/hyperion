@@ -167,8 +167,8 @@ REQUIRED SOFTWARE PACKAGES
 
       A higher SDK version should also work.  Web Developer Tools is
       absolutely required to build Hercules.  The Common Tools for
-	  Visual C++ may not be required; further testing is needed.
-	  Feedback is welcomed.
+      Visual C++ may not be required; further testing is needed.
+      Feedback is welcomed.
 
       See the Appendix below for details on the requirement for
       win32.mak.
@@ -280,17 +280,17 @@ OPTIONAL SOFTWARE PACKAGES FOR BUILDING HERCULES
      - zlib: Can be used by Hercules to compress both disk and tape
           volumes.  Can be found at:
 
-		  http://www.winimage.com/zLibDll/
+          http://www.winimage.com/zLibDll/
 
-		  Repackaging into the directory structure required for Hercules
-		  will be needed.  Original package available at:
+          Repackaging into the directory structure required for Hercules
+          will be needed.  Original package available at:
 
-		  http://www.zlib.net
+          http://www.zlib.net
 
        At the moment, Windows users will need to build from source.
        A binary distribution is not available at the moment.  If you
-	   have a version of zlib that was used to build a previous version
-	   of Hyperion, you can use that in lieu of building again.
+       have a version of zlib that was used to build a previous version
+       of Hyperion, you can use that in lieu of building again.
 
      - libbz2: Can be used by Hercules to compress both disk and tape
           volumes.  Can be found at:
@@ -299,8 +299,8 @@ OPTIONAL SOFTWARE PACKAGES FOR BUILDING HERCULES
 
        At the moment, Windows users will need to build from source.
        A binary distribution is not available at the moment.   If you
-	   have a version of zlib that was used to build a previous version
-	   of Hyperion, you can use that in lieu of building again.
+       have a version of zlib that was used to build a previous version
+       of Hyperion, you can use that in lieu of building again.
 
    Perl-Compatible Regular Expressions Library
 
@@ -309,10 +309,10 @@ OPTIONAL SOFTWARE PACKAGES FOR BUILDING HERCULES
        (This support is provided by UNIX-like operating systems; no
        separate module is needed.)  Obtain pcre version 8.2.0 here:
 
-	     http://www.airesoft.co.uk/pcre
+         http://www.airesoft.co.uk/pcre
 
        Other versions are available on that page.  8.20 has been tested
-	   and found to work.  The source for pcre may be found here.
+       and found to work.  The source for pcre may be found here.
 
          http://www.pcre.org/
 
