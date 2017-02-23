@@ -188,6 +188,7 @@
   set "break=goto :break"
   set "skip=goto :skip"
   set "exit=goto :exit"
+  set "FIND=%SystemRoot%\System32\find.exe"
 
   set /a "rc=0"
   set /a "maxrc=0"
@@ -545,7 +546,7 @@
   ::  VERS_INT=n and VERS_MIN=n statements.
   :: -------------------------------------------------------------------
 
-  for /f "delims==# tokens=1-3" %%a in ('type %infile% ^| find /i "VERS_"') do (
+  for /f "delims==# tokens=1-3" %%a in ('type %infile% ^| %FIND% /i "VERS_"') do (
     if /i "%%a" == "VERS_MAJ" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_MAJ=%%n"
     if /i "%%a" == "VERS_INT" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_INT=%%n"
     if /i "%%a" == "VERS_MIN" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_MIN=%%n"
@@ -605,15 +606,15 @@
   %TRACE% Attempting SubWCRev.exe ...
 
   set "#="
-  for /f %%a in ('%SubWCRev_exe% "." ^| find /i "E155007"') do set "#=1"
+  for /f %%a in ('%SubWCRev_exe% "." ^| %FIND% /i "E155007"') do set "#=1"
   if defined # goto :set_VERSION_try_GIT
 
   %TRACE% Using SubWCRev.exe ...
 
   set "modified_str="
 
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Updated to revision"') do set "VERS_BLD=%%j"
-  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| find /i "Local modifications found"') do set "modified_str=-modified"
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| %FIND% /i "Updated to revision"') do set "VERS_BLD=%%j"
+  for /f "tokens=1-5" %%g in ('%SubWCRev_exe% "." -f ^| %FIND% /i "Local modifications found"') do set "modified_str=-modified"
 
   if defined VERS_BLD (
     %TRACE% VERS_BLD     = %VERS_BLD%
@@ -636,14 +637,14 @@
   %TRACE% Attempting svn.exe ...
 
   set "#="
-  for /f %%a in ('%svn_exe% info 2^>^&1 ^| find /i "E155007"') do set "#=1"
+  for /f %%a in ('%svn_exe% info 2^>^&1 ^| %FIND% /i "E155007"') do set "#=1"
   if defined # goto :set_VERSION_try_GIT
 
   %TRACE% Using svn.exe ...
 
   set "modified_str="
 
-  for /f "tokens=1-2" %%a in ('%svn_exe% info 2^>^&1 ^| find /i "Revision:"') do set "VERS_BLD=%%b"
+  for /f "tokens=1-2" %%a in ('%svn_exe% info 2^>^&1 ^| %FIND% /i "Revision:"') do set "VERS_BLD=%%b"
 
   @REM Check if there are local modifications
 

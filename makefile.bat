@@ -795,6 +795,7 @@
 
   for /f "delims=; tokens=1*" %%a in ("%_%") do (
     echo   %%a
+	if not exist %%a echo %~nx0^(1^) : warning C9999 : Path does not exist on disk: "%%a"
     if "%%b" == "" %break%
     set _=%%b
     goto :fxxx_loop
