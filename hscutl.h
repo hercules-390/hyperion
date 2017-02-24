@@ -4,6 +4,9 @@
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
+/*   Modifications to HSCUTL.H Copyright 2017 by Stephen Orso,       */
+/*     and distributed under the terms of the Q Public License       */
+/*     Version 1                                                     */
 
 /*********************************************************************/
 /* HSCUTL.H   --   Implementation of functions used in hercules that */
@@ -255,13 +258,11 @@ HUT_DLL_IMPORT  void   hpcfree  ( BYTE type, void*  ptr  );
 /* Hercules low-level file open */
 HUT_DLL_IMPORT  int hopen( const char* path, int oflag, ... );
 
-/* Trim path information from __FILE__ macro */
-#if defined( _MSVC_ )
+/* Trim path information from strings that include the               */
+/* __FILE__ predefined macro                                         */
+
 HUT_DLL_IMPORT const char* trimloc( const char* loc );
 #define  TRIMLOC(_loc)     trimloc( _loc )
-#else
-#define  TRIMLOC(_loc)            ( _loc )
-#endif
 
 /*********************************************************************/
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
