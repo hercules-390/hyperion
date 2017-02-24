@@ -312,26 +312,77 @@ static const char* sig2str( BYTE sig ) {
 }
 
 /*-------------------------------------------------------------------*/
+/* The following is the original macro comment - kept for historical */
+/* value                                                             */
+/*-------------------------------------------------------------------*/
 /* STORCHK macro: check storage access & update ref & change bits.   */
 /* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
 /* Storage key ref & change bits are only updated if successful.     */
 /*-------------------------------------------------------------------*/
-/* FIXME - WORKAROUND FIX ONLY */
-#define STORCHK(_addr,_len,_key,_acc,_dev) 0
-/*
-#define STORCHK(_addr,_len,_key,_acc,_dev) \
-  (((((_addr) + (_len)) > (_dev)->mainlim) \
-    || (((_dev)->orb.flag5 & ORB5_A) \
-      && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
-        && ((_addr) < sysblk.addrlimval)) \
-      || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH) \
-        && (((_addr) + (_len)) > sysblk.addrlimval)) ) )) ? CSW_PROGC : \
-   ((_key) && ((STORAGE_KEY((_addr), (_dev)) & STORKEY_KEY) != (_key)) \
-&& ((STORAGE_KEY((_addr), (_dev)) & STORKEY_FETCH) || ((_acc) == STORKEY_CHANGE))) ? CSW_PROTC : \
-  ((STORAGE_KEY((_addr), (_dev)) |= ((((_acc) == STORKEY_CHANGE)) \
-    ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
-*/
 
+/* Make the macro unto an inline function - same perf, less arcane @ISW */
+/* NOTE : This should probably go into qdio.h */
+static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc, DEVBLK *dev)
+{
+	if(addr+len>dev->mainlim)
+	{
+		DBGTRC(dev,"Address %llx above main storage\n",addr);
+		 return CSW_PROGC;	/* Outside storage */
+	}
+	if(dev->orb.flag5 & ORB5_A)			/* Address limit checking enabled ?*/
+	{
+		if(dev->pmcw.flag5 & PMCW5_LM_LOW)	/* Low address defined ? */
+		{
+			if(addr<sysblk.addrlimval)
+			{
+				DBGTRC(dev,"Address %llx below limit of %llx\n",addr,sysblk.addrlimval);
+				return CSW_PROGC;
+			}
+		}
+		if(dev->pmcw.flag5 & PMCW5_LM_HIGH)	/* High address defined ? */
+		{
+			if((addr+len)>sysblk.addrlimval)
+			{
+				DBGTRC(dev,"Address %llx above limit of %llx\n",addr+len,sysblk.addrlimval);
+				return CSW_PROGC;
+			}
+		}
+	}
+	/* key 0 always right */
+	if(key==0) return 0;
+
+	/* This may not be described anywhere - and could be wrong  */
+	/* But apparently z/VM TC/IP expects Key 14 to allow access to all */
+	/* including storage frames with key 0.... */
+	if((key & 0Xf0)==0xe0) return 0; /* Special case for key 14 ? */
+
+	/* Key match check if keys match we're good */
+	if((STORAGE_KEY(addr,dev) & STORKEY_KEY) == key) return 0;
+
+	/* Ok for fetch when key mismatches */
+	if(!((STORAGE_KEY(addr,dev)) & STORKEY_FETCH) && acc==STORKEY_FETCH) return 0;
+
+	/* Ok for write or fetch when write allowed even on key mismatch */
+	if(((STORAGE_KEY(addr,dev)) & STORKEY_CHANGE)) return 0;
+	DBGTRC(dev,"Key mismatch protection exception : requested key : %x, storage key : %x access type %x\n",key,STORAGE_KEY(addr,dev),acc);
+
+	return CSW_PROTC;
+}
+
+/* The following function updates the storage key on access */
+static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int key,int acc, DEVBLK *dev)
+{
+	int	rc;
+	rc=qeth_storage_access_check(addr,len,key,acc,dev);
+	if(rc==0)
+	{
+		STORAGE_KEY(addr,dev)|=acc;
+	}
+	return rc;
+}
+
+/* Macro wrapper */
+#define STORCHK(_addr,_len,_key,_acc,_dev) qeth_storage_access_check_and_update(_addr,_len,_key,_acc,_dev)
 
 /*-------------------------------------------------------------------*/
 /* Register local MAC address                                        */
