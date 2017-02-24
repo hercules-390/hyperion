@@ -376,7 +376,8 @@ static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int 
 	rc=qeth_storage_access_check(addr,len,key,acc,dev);
 	if(rc==0)
 	{
-		STORAGE_KEY(addr,dev)|=acc;
+		/* Update the REF/CHANGE flag in the storage key */
+		STORAGE_KEY(addr,dev)|=(acc & (STORKEY_FETCH | STORKEY_CHANGE));
 	}
 	return rc;
 }
