@@ -5,6 +5,9 @@
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
+/*   Modifications to HSCUTL.C Copyright 2017 by Stephen Orso,       */
+/*     and distributed under the terms of the Q Public License       */
+/*     Version 1                                                     */
 
 /*********************************************************************/
 /* HSCUTL.C   --   Implementation of functions used in hercules that */
@@ -1203,17 +1206,26 @@ DLL_EXPORT int drop_all_caps(void)
 }
 #endif /* defined(HAVE_SYS_CAPABILITY_H) && defined(HAVE_SYS_PRCTL_H) && defined(OPTION_CAPABILITIES) */
 
-#if defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
 /* Trim path information from __FILE__ macro value                   */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT const char* trimloc( const char* loc )
 {
     /*
-    ** Under certain unknown circumstances MSVC sometimes
-    ** sets the __FILE__ macro to a full path filename
-    ** rather than just the filename only. The following
-    ** compensates for this condition.
+    ** MSVC with the /FC flag and GCC always set the __FILE__ macro 
+    ** to a full path filename.  Without /FC, MSVC sometimes provides
+    ** the full path and sometimes provides just the file name.  The
+    ** following strips any path that may or may not be present in the
+    ** passed parameter.
+    **
+    ** This routine is used by logmsg to set the debug message prexfix,
+    ** and by hthreads and pttrace to remove the path name from the
+    ** lock location, which is "__FILE__(__LINE__)".
+    **
+    ** basename() cannot be used because it is not portable to Windows.
+    **
+    ** As this is primarily debug code, there is not much point in 
+    ** seeking opportunities for optimization and in-lining this code.
     */
     char* p = strrchr( loc, '\\' );
     if (!p) p = strrchr( loc, '/' );
@@ -1221,7 +1233,6 @@ DLL_EXPORT const char* trimloc( const char* loc )
         loc = p+1;
     return loc;
 }
-#endif /* defined( _MSVC_ ) */
 
 /*********************************************************************/
 /* Format TIMEVAL to printable value: "YYYY-MM-DD HH:MM:SS.uuuuuu",  */
