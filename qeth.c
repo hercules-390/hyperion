@@ -316,6 +316,9 @@ static const char* sig2str( BYTE sig ) {
 /* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
 /* Storage key ref & change bits are only updated if successful.     */
 /*-------------------------------------------------------------------*/
+/* FIXME - WORKAROUND FIX ONLY */
+#define STORCHK(_addr,_len,_key,_acc,_dev) 0
+/*
 #define STORCHK(_addr,_len,_key,_acc,_dev) \
   (((((_addr) + (_len)) > (_dev)->mainlim) \
     || (((_dev)->orb.flag5 & ORB5_A) \
@@ -327,6 +330,7 @@ static const char* sig2str( BYTE sig ) {
 && ((STORAGE_KEY((_addr), (_dev)) & STORKEY_FETCH) || ((_acc) == STORKEY_CHANGE))) ? CSW_PROTC : \
   ((STORAGE_KEY((_addr), (_dev)) |= ((((_acc) == STORKEY_CHANGE)) \
     ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
+*/
 
 
 /*-------------------------------------------------------------------*/
