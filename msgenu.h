@@ -16,6 +16,7 @@
 #define _MSGENU_H_
 
 #include "printfmt.h"       /* Hercules printf/sscanf format strings */
+
 /*
 -----------------------------------------------------------------------
                         Message principles
@@ -72,7 +73,10 @@ Examples:
   128bit psw: "%016X %016X", psw64h, psw64l
   Regs:       "GR%02d CR%02d AR%02d FP%02d", grnum, crnum, arnum, fpnum
   Strings:    "%s", ""
+
+-----------------------------------------------------------------------
 */
+
 /*-------------------------------------------------------------------*/
 /*                      PRIMARY MESAGE MACROS                        */
 /*-------------------------------------------------------------------*/
