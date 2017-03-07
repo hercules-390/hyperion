@@ -2563,7 +2563,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
             if ( CMD(argv[2],on,2) )
             {
                 onoff = TRUE;
-                mask = DBGQETHPACKET;
+                mask = DBGQETHPACKET+DBGQETHDATA+DBGQETHUPDOWN;
             }
             else if ( CMD(argv[2],off,3) )
             {

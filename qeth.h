@@ -24,8 +24,9 @@
 /*-------------------------------------------------------------------*/
 #define OSA_GROUP_SIZE          3     /* Devices per OSA Adapter     */
 #define OSA_PORTNO              0     /* OSA Port Number             */
-#define OSA_MAXMAC             32     /* Max supported MAC addresses */
+#define OSA_MAXIPV4             1     /* Max supported IPv4 addresses*/
 #define OSA_MAXIPV6            32     /* Max supported IPv6 addresses*/
+#define OSA_MAXMAC             32     /* Max supported MAC addresses */
 #define OSA_TIMEOUTUS       50000     /* Read select timeout (usecs) */
 
 #define QTOKEN1        0xD8C5E3F1     /* QETH token 1 (QET1 ebcdic)  */
@@ -96,6 +97,7 @@ struct _OSA_BHR;                        /* OSA Buffer Header         */
 typedef struct _OSA_BHR   OSA_BHR,  *POSA_BHR;
 struct _OSA_BHR {                       /* OSA Buffer Header         */
     OSA_BHR*  next;                     /* Pointer to next OSA_BHR   */
+    char*     content;                  /* Pointer to content string */
     int       arealen;                  /* Data area length          */
     int       datalen;                  /* Data length               */
 };                                      /*                           */
@@ -121,13 +123,24 @@ typedef struct _OSA_MAC {
 
 
 /*-------------------------------------------------------------------*/
+/* OSA IPv4 address structure                                        */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_IPV4 {
+        BYTE    addr[4];
+        int     type;
+#define IPV4_TYPE_NONE  0
+#define IPV4_TYPE_INUSE 1
+} OSA_IPV4;
+
+
+/*-------------------------------------------------------------------*/
 /* OSA IPv6 address structure                                        */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_IPV6 {
         BYTE    addr[16];
         int     type;
-#define IPV6_TYPE_NONE     0x00
-#define IPV6_TYPE_INUSE    0x01
+#define IPV6_TYPE_NONE  0
+#define IPV6_TYPE_INUSE 1
 } OSA_IPV6;
 
 
@@ -150,7 +163,6 @@ typedef struct _OSA_GRP {
     char *tthwaddr;             /* MAC address of the interface      */
     char *ttmtu;                /* MTU of the interface              */
 
-    char *ottipaddr;            /* Original 'ipaddr' option value    */
     char *ttipaddr;             /* IPv4 address of the interface     */
     char *ttpfxlen;             /* IPv4 Prefix length of interface   */
     char *ttnetmask;            /* IPv4 Netmask of the interface     */
@@ -160,14 +172,19 @@ typedef struct _OSA_GRP {
 
     char *ttchpid;              /* chpid                             */
 
-    BYTE  pfxmask6[16];         /* IPv6 prefix mask (zeroes then ff) */  /* Needed??? */
-/*  BYTE  ipaddr6[16]; */       /* Network format IPv6 address       */
-    U32   pfxmask4;             /* IPv4 prefix mask (zeroes then ff) */  /* Needed??? */
+    BYTE  confipaddr4[4];       /* IPv4 address of the interface in  */
+                                /* host byte order. This variable    */
+                                /* contains the binary equivalent of */
+                                /* the ttipaddr string.              */
+    BYTE  confpfxmask4[4];      /* IPv4 prefix mask (zeroes then ff) */
+    BYTE  confipaddr6[16];      /* IPv6 address of the interface in  */
+                                /* host byte order. This variable    */
+                                /* contains the binary equivalent of */
+                                /* the ttipaddr6 string.             */
+    BYTE  confpfxmask6[16];     /* IPv6 prefix mask (zeroes then ff) */
 
-    U32   hipaddr4;             /* Locally recognised IPv4 address   */
-
+ OSA_IPV4 ipaddr4[OSA_MAXIPV4]; /* Locally recognised IPv4 address   */
  OSA_IPV6 ipaddr6[OSA_MAXIPV6]; /* Locally recognised IPv6 addresses */
-
   OSA_MAC mac[OSA_MAXMAC];      /* Locally recognised MAC addresses  */
 
     int   promisc;              /* Adapter is in promiscuous mode    */

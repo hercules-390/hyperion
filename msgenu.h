@@ -1893,7 +1893,16 @@ Examples:
 // range 03500 - 03599 available
 // range 03600 - 03699 available
 // range 03700 - 03799 available
-// range 03800 - 03899 available
+
+// reserve 038xx for qeth related messages
+#define HHC03801 "%1d:%04X %s: Register guest MAC address %s"
+#define HHC03802 "%1d:%04X %s: Cannot register guest MAC address %s"
+#define HHC03803 "%1d:%04X %s: Unregister guest MAC address %s"
+#define HHC03804 "%1d:%04X %s: Cannot unregister guest MAC address %s"
+#define HHC03805 "%1d:%04X %s: Register guest IP address %s"
+#define HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
+#define HHC03807 "%1d:%04X %s: Unregister guest IP address %s"
+#define HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
 
 // reserve 039xx for ptp related messages
 #define HHC03901 "%1d:%04X PTP: Guest and driver IP addresses are the same"

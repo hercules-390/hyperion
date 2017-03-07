@@ -191,6 +191,40 @@ static void DBGTRC( DEVBLK* dev, char* fmt, ... )
   #define MPC_DUMP_DATA(...)    // (do nothing)
 #endif // QETH_DUMP_DATA
 
+/* DBGUPD statements controlled by "debugupdown" option */
+static void DBGUPD( DEVBLK* dev, int what, void* adr, int len, BYTE dir, char* fmt, ... )
+{
+  DEVGRP *devgrp = dev->group;
+  if (devgrp)
+  {
+    OSA_GRP* grp = devgrp->grp_data;
+    if (grp && (grp->debugmask & DBGQETHUPDOWN))
+    {
+      char buf[256];
+      va_list   vargs;
+      va_start( vargs, fmt );
+#if defined( _MSVC_ )
+      _vsnprintf_s( buf, sizeof(buf), _TRUNCATE, fmt, vargs );
+#else
+      vsnprintf( buf, sizeof(buf), fmt, vargs );
+#endif
+      // HHC03991 "%1d:%04X %s: %s"
+      WRMSG( HHC03991, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+             buf );
+      va_end( vargs );
+      if (what == 3) {
+        mpc_display_osa_iear( dev, adr, dir, len );
+      } else if (what == 2) {
+        mpc_display_osa_iea( dev, adr, dir, len );
+      } else if (what == 1) {
+        mpc_display_osa_th_etc( dev, adr, dir, 0 );
+      } else {
+        mpc_display_stuff( dev, "", adr, len, dir );
+      }
+    }
+  }
+}
+
 
 /*-------------------------------------------------------------------*/
 /* Hercules Dynamic Loader (HDL)                                     */
@@ -216,12 +250,11 @@ static OSA_BHR* process_ulp_setup( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 static OSA_BHR* process_dm_act( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 static OSA_BHR* process_ulp_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 static OSA_BHR* process_ulp_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
-static OSA_BHR* process_unknown_puk( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 static OSA_BHR* alloc_buffer( DEVBLK*, int );
-static void*    add_buffer_to_chain_and_signal_event( OSA_GRP*, OSA_BHR* );
-static void*    add_buffer_to_chain( OSA_GRP*, OSA_BHR* );
+static void     add_buffer_to_chain_and_signal_event( OSA_GRP*, OSA_BHR* );
+static void     add_buffer_to_chain( OSA_GRP*, OSA_BHR* );
 static OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
-static void*    remove_and_free_any_buffers_on_chain( OSA_GRP* );
+static void     remove_and_free_any_buffers_on_chain( OSA_GRP* );
 static void     InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
 static void     InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
 static int      netmask2prefix( char* ttnetmask, char** ttpfxlen  );
@@ -385,132 +418,6 @@ static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int 
 /* Macro wrapper */
 #define STORCHK(_addr,_len,_key,_acc,_dev) qeth_storage_access_check_and_update(_addr,_len,_key,_acc,_dev)
 
-/*-------------------------------------------------------------------*/
-/* Register local IPv6 address                                       */
-/*-------------------------------------------------------------------*/
-static inline int register_ipv6(BYTE *ipaddr6, OSA_GRP *grp)
-{
-int i;
-    /* Check whether the IPv6 address is already known in the table. */
-    for (i = 0; i < OSA_MAXIPV6; i++)
-    {
-        if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE &&
-            memcmp(grp->ipaddr6[i].addr, ipaddr6, 16) == 0)
-        {
-            return IPV6_TYPE_INUSE;
-        }
-    }
-    /* Record the previously unknown IPv6 address in the table. */
-    for (i = 0; i < OSA_MAXIPV6; i++)
-    {
-        if(grp->ipaddr6[i].type == IPV6_TYPE_NONE)
-        {
-            grp->ipaddr6[i].type = IPV6_TYPE_INUSE;
-            memcpy(grp->ipaddr6[i].addr, ipaddr6, 16);
-            return IPV6_TYPE_INUSE;
-        }
-    }
-    /* Oh dear, the table of IPv6 addresses is full. */
-    return IPV6_TYPE_NONE;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Deregister local IPv6 address                                     */
-/*-------------------------------------------------------------------*/
-static inline int deregister_ipv6(BYTE *ipaddr6, OSA_GRP *grp)
-{
-int i;
-    /* Check whether the IPv6 address is in the table. */
-    for (i = 0; i < OSA_MAXIPV6; i++)
-    {
-        if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE &&
-            memcmp(grp->ipaddr6[i].addr, ipaddr6, 16) == 0)
-        {
-            grp->ipaddr6[i].type = IPV6_TYPE_NONE;
-            memset(grp->ipaddr6[i].addr, 0, 16);
-            return IPV6_TYPE_NONE;
-        }
-    }
-    /* Oh dear, the IPv6 address wasn't in the table. */
-    return IPV6_TYPE_NONE;
-}
-
-
-#if 0 // FIXME: Do we need this, see l3_cast_type_ipv6?
-/*-------------------------------------------------------------------*/
-/* Validate IPv6 address                                             */
-/*-------------------------------------------------------------------*/
-static inline int validate_ipv6(OSA_GRP *grp, BYTE *ipaddr6)
-{
-int i;
-    /* Check whether the IPv6 address is in the table. */
-    for (i = 0; i < OSA_MAXIPV6; i++)
-    {
-        if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE &&
-            memcmp(grp->ipaddr6[i].addr, ipaddr6, 16) == 0)
-        {
-            return IPV6_TYPE_INUSE;
-        }
-    }
-    /* Oh dear, the IPv6 address isn't in the table. */
-    return IPV6_TYPE_NONE;
-}
-#endif // (Do we need any of this?)
-
-
-/*-------------------------------------------------------------------*/
-/* Register local MAC address                                        */
-/*-------------------------------------------------------------------*/
-static inline int register_mac(BYTE *mac, int type, OSA_GRP *grp)
-{
-int i;
-    for(i = 0; i < OSA_MAXMAC; i++)
-    {
-        if(!grp->mac[i].type || !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
-        {
-            memcpy(grp->mac[i].addr,mac,IFHWADDRLEN);
-            grp->mac[i].type = type;
-            return type;
-        }
-    }
-    return MAC_TYPE_NONE;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Deregister local MAC address                                      */
-/*-------------------------------------------------------------------*/
-static inline int deregister_mac(BYTE *mac, int type, OSA_GRP *grp)
-{
-int i;
-    for(i = 0; i < OSA_MAXMAC; i++)
-    {
-        if((grp->mac[i].type == type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
-        {
-            grp->mac[i].type = MAC_TYPE_NONE;
-            return type;
-        }
-    }
-    return MAC_TYPE_NONE;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Validate MAC address and return MAC type                          */
-/*-------------------------------------------------------------------*/
-static inline int validate_mac(BYTE *mac, int type, OSA_GRP *grp)
-{
-int i;
-    for(i = 0; i < OSA_MAXMAC; i++)
-    {
-        if((grp->mac[i].type & type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
-            return grp->mac[i].type | grp->promisc;
-    }
-    return grp->promisc;
-}
-
-
 #if defined(_FEATURE_QDIO_THININT)
 /*-------------------------------------------------------------------*/
 /* Set Adapter Local Summary Indicator bits                          */
@@ -600,6 +507,247 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 #define CLR_DSCI(_dev,_bits)    /* (do nothing) */
 
 #endif /*defined(_FEATURE_QDIO_THININT)*/
+
+
+/*-------------------------------------------------------------------*/
+/* Register local MAC address                                        */
+/*-------------------------------------------------------------------*/
+static int register_mac(BYTE *mac, int type, OSA_GRP *grp)
+{
+int i;
+char charmac[24];
+    for(i = 0; i < OSA_MAXMAC; i++)
+    {
+        if(!grp->mac[i].type || !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
+        {
+            memcpy(grp->mac[i].addr,mac,IFHWADDRLEN);
+            grp->mac[i].type = type;
+            return type;
+        }
+    }
+    return MAC_TYPE_NONE;
+
+
+        snprintf(  charmac,  sizeof(charmac),
+            "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
+
+
+}
+
+/*-------------------------------------------------------------------*/
+/* Unregister local MAC address                                      */
+/*-------------------------------------------------------------------*/
+static int unregister_mac(BYTE *mac, int type, OSA_GRP *grp)
+{
+int i;
+    for(i = 0; i < OSA_MAXMAC; i++)
+    {
+        if((grp->mac[i].type == type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
+        {
+            grp->mac[i].type = MAC_TYPE_NONE;
+            return type;
+        }
+    }
+    return MAC_TYPE_NONE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Unregister all local MAC address                                  */
+/*-------------------------------------------------------------------*/
+static int unregister_all_mac(OSA_GRP *grp)
+{
+int i;
+    for(i = 0; i < OSA_MAXMAC; i++)
+    {
+        grp->mac[i].type = MAC_TYPE_NONE;
+        memset(grp->mac[i].addr, 0, IFHWADDRLEN);
+    }
+    return MAC_TYPE_NONE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Validate MAC address and return MAC type                          */
+/*-------------------------------------------------------------------*/
+static int validate_mac(BYTE *mac, int type, OSA_GRP *grp)
+{
+int i;
+    for(i = 0; i < OSA_MAXMAC; i++)
+    {
+        if((grp->mac[i].type & type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
+            return grp->mac[i].type | grp->promisc;
+    }
+    return grp->promisc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Register local IPv4 address                                       */
+/*-------------------------------------------------------------------*/
+/* The returned values are:-                                         */
+/*   -1  The table is full                                           */
+/*    0  The IPv4 address was added to the table                     */
+/*    1  The IPv4 address was already in the table                   */
+static int register_ipv4(OSA_GRP* grp, DEVBLK* dev, BYTE *ipaddr4)
+{
+char charip4[48];
+    /* Check whether the IPv4 address is already registered. */
+    if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE &&
+        memcmp(grp->ipaddr4[0].addr, ipaddr4, 4) == 0)
+    {
+        return 1;
+    }
+    /* Register the previously unknown IPv4 address. */
+    if (grp->ipaddr4[0].type == IPV4_TYPE_NONE)
+    {
+        memcpy(grp->ipaddr4[0].addr, ipaddr4, 4);
+        grp->ipaddr4[0].type = IPV4_TYPE_INUSE;
+        hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
+        // HHC03805 "%1d:%04X %s: Register guest IP address %s"
+        WRMSG(HHC03805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                charip4 );
+        return 0;
+    }
+    /* Oh dear, the table of IPv4 addresses is full. */
+    hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
+    // HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
+    WRMSG(HHC03806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            charip4 );
+    return -1;
+}
+
+/*-------------------------------------------------------------------*/
+/* Unregister local IPv4 address                                     */
+/*-------------------------------------------------------------------*/
+/* The returned values are:-                                         */
+/*    0  The IPv4 address was removed from the table                 */
+/*    1  The IPv4 address was not in the table                       */
+static int unregister_ipv4(OSA_GRP* grp, DEVBLK* dev, BYTE *ipaddr4)
+{
+char charip4[48];
+    /* Check whether the IPv4 address is registered. */
+    if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE &&
+        memcmp(grp->ipaddr4[0].addr, ipaddr4, 4) == 0)
+    {
+        grp->ipaddr4[0].type = IPV4_TYPE_NONE;
+        memset(grp->ipaddr4[0].addr, 0, 4);
+        hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
+        // HHC03807 "%1d:%04X %s: Unregister guest IP address %s"
+        WRMSG(HHC03807, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                charip4 );
+        return 0;
+    }
+    /* Oh dear, the IPv4 address wasn't registered. */
+    hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
+    // HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
+    WRMSG(HHC03808, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+          charip4 );
+    return 1;
+}
+
+/*-------------------------------------------------------------------*/
+/* Unregister all local IPv4 addresses                               */
+/*-------------------------------------------------------------------*/
+/* The returned value is:-                                           */
+/*    0  All IPv4 addresses were removed from the table              */
+static int unregister_all_ipv4(OSA_GRP* grp)
+{
+    grp->ipaddr4[0].type = IPV4_TYPE_NONE;
+    memset(grp->ipaddr4[0].addr, 0, 4);
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Register local IPv6 address                                       */
+/*-------------------------------------------------------------------*/
+/* The returned values are:-                                         */
+/*   -1  The table is full                                           */
+/*    0  The IPv6 address was added to the table                     */
+/*    1  The IPv6 address was already in the table                   */
+static int register_ipv6(OSA_GRP* grp, DEVBLK* dev, BYTE *ipaddr6)
+{
+int i;
+char charip6[48];
+    /* Check whether the IPv6 address is already registered. */
+    for (i = 0; i < OSA_MAXIPV6; i++)
+    {
+        if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE &&
+            memcmp(grp->ipaddr6[i].addr, ipaddr6, 16) == 0)
+        {
+            return 1;
+        }
+    }
+    /* Register the previously unknown IPv6 address. */
+    for (i = 0; i < OSA_MAXIPV6; i++)
+    {
+        if (grp->ipaddr6[i].type == IPV6_TYPE_NONE)
+        {
+            memcpy(grp->ipaddr6[i].addr, ipaddr6, 16);
+            grp->ipaddr6[i].type = IPV6_TYPE_INUSE;
+            hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
+            // HHC03805 "%1d:%04X %s: Registered guest IP address %s"
+            WRMSG(HHC03805, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                    charip6 );
+            return 0;
+        }
+    }
+    /* Oh dear, the IPv6 address table is full. */
+    hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
+    // HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
+    WRMSG(HHC03806, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+          charip6 );
+    return -1;
+}
+
+/*-------------------------------------------------------------------*/
+/* Unregister local IPv6 address                                     */
+/*-------------------------------------------------------------------*/
+/* The returned values are:-                                         */
+/*    0  The IPv6 address was removed from the table                 */
+/*    1  The IPv6 address was not in the table                       */
+static int unregister_ipv6(OSA_GRP* grp, DEVBLK* dev, BYTE *ipaddr6)
+{
+int i;
+char charip6[48];
+    /* Check whether the IPv6 address is registered. */
+    for (i = 0; i < OSA_MAXIPV6; i++)
+    {
+        if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE &&
+            memcmp(grp->ipaddr6[i].addr, ipaddr6, 16) == 0)
+        {
+            grp->ipaddr6[i].type = IPV6_TYPE_NONE;
+            memset(grp->ipaddr6[i].addr, 0, 16);
+            hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
+            // HHC03807 "%1d:%04X %s: Unregistered guest IP address %s"
+            WRMSG(HHC03807, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                    charip6 );
+            return 0;
+        }
+    }
+    /* Oh dear, the IPv6 address wasn't registered. */
+    hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
+    // HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
+    WRMSG(HHC03808, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+            charip6 );
+    return 1;
+}
+
+/*-------------------------------------------------------------------*/
+/* Unregister all local IPv6 addresses                               */
+/*-------------------------------------------------------------------*/
+/* The returned value is:-                                           */
+/*    0  All IPv6 addresses were removed from the table              */
+static int unregister_all_ipv6(OSA_GRP* grp)
+{
+int i;
+    for (i = 0; i < OSA_MAXIPV6; i++)
+    {
+        grp->ipaddr6[i].type = IPV6_TYPE_NONE;
+        memset(grp->ipaddr6[i].addr, 0, 16);
+    }
+    return 0;
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -867,12 +1015,15 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         qeth_errnum_msg( dev, grp, rc,
             "W", "socket_set_blocking_mode() failed" );
 
-    /* Make sure the interface has a valid MAC address */
+    /* Make sure the interface has a valid MAC address.      */
+    /* TUN's of course don't have MAC addresses, only TAP's. */
     if (grp->tthwaddr) {
 #if defined( OPTION_TUNTAP_SETMACADDR )
-        if ((rc = TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
-                "E", "TUNTAP_SetMACAddr() failed" );
+        if (!grp->l3) {
+            if ((rc = TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr)) != 0)
+                return qeth_errnum_msg( dev, grp, rc,
+                    "E", "TUNTAP_SetMACAddr() failed" );
+        }
 #endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
     } else {
         InitMACAddr( dev, grp );
@@ -936,7 +1087,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 /*-------------------------------------------------------------------*/
 /* Adapter Command Routine                                           */
 /*-------------------------------------------------------------------*/
-static void osa_adapter_cmd(DEVBLK *dev, MPC_TH *req_th)
+static void osa_adapter_cmd(DEVBLK *dev, MPC_TH *req_th, int datalen)
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
@@ -957,7 +1108,7 @@ U16 offph;
     switch(req_rrh->type) {
 
     case RRH_TYPE_CM:
-        DBGTRC(dev, "RRH_TYPE_CM\n");
+        strcat( dev->dev_data, "RRH_TYPE_CM" );  /* Prepare the contentstring */
         {
             MPC_PUK *req_puk;
 
@@ -966,28 +1117,31 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
-                DBGTRC(dev, "  PUK_TYPE_ENABLE (CM_ENABLE)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_ENABLE (CM_ENABLE)" );  /* Prepare the contentstring */
                 rsp_bhr = process_cm_enable( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_SETUP:
-                DBGTRC(dev, "  PUK_TYPE_SETUP (CM_SETUP)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_SETUP (CM_SETUP)" );  /* Prepare the contentstring */
                 rsp_bhr = process_cm_setup( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_TAKEDOWN:
-                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN (CM_TAKEDOWN)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_TAKEDOWN (CM_TAKEDOWN)" );  /* Prepare the contentstring */
                 rsp_bhr = process_cm_takedown( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_DISABLE:
-                DBGTRC(dev, "  PUK_TYPE_DISABLE (CM_DISABLE)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_DISABLE (CM_DISABLE)" );  /* Prepare the contentstring */
                 rsp_bhr = process_cm_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
             default:
-                DBGTRC(dev, "  Unknown RRH_TYPE_CM type 0x%02X\n", req_puk->type);
-                rsp_bhr = process_unknown_puk( dev, req_th, req_rrh, req_puk );
+                // HHC03991 "%1d:%04X %s: %s"
+                WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                    "Unknown PUK_TYPE_xxx (CM Unknown)" );
+                net_data_trace( dev, (BYTE*)req_th, datalen, FROM_GUEST, 'I', "???", 0 );
+                rsp_bhr = NULL;
 
             }
 
@@ -997,8 +1151,15 @@ U16 offph;
         }
         break;
 
+    /*  The RRH_TYPE_ULP requests enable/disable a specific data device. The  */
+    /*  data device being enabled is identified by the ULP_SETUP PUS_0B       */
+    /*  contents. The data device being disabled is identified by the token.  */
+    /*  Note: The ULP_ENABLE, ULP_SETUP & ULP_ACTIVE exchanges also prepares  */
+    /*  the token that identifies the data device in subsequent RRH_TYPE_IPA  */
+    /*  requests & responses. QETH currently uses the constant 'QET5' for     */
+    /*  the token, I wonder if it should be unique?                           */
     case RRH_TYPE_ULP:
-        DBGTRC(dev, "RRH_TYPE_ULP\n");
+        strcat( dev->dev_data, "RRH_TYPE_ULP" );  /* Prepare the contentstring */
         {
             MPC_PUK *req_puk;
 
@@ -1007,7 +1168,7 @@ U16 offph;
             switch(req_puk->type) {
 
             case PUK_TYPE_ENABLE:
-                DBGTRC(dev, "  PUK_TYPE_ENABLE (ULP_ENABLE)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_ENABLE (ULP_ENABLE)" );  /* Prepare the contentstring */
                 if (process_ulp_enable_extract( dev, req_th, req_rrh, req_puk ) != 0)
                 {
                     rsp_bhr = NULL;
@@ -1021,28 +1182,31 @@ U16 offph;
                 break;
 
             case PUK_TYPE_SETUP:
-                DBGTRC(dev, "  PUK_TYPE_SETUP (ULP_SETUP)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_SETUP (ULP_SETUP)" );  /* Prepare the contentstring */
                 rsp_bhr = process_ulp_setup( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_ACTIVE:
-                DBGTRC(dev, "  PUK_TYPE_ACTIVE (ULP_ACTIVE)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_ACTIVE (ULP_ACTIVE)" );  /* Prepare the contentstring */
                 rsp_bhr = process_dm_act( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_TAKEDOWN:
-                DBGTRC(dev, "  PUK_TYPE_TAKEDOWN (ULP_TAKEDOWN)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_TAKEDOWN (ULP_TAKEDOWN)" );  /* Prepare the contentstring */
                 rsp_bhr = process_ulp_takedown( dev, req_th, req_rrh, req_puk );
                 break;
 
             case PUK_TYPE_DISABLE:
-                DBGTRC(dev, "  PUK_TYPE_DISABLE (ULP_DISABLE)\n");
+                strcat( dev->dev_data, ": PUK_TYPE_DISABLE (ULP_DISABLE)" );  /* Prepare the contentstring */
                 rsp_bhr = process_ulp_disable( dev, req_th, req_rrh, req_puk );
                 break;
 
             default:
-                DBGTRC(dev, "  Unknown RRH_TYPE_ULP type 0x%02X\n", req_puk->type);
-                rsp_bhr = process_unknown_puk( dev, req_th, req_rrh, req_puk );
+                // HHC03991 "%1d:%04X %s: %s"
+                WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                    "Unknown PUK_TYPE_xxx (ULP Unknown)" );
+                net_data_trace( dev, (BYTE*)req_th, datalen, FROM_GUEST, 'I', "???", 0 );
+                rsp_bhr = NULL;
             }
 
             // Add response buffer to chain.
@@ -1050,8 +1214,11 @@ U16 offph;
         }
         break;
 
+    /*  The RRH_TYPE_IPA requests configure a specific data device            */
+    /*  identified by the MPC_RRH->token variable. As QETH only supports a    */
+    /*  group with a single data device, this isn't a problem (yet!).         */
     case RRH_TYPE_IPA:
-        DBGTRC(dev, "RRH_TYPE_IPA\n");
+        strcat( dev->dev_data, "RRH_TYPE_IPA" );  /* Prepare the contentstring */
         {
             MPC_TH  *rsp_th;
             MPC_RRH *rsp_rrh;
@@ -1096,12 +1263,16 @@ U16 offph;
 
             case IPA_CMD_STARTLAN:  /* 0x01 */
                 /* Note: the MPC_IPA may be 16-bytes in length, not 20-bytes. */
+                strcat( dev->dev_data, ": IPA_CMD_STARTLAN" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 U32  uLoselen;
                 U32  uLength1;
                 U32  uLength3;
-
-                    DBGTRC(dev, "  IPA_CMD_STARTLAN\n");
 
                     if (lendata > SIZE_IPA_SHORT) {
                         uLoselen = lendata - SIZE_IPA_SHORT;
@@ -1117,37 +1288,42 @@ U16 offph;
                     STORE_HW(ipa->rc,IPA_RC_OK);
                     grp->ipae |= IPA_SETADAPTERPARMS;
 
-                    /* Enable the TAP interface */
-                    if (!grp->l3)
-                        VERIFY( qeth_enable_interface( dev, grp ) == 0);
+                    /* Enable the TUN or TAP interface */
+                    VERIFY( qeth_enable_interface( dev, grp ) == 0);
                 }
                 break;
 
             case IPA_CMD_STOPLAN:  /* 0x02 */
-                {
-                    DBGTRC(dev, "  IPA_CMD_STOPLAN\n");
+                strcat( dev->dev_data, ": IPA_CMD_STOPLAN" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
 
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
+                {
                     STORE_HW(ipa->rc,IPA_RC_OK);
                     grp->ipae &= ~IPA_SETADAPTERPARMS;
 
-                    /* Disable the TAP interface */
-                    if (!grp->l3)
-                        VERIFY( qeth_disable_interface( dev, grp ) == 0);
+                    /* Disable the TUN or TAP interface */
+                    VERIFY( qeth_disable_interface( dev, grp ) == 0);
                 }
                 break;
 
             case IPA_CMD_SETADPPARMS:  /* 0xB8 */
+                strcat( dev->dev_data, ": IPA_CMD_SETADPPARMS" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 MPC_IPA_SAP *sap = (MPC_IPA_SAP*)(ipa+1);
                 U32 cmd;
 
                     FETCH_FW(cmd,sap->cmd);
-                    DBGTRC(dev, "  IPA_CMD_SETADPPARMS\n");
-
                     switch(cmd) {
 
                     case IPA_SAP_QUERY:  /*0x00000001 */
-                        DBGTRC(dev, "    IPA_SAP_QUERY\n");
                         {
                         SAP_QRY *qry = (SAP_QRY*)(sap+1);
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
@@ -1158,7 +1334,6 @@ U16 offph;
                         break;
 
                     case IPA_SAP_SETMAC:     /* 0x00000002 */
-                        DBGTRC(dev, "    IPA_SAP_SETMAC\n");
                         {
                         SAP_SMA *sma = (SAP_SMA*)(sap+1);
                         U32 cmd;
@@ -1167,7 +1342,6 @@ U16 offph;
                             switch(cmd) {
 
                             case IPA_SAP_SMA_CMD_READ:  /* 0 */
-                                DBGTRC(dev, "      IPA_SAP_SMA_CMD_READ\n");
                                 STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
                                 STORE_FW(sap->resv004,0x93020000);  /* !!!! */
                                 STORE_FW(sma->asize,IFHWADDRLEN);
@@ -1183,7 +1357,7 @@ U16 offph;
 //                          case IPA_SAP_SMA_CMD_RESET:  /* 8 */
 
                             default:
-                                DBGTRC(dev, "      Unknown IPA_SAP_SETMAC cmd 0x%08x)\n",cmd);
+                                DBGTRC(dev, "  Unknown SET_SAP_MAC subcommand 0x%08x",cmd);
                                 STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                                 STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                             }
@@ -1196,20 +1370,19 @@ U16 offph;
                         U32 promisc;
                             FETCH_FW(promisc,spm->promisc);
                             grp->promisc = promisc ? MAC_TYPE_PROMISC : 0;
-                            DBGTRC(dev, "    IPA_SAP_PROMISC %s\n",grp->promisc ? "On" : "Off");
+                            DBGTRC(dev, "  IPA_SAP_PROMISC %s",grp->promisc ? "On" : "Off");
                             STORE_HW(sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
                         break;
 
                     case IPA_SAP_SETACCESS:  /* 0x00010000 */
-                        DBGTRC(dev, "    IPA_SAP_SETACCESS\n");
                         STORE_HW(sap->rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
 
                     default:
-                        DBGTRC(dev, "    Unknown IPA_CMD_SETADPPARMS command 0x%08x\n",cmd);
+                        DBGTRC(dev, "  Unknown IPA_CMD_SETADPPARMS command 0x%08x",cmd);
                         STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     }
@@ -1218,7 +1391,12 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETVMAC:  /* 0x25 */
-                DBGTRC(dev, "  IPA_CMD_SETVMAC\n");
+                strcat( dev->dev_data, ": IPA_CMD_SETVMAC" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
@@ -1260,11 +1438,16 @@ U16 offph;
                 break;
 
             case IPA_CMD_DELVMAC:  /* 0x26 */
-                DBGTRC(dev, "  IPA_CMD_DELVMAC\n");
+                strcat( dev->dev_data, ": IPA_CMD_DELVMAC" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
-                    if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
+                    if(unregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
                         STORE_HW(ipa->rc,IPA_RC_OK);
                     else
                         STORE_HW(ipa->rc,IPA_RC_L2_MAC_NOT_FOUND);
@@ -1272,7 +1455,12 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETGMAC:  /* 0x23 */
-                DBGTRC(dev, "  IPA_CMD_SETGMAC\n");
+                strcat( dev->dev_data, ": IPA_CMD_SETGMAC" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
@@ -1284,11 +1472,16 @@ U16 offph;
                 break;
 
             case IPA_CMD_DELGMAC:  /* 0x24 */
-                DBGTRC(dev, "  IPA_CMD_DELGMAC\n");
+                strcat( dev->dev_data, ": IPA_CMD_DELGMAC" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
 
-                    if(deregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
+                    if(unregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
                         STORE_HW(ipa->rc,IPA_RC_OK);
                     else
                         STORE_HW(ipa->rc,IPA_RC_L2_GMAC_NOT_FOUND);
@@ -1296,7 +1489,12 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETIP:  /* 0xB1 */
-                DBGTRC(dev, "  IPA_CMD_SETIP\n");
+                strcat( dev->dev_data, ": IPA_CMD_SETIP" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 MPC_IPA_SIP *ipa_sip = (MPC_IPA_SIP*)(ipa+1);
                 U16  proto, retcode;
@@ -1315,13 +1513,24 @@ U16 offph;
                       if (flags == IPA_SIP_DEFAULT)
                       {
 
-                        /* Save guest IPv4 address and netmask*/
-                        FETCH_FW( grp->hipaddr4, ipa_sip->data.ip4.addr );
+                        /* Register the IPv4 address */
+                        rc = register_ipv4(grp, dev, (BYTE*)ipa_sip->data.ip4.addr);
+                        if (rc == -1) {          /* IP table full */
+                            retcode = IPA_RC_IP_ADDR_TABLE_FULL;
+                        } else if (rc == 1) {    /* IP address in table */
+                            retcode = IPA_RC_IP_ADDR_ALREADY_USED;
+                        } else {                 /* IP address added to table */
+                            retcode = IPA_RC_SUCCESS;
+                        }
 
+                        /* Save guest IPv4 address and netmask*/
                         MSGBUF(ipaddr,"%d.%d.%d.%d",ipa_sip->data.ip4.addr[0],
                                                     ipa_sip->data.ip4.addr[1],
                                                     ipa_sip->data.ip4.addr[2],
                                                     ipa_sip->data.ip4.addr[3]);
+                        /* Note: ipa_sip->data.ip4.mask usually contains */
+                        /* 0xFFFFFF00, irrespective of the subnet mask   */
+                        /* that the guest is actually using.             */
                         MSGBUF(ipmask,"%d.%d.%d.%d",ipa_sip->data.ip4.mask[0],
                                                     ipa_sip->data.ip4.mask[1],
                                                     ipa_sip->data.ip4.mask[2],
@@ -1354,50 +1563,51 @@ U16 offph;
                       if (flags == IPA_SIP_DEFAULT)
                       {
 
-                        register_ipv6((BYTE*)ipa_sip->data.ip6.addr, grp);
-
-#if 0 // FIXME: Do we need any of this?
-                        memcpy( grp->ipaddr6, ipa_sip->data.ip6.addr, 16 );
-
-                        if(grp->ttipaddr6)
-                            free(grp->ttipaddr6);
-                        hinet_ntop( AF_INET6, ipa_sip->data.ip6.addr, grp->ttipaddr6, sizeof( grp->ttipaddr6 ));
-#endif // (Do we need any of this?)
-
-#if 0 // FIXME: How do we do this for IPv6?
-      // Basically, we don't. TUNTAP_SetDestAddr issues an ioctl SIOCSIFDSTADDR
-      // request, for which there doesn't appear to be an IPv6 equivalent. The
-      // concept of peer IPv6 addresses doesn't seem to exist, presumably one
-      // is supposed to use routing.
-
-                        rc = TUNTAP_SetDestAddr6(grp->ttifname,grp->ttipaddr6)
-
-                        if (rc != 0)
-                        {
-                            qeth_errnum_msg( dev, grp, rc,
-                                "E", "TUNTAP_SetDestAddr6() failed" );
-                            retcode = IPA_RC_FFFF;
+                        /* Register the IPv6 address */
+                        rc = register_ipv6(grp, dev, (BYTE*)ipa_sip->data.ip6.addr);
+                        if (rc == -1) {          /* IP table full */
+                            retcode = IPA_RC_IP_ADDR_TABLE_FULL;
+                        } else if (rc == 1) {    /* IP address in table */
+                            retcode = IPA_RC_IP_ADDR_ALREADY_USED;
+                        } else {                 /* IP address added to table */
+                            retcode = IPA_RC_SUCCESS;
                         }
-#endif // (how do we do this for IPv6?)
+
+                        // TUNTAP_SetDestAddr issues an ioctl SIOCSIFDSTADDR request,
+                        // for which there doesn't appear to be an IPv6 equivalent.
+                        // The concept of peer IPv6 addresses doesn't seem to exist,
+                        // presumably one is supposed to use routing.
+
                       }
                     }
 #endif /*defined(ENABLE_IPV6)*/
+                    else
+                    {
+                        retcode = IPA_RC_INVALID_IP_VERSION;
+                    }
 
                     STORE_HW(ipa->rc,retcode);
-
-                    /* Enable the TUN interface */
-                    if (grp->l3 && IPA_RC_OK == retcode)
-                        VERIFY( qeth_enable_interface( dev, grp ) == 0);
                 }
                 break;
 
             case IPA_CMD_QIPASSIST:  /* 0xB2 */
-                DBGTRC(dev, "  IPA_CMD_QIPASSIST\n");
+                strcat( dev->dev_data, ": IPA_CMD_QIPASSIST" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 grp->ipae |= IPA_SETADAPTERPARMS;
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_SETASSPARMS:  /* 0xB3 */
+                strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 MPC_IPA_SAS *sas = (MPC_IPA_SAS*)(ipa+1);
                 U32 ano;
@@ -1405,7 +1615,6 @@ U16 offph;
 
                     FETCH_FW(ano,sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,sas->hdr.cmd);    /* Command code */
-                    DBGTRC(dev, "  IPA_CMD_SETASSPARMS: %8.8x, %4.4x\n",ano,cmd);
 
                     if (!(ano & grp->ipas)) {
                         STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
@@ -1415,14 +1624,12 @@ U16 offph;
                     switch(cmd) {
 
                     case IPA_SAS_CMD_START:      /* 0x0001 */
-                        DBGTRC(dev, "    IPA_SAS_CMD_START\n");
                         grp->ipae |= ano;
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     case IPA_SAS_CMD_STOP:       /* 0x0002 */
-                        DBGTRC(dev, "    IPA_SAS_CMD_STOP\n");
                         grp->ipae &= (0xFFFFFFFF - ano);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
@@ -1432,15 +1639,14 @@ U16 offph;
                     case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
-                        DBGTRC(dev, "    IPA_SAS_CMD_xxxxxxx\n");
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     default:
-                        DBGTRC(dev, "    Unknown IPA_CMD_SETASSPARMS command 0x%04X\n", cmd);
-                    /*  STORE_HW(sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
+                        DBGTRC(dev, "  Unknown IPA_CMD_SETASSPARMS command 0x%04X", cmd);
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                    /*  STORE_HW(sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
                     }
 
                 }
@@ -1448,27 +1654,101 @@ U16 offph;
                 break;
 
             case IPA_CMD_SETIPM:  /* 0xB4 */
-                DBGTRC(dev, "  IPA_CMD_SETIPM\n");
+                strcat( dev->dev_data, ": IPA_CMD_SETIPM" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_DELIPM:  /* 0xB5 */
-                DBGTRC(dev, "  IPA_CMD_DELIPM\n");
+                strcat( dev->dev_data, ": IPA_CMD_DELIPM" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_SETRTG:  /* 0xB6 */
-                DBGTRC(dev, "  IPA_CMD_SETRTG\n");
+                strcat( dev->dev_data, ": IPA_CMD_SETRTG" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
             case IPA_CMD_DELIP:  /* 0xB7 */
-                DBGTRC(dev, "  IPA_CMD_DELIP\n");
-                STORE_HW(ipa->rc,IPA_RC_OK);
+                strcat( dev->dev_data, ": IPA_CMD_DELIP" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
+                {
+                MPC_IPA_SIP *ipa_sip = (MPC_IPA_SIP*)(ipa+1);
+                U16  proto, retcode;
+                int  rc;
+                U32  flags;
+
+                    retcode = IPA_RC_OK;
+                    FETCH_HW(proto,ipa->proto);
+
+                    if (proto == IPA_PROTO_IPV4)
+                    {
+                      FETCH_FW(flags,ipa_sip->data.ip4.flags);
+                      if (flags == IPA_SIP_DEFAULT)
+                      {
+
+                        /* Register the IPv4 address */
+                        rc = unregister_ipv4(grp, dev, (BYTE*)ipa_sip->data.ip4.addr);
+                        if (rc == 1) {           /* IP address not in table */
+                          retcode = IPA_RC_UNREGISTERED_ADDR;
+                        } else {                 /* IP address removed from to table */
+                          retcode = IPA_RC_SUCCESS;
+                        }
+
+                      }
+                    }
+#if defined(ENABLE_IPV6)
+                    else if (proto == IPA_PROTO_IPV6)
+                    {
+                      FETCH_FW(flags,ipa_sip->data.ip6.flags);
+                      if (flags == IPA_SIP_DEFAULT)
+                      {
+
+                        /* Register the IPv6 address */
+                        rc = unregister_ipv6(grp, dev, (BYTE*)ipa_sip->data.ip6.addr);
+                        if (rc == 1) {           /* IP address not in table */
+                          retcode = IPA_RC_UNREGISTERED_ADDR;
+                        } else {                 /* IP address removed from to table */
+                          retcode = IPA_RC_SUCCESS;
+                        }
+
+                      }
+                    }
+#endif /*defined(ENABLE_IPV6)*/
+                    else
+                    {
+                      retcode = IPA_RC_INVALID_IP_VERSION;
+                    }
+
+                    STORE_HW(ipa->rc,retcode);
+                }
                 break;
 
             case IPA_CMD_CREATEADDR:  /* 0xC3 */
-                DBGTRC(dev, "  IPA_CMD_CREATEADDR\n");
+                strcat( dev->dev_data, ": IPA_CMD_CREATEADDR" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 {
                 BYTE *ip6 = (BYTE*)(ipa+1);
 
@@ -1479,13 +1759,17 @@ U16 offph;
                     ip6[7] = 0xFE;
                     ip6[0] |= 0x02; // FIXME: IPA_CMD_CREATEADDR: is this needed?
 
-                    STORE_HW( ipa->rc,
-                        IPA_RC_OK );
+                    STORE_HW(ipa->rc,IPA_RC_OK);
                 }
                 break;
 
             case IPA_CMD_SETDIAGASS:  /* 0xB9 */
-                DBGTRC(dev, "  IPA_CMD_SETDIAGASS\n");
+                strcat( dev->dev_data, ": IPA_CMD_SETDIAGASS" );  /* Prepare the contentstring */
+                rsp_bhr->content = strdup( dev->dev_data );
+
+                /* Display the request MPC_TH etc., maybe. */
+                DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
+
                 STORE_HW(ipa->rc,IPA_RC_OK);
                 break;
 
@@ -1509,7 +1793,11 @@ U16 offph;
         break;
 
     default:
-        DBGTRC(dev, "RRH_TYPE_??: Unknown osa_adapter_cmd: req_rrh->type = 0x%02x\n",req_rrh->type);
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+               "Unknown RHH_TYPE_xxx" );
+        net_data_trace( dev, (BYTE*)req_th, datalen, FROM_GUEST, 'I', "???", 0 );
+
     }
     /* end switch(req_rrh->type) */
 }
@@ -1539,33 +1827,58 @@ U16 reqtype;
     /* Copy request to response buffer. */
     memcpy(iear, iea, ieasize);
 
-    FETCH_HW(reqtype, iea->type);
+    /*  The IDX_ACT_TYPE_READ and IDX_ACT_TYPE_WRITE requests & responses     */
+    /*  tell the OSA adapter which of its 256 potential device addresses      */
+    /*  make up the, in QETH terms, group. The IDX_ACT_TYPE_READ request      */
+    /*  identifies the read device, and the IDX_ACT_TYPE_WRITE request        */
+    /*  identifies the write device. Each of the requests contains a list of  */
+    /*  device(s) that will be the data device(s). As QETH only supports a    */
+    /*  group with a single data device, we only ever see a list with a       */
+    /*  single entry. (VTAM supports up to 238 data devices in a group.) The  */
+    /*  requests also contain the iea->port variable containing the OSA port  */
+    /*  number, something that is of great importance to a real OSA, but      */
+    /*  QETH completely ignores. The requests also contains the iea->dataset  */
+    /*  variable, which I believe contains the OSA port name for non-QDIO     */
+    /*  OSA's (see PUS_0A).                                                   */
+    /*  Note: I said earlier that QETH ignores the iea->port variable. What   */
+    /*  I should have said is that QETH ignores the variable after checking   */
+    /*  that the port number is zero. The check probably should be removed.   */
 
+    FETCH_HW(reqtype, iea->type);
     switch(reqtype) {
 
     case IDX_ACT_TYPE_READ:
-        DBGTRC(dev, "IDX_ACT_TYPE_READ\n");
+        strcat( dev->dev_data, "IDX_ACT_TYPE_READ" );  /* Prepare the contentstring */
+        rsp_bhr->content = strdup( dev->dev_data );
+
+        /* Display the request MPC_IEA, maybe. */
+        DBGUPD( dev, 2, iea, ieasize, FROM_GUEST, "%s: Request", dev->dev_data );
+
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, "IDX_ACT_TYPE_READ: Invalid OSA Port %d\n",
+            DBGTRC(dev, "IDX_ACT_TYPE_READ: Invalid OSA Port %d",
                 (iea->port & IDX_ACT_PORT_MASK));
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
+            break;
         }
-        else
-        {
-            iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
-            iear->resp |= IDX_RSP_RESP_OK;
-            iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
-            STORE_FW(iear->token, QTOKEN1);
-            STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
-            STORE_FW(iear->uclevel, QUCLEVEL);
-            dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
-            dev->qtype = QTYPE_READ;
-        }
+
+        iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
+        iear->resp |= IDX_RSP_RESP_OK;
+        iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
+        STORE_FW(iear->token, QTOKEN1);
+        STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
+        STORE_FW(iear->uclevel, QUCLEVEL);
+        dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
+        dev->qtype = QTYPE_READ;
+
         break;
 
     case IDX_ACT_TYPE_WRITE:
-        DBGTRC(dev, "IDX_ACT_TYPE_WRITE\n");
+        strcat( dev->dev_data, "IDX_ACT_TYPE_WRITE" );  /* Prepare the contentstring */
+        rsp_bhr->content = strdup( dev->dev_data );
+
+        /* Display the request MPC_IEA, maybe. */
+        DBGUPD( dev, 2, iea, ieasize, FROM_GUEST, "%s: Request", dev->dev_data );
 
         memcpy( grp->gtissue, iea->token, MPC_TOKEN_LENGTH );  /* Remember guest token issuer */
         grp->ipas = IPA_SUPP;
@@ -1573,28 +1886,33 @@ U16 reqtype;
 
         if((iea->port & IDX_ACT_PORT_MASK) != OSA_PORTNO)
         {
-            DBGTRC(dev, "IDX_ACT_TYPE_WRITE: Invalid OSA Port %d\n",
+            DBGTRC(dev, "IDX_ACT_TYPE_WRITE: Invalid OSA Port %d",
                 (iea->port & IDX_ACT_PORT_MASK));
             dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
+            break;
         }
-        else
-        {
-            iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
-            iear->resp |= IDX_RSP_RESP_OK;
-            iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
-            STORE_FW(iear->token, QTOKEN1);
-            STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
-            STORE_FW(iear->uclevel, QUCLEVEL);
-            dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
-            dev->qtype = QTYPE_WRITE;
-        }
+
+        iear->resp &= (0xFF - IDX_RSP_RESP_MASK);
+        iear->resp |= IDX_RSP_RESP_OK;
+        iear->flags = (IDX_RSP_FLAGS_NOPORTREQ + IDX_RSP_FLAGS_40);
+        STORE_FW(iear->token, QTOKEN1);
+        STORE_HW(iear->flevel, IDX_RSP_FLEVEL_0201);
+        STORE_FW(iear->uclevel, QUCLEVEL);
+        dev->qdio.idxstate = MPC_IDX_STATE_ACTIVE;
+        dev->qtype = QTYPE_WRITE;
+
         break;
 
     default:
-        DBGTRC(dev, "Unknown IDX_ACT_TYPE_xxx %04.4x\n",reqtype);
+        // HHC03991 "%1d:%04X %s: %s"
+        WRMSG( HHC03991, "W", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+               "Unknown IDX_ACT_TYPE_xxx" );
+        net_data_trace( dev, (BYTE*)iea, ieasize, FROM_GUEST, 'I', "IEA?", 0 );
+
         dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
 
-        // Free the buffer.
+        // Free the response buffer.
+        if (rsp_bhr->content) free( rsp_bhr->content );
         free( rsp_bhr );
         rsp_bhr = NULL;
 
@@ -1730,33 +2048,40 @@ static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 /*-------------------------------------------------------------------*/
 /* Determine Layer 3 IPv4 cast type                                  */
 /*-------------------------------------------------------------------*/
-static inline int l3_cast_type_ipv4( U32 dstaddr, OSA_GRP *grp )
+static inline int l3_cast_type_ipv4( BYTE* dest_addr, OSA_GRP* grp )
 {
-    if (!dstaddr)
+U32 dest_hbo;
+U32 mask_hbo;
+    FETCH_FW(dest_hbo, dest_addr);
+    FETCH_FW(mask_hbo, grp->confpfxmask4);
+    if (!dest_hbo)                          /* Note: why check for the loopback address? */
         return HDR3_FLAGS_NOCAST;
-    if ((dstaddr & 0xE0000000) == 0xE0000000)
+    if ((dest_hbo & 0xE0000000) == 0xE0000000)
         return HDR3_FLAGS_MULTICAST;
-    if ((dstaddr & grp->pfxmask4) == grp->pfxmask4)
+    if ((dest_hbo & mask_hbo) == mask_hbo)
         return HDR3_FLAGS_BROADCAST;
-    if ((dstaddr & ~grp->pfxmask4) != (grp->hipaddr4 & ~grp->pfxmask4))
-        return HDR3_FLAGS_NOTFORUS;
-    return HDR3_FLAGS_UNICAST;
+    if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE &&
+        memcmp(grp->ipaddr4[0].addr, dest_addr, 4) == 0)
+    {
+        return HDR3_FLAGS_UNICAST;
+    }
+    return HDR3_FLAGS_NOTFORUS;
 }
 
 
 /*-------------------------------------------------------------------*/
 /* Determine Layer 3 IPv6 cast type                                  */
 /*-------------------------------------------------------------------*/
-static inline int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP *grp )
+static inline int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP* grp )
 {
     static const BYTE dest_zero[16] = {0};
     int i;
 
+    if (memcmp( dest_addr, dest_zero, 16 ) == 0)     /* Note: why check for the loopback address? */
+        return HDR3_FLAGS_NOCAST;
+
     if (dest_addr[0] == 0xFF)
         return HDR3_FLAGS_MULTICAST;
-
-    if (memcmp( dest_addr, dest_zero, 16 ) == 0)  /* Note: the loopback address? */
-        return HDR3_FLAGS_NOCAST;
 
     /* Check whether the IPv6 address is in the table. */
     for (i = 0; i < OSA_MAXIPV6; i++)
@@ -2169,16 +2494,12 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         iPktVer = ( ( dev->buf[0] & 0xF0 ) >> 4 );
         if (iPktVer == 4)
         {
-            U32 dstaddr;
-            U16 checksum;
             IP4FRM* ip4 = (IP4FRM*)dev->buf;
             strcpy( cPktVer, "IPv4" );
-            FETCH_FW( dstaddr, &ip4->lDstIP );
-            STORE_FW( &o3hdr.dest_addr[12], dstaddr );
-            FETCH_HW( checksum, ip4->hwChecksum );
-            STORE_HW( o3hdr.in_cksum, checksum );
-            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
-                l3_cast_type_ipv4( dstaddr, grp )))
+            memcpy( &o3hdr.dest_addr[12], &ip4->lDstIP, 4 );
+            memcpy( o3hdr.in_cksum, ip4->hwChecksum, 2 );
+            o3hdr.flags = l3_cast_type_ipv4( &o3hdr.dest_addr[12], grp );
+            if (o3hdr.flags == HDR3_FLAGS_NOTFORUS)
                 return QRC_EPKEOF; /* Not our packet */
             o3hdr.ext_flags = (ip4->bProtocol == udp) ? HDR3_EXFLAG_UDP : 0;
         }
@@ -2187,10 +2508,11 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
             IP6FRM* ip6 = (IP6FRM*)dev->buf;
             strcpy( cPktVer, "IPv6" );
             memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
-            if (HDR3_FLAGS_NOTFORUS == (o3hdr.flags =
-                l3_cast_type_ipv6( o3hdr.dest_addr, grp )))
+            o3hdr.flags = l3_cast_type_ipv6( o3hdr.dest_addr, grp );
+            if (o3hdr.flags == HDR3_FLAGS_NOTFORUS)
                 return QRC_EPKEOF; /* Not our packet */
-            o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6;
+/* ????     o3hdr.flags |= HDR3_FLAGS_PASSTHRU | HDR3_FLAGS_IPV6;    */
+            o3hdr.flags |= HDR3_FLAGS_IPV6;
             o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
         }
         else
@@ -2670,6 +2992,7 @@ OSA_GRP *grp;
 int groupsize = OSA_GROUP_SIZE;
 int grouped = 0;
 int i;
+U32 mask4;
 
 //  if (dev->numconfdev > groupsize)
 //      groupsize = dev->numconfdev;
@@ -2836,6 +3159,21 @@ int i;
             grp->debugmask = DBGQETHPACKET+DBGQETHDATA+DBGQETHUPDOWN;
             continue;
         }
+        else if (!strcasecmp("debugpacket",argv[i]))
+        {
+            grp->debugmask |= DBGQETHPACKET;
+            continue;
+        }
+        else if (!strcasecmp("debugdata",argv[i]))
+        {
+            grp->debugmask |= DBGQETHDATA;
+            continue;
+        }
+        else if (!strcasecmp("debugupdown",argv[i]))
+        {
+            grp->debugmask |= DBGQETHUPDOWN;
+            continue;
+        }
         else if(!strcasecmp("nodebug",argv[i]))
         {
             grp->debugmask = 0;
@@ -2859,11 +3197,13 @@ int i;
         HRB      hrb;
         char     c;
         char    *p;
+        static const BYTE zeromac[IFHWADDRLEN] = {0};
 
         /* Check the grp->tthwaddr value */
         if (grp->tthwaddr)
         {
-            if (ParseMAC( grp->tthwaddr, mac ) != 0)
+            if (ParseMAC( grp->tthwaddr, mac ) != 0 ||
+                memcmp( mac, zeromac, IFHWADDRLEN ) == 0)
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -2882,7 +3222,11 @@ int i;
             hrb.numeric = TRUE;
             memcpy( hrb.host, grp->ttipaddr, strlen(grp->ttipaddr) );
             rc = resolve_host( &hrb);
-            if (rc != 0)
+            if (rc == 0)
+            {
+                hinet_pton( AF_INET, grp->ttipaddr, grp->confipaddr4 );
+            }
+            else
             {
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -2900,8 +3244,6 @@ int i;
                     grp->ttnetmask = NULL;
                 }
             }
-            else
-                grp->hipaddr4 = ntohl( inet_addr( grp->ttipaddr ));
         }
 
 #if defined( OPTION_W32_CTCI )
@@ -2995,8 +3337,7 @@ int i;
             rc = resolve_host( &hrb);
             if (rc == 0)
             {
-                hinet_pton( AF_INET6, grp->ttipaddr6, grp->ipaddr6[0].addr );
-                grp->ipaddr6[0].type = IPV6_TYPE_INUSE;
+                hinet_pton( AF_INET6, grp->ttipaddr6, grp->confipaddr6 );
             }
             else
             {
@@ -3065,10 +3406,12 @@ int i;
         }
 
         /* Initialize mask fields */
-        if(grp->ttpfxlen)
-            grp->pfxmask4 = makepfxmask4( grp->ttpfxlen );
+        if(grp->ttpfxlen) {
+            mask4 = makepfxmask4( grp->ttpfxlen );
+            STORE_FW( grp->confpfxmask4, mask4 );
+        }
         if(grp->ttpfxlen6)
-            makepfxmask6( grp->ttpfxlen6, grp->pfxmask6 );
+            makepfxmask6( grp->ttpfxlen6, grp->confpfxmask6 );
     }
 
     return 0;
@@ -3330,7 +3673,7 @@ U32 num;                                /* Number of bytes to move   */
     }
 
 //  /* Display various information, maybe */
-//  if (grp->debugmask)
+//  if (grp->debugmask & DBGQETHCCW)
 //  {
 //      // HHC03992 "%1d:%04X %s: Code %02X: Flags %02X: Count %08X: Chained %02X: PrevCode %02X: CCWseq %d"
 //      WRMSG(HHC03992, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -3348,6 +3691,11 @@ U32 num;                                /* Number of bytes to move   */
     {
     int      datalen, length;
     U32      first4;
+    char     contentstring[256] = {0};
+
+
+        /* Prepare the contentstring. */
+        dev->dev_data = &contentstring;
 
         /* Get the first 4-bytes of the data. */
         FETCH_FW( first4, iobuf );
@@ -3356,23 +3704,11 @@ U32 num;                                /* Number of bytes to move   */
         /* */
         if (first4 == MPC_TH_FIRST4)
         {
-            /* Display the request MPC_TH etc., maybe. */
-            if (grp->debugmask)
-            {
-                mpc_display_description( dev, "Request" );
-                mpc_display_osa_th_etc( dev, (MPC_TH*)iobuf, FROM_GUEST, 0 );
-            }
             /* Process the request MPC_TH etc. */
-            osa_adapter_cmd(dev,(MPC_TH*)iobuf);
+            osa_adapter_cmd(dev,(MPC_TH*)iobuf,datalen);
         }
         else if (first4 == MPC_IEA_FIRST4)
         {
-            /* Display the IEA, maybe. */
-            if (grp->debugmask)
-            {
-                mpc_display_description( dev, "Request" );
-                mpc_display_osa_iea( dev, (MPC_IEA*)iobuf, FROM_GUEST, datalen );
-            }
             /* Process the IEA. */
             osa_device_cmd(dev,(MPC_IEA*)iobuf,datalen);
         }
@@ -3399,6 +3735,9 @@ U32 num;                                /* Number of bytes to move   */
         *unitstat = CSW_CE | CSW_DE;
         *residual = 0;
         *more = 0;
+
+        /* Finished with the contentstring. */
+        dev->dev_data = NULL;
 
         break;
     }
@@ -3476,20 +3815,12 @@ U32 num;                                /* Number of bytes to move   */
                     STORE_FW( th->seqnum, ++grp->seqnumth );
 
                     /* Display the response MPC_TH etc., maybe. */
-                    if (grp->debugmask)
-                    {
-                        mpc_display_description( dev, "Response" );
-                        mpc_display_osa_th_etc( dev, (MPC_TH*)iodata, TO_GUEST, 0 );
-                    }
+                    DBGUPD( dev, 1, iodata, 0, TO_GUEST, "%s: Response", bhr->content );
                 }
                 else if (first4 == MPC_IEA_FIRST4)
                 {
-                    /* Display the IEAR, maybe. */
-                    if (grp->debugmask)
-                    {
-                        mpc_display_description( dev, "Response" );
-                        mpc_display_osa_iear( dev, (MPC_IEAR*)iodata, TO_GUEST, datalen );
-                    }
+                    /* Display the response MPC_IEAR, maybe. */
+                    DBGUPD( dev, 3, iodata, datalen, TO_GUEST, "%s: Response", bhr->content );
                 }
                 else if (first4 == MPC_END_FIRST4)
                 {
@@ -3514,6 +3845,7 @@ U32 num;                                /* Number of bytes to move   */
                 memcpy( iobuf, iodata, datalen );
 
                 /* Free IDX response buffer. Read is complete. */
+                if (bhr->content) free( bhr->content );
                 free( bhr );
                 break; /*while*/
             }
@@ -3610,7 +3942,7 @@ U32 num;                                /* Number of bytes to move   */
         *unitstat = CSW_CE | CSW_DE;
 
         /* Display formatted Sense Id information, maybe */
-        if (grp->debugmask)
+        if (grp->debugmask & DBGQETHUPDOWN)
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
@@ -3638,7 +3970,7 @@ U32 num;                                /* Number of bytes to move   */
         *unitstat = CSW_CE | CSW_DE;
 
         /* Display formatted Read Configuration Data records, maybe */
-        if (grp->debugmask)
+        if (grp->debugmask & DBGQETHUPDOWN)
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
@@ -3698,7 +4030,7 @@ U32 num;                                /* Number of bytes to move   */
         *unitstat = CSW_CE | CSW_DE;
 
         /* Display various information, maybe */
-        if (grp->debugmask) {
+        if (grp->debugmask & DBGQETHUPDOWN) {
             MPC_DUMP_DATA( "SII", iobuf, num, ' ' );
         }
 
@@ -3758,7 +4090,7 @@ U32 num;                                /* Number of bytes to move   */
         *unitstat = CSW_CE | CSW_DE;
 
         /* Display formatted Read Node Information, maybe */
-        if (grp->debugmask)
+        if (grp->debugmask & DBGQETHUPDOWN)
         {
             char buf[1024];
             // HHC03995 "%1d:%04X %s: %s:\n%s"
@@ -4018,7 +4350,7 @@ U32 num;                                /* Number of bytes to move   */
     } /* end switch(code) */
 
 //  /* Display various information, maybe */
-//  if (grp->debugmask)
+//  if (grp->debugmask & DBGQETHCCW)
 //  {
 //      // HHC03993 "%1d:%04X %s: Status %02X: Residual %08X: More %02X"
 //      WRMSG(HHC03993, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -4262,8 +4594,10 @@ U32 uLength2;
 U32 uLength3;
 U16 uLength4;
 
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_01 = mpc_point_pus( dev, req_puk, PUS_TYPE_01 );
@@ -4289,6 +4623,7 @@ U16 uLength4;
     rsp_bhr = alloc_buffer( dev, uLength1+10 );
     if (!rsp_bhr)
         return NULL;
+    rsp_bhr->content = strdup( dev->dev_data );
     rsp_bhr->datalen = uLength1;
 
     // Fix-up various pointers
@@ -4369,8 +4704,10 @@ U32 uLength2;
 U32 uLength3;
 U16 uLength4;
 
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_04 = mpc_point_pus( dev, req_puk, PUS_TYPE_04 );
@@ -4397,6 +4734,7 @@ U16 uLength4;
     rsp_bhr = alloc_buffer( dev, uLength1+10 );
     if (!rsp_bhr)
         return NULL;
+    rsp_bhr->content = strdup( dev->dev_data );
     rsp_bhr->datalen = uLength1;
 
     // Fix-up various pointers
@@ -4470,9 +4808,11 @@ static OSA_BHR* process_cm_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_r
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     UNREFERENCED(grp);
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* There will be no response. */
 
@@ -4487,21 +4827,24 @@ static OSA_BHR* process_cm_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rr
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     UNREFERENCED(grp);
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* There will be no response. */
 
     return NULL;
 }
 
+
 /*-------------------------------------------------------------------*/
 /* Process the ULP_ENABLE request from the guest to extract values.  */
 /*-------------------------------------------------------------------*/
 /* There is one ULP_ENABLE request, irrespective of the number of    */
-/* data paths, which indicates whether the data paths will be using  */
-/* layer2 or layer3. A ULP_ENABLE response will be returned.         */
+/* data paths, which indicates that all of the data paths will be    */
+/* using layer2 or layer3. A ULP_ENABLE response will be returned.   */
 static int process_ulp_enable_extract( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
@@ -4509,8 +4852,10 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 MPC_PUS *req_pus_01;
 MPC_PUS *req_pus_0A;
 
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_01 = mpc_point_pus( dev, req_puk, PUS_TYPE_01 );
@@ -4524,6 +4869,11 @@ MPC_PUS *req_pus_0A;
 
     /* Remember whether we are using layer2 or layer3. */
     grp->l3 = (req_pus_01->vc.pus_01.proto == PROTOCOL_LAYER3);
+
+    /* Clear any registered IP or MAC addresses. */
+    unregister_all_ipv4( grp );
+    unregister_all_ipv6( grp );
+    unregister_all_mac( grp );
 
     return 0;
 }
@@ -4590,6 +4940,7 @@ U16 uLength4;
     rsp_bhr = alloc_buffer( dev, uLength1+10 );
     if (!rsp_bhr)
         return NULL;
+    rsp_bhr->content = strdup( dev->dev_data );
     rsp_bhr->datalen = uLength1;
 
     // Fix-up various pointers
@@ -4679,8 +5030,10 @@ U32 uLength2;
 U32 uLength3;
 U16 uLength4;
 
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* Point to the expected MPC_PUS and check they are present. */
     req_pus_04 = mpc_point_pus( dev, req_puk, PUS_TYPE_04 );
@@ -4713,6 +5066,7 @@ U16 uLength4;
     rsp_bhr = alloc_buffer( dev, uLength1+10 );
     if (!rsp_bhr)
         return NULL;
+    rsp_bhr->content = strdup( dev->dev_data );
     rsp_bhr->datalen = uLength1;
 
     // Fix-up various pointers
@@ -4811,9 +5165,11 @@ U32 uLength2;
 U32 uLength3;
 U16 uLength4;
 
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     // Fix-up various lengths
     uLength4 = SIZE_PUS_04;                      // first MPC_PUS
@@ -4825,6 +5181,7 @@ U16 uLength4;
     rsp_bhr = alloc_buffer( dev, uLength1+10 );
     if (!rsp_bhr)
         return NULL;
+    rsp_bhr->content = strdup( dev->dev_data );
     rsp_bhr->datalen = uLength1;
 
     // Fix-up various pointers
@@ -4886,9 +5243,11 @@ static OSA_BHR* process_ulp_takedown( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     UNREFERENCED(grp);
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* There will be no response. */
 
@@ -4904,9 +5263,11 @@ static OSA_BHR* process_ulp_disable( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_r
 {
 OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
-    UNREFERENCED(req_th);
     UNREFERENCED(req_rrh);
     UNREFERENCED(req_puk);
+
+    /* Display the request MPC_TH etc., maybe. */
+    DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
     /* There will be a single MPC_PUS_03 containing the grp->gtcmfilt token */
 
@@ -4914,27 +5275,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 
     /* Disable the TUN interface */
     if (grp->l3)
-        VERIFY( qeth_disable_interface( dev, grp ) == 0);
-
-    return NULL;
-}
-
-/*-------------------------------------------------------------------*/
-/* Process unknown from the guest.                                   */
-/*-------------------------------------------------------------------*/
-static OSA_BHR* process_unknown_puk( DEVBLK* dev, MPC_TH* req_th, MPC_RRH* req_rrh, MPC_PUK* req_puk )
-{
-OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
-
-    UNREFERENCED(grp);
-    UNREFERENCED(req_th);
-    UNREFERENCED(req_rrh);
-    UNREFERENCED(req_puk);
-
-    /* FIXME Error message please. */
-    DBGTRC(dev, "process_unknown_puk\n");
-
-    /* There will be no response. */
+        qeth_disable_interface( dev, grp );
 
     return NULL;
 }
@@ -4972,7 +5313,7 @@ static OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
 /*--------------------------------------------------------------------*/
 /* add_buffer_to_chain_and_signal_event(): Add OSA_BHR to end of chn. */
 /*--------------------------------------------------------------------*/
-static void*  add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
+static void  add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
 {
     add_buffer_to_chain( grp, bhr );
 
@@ -4980,17 +5321,16 @@ static void*  add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
     signal_condition( &grp->qrcond );
     release_lock( &grp->qlock );
 
-    return NULL;
+    return;
 }
 
 /*--------------------------------------------------------------------*/
 /* add_buffer_to_chain(): Add OSA_BHR to end of chain.                */
 /*--------------------------------------------------------------------*/
-static void*  add_buffer_to_chain( OSA_GRP* grp, OSA_BHR* bhr )
+static void  add_buffer_to_chain( OSA_GRP* grp, OSA_BHR* bhr )
 {
     // Prepare OSA_BHR for adding to chain.
-    if (!bhr)                              // Any OSA_BHR been passed?
-        return NULL;
+    if (!bhr) return;                      // Any OSA_BHR been passed?
     bhr->next = NULL;                      // Clear the pointer to next OSA_BHR
 
     // Obtain the buffer chain lock.
@@ -5013,7 +5353,7 @@ static void*  add_buffer_to_chain( OSA_GRP* grp, OSA_BHR* bhr )
     // Release the buffer chain lock.
     release_lock( &grp->qblock );
 
-    return NULL;
+    return;
 }
 
 /*--------------------------------------------------------------------*/
@@ -5052,7 +5392,7 @@ static OSA_BHR*  remove_buffer_from_chain( OSA_GRP* grp )
 /*--------------------------------------------------------------------*/
 /* remove_and_free_any_buffers_on_chain(): Remove and free OSA_BHRs.  */
 /*--------------------------------------------------------------------*/
-static void*  remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
+static void  remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
 {
     OSA_BHR*    bhr;                       // OSA_BHR
 
@@ -5064,6 +5404,7 @@ static void*  remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
     {
         bhr = grp->firstbhr;               // Pointer to first OSA_BHR
         grp->firstbhr = bhr->next;         // Make the next the first OSA_BHR
+        if (bhr->content) free( bhr->content );  // Free the buffer content string
         free( bhr );                       // Free the message buffer
     }
 
@@ -5075,7 +5416,7 @@ static void*  remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
     // Release the buffer chain lock.
     release_lock( &grp->qblock );
 
-    return NULL;
+    return;
 
 }
 
@@ -5088,34 +5429,59 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     static const BYTE zeromac[IFHWADDRLEN] = {0};
     char* tthwaddr;
     BYTE iMAC[ IFHWADDRLEN ];
+    char szMAC[3*IFHWADDRLEN] = {0};
     int rc = 0;
 
-    /* Retrieve the MAC Address directly from the tuntap interface */
-    rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
+    /* Do different things for TUN's and TAP's */
+    if (!grp->l3) {
 
-    /* Did we get what we wanted? */
-    if (0
-        || rc != 0
-        || ParseMAC( tthwaddr, iMAC ) != 0
-        || memcmp( iMAC, zeromac, IFHWADDRLEN ) == 0
-    )
-    {
-        char szMAC[3*IFHWADDRLEN] = {0};
-        UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
-        DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
-        if (tthwaddr)
-            free( tthwaddr );
-        build_herc_iface_mac( iMAC, NULL );
-        MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
-            iMAC[0], iMAC[1], iMAC[2],
-            iMAC[3], iMAC[4], iMAC[5] );
-        tthwaddr = strdup( szMAC );
+        /* Retrieve the MAC Address directly from the tap interface */
+            rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
+
+        /* Did we get what we wanted? */
+        if (0
+            || rc != 0
+            || ParseMAC( tthwaddr, iMAC ) != 0
+            || memcmp( iMAC, zeromac, IFHWADDRLEN ) == 0
+        )
+        {
+            UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
+            DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
+            if (tthwaddr)
+                free( tthwaddr );
+            build_herc_iface_mac( iMAC, NULL );
+            MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
+                iMAC[0], iMAC[1], iMAC[2],
+                iMAC[3], iMAC[4], iMAC[5] );
+            tthwaddr = strdup( szMAC );
+        }
+
+        grp->tthwaddr = strdup( tthwaddr );
+        memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
+
+        free( tthwaddr );
+
+    } else {
+
+        /* If grp->tthwaddr specified a valid MAC address use it, */
+        /* otherwise create a MAC address. This MAC address is    */
+        /* only for the benefit and use of the guest.             */
+        if (grp->tthwaddr &&
+            ParseMAC( grp->tthwaddr, iMAC ) == 0 &&
+            memcmp( iMAC, zeromac, IFHWADDRLEN ) != 0)
+        {
+            memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
+        } else {
+            if (grp->tthwaddr) free(grp->tthwaddr);
+            build_herc_iface_mac( iMAC, NULL );
+            MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
+                    iMAC[0], iMAC[1], iMAC[2], iMAC[3], iMAC[4], iMAC[5] );
+            grp->tthwaddr = strdup( szMAC );
+            memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
+        }
+
     }
 
-    grp->tthwaddr = strdup( tthwaddr );
-    memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
-
-    free( tthwaddr );
 }
 
 
