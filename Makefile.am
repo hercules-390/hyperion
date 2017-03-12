@@ -25,8 +25,7 @@ SUBDIRS =		 \
 
 LDADD = @LIBS@
 
-DYNAMIC_VERSION := $(shell $(top_srcdir)/GetGitHash $(top_srcdir))
-varsion.lo: commitinfo.h
+#DYNAMIC_VERSION := $(shell $(top_srcdir)/GetGitHash $(top_srcdir))
 
 AM_CPPFLAGS =									\
 	-I$(top_srcdir)							\
@@ -1032,6 +1031,12 @@ uninstall-hook:
 
 %.i: %.c
 	$(COMPILE) -E $< >$@
+
+commitinfo.h:
+	$(top_srcdir)/GetGitHash $(top_srcdir)
+
+version.lo: commitinfo.h
+
 
 # PROGRAMMING NOTE: the following two rules cause only ieee.c to be
 # recompiled whenever the interface to Softfloat 3a is changed.

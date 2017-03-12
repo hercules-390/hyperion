@@ -102,7 +102,7 @@ dogit ()
 
 dogit $1
 
-cmp --quiet -i $idlen $outfile $tempfile
+cmp $outfile $tempfile $idlen $idlen >/dev/null 2>&1
 rv=$?
 
 if [ $rv -eq 0 ] ;
