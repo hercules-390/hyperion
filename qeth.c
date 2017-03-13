@@ -515,7 +515,6 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 static int register_mac(BYTE *mac, int type, OSA_GRP *grp)
 {
 int i;
-char charmac[24];
     for(i = 0; i < OSA_MAXMAC; i++)
     {
         if(!grp->mac[i].type || !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
@@ -527,10 +526,6 @@ char charmac[24];
     }
     return MAC_TYPE_NONE;
 
-
-        snprintf(  charmac,  sizeof(charmac),
-            "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
-            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
 
 
 }
