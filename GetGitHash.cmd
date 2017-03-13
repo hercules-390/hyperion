@@ -61,16 +61,15 @@ set "id=/* Generated %datestring% by %~nx0 */"
 :: Ensure file exists; so that nmake will resolve the dependency.
 
 if not exist %outfile% @echo off > %outfile%
-@echo on
+
 :: Write dummy file up front so that there is always something
 (
-        echo %id%
         echo #define COMMIT_COUNT 0
         echo #define COMMIT_MESSAGE ""
         echo #define COMMIT_HASH ""
         echo #define COMMIT_UNTRACKED ""
         echo #define COMMIT_MODIFIED ""
-
+        echo %id%
 ) >%tempfile%
 
 git --version >nul
@@ -89,9 +88,9 @@ pushd %1
 set "CommitCount=0"
 set "for_query=git log --pretty=format:"x""
 :: open-source version uses --pretty=oneline, but --pretty=format:"x" is noticeably faster on Windows
-@echo off
+
 for /f "tokens=*" %%a in ('!for_query!') do set /a "CommitCount+=1"
-@echo on
+
 set "for_query=git log -n 1 --pretty=format:"%%H %%h %%ai""
 for /f "tokens=1-5" %%a in ('!for_query!') do (
     set "commit=%%a"
@@ -119,7 +118,6 @@ for /f "tokens=1" %%a in ('git status --porcelain') do (
 popd
 
 (
-    echo %id%
     echo #define COMMIT_COUNT %commitCount%
     echo #define COMMIT_MESSAGE "%$msg%"
     echo #define COMMIT_HASH "%commit%"
@@ -133,10 +131,11 @@ popd
     ) else (
         echo #define COMMIT_MODIFIED "  %changed% added/modified/deleted files."
     )
+    echo %id%
 ) >%tempfile%
 
 set /a "rv=0"
-FC /l %outfile% %tempfile% || set /a "rv=1" 2>nul"
+echo n|COMP /n=5 /l %outfile% %tempfile% >nul 2>nul || set /a "rv=1" 2>nul"
 
 if "%rv%" == "1" (
     copy /Y %tempfile% %outfile% >nul

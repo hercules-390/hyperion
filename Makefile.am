@@ -25,7 +25,7 @@ SUBDIRS =		 \
 
 LDADD = @LIBS@
 
-#DYNAMIC_VERSION := $(shell $(top_srcdir)/GetGitHash $(top_srcdir))
+DYNAMIC_VERSION := $(shell $(top_srcdir)/GetGitHash $(top_srcdir))
 
 AM_CPPFLAGS =									\
 	-I$(top_srcdir)							\
