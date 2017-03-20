@@ -73,8 +73,9 @@ dogit ()
 
         msg=$(git log -n 1 --pretty=format:'%s' | cut -c -70 | tr "'" '\"' )
 
-        changed=$(git status --porcelain | grep '^[^?!]' | wc -l)
-        new=$(git status --porcelain | grep '^?' | wc -l)
+        gitstat=$(git status --porcelain | grep -v -e ' tests/' -e ' html/' -e ' man/' -e ' scripts/' -e ' util/')
+        changed=$(echo $gitstat | grep '^[^?!]' | wc -l)
+        new=$(echo $gitstat | grep '^?' | wc -l)
 
         # Return to build directory
         cd -

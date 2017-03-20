@@ -106,11 +106,20 @@ for /f "tokens=*" %%a in ('!for_query!') do (
 
 set /a "changed=0"
 set /a "new=0"
-for /f "tokens=1" %%a in ('git status --porcelain') do (
-    if "%%a" == "??" (
-         set /a "new+=1"
-    ) else (
-         set /a "changed+=1"
+for /f "tokens=1-2" %%a in ('git status --porcelain') do (
+    set "fn=%%b"
+    set /a excdir=0
+    if /I "!fn:~0,6!" == "tests/"   set /a excdir=1
+    if /I "!fn:~0,8!" == "scripts/" set /a excdir=1
+    if /I "!fn:~0,5!" == "html/"    set /a excdir=1
+    if /I "!fn:~0,4!" == "man/"     set /a excdir=1
+    if /I "!fn:~0,5!" == "util/"    set /a excdir=1
+    if !excdir! equ 0 (
+        if "%%a" == "??" (
+             set /a new+=1
+        ) else (
+             set /a changed+=1
+        )
     )
 )
 
