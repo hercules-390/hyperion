@@ -1026,10 +1026,10 @@ uninstall-hook:
 	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
 	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 
-%.s: %.c
+.c.s:
 	$(COMPILE) -S $<
 
-%.i: %.c
+.c.i:
 	$(COMPILE) -E $< >$@
 
 commitinfo.h:

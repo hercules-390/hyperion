@@ -186,7 +186,7 @@ AC_DEFUN([HC_ARG_ENABLE_GETOPTWRAPPER],
 #
 #------------------------------------------------------------------------------
 
-AC_DEFUN( [HC_GET_C11_LOCK_FREE_VALUE],
+AC_DEFUN([HC_GET_C11_LOCK_FREE_VALUE],
 [
     c11_lock_free_name="$1"
 

@@ -8,8 +8,23 @@
 #
 ###############################################################################
 
-AC_INIT(hercules.h)           # (package, version, bugreport email, etc)
+AC_INIT([Hercules V4],[4.0.0], , hercv4,[http://hercules-390.github.io/html/])
 
+#
+# When changing the version string (AC_INIT parameter two), be sure to change
+# the values of variables VERS_MAJ, VERS_INT, and VERS_MIN below, just before
+# AM_INIT_MAKEFILE.  The variables are used by the Windows build process.
+#
+
+
+AC_REVISION($Revision$)       # (the version of this configure.ac)
+AC_MSG_NOTICE( [build directory:    $(pwd)])
+AC_MSG_NOTICE( [source directory:   $(cd $(dirname $0) && pwd)] )
+AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxillary build tools)
+AC_CONFIG_HEADERS(config.h)   # (the file the resulting configure script will produce)
+AM_MAINTAINER_MODE()
+AC_CANONICAL_HOST()           # (sets $host_cpu, $host_vendor, and $host_os)
+AC_CANONICAL_TARGET()         # (sets $target_cpu, $target_vendor, and $target_os)
 
 ###############################################################################
 # Test for an in-source build and abort if such is attempted.  The
@@ -53,11 +68,6 @@ fi
 # Building outside of the source directory.  Continue.
 ###############################################################################
 
-
-
-AC_REVISION($Revision$)       # (the version of this configure.ac)
-AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxillary build tools)
-
 # -----------------------------------------------------------------------------
 #  PROGRAMMING NOTE: The below VERS_MAJ, VERS_INT and VERS_MIN assignment
 #  statements must retain their existing variable names (VERS_MAJ, VERS_INT
@@ -75,14 +85,11 @@ VERS_MAJ=4                    # first  digit of version
 VERS_INT=0                    # second digit of version
 VERS_MIN=0                    # third  digit of version
 
-AM_INIT_AUTOMAKE(hercules,${VERS_MAJ}.${VERS_INT}.${VERS_MIN})
+AM_INIT_AUTOMAKE()
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 # -----------------------------------------------------------------------------
 
-AC_CONFIG_HEADERS(config.h)   # (the file the resulting configure script will produce)
-AM_MAINTAINER_MODE()
-AC_CANONICAL_HOST()           # (sets $host_cpu, $host_vendor, and $host_os)
-AC_CANONICAL_TARGET()         # (sets $target_cpu, $target_vendor, and $target_os)
+
 
 ###############################################################################
 #   Programs section...
@@ -1263,7 +1270,7 @@ AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(int *)
 AC_CHECK_SIZEOF(off_t)
 
-if test "$hc_cv_have_pthread_h" == "yes"; then
+if test "$hc_cv_have_pthread_h" = "yes"; then
   AC_CHECK_SIZEOF(pthread_t)
 fi
 

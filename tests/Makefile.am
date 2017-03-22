@@ -352,5 +352,7 @@ EXTRA_DIST =				\
 # You can clone SATK from
 # git@github.com:s390guy/SATK.git
 
-%.core: %.asm
+SUFFIXES = .core .asm
+
+.asm.core:
 	ASMPATH=. MACLIB=mac ${APATH}/asma.py -l $*.list -i $@ $<
