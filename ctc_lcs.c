@@ -924,6 +924,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
     char        cPktType[8];
     char        buf[32];
     U16         hwEthernetType;
+    MAC         nullmac;
 
 
     // Display the data written by the guest, if debug is active.
@@ -1084,6 +1085,15 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             pLCSEthFrame = (PLCSETHFRM)pLCSHDR;
             pEthFrame    = (PETHFRM)pLCSEthFrame->bData;
             iEthLen      = iLength - sizeof(LCSETHFRM);
+
+            memset( nullmac, 0, sizeof( nullmac ));
+
+            if (memcmp( pEthFrame->bSrcMAC, nullmac, sizeof( MAC )) == 0)
+            {
+                PLCSPORT  pLCSPORT  = &pLCSDEV->pLCSBLK->Port[ pLCSDEV->bPort ];
+                memcpy( pEthFrame->bSrcMAC, pLCSPORT->MAC_Address, sizeof( MAC ));
+                pEthFrame->bSrcMAC[5]++;	/* Get next MAC address */
+            }
 
             // Trace Ethernet frame before sending to TAP device
             if( pLCSDEV->pLCSBLK->fDebug )
