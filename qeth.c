@@ -567,6 +567,13 @@ int i;
 static int validate_mac(BYTE *mac, int type, OSA_GRP *grp)
 {
 int i;
+    /* Always accept broadcast frames */
+    for(i=0;i<IFHWADDRLEN;i++)
+    {
+       if(mac[i]!=0xff) break;
+    }
+    if(i==(IFHWADDRLEN)) return MAC_TYPE_BRDCST & type;
+
     for(i = 0; i < OSA_MAXMAC; i++)
     {
         if((grp->mac[i].type & type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
