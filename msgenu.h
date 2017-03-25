@@ -1345,6 +1345,9 @@ Examples:
 #define HHC02341 "Script %d: test: unknown runtest keyword: %s"
 #define HHC02342 "%s file '%s' not found:  %s"
 #define HHC02343 "Terminating due to %d argument errors"
+#define HHC02344 "%s device %1d:%04X group has registered MAC address %s"
+#define HHC02345 "%s device %1d:%04X group has registered IP address %s"
+#define HHC02346 "%s device %1d:%04X group has no registered MAC or IP addresses"
 
 // range 02350 - 02369 available
 
