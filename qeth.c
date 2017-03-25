@@ -563,22 +563,38 @@ int i;
 
 /*-------------------------------------------------------------------*/
 /* Validate MAC address and return MAC type                          */
+/* In promiscuous mode, all frames are accepted                      */
+/* a Broadcast frame is always valid (unless we do not seek broadcast*/
+/*  frames                                                           */
 /*-------------------------------------------------------------------*/
 static int validate_mac(BYTE *mac, int type, OSA_GRP *grp)
 {
-int i;
+int i;	/* Utility variable */
+
     /* Always accept broadcast frames */
+    /* Search for all FFs             */
+
     for(i=0;i<IFHWADDRLEN;i++)
     {
        if(mac[i]!=0xff) break;
     }
-    if(i==(IFHWADDRLEN)) return MAC_TYPE_BRDCST & type;
+    /* If we reached end of MAC address, all FF then it is a broadcast */
+    /* Return it is a broadcast unless broadcast isn't sought for      */
+    /* unless the interface is in promiscuous mode                     */
 
+    if(i==(IFHWADDRLEN)) return (MAC_TYPE_BRDCST & type) | grp->promisc;
+
+    /* Find a matching MAC (Unicast or Multicast) */
     for(i = 0; i < OSA_MAXMAC; i++)
     {
+        /* Find a type matching the search mask with a matching MAC addr */
         if((grp->mac[i].type & type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
             return grp->mac[i].type | grp->promisc;
     }
+
+    /* Not match found - but accept it if the interface is in promiscuous mode */
+    /* Otherwise, ignore the frame                                             */
+
     return grp->promisc;
 }
 
