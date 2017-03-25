@@ -3019,7 +3019,6 @@ U32 mask4;
             dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
             memset (grp, 0, sizeof(OSA_GRP));
 
-            register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
             initialize_condition( &grp->qrcond );
             initialize_condition( &grp->qdcond );
@@ -5438,7 +5437,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     if (!grp->l3) {
 
         /* Retrieve the MAC Address directly from the tap interface */
-            rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
+        rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
 
         /* Did we get what we wanted? */
         if (0
