@@ -512,44 +512,93 @@ static inline void clr_dsci(DEVBLK *dev, BYTE bits)
 /*-------------------------------------------------------------------*/
 /* Register local MAC address                                        */
 /*-------------------------------------------------------------------*/
-static int register_mac(BYTE *mac, int type, OSA_GRP *grp)
+/* The returned values are:-                                         */
+/*   -1  The table is full                                           */
+/*    0  The MAC address was added to the table                      */
+/*    1  The MAC address was already in the table                    */
+static int register_mac(OSA_GRP *grp, DEVBLK* dev, BYTE *mac, int type)
 {
 int i;
-    for(i = 0; i < OSA_MAXMAC; i++)
+char charmac[24];
+
+    /* Check whether the MAC address is already registered. */
+    for (i = 0; i < OSA_MAXMAC; i++)
     {
-        if(!grp->mac[i].type || !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
+        if (grp->mac[i].type &&
+            memcmp(grp->mac[i].addr, mac, IFHWADDRLEN) == 0)
         {
-            memcpy(grp->mac[i].addr,mac,IFHWADDRLEN);
-            grp->mac[i].type = type;
-            return type;
+            return 1;
         }
     }
-    return MAC_TYPE_NONE;
-
-
-
+    /* Register the previously unknown MAC address. */
+    for (i = 0; i < OSA_MAXMAC; i++)
+    {
+        if (!grp->mac[i].type)
+        {
+            memcpy(grp->mac[i].addr, mac, IFHWADDRLEN);
+            grp->mac[i].type = type;
+            snprintf( charmac, sizeof(charmac),
+                      "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+                      mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
+            // HHC03801 "%1d:%04X %s: Register guest MAC address %s"
+            WRMSG(HHC03801, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                      charmac );
+            return 0;
+        }
+    }
+    /* Oh dear, the MAC address table is full. */
+    snprintf( charmac, sizeof(charmac),
+              "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+              mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
+    // HHC03802 "%1d:%04X %s: Cannot register guest MAC address %s"
+    WRMSG(HHC03802, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+              charmac );
+    return -1;
 }
 
 /*-------------------------------------------------------------------*/
 /* Unregister local MAC address                                      */
 /*-------------------------------------------------------------------*/
-static int unregister_mac(BYTE *mac, int type, OSA_GRP *grp)
+/* The returned values are:-                                         */
+/*    0  The MAC address was removed from the table                  */
+/*    1  The MAC address was not in the table                        */
+static int unregister_mac(OSA_GRP *grp, DEVBLK* dev, BYTE *mac, int type)
 {
 int i;
-    for(i = 0; i < OSA_MAXMAC; i++)
+char charmac[24];
+UNREFERENCED(type);
+    /* Check whether the MAC address is registered. */
+    for (i = 0; i < OSA_MAXMAC; i++)
     {
-        if((grp->mac[i].type == type) && !memcmp(grp->mac[i].addr,mac,IFHWADDRLEN))
+        if (grp->mac[i].type &&
+            memcmp(grp->mac[i].addr, mac, IFHWADDRLEN) == 0)
         {
             grp->mac[i].type = MAC_TYPE_NONE;
-            return type;
+            memset(grp->mac[i].addr, 0, IFHWADDRLEN);
+            snprintf( charmac, sizeof(charmac),
+                      "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+                      mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
+            // HHC03803 "%1d:%04X %s: Unregistered guest MAC address %s"
+            WRMSG(HHC03803, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                      charmac );
+            return 0;
         }
     }
-    return MAC_TYPE_NONE;
+    /* Oh dear, the MAC address wasn't registered. */
+    snprintf( charmac, sizeof(charmac),
+              "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+              mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
+    // HHC03804 "%1d:%04X %s: Cannot unregister guest MAC address %s"
+    WRMSG(HHC03804, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+              charmac );
+    return 1;
 }
 
 /*-------------------------------------------------------------------*/
 /* Unregister all local MAC address                                  */
 /*-------------------------------------------------------------------*/
+/* The returned value is:-                                           */
+/*    0  All MAC addresses were removed from the table               */
 static int unregister_all_mac(OSA_GRP *grp)
 {
 int i;
@@ -569,7 +618,7 @@ int i;
 /*-------------------------------------------------------------------*/
 static int validate_mac(BYTE *mac, int type, OSA_GRP *grp)
 {
-int i;	/* Utility variable */
+int i;  /* Utility variable */
 
     /* Always accept broadcast frames */
     /* Search for all FFs             */
@@ -1417,10 +1466,10 @@ U16 offph;
 
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
-                char tthwaddr[32] = {0}; // 11:22:33:44:55:66
-#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                 int rc = 0;
-#endif /*defined(OPTION_W32_CTCI)*/
+#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
+                char tthwaddr[32] = {0}; // 11:22:33:44:55:66
+
                     MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
                         ,ipa_mac->macaddr[0]
                         ,ipa_mac->macaddr[1]
@@ -1430,7 +1479,6 @@ U16 offph;
                         ,ipa_mac->macaddr[5]
                     );
 
-#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                     if ((rc = TUNTAP_SetMACAddr( grp->ttifname, tthwaddr )) != 0)
                     {
                         qeth_errnum_msg( dev, grp, rc,
@@ -1447,10 +1495,14 @@ U16 offph;
 #else /*defined(OPTION_W32_CTCI)*/
                     {
 #endif /*defined(OPTION_W32_CTCI)*/
-                        if(register_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
-                            STORE_HW(ipa->rc,IPA_RC_OK);
-                        else
-                            STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
+                        rc = register_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_UNICST);
+                        if (rc == -1) {          /* MAC table full */
+                            STORE_HW(ipa->rc, IPA_RC_L2_ADDR_TABLE_FULL);
+                        } else if (rc == 1) {    /* MAC address in table */
+                            STORE_HW(ipa->rc, IPA_RC_L2_DUP_MAC);
+                        } else {                 /* MAC address added to table */
+                            STORE_HW(ipa->rc, IPA_RC_SUCCESS);
+                        }
                     }
                 }
                 break;
@@ -1464,11 +1516,13 @@ U16 offph;
 
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
-
-                    if(unregister_mac(ipa_mac->macaddr,MAC_TYPE_UNICST,grp))
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                    else
-                        STORE_HW(ipa->rc,IPA_RC_L2_MAC_NOT_FOUND);
+                int  rc;
+                    rc = unregister_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_UNICST);
+                    if (rc == 1) {           /* MAC address not in table */
+                        STORE_HW(ipa->rc, IPA_RC_L2_MAC_NOT_FOUND);
+                    } else {                 /* MAC address removed from table */
+                        STORE_HW(ipa->rc, IPA_RC_SUCCESS);
+                    }
                 }
                 break;
 
@@ -1481,11 +1535,15 @@ U16 offph;
 
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
-
-                    if(register_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                    else
-                        STORE_HW(ipa->rc,IPA_RC_L2_DUP_MAC);
+                int  rc;
+                    rc = register_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_MLTCST);
+                    if (rc == -1) {          /* MAC table full */
+                        STORE_HW(ipa->rc, IPA_RC_L2_ADDR_TABLE_FULL);
+                    } else if (rc == 1) {    /* MAC address in table */
+                        STORE_HW(ipa->rc, IPA_RC_L2_DUP_MAC);
+                    } else {                 /* MAC address added to table */
+                        STORE_HW(ipa->rc, IPA_RC_SUCCESS);
+                    }
                 }
                 break;
 
@@ -1498,11 +1556,13 @@ U16 offph;
 
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
-
-                    if(unregister_mac(ipa_mac->macaddr,MAC_TYPE_MLTCST,grp))
-                        STORE_HW(ipa->rc,IPA_RC_OK);
-                    else
-                        STORE_HW(ipa->rc,IPA_RC_L2_GMAC_NOT_FOUND);
+                int  rc;
+                    rc = unregister_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_MLTCST);
+                    if (rc == 1) {           /* MAC address not in table */
+                        STORE_HW(ipa->rc, IPA_RC_L2_GMAC_NOT_FOUND);
+                    } else {                 /* MAC address removed from table */
+                        STORE_HW(ipa->rc, IPA_RC_SUCCESS);
+                    }
                 }
                 break;
 
@@ -3035,7 +3095,6 @@ U32 mask4;
             dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
             memset (grp, 0, sizeof(OSA_GRP));
 
-            register_mac((BYTE*)"\xFF\xFF\xFF\xFF\xFF\xFF",MAC_TYPE_BRDCST,grp);
 
             initialize_condition( &grp->qrcond );
             initialize_condition( &grp->qdcond );
@@ -5454,7 +5513,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     if (!grp->l3) {
 
         /* Retrieve the MAC Address directly from the tap interface */
-            rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
+        rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
 
         /* Did we get what we wanted? */
         if (0
