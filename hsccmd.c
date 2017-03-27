@@ -2762,72 +2762,76 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
         grp = NULL;
         for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
         {
-            /* Check the device is a QETH device */
-            if ( dev->allocated &&
-                 dev->devtype == 0x1731 )
+          /* Check the device is a QETH device */
+          if ( dev->allocated &&
+               dev->devtype == 0x1731 )
+          {
+            /* Check whether we are displaying all QETH groups or just a specific QETH group */
+            if (all == TRUE || pDEVGRP == dev->group)
             {
-                /* Check whether we are displaying all QETH groups or just a specific QETH group */
-                if (all == TRUE || pDEVGRP == dev->group)
+              /* Check whether we have already displayed this QETH group */
+              if (grp != dev->group->grp_data)
+              {
+                /* Check whether this QETH group is complete */
+                grp = dev->group->grp_data;
+                if (dev->group->members == dev->group->acount)
                 {
-                    /* Check whether we have already displayed this QETH group */
-                    if (grp != dev->group->grp_data)
+                  /* The first device of a complete QETH group, display the addresses */
+                  numaddr = 0;
+
+                  /* Display registered MAC addresses. */
+                  for (i = 0; i < OSA_MAXMAC; i++)
+                  {
+                    if (grp->mac[i].type)
                     {
-                        /* The first device of the QETH group, so displaying QETH group addresses */
-                        grp = dev->group->grp_data;
-                        numaddr = 0;
-
-                        /* Display registered MAC addresses. */
-                        for (i = 0; i < OSA_MAXMAC; i++)
-                        {
-                            if (grp->mac[i].type)
-                            {
-                                snprintf( charaddr, sizeof(charaddr),
-                                          "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
-                                          grp->mac[i].addr[0],
-                                          grp->mac[i].addr[1],
-                                          grp->mac[i].addr[2],
-                                          grp->mac[i].addr[3],
-                                          grp->mac[i].addr[4],
-                                          grp->mac[i].addr[5] );
-                                // HHC02344 "%s device %1d:%04X group has registered MAC address %s"
-                                WRMSG(HHC02344, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                                          charaddr );
-                                numaddr++;
-                            }
-                        }
-
-                        /* Display registered IPv4 address. */
-                        if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE)
-                        {
-                            hinet_ntop( AF_INET, grp->ipaddr4[0].addr, charaddr, sizeof(charaddr) );
-                            // HHC02345 "%s device %1d:%04X group has registered IP address %s"
-                            WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                                    charaddr );
-                            numaddr++;
-                        }
-
-                        /* Display registered IPv6 addresses. */
-                        for (i = 0; i < OSA_MAXIPV6; i++)
-                        {
-                            if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE)
-                            {
-                                hinet_ntop( AF_INET6, grp->ipaddr6[i].addr, charaddr, sizeof(charaddr) );
-                                // HHC02345 "%s device %1d:%04X group has registered IP address %s"
-                                WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
-                                        charaddr );
-                                numaddr++;
-                            }
-                        }
-
-                        /* Display whether there were any registered addresses. */
-                        if (numaddr == 0)
-                        {
-                            // HHC02346 "%s device %1d:%04X group has no registered MAC or IP addresses"
-                            WRMSG(HHC02346, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum);
-                        }
+                      snprintf( charaddr, sizeof(charaddr),
+                                "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+                                grp->mac[i].addr[0],
+                                grp->mac[i].addr[1],
+                                grp->mac[i].addr[2],
+                                grp->mac[i].addr[3],
+                                grp->mac[i].addr[4],
+                                grp->mac[i].addr[5] );
+                      // HHC02344 "%s device %1d:%04X group has registered MAC address %s"
+                      WRMSG(HHC02344, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                                charaddr );
+                      numaddr++;
                     }
+                  }
+
+                  /* Display registered IPv4 address. */
+                  if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE)
+                  {
+                    hinet_ntop( AF_INET, grp->ipaddr4[0].addr, charaddr, sizeof(charaddr) );
+                    // HHC02345 "%s device %1d:%04X group has registered IP address %s"
+                    WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                            charaddr );
+                    numaddr++;
+                  }
+
+                  /* Display registered IPv6 addresses. */
+                  for (i = 0; i < OSA_MAXIPV6; i++)
+                  {
+                    if (grp->ipaddr6[i].type == IPV6_TYPE_INUSE)
+                    {
+                      hinet_ntop( AF_INET6, grp->ipaddr6[i].addr, charaddr, sizeof(charaddr) );
+                      // HHC02345 "%s device %1d:%04X group has registered IP address %s"
+                      WRMSG(HHC02345, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum,
+                              charaddr );
+                      numaddr++;
+                    }
+                  }
+
+                  /* Display whether there were any registered addresses. */
+                  if (numaddr == 0)
+                  {
+                  // HHC02346 "%s device %1d:%04X group has no registered MAC or IP addresses"
+                  WRMSG(HHC02346, "I", dev->typname, SSID_TO_LCSS(dev->ssid), dev->devnum);
+                  }
                 }
+              }
             }
+          }
         }
 
         return 0;
