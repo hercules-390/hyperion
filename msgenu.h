@@ -655,7 +655,7 @@ Examples:
 // reserve 009xx for ctc related messages
 /* ctcadpt.c, ctc_ctci.c, ctc_lcs.c, ctc_ptp.c, qeth.c */
 #define HHC00900 "%1d:%04X %s: Error in function %s: %s"
-#define HHC00901 "%1d:%04X %s: Interface %s, type %s opened"
+#define HHC00901 "%1d:%04X %s: Interface %s type %s opened"
 #define HHC00902 "%1d:%04X %s: ioctl %s failed for device %s: %s"
 #define HHC00904 "%1d:%04X %s: Halt or clear recognized"
 #define HHC00906 "%1d:%04X CTC: write CCW count %u is invalid"
@@ -1944,7 +1944,7 @@ Examples:
 #define HHC03994 "%1d:%04X %s: Status %02X"
 #define HHC03995 "%1d:%04X %s: %s:\n%s"
 #define HHC03996 "%1d:%04X %s: %s: %s"
-#define HHC03997 "%1d:%04X %s: %s: %susing %s %s"
+#define HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
 #define HHC03998 "%1d:%04X %s: %s inconsistent with %s"
 
 // reserve 04xxx for host os specific component messages

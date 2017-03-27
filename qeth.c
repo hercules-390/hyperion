@@ -387,7 +387,10 @@ static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc
   /* This may not be described anywhere - and could be wrong  */
   /* But apparently z/VM TC/IP expects Key 14 to allow access to all */
   /* including storage frames with key 0.... */
+  /* and apparently z/OS TCP/IP expects Key 6 to allow access to all */
+  /* including storage frames with key 0.... */
   if((key & 0Xf0)==0xe0) return 0; /* Special case for key 14 ? */
+  if((key & 0Xf0)==0x60) return 0; /* Special case for key 6 ? */
 
   /* Key match check if keys match we're good */
   if((STORAGE_KEY(addr,dev) & STORKEY_KEY) == key) return 0;
@@ -538,7 +541,7 @@ char charmac[24];
             memcpy(grp->mac[i].addr, mac, IFHWADDRLEN);
             grp->mac[i].type = type;
             snprintf( charmac, sizeof(charmac),
-                      "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+                      "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
             // HHC03801 "%1d:%04X %s: Register guest MAC address %s"
             WRMSG(HHC03801, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -548,7 +551,7 @@ char charmac[24];
     }
     /* Oh dear, the MAC address table is full. */
     snprintf( charmac, sizeof(charmac),
-              "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+              "%02x:%02x:%02x:%02x:%02x:%02x",
               mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
     // HHC03802 "%1d:%04X %s: Cannot register guest MAC address %s"
     WRMSG(HHC03802, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -576,7 +579,7 @@ UNREFERENCED(type);
             grp->mac[i].type = MAC_TYPE_NONE;
             memset(grp->mac[i].addr, 0, IFHWADDRLEN);
             snprintf( charmac, sizeof(charmac),
-                      "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+                      "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
             // HHC03803 "%1d:%04X %s: Unregistered guest MAC address %s"
             WRMSG(HHC03803, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -586,7 +589,7 @@ UNREFERENCED(type);
     }
     /* Oh dear, the MAC address wasn't registered. */
     snprintf( charmac, sizeof(charmac),
-              "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+              "%02x:%02x:%02x:%02x:%02x:%02x",
               mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
     // HHC03804 "%1d:%04X %s: Cannot unregister guest MAC address %s"
     WRMSG(HHC03804, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
@@ -928,27 +931,49 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
     char not[8];
     strlcpy( not, grp->enabled ? "" : "not ", sizeof( not ));
 
-    // HHC03997 "%1d:%04X %s: %s: %susing %s %s"
+    // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
     WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-        grp->ttifname, not, "MAC", grp->tthwaddr );
+        grp->ttifname, not, "MAC address", grp->tthwaddr );
 
     if (grp->l3 && grp->ttipaddr)
     {
-        if(grp->ttipaddr)
-            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-                grp->ttifname, not, "IPv4", grp->ttipaddr );
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+             grp->ttifname, not, "IP address", grp->ttipaddr );
+
         if(grp->ttnetmask)
+        {
             WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-                grp->ttifname, not, "MASK", grp->ttnetmask );
+                grp->ttifname, not, "subnet mask", grp->ttnetmask );
+        }
     }
 
     if (grp->l3 && grp->ttipaddr6)
+    {
         WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-            grp->ttifname, not, "IPv6", grp->ttipaddr6 );
+            grp->ttifname, not, "IP address", grp->ttipaddr6 );
+
+        if(grp->ttpfxlen6)
+        {
+            WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+                grp->ttifname, not, "prefix length", grp->ttpfxlen6 );
+        }
+    }
 
     if (grp->ttmtu)
+    {
         WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
             grp->ttifname, not, "MTU", grp->ttmtu );
+    }
+
+#if defined(ENABLE_IPV6)
+    if (grp->l3 && grp->enabled)
+    {
+        // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            grp->ttifname, "pretend ", "drive IP address", grp->szDriveLLAddr6 );
+    }
+#endif /* defined(ENABLE_IPV6) */
+
 }
 
 
@@ -1470,7 +1495,7 @@ U16 offph;
 #if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
 
-                    MSGBUF( tthwaddr, "%02X:%02X:%02X:%02X:%02X:%02X"
+                    MSGBUF( tthwaddr, "%02x:%02x:%02x:%02x:%02x:%02x"
                         ,ipa_mac->macaddr[0]
                         ,ipa_mac->macaddr[1]
                         ,ipa_mac->macaddr[2]
@@ -1852,7 +1877,7 @@ U16 offph;
                 break;
 
             default:
-                DBGTRC(dev, "  Unknown RRH_TYPE_IPA command 0x%02x\n",ipa->cmd);
+                DBGTRC(dev, "  Unknown RRH_TYPE_IPA command 0x%02X\n",ipa->cmd);
                 STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
             }
             /* end switch(ipa->cmd) */
@@ -4419,7 +4444,7 @@ U32 num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-        DBGTRC(dev, "Unknown CCW opcode 0x%02x)\n",code);
+        DBGTRC(dev, "Unknown CCW opcode 0x%02X)\n",code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5508,11 +5533,15 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     BYTE iMAC[ IFHWADDRLEN ];
     char szMAC[3*IFHWADDRLEN] = {0};
     int rc = 0;
+#if defined(ENABLE_IPV6)
+    int j;
+    struct in6_addr addr6;
+#endif /* defined(ENABLE_IPV6) */
 
-    /* Do different things for TUN's and TAP's */
+    /* Do different things for TAP's (layer 2) and TUN's (layer 3) */
     if (!grp->l3) {
 
-        /* Retrieve the MAC Address directly from the tap interface */
+        /* Retrieve the MAC Address directly from the TAP interface */
         rc = TUNTAP_GetMACAddr( grp->ttifname, &tthwaddr );
 
         /* Did we get what we wanted? */
@@ -5527,7 +5556,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
             if (tthwaddr)
                 free( tthwaddr );
             build_herc_iface_mac( iMAC, NULL );
-            MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
+            MSGBUF( szMAC, "%02x:%02x:%02x:%02x:%02x:%02x",
                 iMAC[0], iMAC[1], iMAC[2],
                 iMAC[3], iMAC[4], iMAC[5] );
             tthwaddr = strdup( szMAC );
@@ -5538,11 +5567,17 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 
         free( tthwaddr );
 
+#if defined(ENABLE_IPV6)
+        memset( &grp->iaDriveLLAddr6, 0, sizeof(grp->iaDriveLLAddr6) );
+        memset( grp->szDriveLLAddr6, 0, sizeof(grp->szDriveLLAddr6) );
+#endif /* defined(ENABLE_IPV6) */
+
     } else {
 
         /* If grp->tthwaddr specified a valid MAC address use it, */
         /* otherwise create a MAC address. This MAC address is    */
-        /* only for the benefit and use of the guest.             */
+        /* reported to and used by the guest. The reported MAC    */
+        /* is used to create the guests link local IPv6 address.  */
         if (grp->tthwaddr &&
             ParseMAC( grp->tthwaddr, iMAC ) == 0 &&
             memcmp( iMAC, zeromac, IFHWADDRLEN ) != 0)
@@ -5551,11 +5586,22 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         } else {
             if (grp->tthwaddr) free(grp->tthwaddr);
             build_herc_iface_mac( iMAC, NULL );
-            MSGBUF( szMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
+            MSGBUF( szMAC, "%02x:%02x:%02x:%02x:%02x:%02x",
                     iMAC[0], iMAC[1], iMAC[2], iMAC[3], iMAC[4], iMAC[5] );
             grp->tthwaddr = strdup( szMAC );
             memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
         }
+
+#if defined(ENABLE_IPV6)
+        /* Create a Driver Link Local address using pseudo-random numbers */
+        addr6.s6_addr[0] = 0xFE;
+        addr6.s6_addr[1] = 0x80;
+        memset( &addr6.s6_addr[2], 0, 6 );
+        for( j = 8; j < 16; j++ )
+            addr6.s6_addr[j] = (int)((rand()/(RAND_MAX+1.0))*256);
+        memcpy( &grp->iaDriveLLAddr6, &addr6, sizeof(grp->iaDriveLLAddr6) );
+        hinet_ntop( AF_INET6, &addr6, grp->szDriveLLAddr6, sizeof(grp->szDriveLLAddr6) );
+#endif /* defined(ENABLE_IPV6) */
 
     }
 
