@@ -727,12 +727,14 @@ Examples:
 #define HHC00978 "CTC: lcs device port %2.2X: STILL trying to enqueue REPLY frame to device %4.4X %s"
 #define HHC00979 "%s: %s: %s %s %s"
 
-/* ctc_ctci.c, ctc_lcs.c, ctc_ptp.c */
+/* ctc_ctci.c, ctc_lcs.c, ctc_ptp.c qeth.c */
 #define HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
 #define HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
 #define HHC00982 "%1d:%04X %s: Present data of size %d bytes to guest"
 #define HHC00983 "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
 #define HHC00984 "%1d:%04X %s: port %2.2X: Receive frame of size %d bytes (with %s packet) from device %s"
+#define HHC00985 "%1d:%04X %s: Send frame of size %d bytes (with %s packet) to device %s"
+#define HHC00986 "%1d:%04X %s: Receive frame of size %d bytes (with %s packet) from device %s"
 
 // reserve 010xx for communication adapter specific component messages
 /* comm3705.c, commadpt.c, console.c, con1052c.c */

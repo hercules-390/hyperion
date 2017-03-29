@@ -965,15 +965,6 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
             grp->ttifname, not, "MTU", grp->ttmtu );
     }
 
-#if defined(ENABLE_IPV6)
-    if (grp->l3 && grp->enabled)
-    {
-        // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
-        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
-            grp->ttifname, "pretend ", "drive IP address", grp->szDriveLLAddr6 );
-    }
-#endif /* defined(ENABLE_IPV6) */
-
 }
 
 
@@ -1511,14 +1502,14 @@ U16 offph;
                         STORE_HW(ipa->rc,IPA_RC_FFFF);
                     }
                     else
+#endif /*defined(OPTION_W32_CTCI)*/
                     {
+#if defined(OPTION_W32_CTCI)
                         if (grp->tthwaddr)
                             free( grp->tthwaddr );
 
                         grp->tthwaddr = strdup( tthwaddr );
                         memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
-#else /*defined(OPTION_W32_CTCI)*/
-                    {
 #endif /*defined(OPTION_W32_CTCI)*/
                         rc = register_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_UNICST);
                         if (rc == -1) {          /* MAC table full */
@@ -1857,7 +1848,7 @@ U16 offph;
 
                     /* Return the values that the guest wiil use to create   */
                     /* the low-order 64-bits of the IPv6 link local address. */
-                    memcpy( ip6+0, &grp->iMAC, 6 );
+                    memcpy( ip6+0, grp->iMAC, IFHWADDRLEN );
                     ip6[6] = 0xFF;
                     ip6[7] = 0xFE;
                     ip6[0] |= 0x02; // FIXME: IPA_CMD_CREATEADDR: is this needed?
@@ -2180,7 +2171,7 @@ static inline int l3_cast_type_ipv6( BYTE* dest_addr, OSA_GRP* grp )
     static const BYTE dest_zero[16] = {0};
     int i;
 
-    if (memcmp( dest_addr, dest_zero, 16 ) == 0)     /* Note: why check for the loopback address? */
+    if (memcmp( dest_addr, dest_zero, 16 ) == 0)     /* Note: why check for the any address? */
         return HDR3_FLAGS_NOCAST;
 
     if (dest_addr[0] == 0xFF)
@@ -2512,6 +2503,8 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
     int mactype;
     QRC qrc;
     int sb = 0;     /* Start with Storage Block zero */
+    U16  hwEthernetType;
+    char cPktType[8];
 
     do {
         /* Find (another) frame for our MAC */
@@ -2545,11 +2538,28 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
             break;
         }
 
-        /* Dump the frame just received */
-        if (grp->debugmask)
+        /* */
+        if (grp->debugmask & DBGQETHPACKET)
         {
-            MPC_DUMP_DATA( "INPUT L2 HDR", (BYTE*)&o2hdr,   (int)sizeof(o2hdr), '<' );
-            MPC_DUMP_DATA( "INPUT L2 FRM", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
+            FETCH_HW( hwEthernetType, eth->hwEthernetType );
+            if( hwEthernetType == ETH_TYPE_IP ) {
+              strcpy( cPktType, "IPv4" );
+            } else if( hwEthernetType == ETH_TYPE_IPV6 ) {
+              strcpy( cPktType, "IPv6" );
+            } else if( hwEthernetType == ETH_TYPE_ARP ) {
+              strcpy( cPktType, "ARP" );
+            } else if( hwEthernetType == ETH_TYPE_RARP ) {
+              strcpy( cPktType, "RARP" );
+            } else if( hwEthernetType == ETH_TYPE_SNA ) {
+              strcpy( cPktType, "SNA" );
+            } else {
+              strcpy( cPktType, "unknown" );
+            }
+            // HHC00986 "%1d:%04X %s: Receive frame of size %d bytes (with %s packet) from device %s"
+            WRMSG(HHC00986, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                 dev->buflen, cPktType, grp->ttifname );
+            net_data_trace( dev, (BYTE*)&o2hdr, sizeof(o2hdr), TO_GUEST, 'D', "L2 hdr", 0 );
+            net_data_trace( dev, dev->buf, dev->buflen, TO_GUEST, 'D', "Frame ", 0 );
         }
 
         /* Copy header and frame to buffer storage block(s) */
@@ -2573,11 +2583,13 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
                             QDIO_SBAL *sbal, BYTE sbalk )
 {
     static const BYTE udp = 17;
+    IP4FRM* ip4;
+    IP6FRM* ip6;
     QRC qrc;
     OSA_HDR3 o3hdr;
     int sb = 0;     /* Start with Storage Block zero */
     int   iPktVer;
-    char  cPktVer[8];
+    char  cPktType[8];
 
     do
     {
@@ -2597,8 +2609,8 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         iPktVer = ( ( dev->buf[0] & 0xF0 ) >> 4 );
         if (iPktVer == 4)
         {
-            IP4FRM* ip4 = (IP4FRM*)dev->buf;
-            strcpy( cPktVer, "IPv4" );
+            ip4 = (IP4FRM*)dev->buf;
+            strcpy( cPktType, " IPv4" );
             memcpy( &o3hdr.dest_addr[12], &ip4->lDstIP, 4 );
             memcpy( o3hdr.in_cksum, ip4->hwChecksum, 2 );
             o3hdr.flags = l3_cast_type_ipv4( &o3hdr.dest_addr[12], grp );
@@ -2608,8 +2620,8 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         }
         else if (iPktVer == 6)
         {
-            IP6FRM* ip6 = (IP6FRM*)dev->buf;
-            strcpy( cPktVer, "IPv6" );
+            ip6 = (IP6FRM*)dev->buf;
+            strcpy( cPktType, " IPv6" );
             memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
             o3hdr.flags = l3_cast_type_ipv6( o3hdr.dest_addr, grp );
             if (o3hdr.flags == HDR3_FLAGS_NOTFORUS)
@@ -2621,14 +2633,17 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
         else
         {
             /* Err... not IPv4 or IPv6! */
-            strcpy( cPktVer, "Unknown" );
+            strcpy( cPktType, "" );
         }
 
-        /* Dump the packet just received */
-        if (grp->debugmask)
+        /* */
+        if (grp->debugmask & DBGQETHPACKET)
         {
-            MPC_DUMP_DATA( "INPUT L3 HDR", (BYTE*)&o3hdr,   (int)sizeof(o3hdr), '<' );
-            MPC_DUMP_DATA( "INPUT L3 PKT", (BYTE*)dev->buf, (int)dev->buflen,   '<' );
+            // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
+            WRMSG(HHC00913, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                            cPktType, dev->buflen, grp->ttifname );
+            net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );
+            net_data_trace( dev, dev->buf, dev->buflen, TO_GUEST, 'D', "Packet", 0 );
         }
 
         /* Copy header and packet to buffer storage block(s) */
@@ -2665,6 +2680,11 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
     QRC qrc;                            /* Internal return code      */
     BYTE hdr_id;                        /* OSA Header Block Id       */
     BYTE flag0;                         /* Storage Block Flag        */
+
+    ETHFRM* eth;                        /* Ethernet frame header */
+    U16  hwEthernetType;
+    int iPktVer;
+    char cPktType[8];
 
     sb = 0;                             /* Start w/Storage Block 0   */
 
@@ -2740,13 +2760,54 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         flag0 = sbal->sbale[sb].flags[0];
 
         /* Trace the pack/frame if debugging is enabled */
-        if (grp->debugmask)
+        DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)\n",
+                        ssb, sb, dev->buflen, dev->buflen );
+
+        /* */
+        if (grp->debugmask & DBGQETHPACKET)
         {
-            DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)\n",
-                ssb, sb, dev->buflen, dev->buflen );
-            MPC_DUMP_DATA( "OUTPUT BUF", dev->buf, dev->buflen, '>' );
+            if (!grp->l3) {
+                eth = (ETHFRM*)dev->buf;
+                FETCH_HW( hwEthernetType, eth->hwEthernetType );
+                if( hwEthernetType == ETH_TYPE_IP ) {
+                  strcpy( cPktType, "IPv4" );
+                } else if( hwEthernetType == ETH_TYPE_IPV6 ) {
+                  strcpy( cPktType, "IPv6" );
+                } else if( hwEthernetType == ETH_TYPE_ARP ) {
+                  strcpy( cPktType, "ARP" );
+                } else if( hwEthernetType == ETH_TYPE_RARP ) {
+                  strcpy( cPktType, "RARP" );
+                } else if( hwEthernetType == ETH_TYPE_SNA ) {
+                  strcpy( cPktType, "SNA" );
+                } else {
+                  strcpy( cPktType, "unknown" );
+                }
+                // HHC00985 "%1d:%04X %s: Send frame of size %d bytes (with %s packet) to device %s"
+                WRMSG(HHC00985, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                     dev->buflen, cPktType, grp->ttifname );
+                net_data_trace( dev, dev->buf, dev->buflen, FROM_GUEST, 'D', "Frame ", 0 );
+            } else {
+                iPktVer = ( ( dev->buf[0] & 0xF0 ) >> 4 );
+                if (iPktVer == 4)
+                {
+                    strcpy( cPktType, " IPv4" );
+                }
+                else if (iPktVer == 6)
+                {
+                    strcpy( cPktType, " IPv6" );
+                }
+                else
+                {
+                    strcpy( cPktType, "" );    /* Err... not IPv4 or IPv6! */
+                }
+                // HHC00910 "%1d:%04X %s: Send%s packet of size %d bytes to device %s"
+                WRMSG(HHC00910, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                cPktType, dev->buflen, grp->ttifname );
+                net_data_trace( dev, dev->buf, dev->buflen, FROM_GUEST, 'D', "Packet", 0 );
+            }
         }
 
+        /* */
         qrc = write_packet( dev, grp, dev->buf, dev->buflen );
     }
     while (qrc >= 0 && !IS_LAST_SBALE_ENTRY( flag0 ) && ++sb < QMAXSTBK);
@@ -3112,6 +3173,11 @@ U32 mask4;
         dev->chptype[0] = CHP_TYPE_OSD;
         dev->pmcw.flag4 |= PMCW4_Q;
         dev->fd = -1;
+        /* Setting dev->bufsize = 0xFFFF causes, on return to attach_device */
+        /* in config.c, storage of size 0xFFFF bytes to be obtained, and    */
+        /* the storage address to be placed in dev->buf. The storage is     */
+        /* used to receive data from the TUNTAP interface, so 0xFFFF is     */
+        /* effectively the largest MTU that could ever be used by QETH.     */
         dev->bufsize = 0xFFFF;      /* maximum packet/frame size */
 
         if(!(grouped = group_device(dev,groupsize)) && !dev->member)
@@ -5533,10 +5599,6 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     BYTE iMAC[ IFHWADDRLEN ];
     char szMAC[3*IFHWADDRLEN] = {0};
     int rc = 0;
-#if defined(ENABLE_IPV6)
-    int j;
-    struct in6_addr addr6;
-#endif /* defined(ENABLE_IPV6) */
 
     /* Do different things for TAP's (layer 2) and TUN's (layer 3) */
     if (!grp->l3) {
@@ -5567,11 +5629,6 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 
         free( tthwaddr );
 
-#if defined(ENABLE_IPV6)
-        memset( &grp->iaDriveLLAddr6, 0, sizeof(grp->iaDriveLLAddr6) );
-        memset( grp->szDriveLLAddr6, 0, sizeof(grp->szDriveLLAddr6) );
-#endif /* defined(ENABLE_IPV6) */
-
     } else {
 
         /* If grp->tthwaddr specified a valid MAC address use it, */
@@ -5591,17 +5648,6 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
             grp->tthwaddr = strdup( szMAC );
             memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
         }
-
-#if defined(ENABLE_IPV6)
-        /* Create a Driver Link Local address using pseudo-random numbers */
-        addr6.s6_addr[0] = 0xFE;
-        addr6.s6_addr[1] = 0x80;
-        memset( &addr6.s6_addr[2], 0, 6 );
-        for( j = 8; j < 16; j++ )
-            addr6.s6_addr[j] = (int)((rand()/(RAND_MAX+1.0))*256);
-        memcpy( &grp->iaDriveLLAddr6, &addr6, sizeof(grp->iaDriveLLAddr6) );
-        hinet_ntop( AF_INET6, &addr6, grp->szDriveLLAddr6, sizeof(grp->szDriveLLAddr6) );
-#endif /* defined(ENABLE_IPV6) */
 
     }
 
@@ -5838,4 +5884,3 @@ END_DEVICE_SECTION
 #if defined( _MSVC_ ) && defined( NO_QETH_OPTIMIZE )
   #pragma optimize( "", on )            // restore previous settings
 #endif
-

@@ -238,11 +238,6 @@ typedef struct _OSA_GRP {
     BYTE  gtulpfilt[4];         /* Guest token ulp filter            */
     BYTE  gtulpconn[4];         /* Guest token ulp connection        */
 
-#if defined(ENABLE_IPV6)
-    struct in6_addr iaDriveLLAddr6;      // IPv6 Link Local Address (Driver)
-    char            szDriveLLAddr6[48];  // IPv6 Link Local Address (Driver)
-#endif /* defined(ENABLE_IPV6) */
-
 } OSA_GRP;
 
 
