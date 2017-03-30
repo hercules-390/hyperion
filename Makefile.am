@@ -1058,27 +1058,27 @@ diagnostic: diagnostic-sysinfo diagnostic-tools diagnostic-dirs diagnostic-vars
 
 diagnostic-sysinfo:
 	@echo 'System information'
-	@echo '  /etc/os-release      $(shell cat /etc/os-release 2>&1)'
-	@echo '  uname -a             $(shell uname -a)'
-	@echo '  uname -m             $(shell uname -m)'
-	@echo '  uname -p             $(shell uname -p)'
-	@echo '  uname -s             $(shell uname -s)'
+	@echo '  /etc/os-release     ' `cat /etc/os-release 2>&1`
+	@echo '  uname -a            ' `uname -a`
+	@echo '  uname -m            ' `uname -m`
+	@echo '  uname -p            ' `uname -p`
+	@echo '  uname -s            ' `uname -s`
 	@echo ' '
 
 diagnostic-tools:
 	@echo 'Build tools versions'
-	@echo '  autoconf             $(shell autoconf --version 2>&1 | sed "2,99d")'
-	@echo '  automake             $(shell automake --version 2>&1 | sed "2,99d")'
-	@echo '  m4                   $(shell m4 --version 2>&1 | sed "2,99d")'
-	@echo '  make                 $(shell make --version 2>&1 | sed "2,99d")'
-	@echo '  compiler             $(shell $(CC) --version 2>&1 | sed "2,99d")'
-	@echo '  linker               $(shell $(LD) --version 2>&1 | sed "2,99d")'
+	@echo '  autoconf            ' `autoconf --version 2>&1 | head -n 1`
+	@echo '  automake            ' `automake --version 2>&1 | head -n 1`
+	@echo '  m4                  ' `m4 --version 2>&1 | head -n 1 | sed "s/.*illegal option.*/BSD version of m4"/`
+	@echo '  make                ' `make --version 2>&1 | head -n 1 | sed "s/^usage: make.*/BSD version of make/"`
+	@echo '  compiler            ' `$(CC) --version 2>&1 | head -n 1`
+	@echo '  linker              ' `$(LD) --version 2>&1 | head -n 1`
 	@echo ' '
 
 diagnostic-dirs:
 	@echo 'Build directories'
-	@echo '  source              $(abspath $(top_srcdir))'
-	@echo '  build               $(shell pwd)'
+	@echo '  source             ' `(cd $(top_srcdir) && pwd || echo $(top_srcdir))`
+	@echo '  build              ' `pwd`
 	@echo 'Install directories'
 	@echo '  prefix              $(prefix)'
 	@echo '    exec_prefix       $(exec_prefix)'
