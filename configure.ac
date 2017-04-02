@@ -8,7 +8,7 @@
 #
 ###############################################################################
 
-AC_INIT([Hercules V4],[4.0.0], , hercv4,[http://hercules-390.github.io/html/])
+AC_INIT([Hercules V4],[4.0.0], , ,[http://hercules-390.github.io/html/])
 
 #
 # When changing the version string (AC_INIT parameter two), be sure to change
