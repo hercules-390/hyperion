@@ -1323,7 +1323,9 @@ kfreebsd*-gnu)
   dynamic_linker='GNU ld.so'
   ;;
 
-freebsd*)
+# FreeBSD before 4.0 may have supported a.out format.  test for it and if the
+# objformat migration tool does not exist, assume a.out
+freebsd2 | freebsd2.* | freebsd3 | freebsd3.* )
   objformat=`test -x /usr/bin/objformat && /usr/bin/objformat || echo aout`
   version_type=freebsd-$objformat
   case $version_type in
@@ -1351,6 +1353,16 @@ freebsd*)
     hardcode_into_libs=yes
     ;;
   esac
+  ;;
+
+# FreeBSD 4 and higher always and only support ELF
+freebsd*)
+  library_names_spec='${libname}${release}${shared_ext}$versuffix ${libname}${release}${shared_ext} $libname${shared_ext}'
+  need_version=no
+  need_lib_prefix=no
+  shlibpath_var=LD_LIBRARY_PATH
+  shlibpath_overrides_runpath=no
+  hardcode_into_libs=yes
   ;;
 
 gnu*)

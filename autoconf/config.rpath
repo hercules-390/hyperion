@@ -236,7 +236,7 @@ else
     darwin* | rhapsody*)
       hardcode_direct=yes
       ;;
-    freebsd1*)
+    freebsd1 | freebsd1.*)
       ld_shlibs=no
       ;;
     freebsd2.2*)
