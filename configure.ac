@@ -26,6 +26,14 @@ AM_MAINTAINER_MODE()
 AC_CANONICAL_HOST()           # (sets $host_cpu, $host_vendor, and $host_os)
 AC_CANONICAL_TARGET()         # (sets $target_cpu, $target_vendor, and $target_os)
 
+# The following two lines are an ugly kludgy hack to prevent a FORTRAN compiler
+# from poisoning a shared library build.  Hercules does not use FORTRAN sources
+# so there is no reason to test nor configure FORTRAN.  The hack neuters the
+# libtools.m4 macros that generate the F77 tests.  We do c++ at the same time;
+# if Hercules ever includes c++ code, remove the first ("CXX") line.
+m4_defun([_LT_AC_LANG_CXX_CONFIG], [:])
+m4_defun([_LT_AC_LANG_F77_CONFIG], [:])
+
 ###############################################################################
 # Test for an in-source build and abort if such is attempted.  The
 # working directory for configure should be the build directory, not
