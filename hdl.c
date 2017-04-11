@@ -224,9 +224,11 @@ size_t  fulllen = 0;
 
     if( hdl_modpath && *hdl_modpath)
     {
+        char * filenamecopy = strdup(filename);
         strlcpy(fullname,hdl_modpath,fulllen);
         strlcat(fullname,PATHSEPS,fulllen);
-        strlcat(fullname,basename(filename),fulllen);
+        strlcat(fullname,basename(filenamecopy),fulllen);
+        free(filenamecopy);
     }
     else
         strlcpy(fullname,filename,fulllen);
