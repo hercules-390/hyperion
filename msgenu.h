@@ -1098,6 +1098,7 @@ Examples:
 #define HHC01722 "ECPS:VM Command processor complete"
 #define HHC01723 "Invalid ECPS:VM level value : %s. Default of 20 used"
 #define HHC01724 "ECPS:VM Operating with CP FREE/FRET trap in effect"
+#define HHC01725 "ECPS:VM Code version %.02f"
 
 // reserve 018xx for http server
 #define HHC01800 "HTTP server: error in function %s: %s"
