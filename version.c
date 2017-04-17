@@ -630,13 +630,9 @@ static const char *build_info[] = {
 #endif
 
 #if defined(NO_IEEE_SUPPORT)
-    "Without IEEE support",
+    "Without IEEE 754 binary floating point support",
 #else
-    #if defined(HAVE_SQRTL)
-        "With    sqrtl support",
-    #else
-        "Without sqrtl support",
-    #endif
+    "With    IEEE 754 binary floating point support",
 #endif
 
 #if defined(NO_SIGABEND_HANDLER)

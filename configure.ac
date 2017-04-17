@@ -310,11 +310,11 @@ AC_ARG_ENABLE( s3fh-altdir,
              -a   -e  "$hc_cv_s3fh_dir/lib/libSoftFloat.a"        ; then
             AC_MSG_NOTICE( [using alternate directory "${hc_cv_s3fh_dir}" for SoftFloat-3a] )
           else
-            AC_MSG_RESULT( [ERROR: --enable-s3fa-altdir= directory does not have SoftFloat-3a headers: $hc_cv_s3fh_dir] )
+            AC_MSG_WARN( [ERROR: --enable-s3fa-altdir= directory does not have SoftFloat-3a headers: $hc_cv_s3fh_dir] )
             hc_cv_have_softfloat_h=no
           fi
         else
-          AC_MSG_RESULT( [ERROR: --enable-s3fa-altdir= directory not found: $hc_cv_s3fh_dir] )
+          AC_MSG_WARN( [ERROR: --enable-s3fa-altdir= directory not found: $hc_cv_s3fh_dir] )
           hc_cv_have_softfloat_h=no
         fi
 
@@ -605,6 +605,7 @@ AH_TEMPLATE( [VERS_MAJ],                     [Hardwired first component of versi
 AH_TEMPLATE( [VERS_INT],                     [Hardwired second component of version.] )
 AH_TEMPLATE( [VERS_MIN],                     [Hardwired third component of version.] )
 
+
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
 ###############################################################################
@@ -615,22 +616,22 @@ AH_TEMPLATE( [VERS_MIN],                     [Hardwired third component of versi
 #  need to have any 'HAVE_XXX' pre-processor #defined entered into config.h
 #  (because we can't build Herc at all if any of them don't happen to exist)
 
-AC_CHECK_HEADER( ctype.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'ctype.h' not found]      ); hc_error=yes ] )
-AC_CHECK_HEADER( errno.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'errno.h' not found]      ); hc_error=yes ] )
-AC_CHECK_HEADER( fcntl.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'fcntl.h' not found]      ); hc_error=yes ] )
-AC_CHECK_HEADER( limits.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'limits.h' not found]     ); hc_error=yes ] )
-AC_CHECK_HEADER( setjmp.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'setjmp.h' not found]     ); hc_error=yes ] )
-AC_CHECK_HEADER( stdarg.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'stdarg.h' not found]     ); hc_error=yes ] )
-AC_CHECK_HEADER( stdio.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'stdio.h' not found]      ); hc_error=yes ] )
-AC_CHECK_HEADER( stdlib.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'stdlib.h' not found]     ); hc_error=yes ] )
-AC_CHECK_HEADER( string.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'string.h' not found]     ); hc_error=yes ] )
-AC_CHECK_HEADER( sched.h,      [], [ AC_MSG_RESULT( [ERROR: Required header 'sched.h' not found]      ); hc_error=yes ] )
-AC_CHECK_HEADER( time.h,       [], [ AC_MSG_RESULT( [ERROR: Required header 'time.h' not found]       ); hc_error=yes ] )
-AC_CHECK_HEADER( unistd.h,     [], [ AC_MSG_RESULT( [ERROR: Required header 'unistd.h' not found]     ); hc_error=yes ] )
-AC_CHECK_HEADER( sys/stat.h,   [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/stat.h' not found]   ); hc_error=yes ] )
-AC_CHECK_HEADER( sys/time.h,   [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/time.h' not found]   ); hc_error=yes ] )
-AC_CHECK_HEADER( sys/types.h,  [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/types.h' not found]  ); hc_error=yes ] )
-AC_CHECK_HEADER( sys/mman.h,   [], [ AC_MSG_RESULT( [ERROR: Required header 'sys/mman.h' not found]   ); hc_error=yes ] )
+AC_CHECK_HEADER( ctype.h,      [], [ AC_MSG_WARN( [ERROR: Required header 'ctype.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( errno.h,      [], [ AC_MSG_WARN( [ERROR: Required header 'errno.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( fcntl.h,      [], [ AC_MSG_WARN( [ERROR: Required header 'fcntl.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( limits.h,     [], [ AC_MSG_WARN( [ERROR: Required header 'limits.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( setjmp.h,     [], [ AC_MSG_WARN( [ERROR: Required header 'setjmp.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( stdarg.h,     [], [ AC_MSG_WARN( [ERROR: Required header 'stdarg.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( stdio.h,      [], [ AC_MSG_WARN( [ERROR: Required header 'stdio.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( stdlib.h,     [], [ AC_MSG_WARN( [ERROR: Required header 'stdlib.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( string.h,     [], [ AC_MSG_WARN( [ERROR: Required header 'string.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( sched.h,      [], [ AC_MSG_WARN( [ERROR: Required header 'sched.h' not found]      ); hc_error=yes ] )
+AC_CHECK_HEADER( time.h,       [], [ AC_MSG_WARN( [ERROR: Required header 'time.h' not found]       ); hc_error=yes ] )
+AC_CHECK_HEADER( unistd.h,     [], [ AC_MSG_WARN( [ERROR: Required header 'unistd.h' not found]     ); hc_error=yes ] )
+AC_CHECK_HEADER( sys/stat.h,   [], [ AC_MSG_WARN( [ERROR: Required header 'sys/stat.h' not found]   ); hc_error=yes ] )
+AC_CHECK_HEADER( sys/time.h,   [], [ AC_MSG_WARN( [ERROR: Required header 'sys/time.h' not found]   ); hc_error=yes ] )
+AC_CHECK_HEADER( sys/types.h,  [], [ AC_MSG_WARN( [ERROR: Required header 'sys/types.h' not found]  ); hc_error=yes ] )
+AC_CHECK_HEADER( sys/mman.h,   [], [ AC_MSG_WARN( [ERROR: Required header 'sys/mman.h' not found]   ); hc_error=yes ] )
 
 #  PROGRAMMING NOTE: the pthread.h header only required if this is not
 #  an fthreads build. Thus we delay aborting until later once we know
@@ -655,7 +656,7 @@ AC_CHECK_HEADER( pthread.h, [hc_cv_have_pthread_h=yes],
             CFLAGS=$hc_temp
 
         else
-            AC_MSG_RESULT( [ERROR: Required header 'pthread.h' not found] )
+            AC_MSG_WARN( [ERROR: Required header 'pthread.h' not found] )
             hc_error=yes
         fi
     ]
@@ -817,7 +818,6 @@ AC_CHECK_HEADERS( inttypes.h,     [hc_cv_have_inttypes_h=yes],     [hc_cv_have_i
 AC_CHECK_HEADERS( locale.h,       [hc_cv_have_locale_h=yes],       [hc_cv_have_locale_h=no]       )
 AC_CHECK_HEADERS( ltdl.h,         [hc_cv_have_ltdl_h=yes],         [hc_cv_have_ltdl_h=no]         )
 AC_CHECK_HEADERS( malloc.h,       [hc_cv_have_malloc_h=yes],       [hc_cv_have_malloc_h=no]       )
-AC_CHECK_HEADERS( math.h,         [hc_cv_have_math_h=yes],         [hc_cv_have_math_h=no]         )
 AC_CHECK_HEADERS( netdb.h,        [hc_cv_have_netdb_h=yes],        [hc_cv_have_netdb_h=no]        )
 AC_CHECK_HEADERS( pwd.h,          [hc_cv_have_pwd_h=yes],          [hc_cv_have_pwd_h=no]          )
 AC_CHECK_HEADERS( regex.h,        [hc_cv_have_regex_h=yes],        [hc_cv_have_regex_h=no]        )
@@ -1055,9 +1055,16 @@ AC_CACHE_SAVE()
 #  keep the below check for 'dlopen' anyway since we prefer that libtool use it
 #  instead of its own equivalent (lt_dlopen) if it's available.
 
+#  AUTOCONF NOTE:  Linker -l options are built up in reverse order of the tests
+#  below; the last test performed becomes the first -l passed to ld.  If a
+#  library requires symbols from second library, the second library must be
+#  tested before the library that requires the symbols.  Note also that if
+#  an <action if found> is specified, a -l linker option is not added for the
+#  library.
+
 AC_CHECK_LIB( msvcrt, _pipe          )
+
 AC_CHECK_LIB( dl,     dlopen         )
-AC_CHECK_LIB( m,      sqrt           )
 AC_CHECK_LIB( socket, connect        )
 AC_CHECK_LIB( nsl,    gethostbyname  )
 AC_CHECK_LIB( resolv, inet_aton      )
@@ -1075,6 +1082,23 @@ AC_CHECK_LIB( rt,     sched_yield    )
 #              To be further investigate...
 # AC_CHECK_LIB( pthread,pthread_create )
 
+###############################################################################
+#   Checks for REQUIRED math.h header and math library files...
+###############################################################################
+
+# math.h is needed by control.c to declare the pow() function, used in the
+# emulation of the Store System Information (STSI instruction).  If we needed
+# other math library functions, we would add AC_CHECK_FUNC.  Note also that
+# math functions are typically in libm in open source and bundled in the c
+# runtime library in Windows.
+
+AC_CHECK_HEADER( math.h,   [], [ AC_MSG_WARN( [Required header 'math.h' not found] );
+                                       hc_error=yes ] )
+AC_CHECK_LIB(    m, pow,   [], [ AC_MSG_WARN( [Required library 'libm' not found or does not include function 'pow()'] );
+                                       hc_error=yes ] )
+
+
+
 AC_CACHE_SAVE()
 
 ###############################################################################
@@ -1087,8 +1111,6 @@ AC_CACHE_SAVE()
 
 AC_CHECK_FUNCS( memrchr )
 AC_CHECK_FUNCS( getopt_long )
-AC_CHECK_FUNCS( sqrtl ldexpl fabsl fmodl frexpl )
-AC_CHECK_FUNCS( ldexpf frexpf fabsf rint )
 AC_CHECK_FUNCS( strlcpy strlcat )
 AC_CHECK_FUNCS( strerror_r )
 AC_CHECK_FUNCS( strsignal, [hc_cv_have_strsignal=yes], [hc_cv_have_strsignal=no] )
@@ -1345,7 +1367,7 @@ AC_MSG_NOTICE( [results: byte structs are aligned/rounded by default... ${hc_cv_
 
 if test "$hc_cv_byte_structs_always_aligned_and_rounded" = "yes"; then
 
-    AC_MSG_RESULT( [ERROR: Size of structures are aligned/rounded and we don't know how to tell the compiler otherwise] )
+    AC_MSG_WARN( [ERROR: Size of structures are aligned/rounded and we don't know how to tell the compiler otherwise] )
     hc_error=yes
 fi
 
@@ -2066,14 +2088,14 @@ AC_ARG_ENABLE( hqa,
             hc_cv_have_hqa_h=no
           fi
         else
-          AC_MSG_RESULT( [ERROR: --enable-hqa directory not found: $hc_cv_hqa_opt] )
+          AC_MSG_WARN( [ERROR: --enable-hqa directory not found: $hc_cv_hqa_opt] )
           hc_error=yes
           hc_cv_have_hqa_h=no
         fi
 
         if test "$hc_cv_have_hqa_h" = "yes"; then
           if test "$hc_cv_hqa_inc" != "."; then
-            AC_MSG_RESULT( [WARNING: --enable-hqa value overrides existing HAQ_DIR value] )
+            AC_MSG_WARN( [WARNING: --enable-hqa value overrides existing HAQ_DIR value] )
           fi
           hc_cv_hqa_inc=$hc_cv_hqa_opt
         else
@@ -2092,7 +2114,7 @@ AC_ARG_ENABLE( dynamic-load,
         case "${enableval}" in
         yes) hc_cv_opt_dynamic_load=yes                      ;;
         no)  hc_cv_opt_dynamic_load=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'dynamic-load' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'dynamic-load' option] )
              hc_error=yes
              ;;
         esac
@@ -2110,7 +2132,7 @@ AC_ARG_ENABLE( object-rexx,
         case "${enableval}" in
         yes) hc_cv_ena_object_rexx=yes                      ;;
         no)  hc_cv_ena_object_rexx=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'object-rexx' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'object-rexx' option] )
              hc_error=yes
              ;;
         esac
@@ -2134,7 +2156,7 @@ AC_ARG_ENABLE( regina-rexx,
         case "${enableval}" in
         yes) hc_cv_ena_regina_rexx=yes                      ;;
         no)  hc_cv_ena_regina_rexx=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'regina-rexx' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'regina-rexx' option] )
              hc_error=yes
              ;;
         esac
@@ -2159,7 +2181,7 @@ AC_ARG_ENABLE( ipv6,
         case "${enableval}" in
         yes) hc_cv_ena_ipv6=yes                      ;;
         no)  hc_cv_ena_ipv6=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'ipv6' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'ipv6' option] )
              hc_error=yes
              ;;
         esac
@@ -2177,7 +2199,7 @@ AC_ARG_ENABLE( cckd-bzip2,
         case "${enableval}" in
         yes) hc_cv_opt_cckd_bzip2=yes                      ;;
         no)  hc_cv_opt_cckd_bzip2=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'cckd-bzip2' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'cckd-bzip2' option] )
              hc_error=yes
              ;;
         esac
@@ -2195,7 +2217,7 @@ AC_ARG_ENABLE( het-bzip2,
         case "${enableval}" in
         yes) hc_cv_opt_het_bzip2=yes                      ;;
         no)  hc_cv_opt_het_bzip2=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'het-bzip2' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'het-bzip2' option] )
              hc_error=yes
              ;;
         esac
@@ -2213,7 +2235,7 @@ AC_ARG_ENABLE( debug,
         case "${enableval}" in
         yes) hc_cv_opt_debug=yes                      ;;
         no)  hc_cv_opt_debug=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'debug' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'debug' option] )
              hc_error=yes
              ;;
         esac
@@ -2243,7 +2265,7 @@ AC_ARG_ENABLE( enhanced-configincludes,
         case "${enableval}" in
         yes) hc_cv_opt_enhanced_configincludes=yes                      ;;
         no)  hc_cv_opt_enhanced_configincludes=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'enhanced-configincludes' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'enhanced-configincludes' option] )
              hc_error=yes
              ;;
         esac
@@ -2261,7 +2283,7 @@ AC_ARG_ENABLE( automatic-operator,
         case "${enableval}" in
         yes) hc_cv_opt_auto_oper=yes                      ;;
         no)  hc_cv_opt_auto_oper=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'automatic-operator' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'automatic-operator' option] )
              hc_error=yes
              ;;
         esac
@@ -2279,7 +2301,7 @@ AC_ARG_ENABLE( external-gui,
         case "${enableval}" in
         yes) hc_cv_opt_external_gui=yes                      ;;
         no)  hc_cv_opt_external_gui=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'external-gui' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'external-gui' option] )
              hc_error=yes
              ;;
         esac
@@ -2297,7 +2319,7 @@ AC_ARG_ENABLE( fthreads,
         case "${enableval}" in
         yes) hc_cv_opt_fthreads=yes                      ;;
         no)  hc_cv_opt_fthreads=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'fthreads' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'fthreads' option] )
              hc_error=yes
              ;;
         esac
@@ -2328,7 +2350,7 @@ AC_ARG_ENABLE( multi-cpu,
             then
                 hc_cv_opt_num_cpu_engines=${enableval}
             else
-                AC_MSG_RESULT( [ERROR: invalid 'multi-cpu' option] )
+                AC_MSG_WARN( [ERROR: invalid 'multi-cpu' option] )
                 hc_error=yes
             fi
             ;;
@@ -2357,7 +2379,7 @@ AC_ARG_ENABLE( capabilities,
         case "${enableval}" in
         yes) hc_cv_opt_capabilities=yes                      ;;
         no)  hc_cv_opt_capabilities=no                       ;;
-        *)   AC_MSG_RESULT( [ERROR: invalid 'capabilities' option] )
+        *)   AC_MSG_WARN( [ERROR: invalid 'capabilities' option] )
              hc_error=yes
              ;;
         esac
@@ -2444,13 +2466,13 @@ if test "$hc_cv_ena_object_rexx" = "yes" ; then
 
    if test "$hc_cv_have_rexx_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) rexx.h is not available] )
+      AC_MSG_WARN( [ERROR: open object rexx support requested but,  (oorexx) rexx.h is not available] )
       hc_error=yes
    fi
 
    if test "$hc_cv_have_oorexxapi_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: open object rexx support requested but,  (oorexx) oorexxapi.h is not available] )
+      AC_MSG_WARN( [ERROR: open object rexx support requested but,  (oorexx) oorexxapi.h is not available] )
       hc_error=yes
    fi
 
@@ -2461,7 +2483,7 @@ if test "$hc_cv_ena_regina_rexx" = "yes" ; then
    if test "$hc_cv_have_rexxsaa_h" != "yes" &&
       test "$hc_cv_have_regina_rexxsaa_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: regina rexx support requested but, (regina) rexxsaa.h is not available] )
+      AC_MSG_WARN( [ERROR: regina rexx support requested but, (regina) rexxsaa.h is not available] )
       hc_error=yes
    fi
 
@@ -2472,7 +2494,7 @@ if test "$hc_cv_ena_ipv6" = "yes" ; then
    if test "$hc_cv_have_in6_ifreq_ifr6_addr" != "yes" &&
       test "$hc_cv_have_in6_ifreq_ifru_addr" != "yes"
    then
-      AC_MSG_RESULT( [ERROR: IPv6 support requested but struct in6_ifreq is not available] )
+      AC_MSG_WARN( [ERROR: IPv6 support requested but struct in6_ifreq is not available] )
       hc_error=yes
    fi
 
@@ -2484,14 +2506,14 @@ if test "$hc_cv_build_hercifc" = "yes"; then
 
       if test "$hc_cv_have_net_if_h" != "yes"; then
 
-         AC_MSG_RESULT( [ERROR: Required headers 'linux/if_tun.h' or 'net/if.h' not found] )
+         AC_MSG_WARN( [ERROR: Required headers 'linux/if_tun.h' or 'net/if.h' not found] )
          hc_error=yes
       fi
    fi
 
    if test "$hc_cv_have_net_route_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: Required header 'net/route_h' not found] )
+      AC_MSG_WARN( [ERROR: Required header 'net/route_h' not found] )
       hc_error=yes
    fi
 fi
@@ -2505,7 +2527,7 @@ fi
 if test "$hc_cv_have_strsignal" != "yes"  &&
    test "$hc_cv_have_signal_h"  != "yes"; then
 
-   AC_MSG_RESULT( [ERROR: Required header 'signal.h' not found] )
+   AC_MSG_WARN( [ERROR: Required header 'signal.h' not found] )
    hc_error=yes
 fi
 
@@ -2513,7 +2535,7 @@ fi
 
 if test "$hc_cv_have_vsscanf" != "yes"; then
 
-    AC_MSG_RESULT( [ERROR: Required function 'vsscanf' not found] )
+    AC_MSG_WARN( [ERROR: Required function 'vsscanf' not found] )
     hc_error=yes
 fi
 
@@ -2522,7 +2544,7 @@ fi
 if test "$hc_cv_have_inttypes_h" != "yes"  &&
    test "$hc_cv_have_u_int8_t"   != "yes"; then
 
-   AC_MSG_RESULT( [ERROR: unable to find fixed-size data types] )
+   AC_MSG_WARN( [ERROR: unable to find fixed-size data types] )
    hc_error=yes
 fi
 
@@ -2533,13 +2555,13 @@ if test "$hc_cv_opt_cckd_bzip2" = "yes"  ||
 
    if test "$hc_cv_have_libbz2" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: bzip2 compression requested but libbz2 library not found] )
+      AC_MSG_WARN( [ERROR: bzip2 compression requested but libbz2 library not found] )
       hc_error=yes
    fi
 
    if test "$hc_cv_have_bzlib_h" != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: bzip2 compression requested but 'bzlib.h' header not found] )
+      AC_MSG_WARN( [ERROR: bzip2 compression requested but 'bzlib.h' header not found] )
       hc_error=yes
    fi
 fi
@@ -2551,7 +2573,7 @@ if test "$hc_cv_opt_dynamic_load" = "yes"; then
    if test "$hc_cv_have_lt_dlopen" != "yes"  &&
       test "$hc_cv_have_dlopen"    != "yes"; then
 
-      AC_MSG_RESULT( [ERROR: dynamic-load requires libtool or dlltool] )
+      AC_MSG_WARN( [ERROR: dynamic-load requires libtool or dlltool] )
       hc_error=yes
    fi
 fi
@@ -2561,7 +2583,7 @@ fi
 if test "$hc_cv_opt_auto_oper" = "yes"  &&
    test "$hc_cv_have_regex_h" != "yes"; then
 
-   AC_MSG_RESULT( [ERROR: automatic-operator requested but 'regex.h' header not found] )
+   AC_MSG_WARN( [ERROR: automatic-operator requested but 'regex.h' header not found] )
    hc_error=yes
 fi
 
@@ -2570,7 +2592,7 @@ fi
 if test "$hc_cv_opt_external_gui"  = "yes"  &&
    test "$hc_cv_opt_dynamic_load" != "yes"; then
 
-   AC_MSG_RESULT( [ERROR: external-gui requires dynamic-load] )
+   AC_MSG_WARN( [ERROR: external-gui requires dynamic-load] )
    hc_error=yes
 fi
 
@@ -2579,14 +2601,14 @@ fi
 if test "$hc_cv_opt_fthreads" = "yes"  &&
    test "$hc_cv_is_windows"  != "yes"; then
 
-   AC_MSG_RESULT( [ERROR: fthreads is only for Windows platforms] )
+   AC_MSG_WARN( [ERROR: fthreads is only for Windows platforms] )
    hc_error=yes
 fi
 
 if test "$hc_cv_have_pthread_h" != "yes"  &&
    test "$hc_cv_opt_fthreads"   != "yes"; then
 
-   AC_MSG_RESULT( [ERROR: unable to find pthread.h] )
+   AC_MSG_WARN( [ERROR: unable to find pthread.h] )
    hc_error=yes
 fi
 
@@ -2596,7 +2618,7 @@ if test "$hc_cv_is_apple"                          = "yes"  &&
    test "$hc_cv_pp_macro_arg_counting_broke"       = "yes"  &&
    test "$hc_cv_traditional_cpp_is_K_AND_R_C_type" = "yes"; then
 
-    AC_MSG_RESULT( [ERROR: macro argument counting broken and cannot use -traditional-cpp option to work around it] )
+    AC_MSG_WARN( [ERROR: macro argument counting broken and cannot use -traditional-cpp option to work around it] )
     hc_error=yes
 fi
 
