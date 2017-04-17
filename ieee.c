@@ -665,18 +665,14 @@ static INLINE BYTE ARCH_DEP(float32_signaling_compare)( float32_t op1, float32_t
 
 #if !defined(_IEEE_NONARCHDEP_)
 
-#if !defined(HAVE_MATH_H) && (_MSC_VER < VS2015)
-/* Avoid double definition for VS2015 (albeit with different values). */
-/* All floating-point numbers can be put in one of these categories.  */
 enum
 {
-    FP_NAN          =  0,
-    FP_INFINITE     =  1,
-    FP_ZERO         =  2,
-    FP_SUBNORMAL    =  3,
-    FP_NORMAL       =  4
+    FPV_NAN          =  0,
+    FPV_INFINITE     =  1,
+    FPV_ZERO         =  2,
+    FPV_SUBNORMAL    =  3,
+    FPV_NORMAL       =  4
 };
-#endif /*!defined(HAVE_MATH_H)*/
 
 /*
  * Classify emulated fp values
@@ -685,32 +681,32 @@ static int lbfpclassify(struct lbfp *op)
 {
     if (op->exp == 0) {
         if (op->fract == 0)
-            return FP_ZERO;
+            return FPV_ZERO;
         else
-            return FP_SUBNORMAL;
+            return FPV_SUBNORMAL;
     } else if (op->exp == 0x7FF) {
         if (op->fract == 0)
-            return FP_INFINITE;
+            return FPV_INFINITE;
         else
-            return FP_NAN;
+            return FPV_NAN;
     } else {
-        return FP_NORMAL;
+        return FPV_NORMAL;
     }
 }
 static int sbfpclassify(struct sbfp *op)
 {
     if (op->exp == 0) {
         if (op->fract == 0)
-            return FP_ZERO;
+            return FPV_ZERO;
         else
-            return FP_SUBNORMAL;
+            return FPV_SUBNORMAL;
     } else if (op->exp == 0xFF) {
         if (op->fract == 0)
-            return FP_INFINITE;
+            return FPV_INFINITE;
         else
-            return FP_NAN;
+            return FPV_NAN;
     } else {
-        return FP_NORMAL;
+        return FPV_NORMAL;
     }
 }
 /*
@@ -770,27 +766,27 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
 
     switch (fpclass) {
     default:
-    case FP_NAN:
+    case FPV_NAN:
         r0 = 0x7FFFFFFF;
         r1 = 0xFFFFFFFF;
         cc = 3;
         break;
-    case FP_INFINITE:
+    case FPV_INFINITE:
         r0 = op->sign ? 0xFFFFFFFF : 0x7FFFFFFF;
         r1 = 0xFFFFFFFF;
         cc = 3;
         break;
-    case FP_ZERO:
+    case FPV_ZERO:
         r0 = op->sign ? 0x80000000 : 0;
         r1 = 0;
         cc = 0;
         break;
-    case FP_SUBNORMAL:
+    case FPV_SUBNORMAL:
         r0 = op->sign ? 0x80000000 : 0;
         r1 = 0;
         cc = op->sign ? 1 : 2;
         break;
-    case FP_NORMAL:
+    case FPV_NORMAL:
         //logmsg("ieee: exp=%d (X\'%3.3x\')\tfract=%16.16"PRIx64"\n",
         //        op->exp, op->exp, op->fract);
         /* Insert an implied 1. in front of the 52 bit binary
