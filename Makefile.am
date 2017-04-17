@@ -173,6 +173,20 @@ HERCLIBS2 = 	 \
 	libhercd.la \
 	libherc.la
 
+disk_HERCLIBS = 	 \
+	libhercs.la \
+	libhercu.la \
+	libhercd.la
+
+tape_HERCLIBS = 	 \
+	libhercs.la \
+	libhercu.la \
+	libherct.la
+
+util_HERCLIBS = 	 \
+	libhercs.la \
+	libhercu.la
+
 HERCMODS =		 \
 	altcmpsc.la \
 	dyngui.la	 \
@@ -602,8 +616,14 @@ tools_LD_FLAGS =
 
 if OPTION_DYNAMIC_LOAD
 tools_ADDLIBS = $(HERCLIBS2) $(LDADD)
+disktools_ADDLIBS = $(disk_HERCLIBS) $(LDADD)
+tapetools_ADDLIBS = $(tape_HERCLIBS) $(LDADD)
+utiltools_ADDLIBS = $(util_HERCLIBS) $(LDADD)
 else
 tools_ADDLIBS = $(HERCLIBS2) $(LDADD) hdlmain.o
+disktools_ADDLIBS = $(disk_HERCLIBS) $(LDADD) hdlmain.o
+tapetools_ADDLIBS = $(tape_HERCLIBS) $(LDADD) hdlmain.o
+utiltools_ADDLIBS = $(util_HERCLIBS) $(LDADD) hdlmain.o
 endif
 
 if BUILD_HERCIFC
@@ -613,92 +633,92 @@ hercifc_LDFLAGS	 = $(tools_LD_FLAGS)
 endif
 
 dasdinit_SOURCES	 = dasdinit.c
-dasdinit_LDADD 	 = $(tools_ADDLIBS)
+dasdinit_LDADD 	 = $(disktools_ADDLIBS)
 dasdinit_LDFLAGS	 = $(tools_LD_FLAGS)
 
 dasdisup_SOURCES	 = dasdisup.c
-dasdisup_LDADD 	 = $(tools_ADDLIBS)
+dasdisup_LDADD 	 = $(disktools_ADDLIBS)
 dasdisup_LDFLAGS	 = $(tools_LD_FLAGS)
 
 dasdload_SOURCES	 = dasdload.c
-dasdload_LDADD 	 = $(tools_ADDLIBS)
+dasdload_LDADD 	 = $(disktools_ADDLIBS)
 dasdload_LDFLAGS	 = $(tools_LD_FLAGS)
 
 dasdconv_SOURCES	 = dasdconv.c
-dasdconv_LDADD 	 = $(tools_ADDLIBS)
+dasdconv_LDADD 	 = $(disktools_ADDLIBS)
 dasdconv_LDFLAGS	 = $(tools_LD_FLAGS)
 
 dasdls_SOURCES 	 = dasdls.c
-dasdls_LDADD		 = $(tools_ADDLIBS)
+dasdls_LDADD		 = $(disktools_ADDLIBS)
 dasdls_LDFLAGS 	 = $(tools_LD_FLAGS)
 
 dasdcat_SOURCES	 = dasdcat.c
-dasdcat_LDADD		 = $(tools_ADDLIBS)
+dasdcat_LDADD		 = $(disktools_ADDLIBS)
 dasdcat_LDFLAGS	 = $(tools_LD_FLAGS)
 
 dasdpdsu_SOURCES	 = dasdpdsu.c
-dasdpdsu_LDADD 	 = $(tools_ADDLIBS)
+dasdpdsu_LDADD 	 = $(disktools_ADDLIBS)
 dasdpdsu_LDFLAGS	 = $(tools_LD_FLAGS)
 
 dasdseq_SOURCES	 = dasdseq.c
-dasdseq_LDADD		 = $(tools_ADDLIBS)
+dasdseq_LDADD		 = $(disktools_ADDLIBS)
 dasdseq_LDFLAGS	 = $(tools_LD_FLAGS)
 
 tapecopy_SOURCES	 = tapecopy.c scsiutil.c
-tapecopy_LDADD 	 = $(tools_ADDLIBS)
+tapecopy_LDADD 	 = $(tapetools_ADDLIBS)
 tapecopy_LDFLAGS	 = $(tools_LD_FLAGS)
 tapecopy_CFLAGS	 = $(AM_CFLAGS)
 
 tapemap_SOURCES	 = tapemap.c
-tapemap_LDADD		 = $(tools_ADDLIBS)
+tapemap_LDADD		 = $(tapetools_ADDLIBS)
 tapemap_LDFLAGS	 = $(tools_LD_FLAGS)
 
 tapesplt_SOURCES	 = tapesplt.c
-tapesplt_LDADD 	 = $(tools_ADDLIBS)
+tapesplt_LDADD 	 = $(tapetools_ADDLIBS)
 tapesplt_LDFLAGS	 = $(tools_LD_FLAGS)
 
 cckdcdsk_SOURCES	 = cckdcdsk.c
-cckdcdsk_LDADD 	 = $(tools_ADDLIBS)
+cckdcdsk_LDADD 	 = $(disktools_ADDLIBS)
 cckdcdsk_LDFLAGS	 = $(tools_LD_FLAGS)
 
 cckdcomp_SOURCES	 = cckdcomp.c
-cckdcomp_LDADD 	 = $(tools_ADDLIBS)
+cckdcomp_LDADD 	 = $(disktools_ADDLIBS)
 cckdcomp_LDFLAGS	 = $(tools_LD_FLAGS)
 
 cckddiag_SOURCES	 = cckddiag.c
-cckddiag_LDADD 	 = $(tools_ADDLIBS)
+cckddiag_LDADD 	 = $(disktools_ADDLIBS)
 cckddiag_LDFLAGS	 = $(tools_LD_FLAGS)
 
 dasdcopy_SOURCES	 = dasdcopy.c
-dasdcopy_LDADD 	 = $(tools_ADDLIBS)
+dasdcopy_LDADD 	 = $(disktools_ADDLIBS)
 dasdcopy_LDFLAGS	 = $(tools_LD_FLAGS)
 
 cckdswap_SOURCES	 = cckdswap.c
-cckdswap_LDADD 	 = $(tools_ADDLIBS)
+cckdswap_LDADD 	 = $(disktools_ADDLIBS)
 cckdswap_LDFLAGS	 = $(tools_LD_FLAGS)
 
 hetget_SOURCES 	 = hetget.c
-hetget_LDADD		 = $(tools_ADDLIBS)
+hetget_LDADD		 = $(tapetools_ADDLIBS)
 hetget_LDFLAGS 	 = $(tools_LD_FLAGS)
 
 hetinit_SOURCES	 = hetinit.c
-hetinit_LDADD		 = $(tools_ADDLIBS)
+hetinit_LDADD		 = $(tapetools_ADDLIBS)
 hetinit_LDFLAGS	 = $(tools_LD_FLAGS)
 
 hetmap_SOURCES 	 = hetmap.c
-hetmap_LDADD		 = $(tools_ADDLIBS)
+hetmap_LDADD		 = $(tapetools_ADDLIBS)
 hetmap_LDFLAGS 	 = $(tools_LD_FLAGS)
 
 hetupd_SOURCES 	 = hetupd.c
-hetupd_LDADD		 = $(tools_ADDLIBS)
+hetupd_LDADD		 = $(tapetools_ADDLIBS)
 hetupd_LDFLAGS 	 = $(tools_LD_FLAGS)
 
 dmap2hrc_SOURCES	 = dmap2hrc.c
-dmap2hrc_LDADD 	 = $(tools_ADDLIBS)
+dmap2hrc_LDADD 	 = $(utiltools_ADDLIBS)
 dmap2hrc_LDFLAGS	 = $(tools_LD_FLAGS)
 
 vmfplc2_SOURCES	 = vmfplc2.c
-vmfplc2_LDADD		 = $(tools_ADDLIBS)
+vmfplc2_LDADD		 = $(tapetools_ADDLIBS)
 vmfplc2_LDFLAGS	 = $(tools_LD_FLAGS)
 
 #
@@ -1145,6 +1165,8 @@ endif
 	@echo '  $$LIB_LD_FLAGS        $(LIB_LD_FLAGS)'
 	@echo '  $$LTDL                $(LTDL)'
 	@echo '  $$tools_ADDLIBS       $(tools_ADDLIBS)'
+	@echo '  $$disktools_ADDLIBS   $(disktools_ADDLIBS)'
+	@echo '  $$tapetools_ADDLIBS   $(tapetools_ADDLIBS)'
 	@echo '  $$tools_LD_FLAGS      $(tools_LD_FLAGS)'
 	@echo '  $$XSTATIC             $(XSTATIC)'
 
