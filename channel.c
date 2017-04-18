@@ -53,10 +53,6 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 #define DEBUG_DUMP              0
 #endif
 
-#if !defined(CHANNEL_TRAPS)
-#undef BREAK_INTO_DEBUGGER();
-#define BREAK_INTO_DEBUGGER();
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Internal function definitions                                     */
