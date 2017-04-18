@@ -202,18 +202,12 @@ if test "$GCC" = "yes"; then
 
   # Show us everything
 
-  CFLAGS="${CFLAGS} -W -Wall"
+  CFLAGS="${CFLAGS} -W -Wall -O2"
 
   # We prefer -O3 (the highest optimization level possible)
   # as long as we can trust GCC to implement it correctly.
+  # Which we cannot, so can we put this to sleep?  jph
 
-  if test "$hc_cv_broken_gcc_O3" = "yes"; then
-    CFLAGS="`echo $CFLAGS | sed -e 's/-O3//'`"
-    CFLAGS="${CFLAGS} -O2"
-  else
-    CFLAGS="`echo $CFLAGS | sed -e 's/-O2//'`"
-    CFLAGS="${CFLAGS} -O3"
-  fi
 fi
 
 #-------------------------------------------------------#

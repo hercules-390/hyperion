@@ -31,7 +31,7 @@
 #if defined( _MSVC_ )
   #define BREAK_INTO_DEBUGGER()     __debugbreak()
 #else
-  #define BREAK_INTO_DEBUGGER()     raise( SIGTRAP )
+  #define BREAK_INTO_DEBUGGER()
 #endif
 
 #undef _ENABLE_TRACING_STMTS_IMPL
