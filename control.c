@@ -35,7 +35,6 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-#include <math.h>
 
 #if !defined(_HENGINE_DLL_)
 #define _HENGINE_DLL_

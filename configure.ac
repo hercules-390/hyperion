@@ -1080,15 +1080,21 @@ AC_CHECK_LIB( rt,     sched_yield    )
 #   Checks for REQUIRED math.h header and math library files...
 ###############################################################################
 
-# math.h is needed by control.c to declare the pow() function, used in the
-# emulation of the Store System Information (STSI instruction).  If we needed
-# other math library functions, we would add AC_CHECK_FUNC.  Note also that
-# math functions are typically in libm in open source and bundled in the c
-# runtime library in Windows.
+# math.h is needed by:
+# 1) control.c to declare the pow(), used in the emulation of STSI
+# 2) impl.c to declare floor(), used to process the time limit option -t
+# 3) clock.c to declare ldexp, used to compute 2^45.
+#
+# Note also that math functions are typically in libm in open source and
+# bundled in the c runtime library in Windows.
 
 AC_CHECK_HEADER( math.h,   [], [ AC_MSG_WARN( [Required header 'math.h' not found] );
                                        hc_error=yes ] )
 AC_CHECK_LIB(    m, pow,   [], [ AC_MSG_WARN( [Required library 'libm' not found or does not include function 'pow()'] );
+                                       hc_error=yes ] )
+AC_CHECK_func(   floor,    [], [ AC_MSG_WARN( [Required function 'floor() not found'] );
+                                       hc_error=yes ] )
+AC_CHECK_func(   ldexp,    [], [ AC_MSG_WARN( [Required function 'ldexp() not found'] );
                                        hc_error=yes ] )
 
 

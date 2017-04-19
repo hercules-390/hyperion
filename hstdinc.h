@@ -55,8 +55,7 @@
 #endif
 
 /* -----------------------------------------------------------------------------------------
-   Note: control.c is the only compilation unit in Hercules that requires <math.h>
-   However, <math.h> must come BEFORE <intrin.h> for Visual Studio 2008 because 
+   Note: <math.h> must come BEFORE <intrin.h> for Visual Studio 2008 because 
    of a duplicate definition of the ceil() function in those two headers.  See
    MS VC Bug ID 381422 at https://connect.microsoft.com/VisualStudio/Feedback/Details/381422
    for additional information.  This issue was addressed by the time of Visual
@@ -65,7 +64,7 @@
    addressed between VS2008 and VS2015, but we do not have confirmation.  (Yet?)
 
    So if we are building on Windows before VS2015, we shall include <math.h> here.
-   Otherwise we shall let control.c do it.  
+   Otherwise we shall include it later in the list of headers.  
    ---------------------------------------------------------------------------------------- */
 
 #ifdef _MSVC_
@@ -111,6 +110,7 @@
   #include <sys/mman.h>
 #endif
 #include <sys/types.h>
+#include <math.h>           /* needed for impl.c, clock.c, control.c use  */
 
 /* Optional headers  --  These we can live without */
 
