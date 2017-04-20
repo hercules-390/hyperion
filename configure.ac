@@ -1092,9 +1092,9 @@ AC_CHECK_HEADER( math.h,   [], [ AC_MSG_WARN( [Required header 'math.h' not foun
                                        hc_error=yes ] )
 AC_CHECK_LIB(    m, pow,   [], [ AC_MSG_WARN( [Required library 'libm' not found or does not include function 'pow()'] );
                                        hc_error=yes ] )
-AC_CHECK_func(   floor,    [], [ AC_MSG_WARN( [Required function 'floor() not found'] );
+AC_CHECK_FUNC(   floor,    [], [ AC_MSG_WARN( [Required function 'floor() not found'] );
                                        hc_error=yes ] )
-AC_CHECK_func(   ldexp,    [], [ AC_MSG_WARN( [Required function 'ldexp() not found'] );
+AC_CHECK_FUNC(   ldexp,    [], [ AC_MSG_WARN( [Required function 'ldexp() not found'] );
                                        hc_error=yes ] )
 
 
