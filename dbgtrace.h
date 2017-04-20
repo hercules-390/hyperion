@@ -31,7 +31,10 @@
 #if defined( _MSVC_ )
   #define BREAK_INTO_DEBUGGER()     __debugbreak()
 #else
-  #define BREAK_INTO_DEBUGGER()
+  /* On  UNIX,  this  essentially works as assert(), except that you */
+  /* get  no  message; it allows an already connected gdb session to */
+  /* gain control.  Its use is questionable.  jph.                   */
+  #define BREAK_INTO_DEBUGGER()     raise( SIGTRAP )
 #endif
 
 #undef _ENABLE_TRACING_STMTS_IMPL

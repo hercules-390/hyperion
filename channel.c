@@ -53,7 +53,6 @@ DISABLE_GCC_WARNING( "-Wunused-function" )
 #define DEBUG_DUMP              0
 #endif
 
-
 /*-------------------------------------------------------------------*/
 /* Internal function definitions                                     */
 /*-------------------------------------------------------------------*/
@@ -2432,7 +2431,6 @@ ScheduleIORequest ( DEVBLK *dev )
         if (ioq == dev)
         {
             rc = 2;
-            BREAK_INTO_DEBUGGER();
             break;
         }
 
@@ -2461,7 +2459,6 @@ ScheduleIORequest ( DEVBLK *dev )
             if (ioq == dev)
             {
                 rc = 2;
-                BREAK_INTO_DEBUGGER();
                 break;
             }
         }
