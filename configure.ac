@@ -1083,7 +1083,7 @@ AC_CHECK_LIB( rt,     sched_yield    )
 # math.h is needed by:
 # 1) control.c to declare the pow(), used in the emulation of STSI
 # 2) impl.c to declare floor(), used to process the time limit option -t
-# 3) clock.c to declare ldexp, used to compute 2^45.
+# 3) clock.c to declare ldexp, used to compute 2^(-43).
 #
 # Note also that math functions are typically in libm in open source and
 # bundled in the c runtime library in Windows.
@@ -2387,6 +2387,49 @@ AC_ARG_ENABLE( capabilities,
     [hc_cv_opt_capabilities=hc_cv_have_sys_capability]
 )
 
+# -----------------------------------------------------------------------
+# -enable-syncio
+#
+# When enabled, syncio is permitted on attach and devinit commands,
+# and when so specified, synchronous I/O operations are used when
+# possible.  When disabled, no support for syncio is compiled into
+# Hercules.
+#
+# When enabled, preprocessor symbol OPTION_SYNCIO is defined.
+# When disabled, preprocessor symbol OPTION_NOSYNCIO is defined.
+# -----------------------------------------------------------------------
+
+AC_ARG_ENABLE( syncio,
+    AC_HELP_STRING([--disable-syncio],
+        [disable syncio function and device options]
+    ),
+                                    dnl Action if specified
+    [
+        case "${enableval}" in
+        yes) hc_cv_opt_syncio=yes                      ;;
+        no)  hc_cv_opt_syncio=no                       ;;
+        *)   AC_MSG_WARN( [ERROR: invalid 'syncio' option.  No operand is allowed.] )
+             hc_error=yes
+             ;;
+        esac
+    ],
+                                    dnl Action if not specified (default)
+    [hc_cv_opt_syncio=yes]
+)
+
+if test "$hc_cv_opt_syncio" = "yes"; then
+    AH_TEMPLATE(   [OPTION_SYNCIO],     [Define to include syncio functions in the build] )
+    AC_DEFINE(     [OPTION_SYNCIO] )
+fi
+if test "$hc_cv_opt_syncio" = "no"; then
+    AH_TEMPLATE(   [OPTION_NOSYNCIO],  [Define to exclude syncio functions from the build] )
+    AC_DEFINE(     [OPTION_NOSYNCIO] )
+    AC_MSG_NOTICE( [Excluding syncio functions from the Hercules build ] )
+fi
+
+
+# -----------------------------------------------------------------------
+
 # Only include libcap if needed and then force
 # disable capabilities support altogether if the
 # library or any required headers are missing.
@@ -2457,6 +2500,11 @@ HC_ARG_ENABLE_GETOPTWRAPPER()
 hc_cv_hdl_build_shared=$enable_shared
 
 AC_CACHE_SAVE()
+
+###############################################################################
+#   End of AC_ARG_ENABLE option selections
+###############################################################################
+
 
 ###############################################################################
 #   Final default settings, final sanity / error checks...
