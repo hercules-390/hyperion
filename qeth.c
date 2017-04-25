@@ -251,10 +251,10 @@ static OSA_BHR* process_dm_act( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 static OSA_BHR* process_ulp_takedown( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 static OSA_BHR* process_ulp_disable( DEVBLK*, MPC_TH*, MPC_RRH*, MPC_PUK* );
 static OSA_BHR* alloc_buffer( DEVBLK*, int );
-static void     add_buffer_to_chain_and_signal_event( OSA_GRP*, OSA_BHR* );
-static void     add_buffer_to_chain( OSA_GRP*, OSA_BHR* );
-static OSA_BHR* remove_buffer_from_chain( OSA_GRP* );
-static void     remove_and_free_any_buffers_on_chain( OSA_GRP* );
+static void     add_buffer_to_chain( OSA_BAN*, OSA_BHR* );
+static OSA_BHR* remove_buffer_from_chain( OSA_BAN* );
+static void     remove_and_free_any_buffers_on_chain( OSA_BAN* );
+static void     signal_idx_event( OSA_GRP* );
 static void     InitMACAddr( DEVBLK* dev, OSA_GRP* grp );
 static void     InitMTU    ( DEVBLK* dev, OSA_GRP* grp );
 static int      netmask2prefix( char* ttnetmask, char** ttpfxlen  );
@@ -263,6 +263,10 @@ static U32      makepfxmask4( char* ttpfxlen );
 static void     makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 );
 static void     qeth_init_queues(DEVBLK *dev);
 static void     qeth_init_queue(DEVBLK *dev, int output);
+#if defined(ENABLE_IPV6)
+static void     process_l3_icmpv6_packet(DEVBLK*, OSA_GRP*, IP6FRM*);
+static void     calculate_icmpv6_checksum(IP6FRM*, BYTE*, int);
+#endif /*defined(ENABLE_IPV6)*/
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -327,6 +331,7 @@ static BYTE qeth_immed_commands [256] =
 #define QDSIG_RDMULT    4       /* SIGA Initiate Input Multiple      */
 #define QDSIG_WRIT      5       /* SIGA Initiate Output              */
 #define QDSIG_WRMULT    6       /* SIGA Initiate Output Multiple     */
+#define QDSIG_WAKEUP    7       /* Wakeup signalling                 */
 
 static const char* sig2str( BYTE sig ) {
     static const char* sigstr[] = {
@@ -337,6 +342,7 @@ static const char* sig2str( BYTE sig ) {
     /*4*/ "QDSIG_RDMULT",
     /*5*/ "QDSIG_WRIT",
     /*6*/ "QDSIG_WRMULT",
+    /*7*/ "QDSIG_WAKEUP",
     }; static char buf[16];
     if (sig < _countof( sigstr ))
         return sigstr[ sig ];
@@ -965,6 +971,18 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
             grp->ttifname, not, "MTU", grp->ttmtu );
     }
 
+#if defined(ENABLE_IPV6)
+    if (grp->l3 && grp->enabled)
+    {
+        // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            grp->ttifname, "", "drive MAC address", grp->szDriveMACAddr );
+        // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
+        WRMSG( HHC03997, "I", SSID_TO_LCSS(dev->ssid), dev->devnum, "QETH",
+            grp->ttifname, "", "drive IP address", grp->szDriveLLAddr6 );
+    }
+#endif /* defined(ENABLE_IPV6) */
+
 }
 
 
@@ -1229,7 +1247,8 @@ U16 offph;
             }
 
             // Add response buffer to chain.
-            add_buffer_to_chain_and_signal_event( grp, rsp_bhr );
+            add_buffer_to_chain( &grp->idx, rsp_bhr );
+            signal_idx_event( grp );
 
         }
         break;
@@ -1293,7 +1312,8 @@ U16 offph;
             }
 
             // Add response buffer to chain.
-            add_buffer_to_chain_and_signal_event( grp, rsp_bhr );
+            add_buffer_to_chain( &grp->idx, rsp_bhr );
+            signal_idx_event( grp );
         }
         break;
 
@@ -1881,7 +1901,8 @@ U16 offph;
                 STORE_FW(ipa->ipae,grp->ipae);
 
             // Add response buffer to chain.
-            add_buffer_to_chain_and_signal_event( grp, rsp_bhr );
+            add_buffer_to_chain( &grp->idx, rsp_bhr );
+            signal_idx_event( grp );
         }
         /* end case RRH_TYPE_IPA: */
         break;
@@ -2014,7 +2035,8 @@ U16 reqtype;
     }
 
     // Add response buffer to chain.
-    add_buffer_to_chain_and_signal_event( grp, rsp_bhr );
+    add_buffer_to_chain( &grp->idx, rsp_bhr );
+    signal_idx_event( grp );
 }
 
 
@@ -2447,7 +2469,8 @@ static QRC copy_storage_fragments( DEVBLK* dev, OSA_GRP *grp,
 /*-------------------------------------------------------------------*/
 static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
                                    QDIO_SBAL *sbal, int sb, BYTE sbalk,
-                                   BYTE* hdr, int hdrlen )
+                                   BYTE* hdr, int hdrlen,
+                                   BYTE* frm, int frmlen )
 {
     int ssb = sb;                       /* Starting Storage Block    */
     U32 sboff = 0;                      /* Storage Block offset      */
@@ -2463,7 +2486,7 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
 
     /* Then copy the packet/frame */
     if ((qrc = copy_fragment_to_storage( dev, sbal, sbalk,
-        &sb, &frag0, &sboff, &sbrem, dev->buf, dev->buflen )) < 0 )
+        &sb, &frag0, &sboff, &sbrem, frm, frmlen )) < 0 )
         return qrc;
 
     /* Mark last fragment */
@@ -2564,7 +2587,8 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
 
         /* Copy header and frame to buffer storage block(s) */
         qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
-                                      (BYTE*) &o2hdr, sizeof( o2hdr ));
+                                      (BYTE*) &o2hdr, sizeof( o2hdr ),
+                                      dev->buf, dev->buflen );
     }
     while (qrc >= 0 && grp->rdpack && more_packets( dev ) && ++sb < QMAXSTBK);
 
@@ -2582,11 +2606,11 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
 static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
                             QDIO_SBAL *sbal, BYTE sbalk )
 {
-    static const BYTE udp = 17;
     IP4FRM* ip4;
     IP6FRM* ip6;
-    QRC qrc;
     OSA_HDR3 o3hdr;
+    QRC qrc;
+    BYTE udp = 17;
     int sb = 0;     /* Start with Storage Block zero */
     int   iPktVer;
     char  cPktType[8];
@@ -2648,9 +2672,110 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
 
         /* Copy header and packet to buffer storage block(s) */
         qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
-                                      (BYTE*) &o3hdr, sizeof( o3hdr ));
+                                      (BYTE*) &o3hdr, sizeof( o3hdr ),
+                                      dev->buf, dev->buflen );
     }
     while (qrc >= 0 && grp->rdpack && more_packets( dev ) && ++sb < QMAXSTBK);
+
+    /* Mark end of buffer */
+    if (sb >= QMAXSTBK) sb--;
+    sbal->sbale[sb].flags[0] |= SBALE_FLAG0_LAST_ENTRY;
+
+    return qrc;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Read one L3 packet from response buffer storage.                  */
+/*-------------------------------------------------------------------*/
+static QRC read_l3r_buffers( DEVBLK* dev, OSA_GRP *grp,
+                             QDIO_SBAL *sbal, BYTE sbalk )
+{
+    OSA_BHR* bhr;
+    BYTE*    bufdata;
+    IP4FRM*  ip4;
+    IP6FRM*  ip6;
+    U32      datalen, length;
+    OSA_HDR3 o3hdr;
+    QRC      qrc;
+    BYTE     udp = 17;
+    int      sb = 0;     /* Start with Storage Block zero */
+    int      iPktVer;
+    char     cPktType[8];
+
+    do
+    {
+        /* Remove layer 3 response buffer from chain. */
+        bhr = remove_buffer_from_chain( &grp->l3r );
+        if (!bhr) return QRC_EPKEOF;
+
+        /* Point to response data and get its length. */
+        bufdata = (BYTE*)bhr + SizeBHR;
+        datalen = bhr->datalen;
+        length = bhr->datalen;
+
+        /* Build the Layer 3 OSA header */
+        memset( &o3hdr, 0, sizeof( OSA_HDR3 ));
+        STORE_HW( o3hdr.length, datalen );
+        o3hdr.id = HDR_ID_LAYER3;
+
+        /* Check the IP packet version. The first 4-bits of the     */
+        /* first byte of the IP header contains the version number. */
+        iPktVer = ( ( bufdata[0] & 0xF0 ) >> 4 );
+        if (iPktVer == 4)
+        {
+            ip4 = (IP4FRM*)bufdata;
+            strcpy( cPktType, " IPv4" );
+            memcpy( &o3hdr.dest_addr[12], &ip4->lDstIP, 4 );
+            memcpy( o3hdr.in_cksum, ip4->hwChecksum, 2 );
+            o3hdr.flags = l3_cast_type_ipv4( &o3hdr.dest_addr[12], grp );
+            if (o3hdr.flags == HDR3_FLAGS_NOTFORUS)
+                length = 0; /* Not our packet */
+            o3hdr.ext_flags = (ip4->bProtocol == udp) ? HDR3_EXFLAG_UDP : 0;
+        }
+        else if (iPktVer == 6)
+        {
+            ip6 = (IP6FRM*)bufdata;
+            strcpy( cPktType, " IPv6" );
+            memcpy( o3hdr.dest_addr, ip6->bDstAddr, 16 );
+            o3hdr.flags = l3_cast_type_ipv6( o3hdr.dest_addr, grp );
+            if (o3hdr.flags == HDR3_FLAGS_NOTFORUS)
+                length = 0; /* Not our packet */
+            o3hdr.flags |= HDR3_FLAGS_IPV6;
+            o3hdr.ext_flags = (ip6->bNextHeader == udp) ? HDR3_EXFLAG_UDP : 0;
+        }
+        else
+        {
+            /* Err... not IPv4 or IPv6! */
+            strcpy( cPktType, "" );
+            length = 0;
+        }
+
+        if (length)
+        {
+            /* */
+            if (grp->debugmask & DBGQETHPACKET)
+            {
+                // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
+                WRMSG(HHC00913, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
+                                cPktType, datalen, "layer 3 response" );
+                net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );
+                net_data_trace( dev, bufdata, datalen, TO_GUEST, 'D', "Packet", 0 );
+            }
+
+            /* Copy header and packet to buffer storage block(s) */
+            qrc = copy_packet_to_storage( dev, grp, sbal, sb, sbalk,
+                                          (BYTE*)&o3hdr, sizeof(o3hdr),
+                                          bufdata, datalen );
+        }
+        else
+            qrc = 0;
+
+        /* Free layer 3 response buffer. Read is complete. */
+        if (bhr->content) free( bhr->content );
+        free( bhr );
+    }
+    while (qrc >= 0 && grp->rdpack && grp->l3r.firstbhr && ++sb < QMAXSTBK);
 
     /* Mark end of buffer */
     if (sb >= QMAXSTBK) sb--;
@@ -2764,10 +2889,42 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                         ssb, sb, dev->buflen, dev->buflen );
 
         /* */
+        pkt = dev->buf;
+        pktlen = dev->buflen;
+
+#if defined(ENABLE_IPV6)
+        /* I know the following looks pretty weird but it seems to be         */
+        /* necessary when using IPv6 over layer 3. IPv6 uses ICMPv6 Neighbor  */
+        /* Solicitation (NS) & Neighbor Advertisment (NA) to determine the    */
+        /* link layer (i.e. Ethernet MAC) address for an IPv6 address. When   */
+        /* the guest sends out a NS, this function sends the packet over the  */
+        /* tun to the host, whereupon the host duly ignores the packet. Hence */
+        /* this function, and function process_l3_icmpv6_packet, responds to  */
+        /* the NS with a NA. It seems that the NA must contain a link layer   */
+        /* address, otherwise the guest ignores the packet. However, after    */
+        /* the guest has received an NA with a link layer address every IPv6  */
+        /* packet from the guest is an Ethernet frame containing the IPv6     */
+        /* packet. Perhaps that's how OSD's actually work? IPv6 packets to    */
+        /* the guest don't need to be Ethernet frames.                        */
+        if (grp->l3)
+        {
+            eth = (ETHFRM*)pkt;
+            FETCH_HW( hwEthernetType, eth->hwEthernetType );
+            if (memcmp( &eth->bDestMAC[0], &grp->iaDriveMACAddr, IFHWADDRLEN ) == 0 &&
+                memcmp( &eth->bSrcMAC[0], &grp->iMAC, IFHWADDRLEN ) == 0 &&
+                hwEthernetType == ETH_TYPE_IPV6)
+            {
+                pkt += sizeof(ETHFRM);
+                pktlen -= sizeof(ETHFRM);
+            }
+        }
+#endif /* defined(ENABLE_IPV6) */
+
+        /* */
         if (grp->debugmask & DBGQETHPACKET)
         {
             if (!grp->l3) {
-                eth = (ETHFRM*)dev->buf;
+                eth = (ETHFRM*)pkt;
                 FETCH_HW( hwEthernetType, eth->hwEthernetType );
                 if( hwEthernetType == ETH_TYPE_IP ) {
                   strcpy( cPktType, "IPv4" );
@@ -2784,10 +2941,10 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                 }
                 // HHC00985 "%1d:%04X %s: Send frame of size %d bytes (with %s packet) to device %s"
                 WRMSG(HHC00985, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-                                     dev->buflen, cPktType, grp->ttifname );
-                net_data_trace( dev, dev->buf, dev->buflen, FROM_GUEST, 'D', "Frame ", 0 );
+                                     pktlen, cPktType, grp->ttifname );
+                net_data_trace( dev, pkt, pktlen, FROM_GUEST, 'D', "Frame ", 0 );
             } else {
-                iPktVer = ( ( dev->buf[0] & 0xF0 ) >> 4 );
+                iPktVer = ( ( pkt[0] & 0xF0 ) >> 4 );
                 if (iPktVer == 4)
                 {
                     strcpy( cPktType, " IPv4" );
@@ -2802,13 +2959,32 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                 }
                 // HHC00910 "%1d:%04X %s: Send%s packet of size %d bytes to device %s"
                 WRMSG(HHC00910, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
-                                cPktType, dev->buflen, grp->ttifname );
-                net_data_trace( dev, dev->buf, dev->buflen, FROM_GUEST, 'D', "Packet", 0 );
+                                cPktType, pktlen, grp->ttifname );
+                net_data_trace( dev, pkt, pktlen, FROM_GUEST, 'D', "Packet", 0 );
             }
         }
 
         /* */
-        qrc = write_packet( dev, grp, dev->buf, dev->buflen );
+        qrc = write_packet( dev, grp, pkt, pktlen );
+
+#if defined(ENABLE_IPV6)
+        /* */
+        if (grp->l3)
+        {
+            iPktVer = ( ( pkt[0] & 0xF0 ) >> 4 );
+            if (iPktVer == 6)
+            {
+                IP6FRM* ip6;
+                BYTE    icmpv6 = 58;  /* = 0x3A */
+                ip6 = (IP6FRM*)pkt;
+                if (ip6->bNextHeader == icmpv6)
+                {
+                    process_l3_icmpv6_packet( dev, grp, ip6 );
+                }
+            }
+        }
+#endif /* defined(ENABLE_IPV6) */
+
     }
     while (qrc >= 0 && !IS_LAST_SBALE_ENTRY( flag0 ) && ++sb < QMAXSTBK);
 
@@ -2874,7 +3050,12 @@ int did_read = 0;                       /* Indicates some data read  */
                         did_read = 1;
 
                         if (grp->l3)
-                            qrc = read_L3_packets( dev, grp, sbal, sk );
+                        {
+                            if (grp->l3r.firstbhr)
+                                qrc = read_l3r_buffers( dev, grp, sbal, sk );
+                            else
+                                qrc = read_L3_packets( dev, grp, sbal, sk );
+                        }
                         else
                             qrc = read_L2_packets( dev, grp, sbal, sk );
 
@@ -3190,7 +3371,8 @@ U32 mask4;
             initialize_condition( &grp->qrcond );
             initialize_condition( &grp->qdcond );
             initialize_lock( &grp->qlock );
-            initialize_lock( &grp->qblock );
+            initialize_lock( &grp->idx.lockbhr );
+            initialize_lock( &grp->l3r.lockbhr );
 
             /* Creat ACTIVATE QUEUES signalling pipe */
             /* Check your return codes, Jan.                         */
@@ -3697,13 +3879,14 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         PTT_QETH_TRACE( "af clos othr", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos fbuf", 0,0,0 );
-        remove_and_free_any_buffers_on_chain( grp );
+        remove_and_free_any_buffers_on_chain( &grp->idx );
         PTT_QETH_TRACE( "af clos fbuf", 0,0,0 );
 
         destroy_condition( &grp->qrcond );
         destroy_condition( &grp->qdcond );
         destroy_lock( &grp->qlock );
-        destroy_lock( &grp->qblock );
+        destroy_lock( &grp->idx.lockbhr );
+        destroy_lock( &grp->l3r.lockbhr );
 
         PTT_QETH_TRACE( "b4 clos fgrp", 0,0,0 );
         free( group->grp_data );
@@ -3949,7 +4132,7 @@ U32 num;                                /* Number of bytes to move   */
         {
             /* Remove IDX response buffer from chain. */
             PTT_QETH_TRACE( "b4 rd rmbuf", 0,0,0 );
-            bhr = remove_buffer_from_chain( grp );
+            bhr = remove_buffer_from_chain( &grp->idx );
             PTT_QETH_TRACE( "af rd rmbuf", bhr,0,0 );
 
             if (bhr)
@@ -4436,13 +4619,15 @@ U32 num;                                /* Number of bytes to move   */
                 case QDSIG_WRMULT:
                     grp->wrpack = 1;
                     break;
+                case QDSIG_WAKEUP:
+                    break;
                 default:
                     ASSERT(0);  /* (should NEVER occur) */
                 }
             }
 
             /* Check if any new packets have arrived */
-            if (rc && FD_ISSET( grp->ttfd, &readset ))
+            if ((rc && FD_ISSET( grp->ttfd, &readset )) || grp->l3r.firstbhr)
             {
                 /* Process packets if Queue is available */
                 if (likely( dev->qdio.i_qmask ))
@@ -5479,47 +5664,33 @@ static OSA_BHR*  alloc_buffer( DEVBLK* dev, int size )
 }
 
 /*--------------------------------------------------------------------*/
-/* add_buffer_to_chain_and_signal_event(): Add OSA_BHR to end of chn. */
-/*--------------------------------------------------------------------*/
-static void  add_buffer_to_chain_and_signal_event( OSA_GRP* grp, OSA_BHR* bhr )
-{
-    add_buffer_to_chain( grp, bhr );
-
-    obtain_lock( &grp->qlock );
-    signal_condition( &grp->qrcond );
-    release_lock( &grp->qlock );
-
-    return;
-}
-
-/*--------------------------------------------------------------------*/
 /* add_buffer_to_chain(): Add OSA_BHR to end of chain.                */
 /*--------------------------------------------------------------------*/
-static void  add_buffer_to_chain( OSA_GRP* grp, OSA_BHR* bhr )
+static void  add_buffer_to_chain( OSA_BAN* ban, OSA_BHR* bhr )
 {
     // Prepare OSA_BHR for adding to chain.
     if (!bhr) return;                      // Any OSA_BHR been passed?
     bhr->next = NULL;                      // Clear the pointer to next OSA_BHR
 
     // Obtain the buffer chain lock.
-    obtain_lock( &grp->qblock );
+    obtain_lock( &ban->lockbhr );
 
     // Add OSA_BHR to end of chain.
-    if (grp->firstbhr)                     // if there are already OSA_BHRs
+    if (ban->firstbhr)                     // if there are already OSA_BHRs
     {
-        grp->lastbhr->next = bhr;          // Add the OSA_BHR to
-        grp->lastbhr = bhr;                // the end of the chain
-        grp->numbhr++;                     // Increment number of OSA_BHRs
+        ban->lastbhr->next = bhr;          // Add the OSA_BHR to
+        ban->lastbhr = bhr;                // the end of the chain
+        ban->numbhr++;                     // Increment number of OSA_BHRs
     }
     else
     {
-        grp->firstbhr = bhr;               // Make the OSA_BHR
-        grp->lastbhr = bhr;                // the only OSA_BHR
-        grp->numbhr = 1;                   // on the chain
+        ban->firstbhr = bhr;               // Make the OSA_BHR
+        ban->lastbhr = bhr;                // the only OSA_BHR
+        ban->numbhr = 1;                   // on the chain
     }
 
     // Release the buffer chain lock.
-    release_lock( &grp->qblock );
+    release_lock( &ban->lockbhr );
 
     return;
 }
@@ -5527,32 +5698,32 @@ static void  add_buffer_to_chain( OSA_GRP* grp, OSA_BHR* bhr )
 /*--------------------------------------------------------------------*/
 /* remove_buffer_from_chain(): Remove OSA_BHR from start of chain.    */
 /*--------------------------------------------------------------------*/
-static OSA_BHR*  remove_buffer_from_chain( OSA_GRP* grp )
+static OSA_BHR*  remove_buffer_from_chain( OSA_BAN* ban )
 {
     OSA_BHR*    bhr;                       // OSA_BHR
 
     // Obtain the buffer chain lock.
-    obtain_lock( &grp->qblock );
+    obtain_lock( &ban->lockbhr );
 
     // Point to first OSA_BHR on the chain.
-    bhr = grp->firstbhr;                   // Pointer to first OSA_BHR
+    bhr = ban->firstbhr;                   // Pointer to first OSA_BHR
 
     // Remove the first OSA_BHR from the chain, if there is one...
     if (bhr)                               // If there is a OSA_BHR
     {
-        grp->firstbhr = bhr->next;         // Make the next the first OSA_BHR
-        grp->numbhr--;                     // Decrement number of OSA_BHRs
+        ban->firstbhr = bhr->next;         // Make the next the first OSA_BHR
+        ban->numbhr--;                     // Decrement number of OSA_BHRs
         bhr->next = NULL;                  // Clear the pointer to next OSA_BHR
-        if (!grp->firstbhr)                // if there are no more OSA_BHRs
+        if (!ban->firstbhr)                // if there are no more OSA_BHRs
         {
-//          grp->firstbhr = NULL;          // Clear
-            grp->lastbhr = NULL;           // the chain
-            grp->numbhr = 0;               // pointers and count
+//          ban->firstbhr = NULL;          // Clear
+            ban->lastbhr = NULL;           // the chain
+            ban->numbhr = 0;               // pointers and count
         }
     }
 
     // Release the buffer chain lock.
-    release_lock( &grp->qblock );
+    release_lock( &ban->lockbhr );
 
     return bhr;
 }
@@ -5560,32 +5731,44 @@ static OSA_BHR*  remove_buffer_from_chain( OSA_GRP* grp )
 /*--------------------------------------------------------------------*/
 /* remove_and_free_any_buffers_on_chain(): Remove and free OSA_BHRs.  */
 /*--------------------------------------------------------------------*/
-static void  remove_and_free_any_buffers_on_chain( OSA_GRP* grp )
+static void  remove_and_free_any_buffers_on_chain( OSA_BAN* ban )
 {
     OSA_BHR*    bhr;                       // OSA_BHR
 
     // Obtain the buffer chain lock.
-    obtain_lock( &grp->qblock );
+    obtain_lock( &ban->lockbhr );
 
     // Remove and free the OSA_BHRs on the chain, if there are any...
-    while( grp->firstbhr != NULL )
+    while( ban->firstbhr != NULL )
     {
-        bhr = grp->firstbhr;               // Pointer to first OSA_BHR
-        grp->firstbhr = bhr->next;         // Make the next the first OSA_BHR
+        bhr = ban->firstbhr;               // Pointer to first OSA_BHR
+        ban->firstbhr = bhr->next;         // Make the next the first OSA_BHR
         if (bhr->content) free( bhr->content );  // Free the buffer content string
         free( bhr );                       // Free the message buffer
     }
 
     // Reset the chain pointers.
-    grp->firstbhr = NULL;                  // Clear
-    grp->lastbhr = NULL;                   // the chain
-    grp->numbhr = 0;                       // pointers and count
+    ban->firstbhr = NULL;                  // Clear
+    ban->lastbhr = NULL;                   // the chain
+    ban->numbhr = 0;                       // pointers and count
 
     // Release the buffer chain lock.
-    release_lock( &grp->qblock );
+    release_lock( &ban->lockbhr );
 
     return;
 
+}
+
+
+/*--------------------------------------------------------------------*/
+/* signal_idx_event():                                                */
+/*--------------------------------------------------------------------*/
+static void  signal_idx_event( OSA_GRP* grp )
+{
+    obtain_lock( &grp->qlock );
+    signal_condition( &grp->qrcond );
+    release_lock( &grp->qlock );
+    return;
 }
 
 
@@ -5599,6 +5782,10 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     BYTE iMAC[ IFHWADDRLEN ];
     char szMAC[3*IFHWADDRLEN] = {0};
     int rc = 0;
+#if defined(ENABLE_IPV6)
+    int j;
+    struct in6_addr addr6;
+#endif /* defined(ENABLE_IPV6) */
 
     /* Do different things for TAP's (layer 2) and TUN's (layer 3) */
     if (!grp->l3) {
@@ -5629,6 +5816,11 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 
         free( tthwaddr );
 
+#if defined(ENABLE_IPV6)
+        memset( &grp->iaDriveLLAddr6, 0, sizeof(grp->iaDriveLLAddr6) );
+        memset( grp->szDriveLLAddr6, 0, sizeof(grp->szDriveLLAddr6) );
+#endif /* defined(ENABLE_IPV6) */
+
     } else {
 
         /* If grp->tthwaddr specified a valid MAC address use it, */
@@ -5648,6 +5840,28 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
             grp->tthwaddr = strdup( szMAC );
             memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
         }
+
+#if defined(ENABLE_IPV6)
+        /* Create a Driver MAC address using pseudo-random numbers */
+        for (j = 0; j < 6; j++)
+            iMAC[j] = (int)((rand()/(RAND_MAX+1.0))*256);
+        iMAC[0] &= 0xFE;  /* Clear multicast bit. */
+        iMAC[0] |= 0x02;  /* Set local assignment bit. */
+        memcpy( grp->iaDriveMACAddr, iMAC, IFHWADDRLEN );
+        snprintf( grp->szDriveMACAddr, sizeof(grp->szDriveMACAddr),
+                  "%02X:%02X:%02X:%02X:%02X:%02X",
+                  iMAC[0], iMAC[1], iMAC[2], iMAC[3], iMAC[4], iMAC[5] );
+        /* Create a Driver Link Local address from the Driver MAC address */
+        addr6.s6_addr[0] = 0xFE;
+        addr6.s6_addr[1] = 0x80;
+        memset( &addr6.s6_addr[2], 0, 6 );
+        memcpy( &addr6.s6_addr[8], &iMAC[0], 3 );
+        addr6.s6_addr[11] = 0xFF;
+        addr6.s6_addr[12] = 0xFE;
+        memcpy( &addr6.s6_addr[13], &iMAC[3], 3 );
+        memcpy( &grp->iaDriveLLAddr6, &addr6, sizeof(grp->iaDriveLLAddr6) );
+        hinet_ntop( AF_INET6, &addr6, grp->szDriveLLAddr6, sizeof(grp->szDriveLLAddr6) );
+#endif /* defined(ENABLE_IPV6) */
 
     }
 
@@ -5778,6 +5992,201 @@ static void makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 )
     else
         memset( &pfxmask6[0], 0xFF, 16 );
 }
+
+
+#if defined(ENABLE_IPV6)
+/*-------------------------------------------------------------------*/
+/* Process layer 3 ICMPv6 packet                                     */
+/* Note: the ICMPv6 data follows the IPv6 header.                    */
+/*-------------------------------------------------------------------*/
+static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
+{
+
+    BYTE*      icmp;                // ICMPv6 header
+    OSA_BHR*   bhrre;               // Response buffer header
+    IP6FRM*    ip6re;               // Response IPv6 header
+    BYTE*      icmpre;              // Response ICMPv6 data
+    U32        ip6re_packet_size;   // Response IPv6 packet size
+    U16        ip6re_header_size;   // Response IPv6 header size
+    U16        ip6re_payload_size;  // Response ICMPv6 data size
+    char       unspecified[16];
+    char       solicitednode[16];
+    BYTE       sig;
+
+
+    // Initialize variables
+    memset( unspecified, 0, 16 );
+    memset( solicitednode, 0, 16 );
+    solicitednode[0] = 0xFF;
+    solicitednode[1] = 0x02;
+    solicitednode[11] = 0x01;
+    solicitednode[12] = 0xFF;
+
+    // Point to the ICMPv6 header
+    icmp = (BYTE*)ip6->bPayload;
+
+    // Process Neighbor Solicitation
+    if (icmp[0] == 0x87)               /* 0x87 = 135 */
+    {                                  /* Start of Neighbor Solicitation */
+
+      // Check for a Neighbor Solicitation message sent by the guest
+      // to verify that no other node is using the guests IP address.
+      // The source address is unspecified, and the destination address
+      // is the Solicited Node address, i.e. FF02::1:FFxx:xxxx.
+//    if (memcmp( &ip6->bSrcAddr[0], &unspecified, 16 ) == 0 &&
+//        memcmp( &ip6->bDstAddr[0], &solicitednode, 13 ) == 0 &&
+//        memcmp( &ip6->bDstAddr[13], &icmp[8+13], 3 ) == 0)
+//    {
+//      return;
+//    }
+
+      // Check for a Neighbor Solicitation message sent by the guest
+      // to resolve the specified IP address. The source address
+      // is the guests IP address, and the destination address is
+      // the Solicited Node address, i.e. FF02::1:FFxx:xxxx.
+      if (memcmp( &ip6->bSrcAddr[0], &unspecified, 16 ) != 0 &&
+          memcmp( &ip6->bDstAddr[0], &solicitednode, 13 ) == 0 &&
+          memcmp( &ip6->bDstAddr[13], &icmp[8+13], 3 ) == 0)
+      {
+
+        // Prepare various sizes
+        ip6re_header_size = sizeof(IP6FRM);
+        ip6re_payload_size = 32;
+        ip6re_packet_size = ip6re_header_size + ip6re_payload_size;
+
+        // Allocate a buffer in which the ICMPv6 Neighbor Advertisment message
+        // will be built. Note: the message will be 72 bytes.
+        // The source address is the target address, the destination
+        // address is the Link-Local Scope All Nodes multicast address,
+        // i.e. FF02:0:0:0:0:0:0:1.
+        bhrre = alloc_buffer( dev, (ip6re_packet_size + 10) );
+        if (!bhrre) return;
+        bhrre->datalen = ip6re_packet_size;
+        ip6re = (IP6FRM*)((BYTE*)bhrre + SizeBHR);
+        icmpre = (BYTE*)ip6re->bPayload;
+
+        // Prepare response IPv6 header
+        ip6re->bVersTCFlow[0] = 0x60;
+        STORE_HW( ip6re->bPayloadLength, ip6re_payload_size );
+        ip6re->bNextHeader = 0x3A;
+        ip6re->bHopLimit = 0xFF;
+        memcpy( ip6re->bSrcAddr, &icmp[8], 16 );
+        memcpy( ip6re->bDstAddr, ip6->bSrcAddr, 16 );
+
+        // Prepare response ICMPv6 data
+        icmpre[0] = 0x88;                    /* Neighbor Advertisment  0x88 = 136 */
+        icmpre[4] = 0x60;                    /* Solicited & Override flags */
+        memcpy( &icmpre[8], &icmp[8], 16 );  /* Target IP address */
+        icmpre[24] = 0x02;                   /* Target link layer option */
+        icmpre[25] = 0x01;                   /* Length of option in 8-byte units */
+        memcpy( &icmpre[26], grp->iaDriveMACAddr, IFHWADDRLEN );
+
+        // Calculate and set the ICMPv6 checksum
+        calculate_icmpv6_checksum( ip6re, icmpre, (int)ip6re_payload_size );
+
+        // Add response buffer to chain.
+        add_buffer_to_chain( &grp->l3r, bhrre );
+        sig = QDSIG_WAKEUP;
+        VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
+        return;
+      }
+
+    }                                  /* End of Neighbor Solicitation */
+
+    // Hmm... an ICMPv6 message sent by the guest
+    // that we don't handle.
+    return;
+}
+#endif /* defined(ENABLE_IPV6) */
+
+
+#if defined(ENABLE_IPV6)
+/* ------------------------------------------------------------------ */
+/* calculate_icmpv6_checksum()                                        */
+/* ------------------------------------------------------------------ */
+// This is not a general purpose function, it is solely for calculating
+// the checksum of ICMPv6 packets sent to the guest on the y-side. The
+// following restriction apply:-
+// - If the ICMPv6 header and message has a length that is an odd number
+//   of bytes, they must be followed by a byte containing zero.
+// - Any existing checksum in the ICMPv6 header will be over-written.
+//
+// The ICMPv6 header and message layout is:-
+//   byte  0    Type: specifies the format of the message.
+//   byte  1    Code: further qualifies the message
+//   bytes 2-3  Checksum.
+//   byte  4-n  Message.
+//
+// The Hop-by-Hop Options extension header layout is:-
+//   byte  0    Next Header: will be 58 (0x3a), ICMPv6 header.
+//   byte  1    Header Extension Length: the header's overall length
+//              0 = 8-bytes, 1 = 16-bytes, 2 = 24-bytes, etc.
+//   byte  2-n  One or more option fields.
+//
+void  calculate_icmpv6_checksum( IP6FRM* pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
+{
+    BYTE*      pBytePtr;
+    int        i,j;
+    U16        uTwobytes;            // Two bytes of data
+    U32        uHighhalf;            // High-order half of the checksum
+    U32        uChecksum;            // The checksum
+    BYTE       bPseudoHeader[40];    //  0-15  Source address
+                                     // 16-31  Destination address
+                                     // 32-35  Upper-layer packet length
+                                     // 36-38  zero
+                                     //   39   Next Header (i.e. 58 (0x3a))
+
+
+    // Clear the checksum in the ICMP header before calculating the checksum.
+    STORE_HW( pIcmpHdr+2, 0x0000 );
+
+    // Construct the Psuedo-Header for the checksum calcuation.
+    memcpy( bPseudoHeader+0, pIP6FRM->bSrcAddr, 16 );
+    memcpy( bPseudoHeader+16, pIP6FRM->bDstAddr, 16 );
+    STORE_FW( bPseudoHeader+32, iIcmpLen );
+    for( i = 36; i <= 38; i++ )
+        bPseudoHeader[i] = 0x00;
+    bPseudoHeader[39] = 0x3A;
+
+    // Calculate the checksum.
+    uChecksum = 0;
+    for( i = 0; i <= 38; i += 2 )
+    {
+        FETCH_HW( uTwobytes, bPseudoHeader+i );
+        uChecksum += uTwobytes;
+    }
+    pBytePtr = pIcmpHdr;                   // Point to the ICMPv6 header.
+    j = iIcmpLen;                          // Get the length of the
+    j++;                                   // ICMPv6 packet rounded up
+    j &= 0xFFFFFFFE;                       // to the next multiple of two.
+    for( i = 0; i <= j - 2; i += 2 )
+    {
+        FETCH_HW( uTwobytes, pBytePtr );
+        uChecksum += uTwobytes;
+        pBytePtr += 2;
+    }
+    uHighhalf = uChecksum >> 16;           // Get the high-order half
+                                           // of the checksum value.
+    uChecksum &= 0x0000FFFF;               // Get the low-order half.
+    uChecksum += uHighhalf;                // Add the high-order half
+                                           // to the low-order half.
+    uHighhalf = uChecksum >> 16;           // Get the high-order half
+                                           // of the checksum value again.
+    uChecksum &= 0x0000FFFF;               // Get the low-order half.
+    uChecksum += uHighhalf;                // Add the high-order half
+                                           // to the low-order half again
+                                           // to include any carry.
+    uChecksum ^= 0xFFFFFFFF;               // Complement the bits.
+    uChecksum &= 0x0000FFFF;               // Get a clean checksum.
+    uTwobytes = uChecksum;                 // Copy to a two-byte value.
+
+    // Set the checksum in the ICMP header.
+    STORE_HW( pIcmpHdr+2, uTwobytes );
+
+    return;
+}   /* End function  calculate_icmpv6_checksum() */
+#endif /* defined(ENABLE_IPV6) */
+
 
 
 /*-------------------------------------------------------------------*/

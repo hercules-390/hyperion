@@ -105,6 +105,17 @@ struct _OSA_BHR {                       /* OSA Buffer Header         */
 
 
 /*-------------------------------------------------------------------*/
+/* OSA Buffer Anchor                                                 */
+/*-------------------------------------------------------------------*/
+typedef struct _OSA_BAN {
+    LOCK      lockbhr;          /* Lock for buffer chain             */
+    OSA_BHR*  firstbhr;         /* First OSA_BHR in chain            */
+    OSA_BHR*  lastbhr;          /* Last OSA_BHR in chain             */
+    int       numbhr;           /* Number of OSA_BHRs on chain       */
+} OSA_BAN;
+
+
+/*-------------------------------------------------------------------*/
 /* OSA MAC structure                                                 */
 /*-------------------------------------------------------------------*/
 typedef struct _OSA_MAC {
@@ -152,10 +163,9 @@ typedef struct _OSA_GRP {
     COND    qdcond;             /* Condition for halt data device    */
     LOCK    qlock;              /* Lock for above conditions         */
 
-    LOCK      qblock;           /* Lock for IDX read buffer chain    */
-    OSA_BHR*  firstbhr;         /* First OSA_BHR in chain            */
-    OSA_BHR*  lastbhr;          /* Last OSA_BHR in chain             */
-    int       numbhr;           /* Number of OSA_BHRs on chain       */
+    OSA_BAN  idx;               /* IDX buffer anchor                 */
+
+    OSA_BAN  l3r;               /* Layer 3 response buffer anchor    */
 
     char *tuntap;               /* Interface path name               */
     char  ttifname[IFNAMSIZ];   /* Interface network name            */
@@ -237,6 +247,13 @@ typedef struct _OSA_GRP {
     BYTE  gtcmconn[4];          /* Guest token cm connection         */
     BYTE  gtulpfilt[4];         /* Guest token ulp filter            */
     BYTE  gtulpconn[4];         /* Guest token ulp connection        */
+
+#if defined(ENABLE_IPV6)
+    BYTE  iaDriveMACAddr[IFHWADDRLEN];   /* MAC address (Driver)     */
+    char  szDriveMACAddr[24];            /* MAC address (Driver)     */
+    struct in6_addr iaDriveLLAddr6;      /* IPv6 Link Local address (Driver) */
+    char            szDriveLLAddr6[48];  /* IPv6 Link Local address (Driver) */
+#endif /* defined(ENABLE_IPV6) */
 
 } OSA_GRP;
 
