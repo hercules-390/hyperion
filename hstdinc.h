@@ -55,16 +55,16 @@
 #endif
 
 /* -----------------------------------------------------------------------------------------
-   Note: <math.h> must come BEFORE <intrin.h> for Visual Studio 2008 because 
+   Note: <math.h> must come BEFORE <intrin.h> for Visual Studio 2008 because
    of a duplicate definition of the ceil() function in those two headers.  See
    MS VC Bug ID 381422 at https://connect.microsoft.com/VisualStudio/Feedback/Details/381422
    for additional information.  This issue was addressed by the time of Visual
-   Studio 2015, when the Windows headers including <intrin.h> were moved to the 
-   Windows SDK and the ceil() definition removed.  This issue may have been 
+   Studio 2015, when the Windows headers including <intrin.h> were moved to the
+   Windows SDK and the ceil() definition removed.  This issue may have been
    addressed between VS2008 and VS2015, but we do not have confirmation.  (Yet?)
 
    So if we are building on Windows before VS2015, we shall include <math.h> here.
-   Otherwise we shall include it later in the list of headers.  
+   Otherwise we shall include it later in the list of headers.
    ---------------------------------------------------------------------------------------- */
 
 #ifdef _MSVC_
@@ -200,9 +200,6 @@
       #include <dlfcn.h>
     #endif
   #endif
-#endif
-#ifdef HAVE_FENV_H
-  #include <fenv.h>
 #endif
 #ifdef HAVE_INTTYPES_H
   #include <inttypes.h>

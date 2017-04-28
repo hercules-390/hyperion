@@ -35,6 +35,13 @@ m4_defun([_LT_AC_LANG_CXX_CONFIG], [:])
 m4_defun([_LT_AC_LANG_F77_CONFIG], [:])
 
 ###############################################################################
+#  The following is a "global error" flag used to defer aborting configure
+#  until after ALL errors have been detected/reported.
+###############################################################################
+
+hc_error=no
+
+###############################################################################
 # Test for an in-source build and abort if such is attempted.  The
 # working directory for configure should be the build directory, not
 # the source directory.  If the working directory when configure is run
@@ -216,23 +223,16 @@ fi
 #-------------------------------------------------------#
 
 if test "$hc_cv_is_nix"        = "yes"; then
-
     hc_cv_build_hercifc=yes
-    hc_cv_non_unique_gettimeofday=no
 
 elif test "$hc_cv_is_windows"  = "yes"; then
-
     hc_cv_build_hercifc=no
-    hc_cv_non_unique_gettimeofday=yes
 
 elif test "$hc_cv_is_apple"    = "yes"; then
-
     hc_cv_build_hercifc=yes
-    hc_cv_non_unique_gettimeofday=no
 
 else
     hc_cv_build_hercifc=no
-    hc_cv_non_unique_gettimeofday=no
 fi
 
 #----------------------#
@@ -524,12 +524,7 @@ HC_LD_DISALLOWDUPS()                    # Add linker options to LDFLAGS variable
                                         # to warn about duplicate libtool symbols,
                                         # if needed.
 
-###############################################################################
-#  The following is a "global error" flag used to defer aborting configure
-#  until after ALL errors have been detected/reported.
-###############################################################################
 
-hc_error=no
 
 ###############################################################################
 #   Autoheader templates
@@ -550,7 +545,6 @@ AH_TEMPLATE( [NO_ASM_BYTESWAP],         [Define to disable assembler routines fo
 AH_TEMPLATE( [NO_IEEE_SUPPORT],         [Define to disable IEEE floating point support] )
 AH_TEMPLATE( [NO_SETUID],               [Define to disable setuid operation] )
 AH_TEMPLATE( [NO_SIGABEND_HANDLER],     [Define to disable sigabend_handler (please describe this better)] )
-AH_TEMPLATE( [NON_UNIQUE_GETTIMEOFDAY], [Define if 'gettimeofday' returns non-unique values] )
 AH_TEMPLATE( [NEED_GETOPT_WRAPPER],     [Define to indicate a wrapper for getopt is needed] )
 AH_TEMPLATE( [NEED_GETOPT_OPTRESET],    [Define to indicate optreset exists] )
 AH_TEMPLATE( [HAVE_INTTYPES_H],         [Define if inttypes.h header file is present on your system] )
@@ -807,9 +801,7 @@ AC_CHECK_HEADERS( sys/un.h,       [hc_cv_have_sys_un_h=yes],       [hc_cv_have_s
 AC_CHECK_HEADERS( byteswap.h,     [hc_cv_have_byteswap_h=yes],     [hc_cv_have_byteswap_h=no]     )
 AC_CHECK_HEADERS( bzlib.h,        [hc_cv_have_bzlib_h=yes],        [hc_cv_have_bzlib_h=no]        )
 AC_CHECK_HEADERS( dlfcn.h,        [hc_cv_have_dlfcn_h=yes],        [hc_cv_have_dlfcn_h=no]        )
-AC_CHECK_HEADERS( fenv.h,         [hc_cv_have_fenv_h=yes],         [hc_cv_have_fenv_h=no]         )
 AC_CHECK_HEADERS( inttypes.h,     [hc_cv_have_inttypes_h=yes],     [hc_cv_have_inttypes_h=no]     )
-AC_CHECK_HEADERS( locale.h,       [hc_cv_have_locale_h=yes],       [hc_cv_have_locale_h=no]       )
 AC_CHECK_HEADERS( ltdl.h,         [hc_cv_have_ltdl_h=yes],         [hc_cv_have_ltdl_h=no]         )
 AC_CHECK_HEADERS( malloc.h,       [hc_cv_have_malloc_h=yes],       [hc_cv_have_malloc_h=no]       )
 AC_CHECK_HEADERS( netdb.h,        [hc_cv_have_netdb_h=yes],        [hc_cv_have_netdb_h=no]        )
@@ -821,7 +813,6 @@ AC_CHECK_HEADERS( time.h,         [hc_cv_have_time_h=yes],         [hc_cv_have_t
 AC_CHECK_HEADERS( zlib.h,         [hc_cv_have_zlib_h=yes],         [hc_cv_have_zlib_h=no]         )
 AC_CHECK_HEADERS( sys/capability.h, [hc_cv_have_sys_capa_h=yes],   [hc_cv_have_sys_capa_h=no]     )
 AC_CHECK_HEADERS( sys/prctl.h,    [hc_cv_have_sys_prctl_h=yes],    [hc_cv_have_sys_prctl_h=no]    )
-AC_CHECK_HEADERS( sys/syscall.h,  [hc_cv_have_syscall_h=yes],      [hc_cv_have_syscall_h=no]    )
 
 AC_CHECK_HEADERS( rexx.h,
                   [hc_cv_have_rexx_h=yes],
@@ -983,7 +974,6 @@ AC_CACHE_SAVE()
 #   Checks for types...
 ###############################################################################
 
-AC_CHECK_TYPES(__int128_t,  [hc_cv_have_int128_t=yes],   [hc_cv_have_int128_t=no]   )
 AC_CHECK_TYPES(__uint128_t, [hc_cv_have_u_int128_t=yes], [hc_cv_have_u_int128_t=no] )
 AC_CHECK_TYPES( u_int8_t,   [hc_cv_have_u_int8_t=yes],   [hc_cv_have_u_int8_t=no]   )
 AC_CHECK_TYPES( useconds_t, [hc_cv_have_useconds_t=yes], [hc_cv_have_useconds_t=no] )
@@ -1056,12 +1046,11 @@ AC_CACHE_SAVE()
 #  an <action if found> is specified, a -l linker option is not added for the
 #  library.
 
-AC_CHECK_LIB( msvcrt, _pipe          )
 
 AC_CHECK_LIB( dl,     dlopen         )
 AC_CHECK_LIB( socket, connect        )
 AC_CHECK_LIB( nsl,    gethostbyname  )
-AC_CHECK_LIB( resolv, inet_aton      )
+dnl AC_CHECK_LIB( resolv, inet_aton      )   left as m4 comment so test can be incrluded in CMake
 AC_CHECK_LIB( z,      uncompress     )
 AC_CHECK_LIB( bz2,    BZ2_bzBuffToBuffDecompress,
             [ hc_cv_have_libbz2=yes ],
@@ -1134,11 +1123,6 @@ AC_CHECK_FUNCS( mlockall )
 AC_CHECK_FUNCS( pvalloc )
 AC_CHECK_FUNCS( valloc )
 AC_CHECK_FUNCS( posix_memalign )
-
-AC_CHECK_FUNCS( vsscanf,
-               [hc_cv_have_vsscanf=yes],
-               [hc_cv_have_vsscanf=no]
-)
 
 AC_CHECK_FUNCS( setresuid getresuid,
                [hc_cv_have_getset_uid=yes],
@@ -2255,24 +2239,6 @@ AC_ARG_ENABLE( optimization,
     [hc_cv_opt_optimization=yes]
 )
 
-AC_ARG_ENABLE( enhanced-configincludes,
-
-    AC_HELP_STRING( [--disable-enhanced-configincludes],
-
-        [disable enhanced-mode 'include' file support in configuration file]
-    ),
-    [
-        case "${enableval}" in
-        yes) hc_cv_opt_enhanced_configincludes=yes                      ;;
-        no)  hc_cv_opt_enhanced_configincludes=no                       ;;
-        *)   AC_MSG_WARN( [ERROR: invalid 'enhanced-configincludes' option] )
-             hc_error=yes
-             ;;
-        esac
-    ],
-    [hc_cv_opt_enhanced_configincludes=yes]
-)
-
 AC_ARG_ENABLE( automatic-operator,
 
     AC_HELP_STRING( [--disable-automatic-operator],
@@ -2577,14 +2543,6 @@ if test "$hc_cv_have_strsignal" != "yes"  &&
 
    AC_MSG_WARN( [ERROR: Required header 'signal.h' not found] )
    hc_error=yes
-fi
-
-#------------------------------------------------------------------------------
-
-if test "$hc_cv_have_vsscanf" != "yes"; then
-
-    AC_MSG_WARN( [ERROR: Required function 'vsscanf' not found] )
-    hc_error=yes
 fi
 
 #------------------------------------------------------------------------------
@@ -2914,7 +2872,6 @@ test "$hc_cv_have_hqa_h"                  = "yes"  &&  AC_DEFINE(HAVE_HQA_H)
 test "$hc_cv_opt_debug"                   = "yes"  &&  AC_DEFINE(DEBUG)
 test "$hc_cv_have_inttypes_h"             = "yes"  &&  AC_DEFINE(HAVE_INTTYPES_H)
 test "$hc_cv_have_u_int8_t"               = "yes"  &&  AC_DEFINE(HAVE_U_INT)
-test "$hc_cv_opt_enhanced_configincludes" = "yes"  &&  AC_DEFINE(OPTION_ENHANCED_CONFIG_INCLUDE)
 test "$hc_cv_opt_auto_oper"               = "yes"  &&  AC_DEFINE(OPTION_HAO)
 test "$hc_cv_opt_dynamic_load"            = "yes"  &&  AC_DEFINE(OPTION_DYNAMIC_LOAD)
 test "$hc_cv_opt_fthreads"                = "yes"  &&  AC_DEFINE(OPTION_FTHREADS)
@@ -2928,7 +2885,6 @@ test "$hc_cv_timespec_in_sys_types_h"     = "yes"  &&  AC_DEFINE(TIMESPEC_IN_SYS
 test "$hc_cv_timespec_in_time_h"          = "yes"  &&  AC_DEFINE(TIMESPEC_IN_TIME_H)
 test "$hc_cv_have_getset_uid"            != "yes"  &&  AC_DEFINE(NO_SETUID)
 test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
-test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
 test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILITIES)
 test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(ENABLE_OBJECT_REXX)
@@ -2964,12 +2920,6 @@ if test "$hc_cv_regparm_attr_supported" = "yes"  &&
    test "$hc_cv_regparm_attr_broke"    != "yes"; then
 
     AC_DEFINE(HAVE_ATTR_REGPARM)
-fi
-
-if test "$hc_cv_is_windows"  != "yes"  &&
-   test "$hc_cv_have_fenv_h" != "yes"; then
-
-    AC_DEFINE(NO_IEEE_SUPPORT)
 fi
 
 #--------------------------------------------------#
