@@ -111,16 +111,32 @@
 # libtool  script  is  built.  Or the directory must contain a symbolic
 # link to the hercules executable.
 
-verlt()
+
+# Verify that the hercules file is indeed an executable file.  This means
+# it must be either a wrapper script for libtool or an ELF executable.
+# This function depends on file output emiting a phrase immediately after
+# the filename thus: <filename>: <phrase>, <more stuff>.   The first and
+# last words in the phrase are tested.  The comma after phrase is important.
+
+ver_exec_or_lt()
 {
-   if [ "$2" = "Bourne-Again" ] ; then
+   fileop=$(file $1)
+   subtype=$(echo $fileop | sed -e 's/.*: // ; s/ .*$//')
+   type=$(echo $fileop | sed -e 's/.*: // ; s/, .*// ; s/.* //')
+# If we get a lot of tests, then convert this to a case/esac.
+# libtool wrapper on system with bash
+   if [ "$subtype $type" = "Bourne-Again script" ] ; then
       return 1
    fi
-# "POSIX shell script text executable"
-   if [ "$2" = "POSIX" ] ; then
+# libtool wrapper on POSIX system (e.g., FreeBSD)
+   if [ "$subtype $type" = "POSIX script" ] ; then
       return 1
    fi
-   echo $*
+# ELF Executable of whatever bitness
+   if [ "$subtype $type" = "ELF executable" ] ; then
+      return 1
+   fi
+   echo $fileop
    return 0
 }
 
@@ -261,10 +277,10 @@ if [ -z $(which rexx) ] ; then
    rv=1
 fi
 
-verlt $(file $hdir/hercules)
+ver_exec_or_lt $hdir/hercules
 vrv=$?
 if [ $vrv -eq 0 ] ; then
-   echo "Error:  Hercules executable $hdir/hercules is not the libtool wrapper."
+   echo "Error:  Hercules executable is neither an ELF executable nor a libtool wrapper."
    rv=1
 fi
 
