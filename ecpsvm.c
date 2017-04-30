@@ -28,7 +28,7 @@
 /* NOTE : ECPS:VM is only available for S/370 architecture */
 /*                                                         */
 /* In order for CP ASSIST to be active, a CONFIGURATION    */
-/* statement is added : ECPS:VM lvl|no                     */
+/* statement is added : ECPSVM lvl|no                      */
 /* lvl is the ASSIST level (20 is recommended)             */
 /* no means CP ASSIST is disabled (default)                */
 /*                                                         */
@@ -78,6 +78,9 @@
 
 /*
 // $Log$    Update revision number in define variable ECPSCODEVER, below.
+//
+// Revision 1.82  2017/04/30 13:54:00  bobpolmanter
+// Fix two minor coding errors in the SIO instruction assist.
 //
 // Revision 1.81  2017/04/12 14:10:00  bobpolmanter
 // Add support for LRA instruction assist.
@@ -163,7 +166,7 @@
 
 #ifdef FEATURE_ECPSVM
 
-#define ECPSCODEVER 1.81	//	<--------------- UPDATE CODE VERSION
+#define ECPSCODEVER 1.82	//	<--------------- UPDATE CODE VERSION
 
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);
 
@@ -3645,7 +3648,7 @@ int ecpsvm_virttmr_ext(REGS *regs)
 /*****************************************/
 /* The VM Assist for SIO/SIOF is a       */
 /* partial assist per the specification. */
-/* This assist avoids a priveleged       */
+/* This assist avoids a privileged       */
 /* operation exception and a trip        */
 /* through the DMKPRG & DMKPRV code      */
 /* path.  In addition, the virtual       */
@@ -3833,7 +3836,7 @@ BYTE work;
             return(0);      /* exit; channel-end pending for device */
         }
     }
-    if(B_VCUSTAT & VCUBUSY)
+    if(B_VCUSTAT & VCUCHBSY)
     {
         return(0);          /* exit; control unit busy pending for device */
     }
@@ -3861,7 +3864,7 @@ BYTE work;
         return(0);          /* exit; virtual device busy */
     }
     H_VDEVINTS=EVM_LH(regs->GR_L(8)+VDEVINTS);
-    B_VDEVFLG2=EVM_LH(regs->GR_L(8)+VDEVFLG2);
+    B_VDEVFLG2=EVM_IC(regs->GR_L(8)+VDEVFLG2);
     if(H_VDEVINTS)
     {
         return(0);          /* exit; virtual device interruption pending */
