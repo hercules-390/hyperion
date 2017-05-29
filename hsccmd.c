@@ -5207,6 +5207,7 @@ int lparname_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int lparnum_cmd(int argc, char *argv[], char *cmdline)
 {
+int     resetSuccessful;
 U16     lparnum;
 BYTE    c;
 
@@ -5253,11 +5254,14 @@ BYTE    c;
             setOperationMode();
 
             /* Update CPU IDs indicating LPAR mode active */
-            if (!resetAllCpuIds())
-                return -1;
+            resetSuccessful = resetAllCpuIds();
 
             /* Release INTLOCK */
             RELEASE_INTLOCK(NULL);
+
+            /* Exit if not successful */
+            if (!resetSuccessful)
+                return (-1);
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
             {
@@ -5292,11 +5296,14 @@ BYTE    c;
             sysblk.cpuidfmt = 0;
             sysblk.operation_mode = om_basic;
 
-            if (!resetAllCpuIds())
-                return -1;
+            resetSuccessful = resetAllCpuIds();
 
             /* Release INTLOCK */
             RELEASE_INTLOCK(NULL);
+
+            /* Exit if not successful */
+            if (!resetSuccessful)
+                return (-1);
 
             if ( MLVL(VERBOSE) )
             {
