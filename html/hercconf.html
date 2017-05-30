@@ -585,7 +585,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUIDFMT"></a>
-<dt><code>CPUIDFMT &nbsp; 0 &#124; 1</code>
+<dt><code>CPUIDFMT &nbsp; BASIC &#124; <u>0</u> &#124; 1</code>
 <dd><p>
     Specifies the format of the CPU ID the STIDP instruction should store.
     Refer to the <a href="#LPARNUM">LPARNUM</a> statement for more information.
@@ -933,7 +933,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="LPARNUM"></a>
-<dt><code>LPARNUM &nbsp; <em>xx</em> &#124; BASIC</code>
+<dt><code>LPARNUM &nbsp; BASIC &#124; <u>1</u> &#124; <em>xx</em></code>
 <dd><p>
     Specifies the one- or two-digit hexadecimal LPAR identification
     number stored by the STIDP instruction, or BASIC.
@@ -944,7 +944,10 @@ a real System/390.  The configuration file is an ASCII text file.
     If zero or a two-digit hexadecimal number (except 10 hexadecimal)
     is specified, then STIDP stores a format-1 CPU ID. For LPARNUM
     10 the current <a href="#CPUIDFMT">CPUIDFMT</a> is not changed.
-    If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID.
+    When LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID
+    (six-hexadecimal digit serial number when MAXCPU = 1, or a
+    one-hexadeciaml digit CPU number and five-hexadecimal digit serial
+    number when MAXCPU > 1).
     <p>
     The default is LPARNUM 1 with a format-0 CPU ID.
     <p>
@@ -961,8 +964,14 @@ a real System/390.  The configuration file is an ASCII text file.
     Specifies the main storage size in megabytes, where
     <code><em>nnnn</em></code> &nbsp;is a decimal number. Or,
     <code><em>nnnM</em></code> &nbsp;where <code><em>M</em></code>&nbsp;
-    is K - Kilobytes, M - Megabytes, G - Gigabytes, T - Terabytes,
-    P - Petabytes, E - Exabytes. The default on startup is 2M.
+    is
+    <code>K</code> - Kilobytes,
+    <code>M</code> - Megabytes,
+    <code>G</code> - Gigabytes,
+    <code>T</code> - Terabytes,
+    <code>P</code> - Petabytes,
+    <code>E</code> - Exabytes.
+    The default on startup is 2M.
     <p>
     For storage sizes less than 16M, sizes not on a 4K boundary are
     rounded up to the next 4K boundary. Otherwise, storage sizes not on
