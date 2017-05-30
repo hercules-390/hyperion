@@ -4146,7 +4146,23 @@ BYTE c;
         return HERRCPUONL;
     }
 
+    /* Make sure all CPUs are deconfigured or stopped if effective cpuidfmt will change */
+    if (((!sysblk.lparmode  &&
+          ((sysblk.maxcpu == 1 && maxcpu >  1)   ||
+           (sysblk.maxcpu >  1 && maxcpu <= 1)))     ||
+         (sysblk.maxcpu > 0 && maxcpu == 0))            &&
+        are_any_cpus_started())
+    {
+        // "All CPU's must be stopped to change architecture"
+        WRMSG( HHC02253, "E" );
+        return HERRCPUONL;
+    }
+
     sysblk.maxcpu = maxcpu;
+
+    /* Update all CPU IDs */
+    setAllCpuIds_lock(-1, -1, -1, -1);
+
 
     if (MLVL(VERBOSE))
     {
@@ -5510,7 +5526,8 @@ BYTE    c;
 /*-------------------------------------------------------------------*/
 int cpuidfmt_cmd(int argc, char *argv[], char *cmdline)
 {
-u_int     cpuidfmt;
+int     resetSuccessful;
+u_int   cpuidfmt;
 
     UNREFERENCED(cmdline);
 
@@ -5563,11 +5580,14 @@ u_int     cpuidfmt;
                 setOperationMode();
 
                 /* Update all CPU IDs */
-                if (!resetAllCpuIds())
-                    return -1;
+                resetSuccessful = resetAllCpuIds();
 
                 /* Release INTLOCK */
                 RELEASE_INTLOCK(NULL);
+
+                /* Exit if reset not successful */
+                if (!resetSuccessful)
+                    return -1;
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
                 set_symbol("CPUIDFMT", (sysblk.cpuidfmt) ? "1" : "0");
@@ -5583,6 +5603,14 @@ u_int     cpuidfmt;
                 return -1;
             }
 
+            /* Make sure all CPUs are deconfigured or stopped */
+            if (are_any_cpus_started())
+            {
+                // "All CPU's must be stopped to change architecture"
+                WRMSG( HHC02253, "E" );
+                return HERRCPUONL;
+            }
+
             if (sysblk.cpuidfmt)
             {
 
@@ -5594,11 +5622,14 @@ u_int     cpuidfmt;
                 sysblk.operation_mode = om_basic;
 
                 /* Update all CPU IDs */
-                if (!resetAllCpuIds())
-                    return -1;
+                resetSuccessful = resetAllCpuIds();
 
                 /* Release INTLOCK */
                 RELEASE_INTLOCK(NULL);
+
+                /* Exit if reset not successful */
+                if (!resetSuccessful)
+                    return -1;
 
 #if defined(ENABLE_BUILTIN_SYMBOLS)
                 set_symbol("CPUIDFMT", "BASIC");
