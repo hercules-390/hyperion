@@ -1,5 +1,9 @@
-/*ECPSVM.H      (c) Copyright Ivan Warren, 2003-2009                 */
+/*ECPSVM.H      (c) Copyright Roger Bowler, 2000-2012                */
 /*              Hercules ECPS:VM Support                             */
+/*                                                                   */
+/*   Released under "The Q Public License Version 1"                 */
+/*   (http://www.hercules-390.org/herclic.html) as modifications to  */
+/*   Hercules.                                                       */
 
 #ifndef __ECPSVM_H__
 #define __ECPSVM_H__
@@ -58,11 +62,12 @@ typedef struct _ECPSVM_MICBLOK
 #define MICIPTP2 0x20   /* VRSTBYPASS IPTE/TPRT Simulation */
 #define MICVPFR2 0x10   /* Virtual Page Fault reflection Assists */
 #define MICLRA2  0x08   /* VRSTBYPASS LRA Simulation */
+#define MICSPT   0x04   /* SPT control */
 #define MICSTSM2 0x02   /* VRSTBYPASS SSM/STxSM Sim */
 #define MICLCTL2 0x01   /* VRSTBYPASS LCTL Sim */
     /* Bits define in MICEVMA3 */
 #define MICSKYMD 0x20   /* Unknown */
-#define MICISKE  0x10   /* PTLB Sim */ 
+#define MICISKE  0x10   /* PTLB Sim */
 #define MICRRBE  0x08   /* IPTE/TPRT Sim */
 #define MICSSKE  0x04   /* V Page Fault Sim */
     /* Bits defined in MICEVMA4 */
@@ -118,10 +123,10 @@ typedef struct _ECPSVM_MICBLOK
 #define ASYSVM 0x37C
 
 /* PSA + X'3D0'-X'3EC' - ASSISTS STUFF */
-#define APAGCP  0x3D0
-#define CPCREG0 0x3D4
-#define CPCREG6 0x3D8
-#define CPCREG8 0x3DC
+#define APAGCP   0x3D0
+#define CPCREG0  0x3D4
+#define CPCREG6  0x3D8
+#define CPCREG8  0x3DC
 #define TIMEDISP 0x3E0
 #define ASVCLIST 0x3E4
 #define AVMALIST 0x3E8
@@ -152,22 +157,23 @@ typedef struct _ECPSVM_MICBLOK
 #define DMKSVCHI  8        /* DMKFREHI */
 #define DMKSVCLO 12        /* DMKFRELO - SAVEAREA LENGTH */
 
+
 /* VM ASSIST LISTS */
 /* ENTRYPOINT TO VARIOUS PRIVOP SIM FASTPATH */
 /* AVMALIST points to DMKPRVMA */
 /* Displacements from DMKPRVMA (defined in DMKPRV) */
-#define VSIVS 0		/* EP To DMKVSIVS (Fastpath SIO/SIOF) */
-#define VSIEX 4		/* Base addr for VSIVS */
-#define DSPCH 8		/* Scheduler - Fast path for LPSW/SSM/STNSM/STOSM */
-#define TMRCC 12	/* SCKC EP */
+#define VSIVS 0     /* EP To DMKVSIVS (Fastpath SIO/SIOF) */
+#define VSIEX 4     /* Base addr for VSIVS */
+#define DSPCH 8     /* Scheduler - Fast path for LPSW/SSM/STNSM/STOSM */
+#define TMRCC 12    /* SCKC EP */
 #define TMR   16    /* Timer ops base */
-#define TMRSP 20	/* SPT EP */
-#define VATAT 24	/* ARCHITECT */
+#define TMRSP 20    /* SPT EP */
+#define VATAT 24    /* ARCHITECT */
 #define DSPB  28    /* Slow Path Dispatcher - PSW Revalidate required */
-#define PRVVS 32	/* VSIVS COUNT */
-#define PRVVL 36	/* LPSW Count */
-#define PRVVM 40	/* SSM/STxSM COUNT */
-#define PRVVC 44	/* SCKC COUNT */
+#define PRVVS 32    /* VSIVS COUNT */
+#define PRVVL 36    /* LPSW Count */
+#define PRVVM 40    /* SSM/STxSM COUNT */
+#define PRVVC 44    /* SCKC COUNT */
 #define RESERVED 48;
 #define PRVVP 52;   /* SPT COUNT */
 
@@ -176,8 +182,8 @@ typedef struct _ECPSVM_MICBLOK
 #define SAVENEXT  0
 #define SAVERETN  0
 #define SAVEREGS  0x10
-#define SAVER12	  0x04
-#define SAVER13	  0x08
+#define SAVER12   0x04
+#define SAVER13   0x08
 #define SAVER8    0x30
 #define SAVER10   0x38
 
@@ -186,8 +192,8 @@ typedef struct _ECPSVM_MICBLOK
 #define PRVCOMND  0x0C
 #define PRVFLAG   0x0D
 /* Bits defined in PRVFLAG */
-#define SMCOM	  0x01
-#define FWDTIC	  0x04
+#define SMCOM     0x01
+#define FWDTIC    0x04
 
 #define VIRCOMND  0x0E
 #define VIRFLAG   0x0F
@@ -196,37 +202,37 @@ typedef struct _ECPSVM_MICBLOK
 #define HADISAM   0x01
 #define HADUTIC   0x02
 
-#define MEMO2	  0x42
+#define MEMO2     0x42
 /* Bits defined in MEMO2 */
 #define STRTNEW   0x40
 
 #define FIRSTRCW  0x44
-#define THISRCW	  0x58
+#define THISRCW   0x58
 #define DEVTABLE  0x50
 
 /* CCW related bits */
-#define CD		  0x80
+#define CD        0x80
 #define CC        0x40
-#define IDA		  0x04
-#define CDTIC	  0x18
+#define IDA       0x04
+#define CDTIC     0x18
 
 /* RCWCCW block definitions */
-#define RCWPNT	  0x00
+#define RCWPNT    0x00
 #define RCWCOMND  0x00
 #define RCWVCAW   0x04
 #define RCWFLAG   0x04
-#define RCWCTL	  0x05
+#define RCWCTL    0x05
 /* Bits in RCWCTL */
-#define RCWIO	  0x80
+#define RCWIO     0x80
 #define RCWGEN    0x40
 #define RCWHMR    0x20
 #define RCW2311   0x04
-#define RCWSHR	  0x01
+#define RCWSHR    0x01
 
 #define RCWCNT    0x06
 #define RCWVCNT   0x08
 #define RCWRCNT   0x0A
-#define RCWCCNT	  0x0E
+#define RCWCCNT   0x0E
 #define RCWHSIZ   0x10
 
 /* CORTABLE definitions */
@@ -235,7 +241,7 @@ typedef struct _ECPSVM_MICBLOK
 #define CORSHARE  0x08
 
 /* IOBLOK Displacements */
-#define IOBCAW	  0x20
+#define IOBCAW    0x20
 #define IOBSPEC2  0x39
 /* Flags in IOBSPEC2 */
 #define IOBUNREL  0x20
@@ -246,7 +252,7 @@ typedef struct _ECPSVM_MICBLOK
 #define VMQBPNT         0x004
 #define VMPNT           0x008
 #define VMECEXT         0x00C
-#define VMVCR0 VMECEXT
+#define VMVCR0  VMECEXT
 #define VMSEG           0x010
 #define VMSIZE          0x014
 #define VMCHSTRT        0x018
@@ -401,8 +407,7 @@ typedef struct _ECPSVM_MICBLOK
 #define VMUSER          0x110
 #define VMACCNT         0x118
 #define VMDIST          0x120
-#define VMPRGIL			0x156
-
+#define VMPRGIL         0x156
 
 #define VMMICRO         0x17C
 #define VMMCR6 VMMICRO
@@ -469,31 +474,24 @@ typedef struct _ECPSVM_MICBLOK
 
 
 
-
-
 /* ECBLOK Specifics */
-#define EXTCR0	 0x00
-#define EXTCR1	 0x04
 #define EXTSHCR0 0x40
 #define EXTSHCR1 0x44
 #define EXTSHLEN 0x48
-#define EXTSTOLD 0x4C
-#define EXTARCH  0x56
-
 
 /* ARCHTECT field displacements  (see ARCHTECT in DMKVAT)  */
 #define PINVBIT 0x08
-#define PAGTLEN 0x12 
+#define PAGTLEN 0x12
 
-/* Field displacements in PSA to support CP trace entries by relevant CP assists */
+/* Field displacements to support CP trace entries by relevant CP assists */
 #define TRACSTRT 0x0C
 #define TRACEND  0x10
 #define TRACCURR 0x14
 #define TRACFLG1 0x400
-#define TRAC02		0x40
-#define TRAC67		0x04
+#define TRAC02   0x40
+#define TRAC67   0x04
 #define TRACFLG2 0x401
-#define TRAC0A		0x80
+#define TRAC0A   0x80
 #define TRCSVC   0x82
 #define TRCFREE  0x86
 #define TRCFRET  0x87
@@ -504,11 +502,12 @@ typedef struct _ECPSVM_MICBLOK
 #define FREER14  0x2b8
 
 
+
 typedef struct _ECPSVM_STAT
 {
     char *name;
-    U32   call;
-    U32   hit;
+    U64   call;
+    U64   hit;
     u_int support:1;
     u_int enabled:1;
     u_int debug:1;
