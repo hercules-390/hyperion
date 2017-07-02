@@ -136,6 +136,10 @@ ver_exec_or_lt()
    if [ "$subtype $type" = "ELF executable" ] ; then
       return 1
    fi
+# ELF shared object of whatever bitness (reported by Debian 9 file utility)
+   if [ "$subtype $type" = "ELF object" ] ; then
+      return 1
+   fi
    echo $fileop
    return 0
 }
