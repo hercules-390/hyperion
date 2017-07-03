@@ -1,0 +1,543 @@
+/*
+   CMakeConfig.h.in, used to generate config.h to build Hercules
+
+   Copyright 2017 by Stephen Orso.
+
+   Distributed under the Boost Software License, Version 1.0.
+   See accompanying file BOOST_LICENSE_1_0.txt or copy at
+   http://www.boost.org/LICENSE_1_0.txt)
+
+*/
+
+/*  ********************* Summary of CMake Build  *********************
+
+------------------------------------------------------------------------
+CMake run timestamp   @BUILD_TIMESTAMP@
+Install prefix        @CMAKE_INSTALL_PREFIX@
+Source directory      @PROJECT_SOURCE_DIR@
+Build directory       @PROJECT_BINARY_DIR@
+Executable directory  @exec_dir@
+Library directory     @library_dir@
+Data Directory (http) @http_dir@
+Build command line:   @CMAKE_MAKE_PROGRAM@
+C Compiler version:   @CMAKE_C_COMPILER_ID@ @CMAKE_C_COMPILER_VERSION@
+C compiler options:   @CMAKE_C_FLAGS@
+Hercules link libs:   @link_alllibs@
+------------------------------------------------------------------------
+
+*/
+
+/*
+   *********************************************************************
+                    Basic Project and Option Definitions
+   *********************************************************************
+*/
+
+/*
+   The following two were passed as -D items from makefile.am to the c
+   compiler to deal with oddities in autotools.  With CMake, we can just
+   define these here as there are no autotools oddities to deal with.
+*/
+
+#define  MODULESDIR         "@exec_dir@"
+#define  PKGDATADIR         "@http_dir@"
+
+/*
+   Project information...
+*/
+
+#define  HOST_ARCH           "@CMAKE_SYSTEM_PROCESSOR@"
+#define  VERS_MAJ            @PROJECT_VERSION_MAJOR@
+#define  VERS_INT            @PROJECT_VERSION_MINOR@
+#define  VERS_MIN            @PROJECT_VERSION_PATCH@
+#define  VERSION             "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"
+
+
+/*
+   User options specified on the command line or via cmake-gui or ccmake.
+*/
+
+#cmakedefine  CCKD_BZIP2          @CCKD_BZIP2@
+#cmakedefine  CUSTOM_BUILD_STRING "@CUSTOM_BUILD_STRING@"
+#cmakedefine  DISABLE_IAF2        @DISABLE_IAF2@
+#cmakedefine  ENABLE_IPV6         @ENABLE_IPV6@
+#cmakedefine  ENABLE_REGINA_REXX  @ENABLE_REGINA_REXX@
+#cmakedefine  ENABLE_OBJECT_REXX  @ENABLE_OBJECT_REXX@
+#cmakedefine  EXTERNALGUI         @EXTERNALGUI@
+#cmakedefine  HET_BZIP2           @HET_BZIP2@
+#cmakedefine  MAX_CPU_ENGINES     @MAX_CPU_ENGINES@
+#cmakedefine  NEED_GETOPT_WRAPPER @NEED_GETOPT_WRAPPER@
+#cmakedefine  OPTION_CAPABILITIES @OPTION_CAPABILITIES@
+#cmakedefine  OPTION_FTHREADS     @OPTION_FTHREADS@
+#cmakedefine  OPTION_HAO          @OPTION_HAO@
+#cmakedefine  OPTION_SYNCIO       @OPTION_SYNCIO@
+#cmakedefine  OPTION_NOSYNCIO     @OPTION_NOSYNCIO@
+
+/*
+   Debug is special because of a name collision between the user option
+   macro and the Hercules preprocessor macro.
+*/
+
+#cmakedefine  DEBUG_BUILD         @DEBUG_BUILD@
+#ifdef DEBUG_BUILD
+#   define DEBUG 1
+#endif
+
+/*
+   HQA_DIR is special because it never finds its way into config.h.
+   Rather, it triggers a test for HAVE_HQA_H, which is used by the build.
+*/
+
+#cmakedefine  HAVE_HQA_H          @HAVE_HQA_H@
+
+
+
+
+/*
+   Macros for large file system support.  These are only required for
+   32-bit systems, as 64-bit systems include LFS from the ground up.
+   _FILE_OFF_SET_BITS is used on 32-bit open source systems, both BSD
+   and GNU/Linux, while _LARGE_FILES is used on 32-bit AIX systems.
+   It is less clear that the Mac OS 10.5 64-bit inode is a requirement
+   just for 32-bit systems, as that defines a file system matter, not
+   the bit-width of a file offset.
+
+   Hercules does not use any of these macros.  Rather, these macros
+   control the expansion of headers that implement LFS when enabled.
+*/
+
+#cmakedefine  _FILE_OFFSET_BITS   @_FILE_OFFSET_BITS@
+#cmakedefine  _LARGE_FILES        @_LARGE_FILES@
+#cmakedefine  _DARWIN_USE_64_BIT_INODE        @_DARWIN_USE_64_BIT_INODE@
+#cmakedefine  HAVE_FSEEKO         @HAVE_FSEEKO@
+
+
+/*
+   Options that may be specified on the command line only.  These are
+   not listed in CMake-gui or in ccmake.
+*/
+
+#cmakedefine  NO_ASM_BYTESWAP     @NO_ASM_BYTESWAP@
+#cmakedefine  NO_IEEE_SUPPORT     @NO_IEEE_SUPPORT@
+
+
+/*
+   Indicate whether hercifc should be built.  In addition to the
+   generator implications of building hercifc, there is preprocessor
+   code in hercifc that suppressses code if the following is not
+   defined.  Belt and braces I suppose.  And there is one Linux header
+   needed to build hercifc...on BSD-basde systems the required header
+   net/if.h is sufficent.
+*/
+
+#cmakedefine  BUILD_HERCIFC       @BUILD_HERCIFC@
+#cmakedefine  HAVE_LINUX_IF_TUN_H @HAVE_LINUX_IF_TUN_H@
+
+
+/*
+   Sundry target hardware characteristics.
+
+   Note that runtest (shell version only) uses `cut -d ' ' ` to parse
+   SIZEOF_INT_P, and the result of that is used to determine bitness.
+   It remains to be seen how best to deal with this, but for the moment,
+   we will not make changes to runtest.  The current Windows version of
+   runtest.cmd is not affected by this issue.
+
+   Changing line 253 of runtest from
+      ptrsize=$(grep SIZEOF_INT_P $hdir/config.h | cut -d ' ' -f 3)
+   to
+      ptrsize=$(grep SIZEOF_INT_P config.h | sed -E "s/ +/ /g"  | cut -d ' ' -f 3)
+   would do the trick.
+*/
+
+#cmakedefine  WORDS_BIGENDIAN     @WORDS_BIGENDIAN@
+#cmakedefine  SIZEOF_INT          @SIZEOF_INT@
+#cmakedefine  SIZEOF_LONG         @SIZEOF_LONG@
+#cmakedefine  SIZEOF_SIZE_T       @SIZEOF_SIZE_T@
+#cmakedefine SIZEOF_INT_P @SIZEOF_INT_P@
+#cmakedefine  SIZEOF_OFF_T        @SIZEOF_OFF_T@
+
+
+/*
+   Not a hardware characteristic, but it is the only other sizeof needed
+   to build Hercules.  And this is as good a place as any.
+*/
+
+#cmakedefine  SIZEOF_PTHREAD_T      @SIZEOF_PTHREAD_T@
+
+
+/*
+   Turn off libtool.  Configure.ac always used libtool.  This
+   CMake build never uses libtool, and it always builds shared
+   libraries and dynamically loaded modules.  Set the suffix to
+   be used for shared libraries (target-dependent).
+*/
+
+#define  HDL_BUILD_SHARED 1
+#define  LTDL_SHLIB_EXT "@shared_lib_suffix@"
+#define  OPTION_DYNAMIC_LOAD 1
+
+
+
+/*
+   *********************************************************************
+                    #defines for Required Headers
+   *********************************************************************
+*/
+
+/*
+   The following header macros are not used by Hercules.  Hercules needs
+   the headers but does not guard the includes (nor should it).  The
+   build scripts check for these headers.  If any are missing, error
+   messages are issued and the build is terminated.
+*/
+
+// #cmakedefine    HAVE_CTYPE_H        @HAVE_CTYPE_H@
+// #cmakedefine    HAVE_ERRNO_H        @HAVE_ERRNO_H@
+// #cmakedefine    HAVE_FCNTL_H        @HAVE_FCNTL_H@
+// #cmakedefine    HAVE_LIMITS_H       @HAVE_LIMITS_H@
+// #cmakedefine    HAVE_MATH_H         @HAVE_MATH_H@
+// #cmakedefine    HAVE_SETJMP_H       @HAVE_SETJMP_H@
+// #cmakedefine    HAVE_SCHED_H        @HAVE_SCHED_H@
+// #cmakedefine    HAVE_STDARG_H       @HAVE_STDARG_H@
+// #cmakedefine    HAVE_STDIO_H        @HAVE_STDIO_H@
+// #cmakedefine    HAVE_STDLIB_H       @HAVE_STDLIB_H@
+// #cmakedefine    HAVE_STRING_H       @HAVE_STRING_H@
+// #cmakedefine    HAVE_SYS_STAT_H     @HAVE_SYS_STAT_H@
+// #cmakedefine    HAVE_SYS_TIME_H     @HAVE_SYS_TIME_H@
+// #cmakedefine    HAVE_SYS_TYPES_H    @HAVE_SYS_TYPES_H@
+// #cmakedefine    HAVE_SYS_MMAN_H     @HAVE_SYS_MMAN_H@
+
+
+/*
+   HAVE_TIME_H is required for inclusion of sys/time.h by hstdinc.h.
+   There is no alternative to sys/time.h, and there is no need for
+   conditional inclusion.  The build will be terminated if it is
+   not present.  The same applies to sys/sysctl.h.
+*/
+
+#cmakedefine  HAVE_DIRENT_H       @HAVE_DIRENT_H@
+#cmakedefine  HAVE_PWD_H          @HAVE_PWD_H@
+#cmakedefine  HAVE_SIGNAL_H       @HAVE_SIGNAL_H@
+#cmakedefine  HAVE_SYS_SYSCTL_H   @HAVE_SYS_SYSCTL_H@
+#cmakedefine  HAVE_SYS_RESOURCE_H @HAVE_SYS_RESOURCE_H@
+#cmakedefine  HAVE_SYS_UTSNAME_H  @HAVE_SYS_UTSNAME_H@
+#cmakedefine  HAVE_SYS_WAIT_H     @HAVE_SYS_WAIT_H@
+#cmakedefine  HAVE_TIME_H         @HAVE_TIME_H@
+
+
+/*
+   One of the following integer type headers must be defined.  hstdint.h
+   uses these variables to include the best one that is present.
+*/
+
+#cmakedefine  HAVE_STDINT_H       @HAVE_STDINT_H@
+#cmakedefine  HAVE_INTTYPES_H     @HAVE_INTTYPES_H@
+#cmakedefine  HAVE_UNISTD_H       @HAVE_UNISTD_H@
+
+
+/*
+   Base functions required for the build.
+*/
+
+#cmakedefine  HAVE_MEMRCHR        @HAVE_MEMRCHR@
+#cmakedefine  HAVE_GETOPT_LONG    @HAVE_GETOPT_LONG@
+#cmakedefine  HAVE_STRLCPY        @HAVE_STRLCPY@
+#cmakedefine  HAVE_STRLCAT        @HAVE_STRLCAT@
+#cmakedefine  HAVE_STRERROR_R     @HAVE_STRERROR_R@
+#cmakedefine  HAVE_STRSIGNAL      @HAVE_STRSIGNAL@
+#cmakedefine  HAVE_SYS_SIGLIST    @HAVE_SYS_SIGLIST@
+#cmakedefine  HAVE_SLEEP          @HAVE_SLEEP@
+#cmakedefine  HAVE_USLEEP         @HAVE_USLEEP@
+#cmakedefine  HAVE_NANOSLEEP      @HAVE_NANOSLEEP@
+#cmakedefine  HAVE_SCHED_YIELD    @HAVE_SCHED_YIELD@
+#cmakedefine  HAVE_STRTOK_R       @HAVE_STRTOK_R@
+#cmakedefine  HAVE_GETTIMEOFDAY   @HAVE_GETTIMEOFDAY@
+#cmakedefine  HAVE_GETPGRP        @HAVE_GETPGRP@
+#cmakedefine  HAVE_GETLOGIN       @HAVE_GETLOGIN@
+#cmakedefine  HAVE_GETLOGIN_R     @HAVE_GETLOGIN_R@
+#cmakedefine  HAVE_REALPATH       @HAVE_REALPATH@
+#cmakedefine  HAVE_FSYNC          @HAVE_FSYNC@
+#cmakedefine  HAVE_FTRUNCATE      @HAVE_FTRUNCATE@
+#cmakedefine  HAVE_INET_ATON      @HAVE_INET_ATON@
+#cmakedefine  HAVE_FORK           @HAVE_FORK@
+#cmakedefine  HAVE_SOCKETPAIR     @HAVE_SOCKETPAIR@
+#cmakedefine  HAVE_SYSCONF        @HAVE_SYSCONF@
+
+
+/*
+   One or more of the following memory management functions are required
+   to build.  Most are deprecated; posix_memalign is not deprecated and
+   apparently the most desireable.
+*/
+
+#cmakedefine  HAVE_MLOCK          @HAVE_MLOCK@
+#cmakedefine  HAVE_MLOCKALL       @HAVE_MLOCKALL@
+#cmakedefine  HAVE_PVALLOC        @HAVE_PVALLOC@
+#cmakedefine  HAVE_VALLOC         @HAVE_VALLOC@
+#cmakedefine  HAVE_POSIX_MEMALIGN @HAVE_POSIX_MEMALIGN@
+
+
+/*
+   *********************************************************************
+               Macros used to configure Hercules networking
+   *********************************************************************
+*/
+
+/*
+   The following headers are in the configure.ac option section (line
+   115), but they are not optional on non-Windows systems.  Try building
+   Hercules without them.  :-)
+*/
+
+#cmakedefine  HAVE_SYS_SOCKET_H           @HAVE_SYS_SOCKET_H@
+#cmakedefine  HAVE_NETINET_IN_H           @HAVE_NETINET_IN_H@
+#cmakedefine  HAVE_NET_IF_H               @HAVE_NET_IF_H@
+#cmakedefine  HAVE_NETDB_H                @HAVE_NETDB_H@
+#cmakedefine  HAVE_NET_ROUTE_H            @HAVE_NET_ROUTE_H@
+#cmakedefine  HAVE_NET_TCP_H              @HAVE_NET_TCP_H@
+#cmakedefine  HAVE_NETINET_TCP_H          @HAVE_NETINET_TCP_H@
+#cmakedefine  HAVE_STRUCT_SOCKADDR_IN_SIN_LEN     @HAVE_STRUCT_SOCKADDR_IN_SIN_LEN@
+#cmakedefine  HAVE_STRUCT_IN_ADDR_S_ADDR  @HAVE_STRUCT_IN_ADDR_S_ADDR@
+#cmakedefine  HAVE_ARPA_INET_H            @HAVE_ARPA_INET_H@
+
+
+/*
+   Optional types for networking.  If they do not exist, Hercules will
+   define appropriate substitutes during the build.
+*/
+
+#cmakedefine  HAVE_IN_ADDR_T      @HAVE_IN_ADDR_T@
+#cmakedefine  HAVE_SOCKLEN_T      @HAVE_SOCKLEN_T@
+
+
+/*
+   Sundry networking macros.  Note that on FreeBSD, the "SIOC.*" macros
+   are defined in sys/sockio.h, which is not included in Hercules.  In
+   Debian, they are defined in sys/ioctl.h, but rather than being a
+   function call, they are constants.  The macros are used in hostopts.h,
+   and the Debian (Linux?) definition seems to be expected.  So from
+   Hercules' perspective, they exist in Linux and not in FreeBSD.
+*/
+
+#cmakedefine  HAVE_DECL_IFNAMSIZ          @HAVE_DECL_IFNAMSIZ@
+#cmakedefine  HAVE_DECL_SIOCSIFNETMASK    @HAVE_DECL_SIOCSIFNETMASK@
+#cmakedefine  HAVE_DECL_SIOCSIFBRDADDR    @HAVE_DECL_SIOCSIFBRDADDR@
+#cmakedefine  HAVE_DECL_SIOCSIFHWADDR     @HAVE_DECL_SIOCSIFHWADDR@
+#cmakedefine  HAVE_DECL_SIOCGIFHWADDR     @HAVE_DECL_SIOCGIFHWADDR@
+#cmakedefine  HAVE_DECL_SIOCADDRT         @HAVE_DECL_SIOCADDRT@
+#cmakedefine  HAVE_DECL_SIOCDELRT         @HAVE_DECL_SIOCDELRT@
+#cmakedefine  HAVE_DECL_SIOCDIFADDR       @HAVE_DECL_SIOCDIFADDR@
+
+
+/*
+   TCP/IP keepalive macros.  The first three specify the general level
+   keepalive support available in the target system.  The remainder
+   identify the target-specific macros needed for that support.  Either
+   _KEEPALIVE macro indicates basic support.  Any one of the remaining
+   three TCP_KEEP* (IDLE, INTVL, CNT) enable partial keepalive support,
+   and if all three are present, full keepalive support is possible.
+*/
+
+#cmakedefine  HAVE_FULL_KEEPALIVE         @HAVE_FULL_KEEPALIVE@
+#cmakedefine  HAVE_PARTIAL_KEEPALIVE      @HAVE_PARTIAL_KEEPALIVE@
+#cmakedefine  HAVE_BASIC_KEEPALIVE        @HAVE_BASIC_KEEPALIVE@
+
+#cmakedefine  HAVE_DECL_SO_KEEPALIVE      @HAVE_DECL_SO_KEEPALIVE@
+#cmakedefine  HAVE_DECL_TCP_KEEPALIVE     @HAVE_DECL_TCP_KEEPALIVE@
+#cmakedefine  HAVE_DECL_TCP_KEEPIDLE      @HAVE_DECL_TCP_KEEPIDLE@
+#cmakedefine  HAVE_DECL_TCP_KEEPINTVL     @HAVE_DECL_TCP_KEEPINTVL@
+#cmakedefine  HAVE_DECL_TCP_KEEPCNT       @HAVE_DECL_TCP_KEEPCNT@
+
+
+/*
+   *********************************************************************
+              Determine how atomic operations are supported.
+   *********************************************************************
+*/
+
+/*
+   The following communicate the state of atomic instrinsics made available
+   by the C compiler and the underlying target userland/os/hardware.  Choices
+   in order of desirability are:
+   - C11 intrinsics
+   - __atomic_* intrinsics
+   - __sync_* intrinsics
+   The header hatomic.h sorts out the choices for the build.  Only the
+   byte-typed intrinsics are used, for the NI, OI, and XOI instructions and
+   their long-displacement (e.g., NIY) equivalents.
+*/
+
+#cmakedefine  HAVE_STDATOMIC_H                @HAVE_STDATOMIC_H@
+#cmakedefine  HAVE_SYNC_BUILTINS              @HAVE_SYNC_BUILTINS@
+#cmakedefine  HAVE_ATOMIC_INTRINSICS          @HAVE_ATOMIC_INTRINSICS@
+
+#cmakedefine  C11_ATOMICS_AVAILABLE           @C11_ATOMICS_AVAILABLE@
+#cmakedefine  C11_ATOMIC_BOOL_LOCK_FREE       @C11_ATOMIC_BOOL_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_CHAR_LOCK_FREE       @C11_ATOMIC_CHAR_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_CHAR16_T_LOCK_FREE   @C11_ATOMIC_CHAR16_T_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_CHAR32_T_LOCK_FREE   @C11_ATOMIC_CHAR32_T_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_WCHAR_T_LOCK_FREE    @C11_ATOMIC_WCHAR_T_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_SHORT_LOCK_FREE      @C11_ATOMIC_SHORT_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_INT_LOCK_FREE        @C11_ATOMIC_INT_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_LONG_LOCK_FREE       @C11_ATOMIC_LONG_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_LLONG_LOCK_FREE      @C11_ATOMIC_LLONG_LOCK_FREE@
+#cmakedefine  C11_ATOMIC_POINTER_LOCK_FREE    @C11_ATOMIC_POINTER_LOCK_FREE@
+
+
+/*
+   *********************************************************************
+             For hercifc: identify target setuid capabilities.
+   *********************************************************************
+*/
+
+/*
+    Configure if and how get/set UID can be done.  If not possible,
+    HAVE_NO_SETUID is defined.  Otherwise, some of the five functions
+    below can be used to enable get/set UID.
+*/
+
+#cmakedefine  HAVE_SETRESUID          @HAVE_SETRESUID@
+#cmakedefine  HAVE_GETRESUID          @HAVE_GETRESUID@
+#cmakedefine  HAVE_SETREUID           @HAVE_SETREUID@
+#cmakedefine  HAVE_GETEUID            @HAVE_GETEUID@
+#cmakedefine  HAVE_GETUID             @HAVE_GETUID@
+#cmakedefine  HAVE_NO_SETUID          @HAVE_NO_SETUID@
+#cmakedefine  NO_SETUID               @NO_SETUID@
+
+
+/*
+   See if sys/capability.h and the corresponding library cap exist.
+   If sys/capability.h and the corresponding library cap exist, then
+   Hercules can be built with support for fine-grained capabilities.
+   Header prctl.h enables some additional control.  Both Capabilities
+   and prctl are Linux-only implementations of POSIX 1003.1e.
+
+   Hercules code only checks for the headers; the functions and library
+   are assumed to exist.
+
+*/
+
+#cmakedefine  HAVE_CAP_SET_PROC       @HAVE_CAP_SET_PROC@
+#cmakedefine  HAVE_SYS_CAPABILITY_H   @HAVE_SYS_CAPABILITY_H@
+#cmakedefine  HAVE_SYS_PRTCL_H        @HAVE_SYS_PRTCL_H@
+
+
+/*
+   *********************************************************************
+        Macros for other optional features, headers, and functions
+   *********************************************************************
+*/
+
+/*
+   Optional useful types.  HAVE___UINT128_T controls whether Hercules
+   can be built with more than 64 CPUs.  If the others do not exist,
+   Hercules will define appropriate substitutes during the build.
+*/
+
+#cmakedefine  HAVE___UINT128_T    @HAVE___UINT128_T@
+#cmakedefine  HAVE_U_INT8_T       @HAVE_U_INT8_T@
+#cmakedefine  HAVE_U_CHAR         @HAVE_U_CHAR@
+#cmakedefine  HAVE_U_SHORT        @HAVE_U_SHORT@
+#cmakedefine  HAVE_U_INT          @HAVE_U_INT@
+#cmakedefine  HAVE_U_LONG         @HAVE_U_LONG@
+
+
+/*
+    Optional headern for Hercules internal functionality.  If any are
+    missing, Hercules will use an internal equivalent as a substitute
+    or avoid the capability, but the build will continue.
+*/
+
+#cmakedefine  HAVE_BYTESWAP_H     @HAVE_BYTESWAP_H@
+#cmakedefine  HAVE_ASSERT_H       @HAVE_ASSERT_H@
+
+
+/*
+   Headers and libraries for REXX, compression, and regular expression
+   support.  Hercules will build correctly without them.  CMake
+   will abort the build for any optional item that was explicitly
+   requested by the builder.
+*/
+
+#cmakedefine  HAVE_BZLIB_H            @HAVE_BZLIB_H@
+#cmakedefine  HAVE_LIBZ               @HAVE_LIBZ@
+#cmakedefine  HAVE_ZLIB_H             @HAVE_ZLIB_H@
+#cmakedefine  HAVE_REGEX_H            @HAVE_REGEX_H@
+#cmakedefine  HAVE_REGINA_REXXSAA_H   @HAVE_REGINA_REXXSAA_H@
+
+
+/*
+   Headers and functions for Unix shell tab key processing and one-char
+   command shortcuts on the internal Hercules CUI panel.
+*/
+
+#cmakedefine  HAVE_ALPHASORT      @HAVE_ALPHASORT@
+#cmakedefine  HAVE_SCANDIR        @HAVE_SCANDIR@
+#cmakedefine  HAVE_TERMIOS_H      @HAVE_TERMIOS_H@
+#cmakedefine  CONST_IN_SCANDIR_PROTOTYPE       @CONST_IN_SCANDIR_PROTOTYPE@
+
+
+/*
+   Headers and macros for real tape devices.  sys/mtio.h and MTEWARN are
+   for SCSI tape devices only, while the rest are for all tapes.
+   Header sys/param.h is a prerequisite for sys/mount.h on some systems.
+*/
+
+#cmakedefine  HAVE_SYS_PARAM_H    @HAVE_SYS_PARAM_H@
+#cmakedefine  HAVE_SYS_MOUNT_H    @HAVE_SYS_MOUNT_H@
+#cmakedefine  HAVE_SYS_MTIO_H     @HAVE_SYS_MTIO_H@
+#cmakedefine  HAVE_DECL_MTEWARN   @HAVE_DECL_MTEWARN@
+
+
+/*
+   Headers for shared device server routines.
+*/
+
+#cmakedefine  HAVE_SYS_UN_H       @HAVE_SYS_UN_H@
+
+
+
+/*
+   Miscelaneous macros that reveal userland capabilities
+*/
+
+#cmakedefine  HAVE_DECL_LOGIN_NAME_MAX        @HAVE_DECL_LOGIN_NAME_MAX@
+#cmakedefine  HAVE_DECL__SC_NPROCESSORS_CONF  @HAVE_DECL__SC_NPROCESSORS_CONF@
+#cmakedefine  HAVE_DECL__SC_NPROCESSORS_ONLN  @HAVE_DECL__SC_NPROCESSORS_ONLN@
+
+
+/*
+   Sundry other Userland capabilities and requirements
+*/
+
+#cmakedefine  NEED_GETOPT_OPTRESET    @NEED_GETOPT_OPTRESET@
+
+
+/*
+   Sundry other c compiler capabilities.  These macros are not required,
+   but they do control how Hercules builds.
+*/
+
+#cmakedefine  C99_FLEXIBLE_ARRAYS             @C99_FLEXIBLE_ARRAYS@
+#cmakedefine  HAVE_ATTR_PRINTF                @HAVE_ATTR_PRINTF@
+#cmakedefine  HAVE_ATTR_REGPARM               @HAVE_ATTR_REGPARM@
+#cmakedefine  HAVE_GCC_DIAG_PRAGMA            @HAVE_GCC_DIAG_PRAGMA@
+#cmakedefine  HAVE_GCC_DIAG_PUSHPOP           @HAVE_GCC_DIAG_PUSHPOP@
+#cmakedefine  HAVE_GCC_UNUSED_FUNC_WARNING    @HAVE_GCC_UNUSED_FUNC_WARNING@
+#cmakedefine  HAVE_GCC_SET_UNUSED_WARNING     @HAVE_GCC_SET_UNUSED_WARNING@
+#cmakedefine  HAVE_VERY_STRICT_ALIASING       @HAVE_VERY_STRICT_ALIASING@
+
+
+/*
+   *********************************************************************
+                    End of config.h generated by CMake
+   *********************************************************************
+*/
+
+
+
+
+
+
+

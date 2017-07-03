@@ -1,0 +1,7 @@
+/* Created by CMakeHercGitVer.txt ${GIT_COMMIT_STAMP}    */
+#define COMMIT_COUNT      @GIT_COMMIT_COUNT@
+#define COMMIT_MESSAGE    @GIT_COMMIT_MESSAGE@
+#define COMMIT_BRANCH     "@GIT_BRANCH@"
+#define COMMIT_HASH       "@GIT_COMMIT_HASH@"
+#define COMMIT_UNTRACKED  "  @GIT_NEW_FILES@ untracked files."
+#define COMMIT_MODIFIED   "  @GIT_CHANGED_FILES@ added/modified/deleted files."

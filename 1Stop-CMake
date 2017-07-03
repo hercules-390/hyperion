@@ -1,0 +1,131 @@
+#!/bin/sh
+
+# Create default Hyperion build directory, if it does not exist.
+# Then configure using the arguments.
+
+# Your current working directory MUST be the one where this file resides
+# DO NOT source this script.
+
+where=$PWD
+gitconf=.git/config
+sfdir=SoftFloat-3a
+build=../$(uname -m)/$(basename "$where")
+obj=../$(uname -m)/s3fh
+
+# Look for SoftFloat; clone if not present; build it if it isn't
+
+# Decode the git configure url statement
+
+testurl () {
+if [ $1 != url ] || [ $2 != "=" ] ; then
+        echo "Git configuration for url not in proper format." >&2
+        echo "Want 'url' have '$1'; want '=' have '$2'."
+        return 14
+fi
+
+pfx=$(echo $3|"cut" -d . -f 1)
+
+case "$pfx" in
+        git@github)
+                clone=git@github.com:hercules-390/$sfdir.git
+                ;;
+        https://github)
+                clone=https://github.com/hercules-390/$sfdir.git
+                ;;
+        *)
+                echo "Git url '$3' does not seem to be correct format." >&2
+                echo "It should start 'git@github' or 'https://github'."
+                return 15
+                ;;
+esac
+
+(cd .. && git clone $clone)
+rv=$?
+
+if [ $rv -ne 0 ] ; then
+        echo "git clone of $sfdir failed rv=$rv."
+        return 16
+fi
+
+return 0
+}
+
+# Try to determine how Hyperion was cloned so that SoftFloat
+# can be cloned the same way.
+
+testSoftFloat () {
+
+if [ -d ../$sfdir ] ; then
+        echo "$sfdir is installed." >&2
+else
+        # Need to download and install softfloat.  Try to determine how
+        # Hyperion was cloned and then use same method
+        if [ ! -d .git ] || [ ! -f $gitconf ] ; then
+                echo "Hyperion git configuration file '$gitconf' not found." >&2
+                return 12
+        fi
+
+        remote=$("sed" -n -e '/\[remote/,/\[/p' $gitconf | "grep" 'url *=')
+
+        if [ -z "$remote" ] ; then
+                echo "Cannot determine how Hyperion was cloned." >&2
+                return 13
+        fi
+
+        testurl $remote
+        rv=$?
+
+        if [ 0 -ne $rv ] ; then return $rv ; fi
+fi
+
+if [ -f $obj/include/softfloat.h ] ; then return 0 ; fi
+
+(cd ../$sfdir && ./1Stop)
+rv=$?
+
+if [ 0 -ne $rv ] ; then
+        echo "Could not build $sfdir rv=$rv."
+        return 17
+fi
+
+return 0
+}
+
+dodir () {
+if [ ! -d $1 ] ; then
+        mkdir $1
+        if [ $? -ne 0 ] ; then
+                echo "Cannot create directory '$1'.  Terminating."
+                exit 12
+        fi
+        echo "Created '$1'." >&2
+else
+        echo "'$1' exists." >&2
+
+fi
+}
+
+testSoftFloat
+rv=$?
+if [ 0 -ne $rv ] ; then exit $rv ; fi
+
+echo "$sfdir installed and built."
+
+dodir ../$(uname -m)
+dodir $build
+
+
+# Run cmake.  Go to build directory.
+
+cd "$build"
+
+# If no arguments are specified and config.log exists, it would be nice
+# get  the  arguments  used last time configure was run, but alas; they
+# are not shown quoted.  The shell cannotdo.
+
+cmake $where "$@"
+rv=$?
+
+if [ 0 -ne $rv ] ; then exit $rv ; fi
+
+make
