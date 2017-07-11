@@ -60,6 +60,15 @@ herc_Define_Shared_Lib( herct "${herct_sources}" "hercu" shared )
 herc_Define_Shared_Lib( herc  "${herc_sources}"  "hercu;hercd;herct;decNumber;SoftFloat" shared )
 
 
+# If the builder did not specify a SoftFloat-3a For Hercules installation
+# directory, then we need to add a dependency on the external project
+# for S3GH that it gets built.  (If the builder did provide a directory,
+# then neither the external project nor the dependency are needed.
+
+if( "${S3FH_DIR}" STREQUAL "" )
+    add_dependencies( herc SoftFloat-3a )
+endif( )
+
 # Dynamically loaded libraries to be included in the build.  Note that these
 # libraries are loaded when/as/if required by Hercules, not the open-source
 # host linking loader or the Windows DLL export library.  For device

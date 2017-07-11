@@ -153,6 +153,13 @@ if( ("${EXTERNAL-GUI}" STREQUAL "YES")
 endif( )
 
 
+# Option EXTPKG_DIR
+
+# Edits on EXTPKG_DIR have validated the path, created the path, and set
+# EXTPKG_ROOT to either the builder-specified or default external
+# package path.  There is nothing to be done here.
+
+
 # Option FTHREADS
 
 # FTHREADS is supported only on Windows builds.
@@ -424,51 +431,15 @@ endif( )
 
 # Option S3FH_DIR
 
-# If S3FH_INSTALL_DIR is non-blank, then CMakeHercOptEdit.cmake has
-# validated that the directory exists.  Here we will make sure that the
-# directory, if defaulted, exists, and that, whether defaulted or
-# specified, it has the required structure.
+# If S3FH_DIR is blank, then CMake will build SoftFloat-3a and no
+# further action is required.
 
-# If it does, then because CMakeCheckUserland.cmake has already run,
-# the tests for library and headers existence are done here.
+# If S3FH_DIR is non-blank, then CMakeHercOptEdit.cmake has validated
+# that the directory exists, has the required structure, and has the
+# required contents.  We will just set S3FH_INSTALL_DIR.
 
-if( "${S3FH_INSTALL_DIR}" STREQUAL "" )
-    set( S3FH_INSTALL_DIR "${buildWith_S3FH_DIR}" )
-    get_filename_component( S3FH_INSTALL_DIR "${S3FH_INSTALL_DIR}"
-                ABSOLUTE
-                BASE_DIR "${CMAKE_BINARY_DIR}"
-                CACHE )
-    if( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}") )
-        herc_Save_Error( "Unable to locate default S3FH installation directory \"${S3FH_INSTALL_DIR}\\\" " "" )
-    endif( )
-endif( )
-
-if( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}/include") )
-    herc_Save_Error( "SoftFloat-3a include directory missing from \"${S3FH_INSTALL_DIR}\\\" " "" )
-
-elseif( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}/lib") )
-    herc_Save_Error( "SoftFloat-3a lib directory missing from  \"${S3FH_INSTALL_DIR}\\\" " "" )
-
-else( )
-#   Make sure the header and include files for SoftFloat-3a are in the
-#   SoftFloat-3a For Hercules installation directory, which is stored in
-#   S3FH_INSTALL_DIR.  We use f32_add as the telltale function for the
-#   library.
-    set( CMAKE_REQUIRED_INCLUDES "${S3FH_INSTALL_DIR}/include" )
-    herc_Check_Include_Files( "stdint.h;softfloat.h" OK )
-    if( NOT HAVE_SOFTFLOAT_H)
-        herc_Save_Error( "Unable to find SoftFloat-3a For Hercules public headers in \"${S3FH_INSTALL_DIR}/include\" " "" )
-    endif( )
-    set( CMAKE_REQUIRED_INCLUDES "" )
-    check_library_exists( SoftFloat f32_add "${S3FH_INSTALL_DIR}/lib" HAVE_SOFTFLOAT )
-    if( NOT HAVE_SOFTFLOAT )
-        if( WIN32 )
-            set(libname "SoftFloat.obj" )
-        else( )
-            set(libname "libSoftFloat.a" )
-        endif( )
-        herc_Save_Error( "Unable to find SoftFloat-3a For Hercules static library \"${S3FH_INSTALL_DIR}/lib/${libname}\" " "" )
-    endif( NOT HAVE_SOFTFLOAT )
+if( NOT ("${S3FH_DIR}" STREQUAL "") )
+    set( S3FH_INSTALL_DIR "${S3FH_DIR}" )
 endif( )
 
 

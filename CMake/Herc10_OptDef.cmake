@@ -55,6 +55,7 @@ set( herc_OptionList
             CUSTOM
             DEBUG
             EXTERNAL-GUI
+            EXTPKG_DIR
             FTHREADS
             GETOPTWRAPPER
             HET-BZIP2
@@ -104,7 +105,10 @@ set( help_Sumry_SETUID-HERCIFC      "=YES|no|<groupname>  Install hercifc as set
 
 # Alternate directories
 set( help_Sumry_HQA_DIR             "=DIR  define dir containing optional header hqa.h" )
-set( help_Sumry_S3FH_DIR            "=DIR  define alternate s3fh directory, relative or absolute" )
+set( help_Sumry_S3FH_DIR            "=DIR  define alternate s3fh install directory, absolute
+                or relative to the Hercules build directory" )
+set( help_Sumry_EXTPKG_DIR          "=DIR  define alternate external package installation
+                directory, absolute or relative to the Hercules build directory" )
 
 
 # Cache the user interface version of the options. If an environment
@@ -119,7 +123,11 @@ set( help_Sumry_S3FH_DIR            "=DIR  define alternate s3fh directory, rela
 # will be added.
 
 foreach( option_name IN LISTS herc_OptionList )
-    set( ${option_name} "$ENV{${option_name}}" CACHE STRING "${help_Sumry_${option_name}}" )
+    if( "${${option_name}}" STREQUAL "" )
+        set( ${option_name} "$ENV{${option_name}}" CACHE STRING "${help_Sumry_${option_name}}" )
+    else( )
+        set( ${option_name} "${${option_name}}" CACHE STRING "${help_Sumry_${option_name}}" FORCE )
+    endif( )
 endforeach( )
 
 
@@ -137,7 +145,7 @@ endforeach( )
 
 if( DEFINED buildWith_Cache_Set)
 else( )
-    set( buildWith_Cache_Set          TRUE  CACHE INTERNAL "Build Options Initialized" )
+    set( buildWith_Cache_Set          TRUE  CACHE INTERNAL "Build Default Options Initialized" )
     set( buildWith_AUTOMATIC-OPERATOR "YES" CACHE INTERNAL "${help_Sumry_AUTOMATIC-OPERATOR}" )
     set( buildWith_DEBUG              "NO"  CACHE INTERNAL "${help_Sumry_DEBUG}" )
     set( buildWith_CAPABILITIES       "NO"  CACHE INTERNAL "${help_Sumry_CAPABILITIES}" )
@@ -152,7 +160,9 @@ else( )
     set( buildWith_REGINA-REXX        "YES" CACHE INTERNAL "${help_Sumry_REGINA-REXX}" )
     set( buildWith_SYNCIO             "YES" CACHE INTERNAL "${help_Sumry_SYNCIO}" )
 
-    if( WIN32 )                         # default for FTHREADS varies by target
+
+# The default for FTHREADS varies by target
+    if( WIN32 )
         set( buildWith_FTHREADS       "YES" CACHE INTERNAL "${help_Sumry_FTHREADS}" )
     else( )
         set( buildWith_FTHREADS       "NO"  CACHE INTERNAL "${help_Sumry_FTHREADS}" )
@@ -160,10 +170,12 @@ else( )
 
     set( buildWith_CUSTOM             ""    CACHE INTERNAL "${help_Sumry_CUSTOM}" )
 
+
 # if the MULTI-CPU default is set to other than YES, NO, or blank, it must be
 # set to a valid value (greater than zero and less than 65, or if __uint128_t
 # is available on the target system, which is not known yet, less than 129)
     set( buildWith_MULTI-CPU          ""    CACHE INTERNAL "${help_Sumry_MULTI-CPU}" )
+
 
 # If we have an optimization script for a given c compiler, then the
 # default is YES if OPTIMIZATION is not specified by the builder.
@@ -176,18 +188,20 @@ else( )
 
     set( buildWith_SETUID-HERCIFC     "YES" CACHE INTERNAL "${help_Sumry_SETUID-HERCIFC}" )
 
+
 # There is no default for the HQA directory.  If it is not specified nor
 # defined as an environment variable, HQA build scenarios are not
 # available.
     set( buildWith_HQA_DIR            ""    CACHE INTERNAL "${help_Sumry_HQA}" )
 
-# The default for the s3fh directory is named "s3fh" at the same level
-# as the build directory.
-    get_filename_component( dirname "../s3fh"
+
+# The default for the extpkg directory is "extpkg" and is a subdirectory
+# of the build directory.
+    get_filename_component( dirname "extpkg"
             ABSOLUTE
             BASE_DIR "${CMAKE_BINARY_DIR}"
             )
-    set( buildWith_S3FH_DIR           "${dirname}" CACHE INTERNAL "${help_Sumry_S3FH_DIR}" )
+    set( buildWith_EXTPKG_DIR           "${dirname}" CACHE INTERNAL "${help_Sumry_EKTPKG_DIR}" )
 
 endif( )
 

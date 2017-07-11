@@ -94,7 +94,7 @@ endif( )
 # builder has provided an optimization string that we shall use.
 
 if( NOT ("${OPTIMIZATION}" STREQUAL "") )
-    if( NOT ( "${OPTIMIZATION)" IN_LIST herc_YES_NO) )
+    if( NOT ( "${OPTIMIZATION}" IN_LIST herc_YES_NO) )
         set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPTIMIZATION}" )
         return( )
     endif( )

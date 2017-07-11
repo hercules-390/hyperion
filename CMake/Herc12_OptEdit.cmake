@@ -56,9 +56,92 @@ herc_Check_User_Option_YesNo( REGINA-REXX        FAIL )
 herc_Check_User_Option_YesNo( SYNCIO             FAIL )
 
 
-# There are no edits for option ADD-CFLAGS.  It is there or not.
+# For option ADD-CFLAGS, we will run a trial compile with the provided
+# options.  If the compile fails, then the options are invalid.
+
+if( NOT ("${ADD-CFLAGS}" STREQUAL "") )
+    string( CONCAT herc_TestSource    # Test for gcc diagostic pragma
+                "/* Test for valid added c flags */\n"
+                "int main()\n"
+                "   {return 0;}\n"
+                )
+
+    file( WRITE ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/HercTempProg.c "${herc_TestSource}" )
+
+    try_compile( tc_return_var ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
+                SOURCES ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/HercTempProg.c
+                COMPILE_DEFINITIONS "${ADD-CFLAGS} -Wall -Werror"
+                OUTPUT_VARIABLE tc_output_var
+            )
+
+    if( NOT tc_return_var )
+        set( opt_err_msg "ADD-CFLAGS \"${ADD-CFLAGS}\" rejected by c compiler.\n\n${tc_output_var}" )
+        herc_Save_Error( "${opt_err_msg}" "" )
+        unset( opt_err_msg )
+    endif( )
+endif( )
+
 
 # There are no edits for option CUSTOM.  It is there or not.
+
+
+# EXTPKG_DIR must either 1) exist and be writable or 2) creatable.
+# Because the directory may not be needed--as would be the case if
+# installation directories were specified for all external
+# packages, we might be creating a directory we will not use.  If
+# the builder specifies this option, then we presume he or she will not
+# be surprised by directory creation even if it is not used.  And the
+# default location for EXTPKG_DIR is in the Hercules build directory,
+# so creating an additional diretory there should not be a (big?)
+# problem.
+
+if( "${EXTPKG_DIR}" STREQUAL "")
+    set( EXTPKG_ROOT "${buildWith_EXTPKG_DIR}" )
+else( )
+    set( EXTPKG_ROOT "${EXTPKG_DIR}" )
+endif( )
+
+get_filename_component( EXTPKG_ROOT "${EXTPKG_ROOT}"
+            ABSOLUTE
+            BASE_DIR "${CMAKE_BINARY_DIR}"
+            CACHE )
+
+# Create the EXTPKG directory if it does not exist
+if( NOT (EXISTS ${EXTPKG_ROOT} ) )
+    execute_process( COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTPKG_ROOT} )
+endif( )
+
+# directory was created, or something (file or directory) exists.
+# make sure it is a directory.
+if( NOT (IS_DIRECTORY "${EXTPKG_ROOT}") )
+    if( "${EXTPKG_DIR}" STREQUAL "")
+        herc_Save_Error( "Unable to locate or create default EXTPKG_DIR directory \"${buildwith_EXTPKG_DIR}\" (= \"${EXTPKG_ROOT}\") " "")
+    else( )
+        herc_Save_Error( "Unable to locate or create specified EXTPKG_DIR directory \"${EXTPKG_DIR}\" (= \"${EXTPKG_ROOT}\") " "")
+    endif( )
+
+else( )     # It is a directory.  Make sure we can create a subdirectory in it.
+#   get a timestamp of the form yyyydddhhmmss
+    string( TIMESTAMP temp_fname "%Y-%j-%H-%M-%S" )
+    set( temp_fname "CMakeDirTest${temp_fname}" )
+    execute_process(
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTPKG_ROOT}/${temp_fname}
+            RESULT_VARIABLE md_result_var
+            OUTPUT_VARIABLE md_output_var
+            ERROR_VARIABLE md_output_var
+        )
+    if( "${md_result_var}" STREQUAL "0" )
+        execute_process( COMMAND ${CMAKE_COMMAND} -E remove_directory ${EXTPKG_ROOT}/${temp_fname} )
+    else( )
+        string( CONCAT md_output_var
+                "Unable to create directory, rc=${md_result_var}, in EXTPKG_DIR directory \"${EXTPKG_ROOT}\"\n"
+                "           Message: ${md_output_var}"
+            )
+        herc_Save_Error( "${md_output_var}" "" )
+    endif( )
+    unset( md_result_var )
+    unset( md_output_var )
+endif( )
 
 
 # MULTI-CPU may be YES, NO, or a value up to the maximum supported
@@ -115,10 +198,9 @@ endif( )
 
 if( NOT ("${opt_flags}" STREQUAL "") )
     string( CONCAT herc_TestSource    # sample program to validate options
-                "int main()"
-                "{
-                    return 0;"
-                "}"
+                "/* Test for valid builder-provided optimization c flags */\n"
+                "int main()\n"
+                "   {return 0;}\n"
                 )
     file( WRITE ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/HercTempProg.c "${herc_TestSource}" )
 
@@ -129,8 +211,9 @@ if( NOT ("${opt_flags}" STREQUAL "") )
             )
 
     if( NOT tc_return_var )      # Non-zero return code means compiler rejected flags
-        set( opt_err_msg "C compiler rejected optimization flags \"${opt_flags}\" \n\n${tc_output_var}" )
+        set( opt_err_msg "OPTIMIZATION flags \"${opt_flags}\" rejected by c compiler\n\n${tc_output_var}" )
         herc_Save_Error( "${opt_err_msg}" "" )
+        unset( opt_err_msg )
     endif( )
 
     file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/HercTempProg.c )
@@ -147,7 +230,6 @@ unset( opt_flags)
 # synonym for Yes, No, or Target.
 
 herc_Check_User_Option_YesNo( SETUID-HERCIFC OK )
-message( "${SETUID-HERCIFC}" )
 if( NOT ( ("${SETUID-HERCIFC}" STREQUAL "YES")
         OR ("${SETUID-HERCIFC}" STREQUAL "NO")
         OR ("${SETUID-HERCIFC}" STREQUAL "") ) )
@@ -181,26 +263,60 @@ if( NOT ("${HQA_INSTALL_DIR}" STREQUAL "") )
                 BASE_DIR "${CMAKE_BINARY_DIR}"
                 CACHE )
     if( NOT (IS_DIRECTORY "${HQA_INSTALL_DIR}" ) )
-#        herc_Save_Message( "Unable to locate HQA_DIR directory \"${HQA_INSTALL_DIR}\" " "")
+#        herc_Save_Error( "Unable to locate HQA_DIR directory \"${HQA_INSTALL_DIR}\" " "")
     endif( )
 endif( )
 
 
 # Convert S3FH_DIR to an absolute path, make sure it exists.  We do not
-# care about symlinks because we are not building into it.  Proper
-# directory structure of the default or specified directory is done in
-# Herc28_OptSelect.cmake, and Herc22_Userland.cmake will
-# ensure the headers and library are present.
+# care about symlinks because we are not building into it.  Because
+# S3FH_DIR is optional, if specified we can edit it here for validity.
+# This includes checking for appropriate subdirectories and ensuring
+# the headers and library are present.
 
 if( NOT ("${S3FH_DIR}" STREQUAL "") )
     get_filename_component( S3FH_INSTALL_DIR "${S3FH_DIR}"
                 ABSOLUTE
                 BASE_DIR "${CMAKE_BINARY_DIR}"
                 CACHE )
-    message( "S3FH_INSTALL_DIR set to \"${S3FH_INSTALL_DIR}\"" )
     if( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}") )
-        herc_Save_Message( "Unable to locate specified S3FH_DIR directory \"${S3FH_INSTALL_DIR}\" (= \"${S3FH_INSTALL_DIR}\") " "")
+        herc_Save_Error( "Unable to locate specified S3FH_DIR directory \"${S3FH_INSTALL_DIR}\" (= \"${S3FH_INSTALL_DIR}\") " "")
+
+    elseif( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}/include") )
+        herc_Save_Error( "SoftFloat-3a include directory missing from \"${S3FH_INSTALL_DIR}\\\" " "" )
+
+    elseif( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}/lib") )
+        herc_Save_Error( "SoftFloat-3a lib directory missing from  \"${S3FH_INSTALL_DIR}\\\" " "" )
+
+    else( )
+#       Make sure the header and include files for SoftFloat-3a are in the
+#       SoftFloat-3a For Hercules installation directory, which is stored in
+#       S3FH_INSTALL_DIR.  We use f32_add as the telltale function for the
+#       library.  Note that the build has not tested stdint.h when these
+#       tests are done.  However, if a system lacks stdint.h, the SoftFloat-3a
+#       install ensures a version ends up in the SoftFloat-3a install
+#       directory.
+
+#       *** Further work is needed on SoftFloat-3a for this.  See
+#       SoftFloat-3a For Hercules issue #5 "Problems building ieee.c in
+#       Hercules using SoftFloat-3a public headers."
+        set( CMAKE_REQUIRED_INCLUDES "${S3FH_INSTALL_DIR}/include" )
+        herc_Check_Include_Files( "stdint.h;softfloat.h" OK )
+        if( NOT HAVE_SOFTFLOAT_H)
+            herc_Save_Error( "Unable to find SoftFloat-3a For Hercules public headers in \"${S3FH_INSTALL_DIR}/include\" " "" )
+        endif( )
+        set( CMAKE_REQUIRED_INCLUDES "" )
+        check_library_exists( SoftFloat f32_add "${S3FH_INSTALL_DIR}/lib" HAVE_SOFTFLOAT )
+        if( NOT HAVE_SOFTFLOAT )
+            if( WIN32 )
+                set(libname "SoftFloat.obj" )
+            else( )
+                set(libname "libSoftFloat.a" )
+            endif( )
+            herc_Save_Error( "Unable to find SoftFloat-3a For Hercules static library \"${S3FH_INSTALL_DIR}/lib/${libname}\" " "" )
+        endif( NOT HAVE_SOFTFLOAT )
     endif( )
+    unset( S3FH_INSTALL_DIR )           # Herc28_OptSelect.cmake will set for build
 endif( )
 
 
