@@ -30,6 +30,67 @@ built outside of the Hercules build tree.
 
 
 
+*** Why should I use CMake to build Hercules?
+
+- You can build in any directory that is not the Hercules source
+  directory.  There is no complex directory structure requirement.
+  
+- The CMake build will take care of all SoftFloat-3a build 
+  requirements, and will build SoftFloat-3a in a subdirectory of
+  the build directory.  
+  
+  (Options are provided to build SoftFloat-3a somewhere else, to share 
+  one SoftFloat-3a build directory with multiple CMake Hercules build 
+  directories, or to build SoftFloat-3a yourself if you wish.) 
+
+- The CMake build supports Ninja and other generators in addition to
+  GNU or BSD Makefiles.  
+  
+- There is no need to have GNU autotools installed on your building 
+  system.  Just CMake 3.4.3 or better and a generator such as Makefiles
+  or Ninja.  And no need to run autogen.sh.  
+
+
+
+*** CMake Build FAQ
+
+What happened to using autogen.sh and configure to build Hercules?
+
+It is still there, and for the moment, either may be used to build 
+Hercules.   But the time will come when the autogen.sh and configure
+build is deprecated, and later removed.  Much like Cygwin/MinGW builds
+for Windows.  
+
+What about Windows?
+
+At the moment, you cannot use CMake to build Hercules for Windows.  The 
+next major revision to the CMake build of Hercules will support 
+Windows builds.  
+
+Does the CMake build work on Apple?
+
+Maybe.  We welcome testers.  An early test report showed that CMake 
+completed, SoftFloat-3a built successfully, but Hercules failed to 
+compile.  We have not received console logs or other files to help
+diagnose the issue.  
+
+I tried it, but it did not work.  What should I do?
+
+See the section "** What to do when it fails" below, and build using 
+autogen.sh and configure.  
+
+I reported a problem.  When will it get fixed?
+
+The CMake build, like all of Hercules, is supported by volunteer 
+developers, conscientious programmers who hate to see their work
+fall short.  All of us have other demands on our time, so things
+may not be corrected as quickly as any of us would wish.  
+
+And of course, if you see the solution to an issue and are willing
+to share, we welcome your contribution.  
+
+
+
 *** CMake Build Process Status
 
 CMake may be used for Hercules open source system builds as an

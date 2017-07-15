@@ -126,7 +126,7 @@ Hercules link libs:   @link_alllibs@
    generator implications of building hercifc, there is preprocessor
    code in hercifc that suppressses code if the following is not
    defined.  Belt and braces I suppose.  And there is one Linux header
-   needed to build hercifc...on BSD-basde systems the required header
+   needed to build hercifc...on BSD-based systems the required header
    net/if.h is sufficent.
 */
 
@@ -167,10 +167,10 @@ Hercules link libs:   @link_alllibs@
 
 
 /*
-   Turn off libtool.  Configure.ac always used libtool.  This
-   CMake build never uses libtool, and it always builds shared
-   libraries and dynamically loaded modules.  Set the suffix to
-   be used for shared libraries (target-dependent).
+   Turn off libtool.  Configure.ac always used libtool.  This CMake
+   build never uses libtool, and it always builds shared libraries and
+   dynamically loaded modules.  Set the suffix to be used for shared
+   libraries (target-dependent).
 */
 
 #define  HDL_BUILD_SHARED 1
@@ -224,6 +224,14 @@ Hercules link libs:   @link_alllibs@
 #cmakedefine  HAVE_SYS_UTSNAME_H  @HAVE_SYS_UTSNAME_H@
 #cmakedefine  HAVE_SYS_WAIT_H     @HAVE_SYS_WAIT_H@
 #cmakedefine  HAVE_TIME_H         @HAVE_TIME_H@
+
+
+/*
+   Enable inclusion of sys/sockio.h on Solaris systems.  Other
+   BSD systems include sys/sockio.h in ioctl.h.  
+*/
+
+#cmakedefine  HAVE_SYS_SOCKIO_H   @HAVE_SYS_SOCKIO_H@
 
 
 /*
@@ -393,7 +401,7 @@ Hercules link libs:   @link_alllibs@
 
 /*
     Configure if and how get/set UID can be done.  If not possible,
-    HAVE_NO_SETUID is defined.  Otherwise, some of the five functions
+    NO_SETUID is defined.  Otherwise, some of the five functions
     below can be used to enable get/set UID.
 */
 
@@ -402,7 +410,6 @@ Hercules link libs:   @link_alllibs@
 #cmakedefine  HAVE_SETREUID           @HAVE_SETREUID@
 #cmakedefine  HAVE_GETEUID            @HAVE_GETEUID@
 #cmakedefine  HAVE_GETUID             @HAVE_GETUID@
-#cmakedefine  HAVE_NO_SETUID          @HAVE_NO_SETUID@
 #cmakedefine  NO_SETUID               @NO_SETUID@
 
 

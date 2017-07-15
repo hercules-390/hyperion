@@ -97,9 +97,19 @@ endif( )
 
 
 # sys/sysctl requires a type definition available in a number of headers.
-# We pick stddef, and we know it exists.
+# We pick stddef, and we know it exists.  It is used only on Apple and
+# FreeBSD, and is not required on other systems.  For the moment, we shall
+# mark it optional.
 
-herc_Check_Include_Files( "stddef.h;sys/sysctl.h" FAIL )
+herc_Check_Include_Files( "stddef.h;sys/sysctl.h" OK )
+
+
+# sys/sockio.h must be explicitly included on Solaris; it is included by
+# ioctl.h on other BSD systems.  Do the test here so the config.h macro
+# can be defined.
+
+herc_Check_Include_Files( sys/sockio.h    OK )
+
 
 
 # Check for public header variables defined by libtool use in the
@@ -267,32 +277,59 @@ endif( )
 herc_Check_Symbol_Exists( IFNAMSIZ        "${prereq_Headers};net/if.h"     OK )
 
 
-# On FreeBSD, some of the the "SIOC.*" macros, notably SIOCSIFNETMASK,
-# are defined in sys/sockio.h and are defined as function calls.  And
-# sys/ioctl.h includes sys/sockio.h.
-# On Linux, they are defined in linux/sockios.h, which is included by
-# sys/ioctl.h, but rather than being a function call, they are constants.
+# The following IOCTL values SIOC* are used for CTC support only.
 
-# The macros are used in hostopts.h to set options for tuntap.c.  Also,
-# tuntap.c uses some of the macros and expects constants, not functions.
-# So from Hercules' perspective, they can be used on Linux systems and
-# and not on FreeBSD, and perhaps all BSD-based systems.
+# Linux systems define IOCTL values as constants in linux/sockios.h
+# (note the plural), which is included by sys/ioctl.h.
+
+# For all BSD systems, the Hercules autotools tests never detected these
+# macros and so the corresponding functionality was never exposed in the
+# code and as a result was not tested.
+
+# BSD systems define the IOCTL values such as SIOCSIFNETMASK as
+# preprocessor macros in sys/sockio.h.  Solaris does not by default
+# include sys/sockio.h inside sys/ioctl.h while other BSD systems do.
+# Because sys/sockio.h includes a guard, we can just include sockio.h
+# when testing BSD systems for IOCTL values.
+
+# IOCTL values are used in hostopts.h to get and/or set interface options
+# in the CTC modules ctc_ptp.c, hercifc.c, and tuntap.c.
 
 # So we shall check for the existence of linux/sockios.h as a tell-tale
-# for a Linux-based SIOCS* implementation, and only if that exists, we
-# will check for the macros.  The macro tests will include sys/ioctl.h
-# so that the tests use only header files that are included by Hercules.
+# for a Linux-based SIOC* implementation and sys/sockio.h as a tell-tale
+# for a BSD-based SIOC* implementation.  If neither exist, then none of
+# the values will be defined.  For BSD systems, we will include sys/sockio.h
+# to cover the case of Solaris, which does not by default include
+# sys/sockio.h inside of sys/ioctl.h
 
+# For compatibilty with the autotools build, if this is a BSD-style
+# SIOC* macro definition set, the tests are skipped and config.h will
+# reflect an absence of this capability.  Someone with CTC experience
+# (me perhaps, once I buy a modified Delorean?) can test the BSD stuff.
+
+set( SIOC_headers "" )
 herc_Check_Include_Files( "${prereq_Headers};linux/sockios.h" OK )
 if( HAVE_LINUX_SOCKIOS_H )
-    herc_Check_Symbol_Exists( SIOCSIFNETMASK  "${prereq_Headers};sys/ioctl.h"  OK )
-    herc_Check_Symbol_Exists( SIOCSIFBRDADDR  "${prereq_Headers};sys/ioctl.h"  OK )
-    herc_Check_Symbol_Exists( SIOCSIFHWADDR   "${prereq_Headers};sys/ioctl.h"  OK )
-    herc_Check_Symbol_Exists( SIOCGIFHWADDR   "${prereq_Headers};sys/ioctl.h"  OK )
-    herc_Check_Symbol_Exists( SIOCADDRT       "${prereq_Headers};sys/ioctl.h"  OK )
-    herc_Check_Symbol_Exists( SIOCDELRT       "${prereq_Headers};sys/ioctl.h"  OK )
-    herc_Check_Symbol_Exists( SIOCDIFADDR     "${prereq_Headers};sys/ioctl.h"  OK )
+    set( SIOC_headers "${prereq_Headers};sys/ioctl.h" )
+else( )
+    herc_Check_Include_Files( "${prereq_Headers};sys/sockio.h" OK )
+    if( HAVE_SYS_SOCKIO_H )
+        set( SIOC_headers "${prereq_Headers};sys/ioctl.h;sys/sockio.h" )
+    endif( )
 endif( )
+
+if( (NOT ("${SIOC_headers}" STREQUAL ""))
+        AND ("${HAVE_LINUX_SOCKIOS_H}")
+        )
+    herc_Check_Symbol_Exists( SIOCSIFNETMASK  "${SIOC_headers}"  OK )
+    herc_Check_Symbol_Exists( SIOCSIFBRDADDR  "${SIOC_headers}"  OK )
+    herc_Check_Symbol_Exists( SIOCSIFHWADDR   "${SIOC_headers}"  OK )
+    herc_Check_Symbol_Exists( SIOCGIFHWADDR   "${SIOC_headers}"  OK )
+    herc_Check_Symbol_Exists( SIOCADDRT       "${SIOC_headers}"  OK )
+    herc_Check_Symbol_Exists( SIOCDELRT       "${SIOC_headers}"  OK )
+    herc_Check_Symbol_Exists( SIOCDIFADDR     "${SIOC_headers}"  OK )
+endif( )
+unset( SIOC_headers )
 
 
 # On Windows, fthreads may be used in lieu of pthreads.  So pthread.h is
@@ -357,7 +394,8 @@ message( "Checking for required functions and libraries" )
 
 herc_Check_Function_Exists( getopt_long FAIL )
 herc_Check_Function_Exists( strerror_r FAIL )
-herc_Check_Function_Exists( sys_siglist FAIL )
+# The following function is not used in Hercules.
+# herc_Check_Function_Exists( sys_siglist FAIL )
 herc_Check_Function_Exists( sleep FAIL )
 herc_Check_Function_Exists( usleep FAIL )
 herc_Check_Function_Exists( nanosleep FAIL )
@@ -370,7 +408,6 @@ herc_Check_Function_Exists( realpath FAIL )
 herc_Check_Function_Exists( fsync FAIL )
 herc_Check_Function_Exists( ftruncate FAIL )
 herc_Check_Function_Exists( fork FAIL )
-herc_Check_Function_Exists( socketpair FAIL )
 herc_Check_Function_Exists( sysconf FAIL )
 
 
@@ -554,32 +591,45 @@ set( CMAKE_REQUIRED_LIBRARIES "" )
 
 herc_Check_Function_Exists( setresuid OK )
 herc_Check_Function_Exists( getresuid OK )
-if( (DEFINED HAVE_SETRESUID) AND (DEFINED HAVE_GETRESUID) )
-else ( )
+if( NOT (HAVE_SETRESUID AND HAVE_GETRESUID) )
     herc_Check_Function_Exists( setreuid OK )
     herc_Check_Function_Exists( geteuid OK )
     herc_Check_Function_Exists( getuid OK )
-    if( (DEFINED HAVE_SETREUID) AND (DEFINED HAVE_GETESUID) AND (DEFINED HAVE_GETUID) )
-    else( )
+    if( NOT (HAVE_SETREUID AND HAVE_GETEUID AND HAVE_GETUID) )
         set( NO_SETUID 1 )
     endif( )
 endif( )
 
 
 # In Linux and BSD, connect() is defined in libc and no additional link
-# libraries are needed.  In Solaris, HP_UX, and perhaps others, the
-# socket library is needed.
+# libraries are needed.  In Solaris, the socket library is needed.
 
 set( CMAKE_REQUIRED_LIBRARIES ${link_libsocket} )
 herc_Check_Function_Exists( connect OK )
 if( NOT HAVE_CONNECT )
     unset( HAVE_CONNECT CACHE )
-    set( CMAKE_REQUIRED_LIBRARIES "${name_libconnect}" )
-    herc_Check_Function_Exists( connect FAIL)
+    set( CMAKE_REQUIRED_LIBRARIES "${name_libsocket}" )
+    herc_Check_Function_Exists( connect FAIL )
     if( HAVE_CONNECT )
         set( link_libsocket "${name_libsocket}" CACHE INTERNAL "include socket library" )
     endif( )
 endif( NOT HAVE_CONNECT )
+set( CMAKE_REQUIRED_LIBRARIES "" )
+
+
+# In Linux and BSD, socketpair() is defined in libc and no additional
+# link libraries are needed.  In Solaris, the socket library is needed.
+
+set( CMAKE_REQUIRED_LIBRARIES ${link_libsocket} )
+herc_Check_Function_Exists( socketpair OK )
+if( NOT HAVE_SOCKETPAIR )
+    unset( HAVE_SOCKETPAIR CACHE )
+    set( CMAKE_REQUIRED_LIBRARIES "${name_libsocket}" )
+    herc_Check_Function_Exists( socketpair FAIL )
+    if( HAVE_CONNECT )
+        set( link_libsocket "${name_libsocket}" CACHE INTERNAL "include socket library" )
+    endif( )
+endif( NOT HAVE_SOCKETPAIR )
 set( CMAKE_REQUIRED_LIBRARIES "" )
 
 

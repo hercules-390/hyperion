@@ -1,4 +1,12 @@
-# Copyright 2017 by Stephen Orso.  Will be licensed once complete.
+# crypto/CMakeLists.txt -  Create the build for the crypto directory.
+
+#[[   Copyright 2017 by Stephen Orso.
+
+      Distributed under the Boost Software License, Version 1.0.
+      See accompanying file BOOST_LICENSE_1_0.txt or copy at
+      http://www.boost.org/LICENSE_1_0.txt)
+]]
+
 
 # Build the dyncrypt shared library.  This build script depends on many
 # things being done by the script in the parent directory, including
@@ -22,6 +30,7 @@ set( ${target_name}_sources
 # library name.
 
 add_library(${target_name} SHARED ${${target_name}_sources} )
+add_dependencies( ${target_name} hercs )
 set_target_properties( ${target_name} PROPERTIES PREFIX "" )
 install( TARGETS ${target_name} DESTINATION ${library_rel_dir})
 

@@ -1,5 +1,11 @@
-# Copyright 2017 by Stephen Orso.  Will be licensed once complete.
+# decNumber/CMakeLists.txt - CMake Hercules Build for the decNumber library
 
+#[[   Copyright 2017 by Stephen Orso.
+
+      Distributed under the Boost Software License, Version 1.0.
+      See accompanying file BOOST_LICENSE_1_0.txt or copy at
+      http://www.boost.org/LICENSE_1_0.txt)
+]]
 # Build the decNumber shared library.  This build script depends on many
 # things being done by the script in the parent directory, including
 # CMake minimum version, policy settings, in-source build prevention,

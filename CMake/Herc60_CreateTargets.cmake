@@ -169,9 +169,9 @@ install( DIRECTORY html/ DESTINATION ${http_rel_dir} )
 
 
 # Crypto must be built after Hercules as it requires the hercs library
-# (really the static shared storage area for Hercules).  Not sure how to
-# do that; placement of add_subdirectory at the end is an attempt.
-# The resulting library should be placed in the parent of crypto.
+# (really the static shared storage area for Hercules).  The easiest way
+# to ensure hercs is built before crypto is to add a dependency on hercs
+# to crypto.  Which is done in that directory's CMakeLists.txt
 
 add_subdirectory( crypto )
 

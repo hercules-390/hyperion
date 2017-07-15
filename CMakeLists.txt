@@ -292,9 +292,9 @@ set( link_alllibs
             ${link_libz}
             ${link_libbz2}
             ${link_librt}
-            ${link_nsl}
-            ${link_cap}
-            ${link_socket}
+            ${link_libnsl}
+            ${link_libcap}
+            ${link_libsocket}
             ${CMAKE_DL_LIBS}
       )
 
