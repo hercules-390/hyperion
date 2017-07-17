@@ -343,15 +343,20 @@ Note: SETUID-HERCIFC=<groupname> is not presently supported.
 
 Host/Target systems:
 
-- FreeBSD 11.0 64-bit, CMake 3.7.1, git 2.11.0, clang 3.8, Ninja 1.7.2 and BSD make
-- Debian 9 64-bit (stretch), CMake 3.7.2, git 2.11.0, gcc 6.3.0, GNU make 4.1
-- Debian 8 32-bit (jessie), CMake 3.7.1, git 2.1.4, gcc 4.9.2, GNU make 4.0
-- Leap 42.2 64-bit, CMake 3.5.2, git 2.12.13, gcc 4.8.5, GNU make 4.0
+- FreeBSD 11.0 64-bit: CMake 3.7.1, git 2.11.0, clang 3.8, Ninja 1.7.2 and BSD make
+- Debian 9 64-bit (stretch): CMake 3.7.2, git 2.11.0, gcc 6.3.0, GNU make 4.1
+- Debian 8 32-bit (jessie): CMake 3.7.1, git 2.1.4, gcc 4.9.2, GNU make 4.0
+- Leap 42.2 64-bit: CMake 3.5.2, git 2.12.13, gcc 4.8.5, GNU make 4.0
+- Ubuntu 16.04: CMake 3.5.1, git 2.7.4, gcc 5.4.0, GNU make 4.1
+- Windows Subsystem for Linux (Ubuntu 14.04): CMake 3.8.2, git 1.9.1, gcc 4.8.4, GNU make 3.81
 
 On Debian 9, exhaustive tests of build options were made.
 
 On Debian 8, a test of the build option -MULTI-CPU=70 was performed to
 ensure a build on a 32-bit system would be limited to 64 CPUs.
+
+CMake was built from source on Windows Subsystem for Linux; WSL (Ubuntu 14.04 LTS)
+includes CMake 2.8.x, below the 3.4 minimum required for a Hercules CMake build.  
 
 On all systems:
 

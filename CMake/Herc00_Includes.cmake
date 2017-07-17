@@ -121,10 +121,7 @@ Notes
 
 function( herc_Define_Shared_Lib libname sources libs dynamiclib)
     add_library( ${libname} SHARED "${sources}" )
-
-    if( NOT "${libs}" STREQUAL "" )
-        target_link_libraries( ${libname} ${libs} )
-    endif( )
+    target_link_libraries( ${libname} ${libs} ${link_alllibs})
 
     if( "${dynamiclib}" STREQUAL "dynamic" )
         SET_TARGET_PROPERTIES( ${libname} PROPERTIES PREFIX "" )
