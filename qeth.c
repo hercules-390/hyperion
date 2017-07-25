@@ -333,7 +333,7 @@ static BYTE qeth_immed_commands [256] =
 #define QDSIG_WRMULT    6       /* SIGA Initiate Output Multiple     */
 #define QDSIG_WAKEUP    7       /* Wakeup signalling                 */
 
-static const char* sig2str( BYTE sig ) {
+static const char* qsig2str( BYTE sig ) {
     static const char* sigstr[] = {
     /*0*/ "QDSIG_RESET",
     /*1*/ "QDSIG_HALT",
@@ -4599,7 +4599,7 @@ U32 num;                                /* Number of bytes to move   */
             {
                 sig = QDSIG_RESET;
                 VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
-                DBGTRC( dev, "Activate Queues: %s received\n", sig2str( sig ));
+                DBGTRC( dev, "Activate Queues: %s received\n", qsig2str( sig ));
 
                 /* Exit immediately when requested to do so */
                 if (QDSIG_HALT == sig)
@@ -4796,7 +4796,7 @@ int noselrd, rc = 0;
         if(noselrd && dev->qdio.i_qmask)
         {
             BYTE sig = QDSIG_READ;
-            DBGTRC( dev, "SIGA-r: sending %s\n", sig2str( sig ));
+            DBGTRC( dev, "SIGA-r: sending %s\n", qsig2str( sig ));
             VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
         }
     }
@@ -4837,7 +4837,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     /* Send signal to ACTIVATE QUEUES device thread loop */
     if(dev->qdio.o_qmask)
     {
-        DBGTRC( dev, "SIGA-o: sending %s\n", sig2str( sig ));
+        DBGTRC( dev, "SIGA-o: sending %s\n", qsig2str( sig ));
         VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
     }
 

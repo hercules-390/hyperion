@@ -143,6 +143,12 @@
 #ifdef HAVE_SYS_IOCTL_H
   #include <sys/ioctl.h>
 #endif
+
+/*  sockio.h needed for Solaris only.  It is guarded, so a NOP on BSD systems.  */
+#ifdef HAVE_SYS_SOCKIO_H
+  #include <sys/sockio.h>
+#endif
+
 #ifdef HAVE_SYS_PARAM_H
   #include <sys/param.h>
 #endif

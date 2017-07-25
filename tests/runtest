@@ -140,6 +140,11 @@ ver_exec_or_lt()
    if [ "$subtype $type" = "ELF object" ] ; then
       return 1
    fi
+# ELF executable version 1 of whatever bitness (reported by Solaris 11.3 file utility)
+# "hercules: ELF 32-bit LSB executable 80386 Version 1, dynamically linked, not stripped"
+   if [ "$subtype $type" = "ELF 1" ] ; then
+      return 1
+   fi
    echo $fileop
    return 0
 }
@@ -162,7 +167,7 @@ scanflags()
                         (-e) setvar ftype   $1 $2 ; shift ;;
                         (-f)
                                 setvar fname   $1 $2
-                                echo -n $fname|grep -q '\.'
+                                echo $fname|grep -q '\.'
                                 if [ $? -eq 1 ] ; then fname=$fname.$ftype; fi
                                 files="$files $testdir/$fname"
                                 shift ;;
@@ -229,7 +234,7 @@ ftype=tst
 hdir=.
 
 if [ $# -gt 0 ] ; then
-        echo -n $1|grep -q '^[-][a-z]$'
+        echo $1|grep -q '^[-][a-z]$'
         if [ $? -eq 0 ] ; then
                 scanflags $*
         else
