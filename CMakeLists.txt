@@ -186,7 +186,7 @@ include( InstallRequiredSystemLibraries )  # CPack: required to build CPack inst
 include( CMake/Herc00_Includes.cmake ) # Get Hercules-specific CMake functions and macros
 
 
-set( herc_Error 0 )                 # No errors detected yet
+set( herc_Error 0 CACHE INTERNAL "Error count" )                 # No errors detected yet
 
 
 # Define all user options and edit them.  If user option HELP is defined,
@@ -254,7 +254,7 @@ elseif( "${CMAKE_C_COMPILER_ID}" STREQUAL "${herc_CompilerGNU}" )
     endif( )
 
 else( )
-    include( CMake/Herc31_COptsunknown.cmake )
+    include( CMake/Herc31_COptsUnknown.cmake )
 
 endif( )
 

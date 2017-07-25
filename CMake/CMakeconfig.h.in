@@ -94,22 +94,30 @@ Hercules link libs:   @link_alllibs@
 
 
 /*
-   Macros for large file system support.  These are only required for
-   32-bit systems, as 64-bit systems include LFS from the ground up.
-   _FILE_OFF_SET_BITS is used on 32-bit open source systems, both BSD
-   and GNU/Linux, while _LARGE_FILES is used on 32-bit AIX systems.
+   Macros for large file support (LFS).  These are only required for
+   32-bit systems that require enabling macros for LFS.  64-bit systems
+   include LFS without needing enabling macros.
+   _FILE_OFF_SET_BITS is used on 32-bit open source systems with
+   enableable large file support (GNU/Linux and Solaris), while
+   _LARGE_FILES is used on 32-bit AIX systems.
+
    It is less clear that the Mac OS 10.5 64-bit inode is a requirement
    just for 32-bit systems, as that defines a file system matter, not
    the bit-width of a file offset.
 
-   Hercules does not use any of these macros.  Rather, these macros
-   control the expansion of headers that implement LFS when enabled.
+   Hercules uses DISABLE_LARGEFILE to avoid use of any available
+   transitional LFS if LARGEFILE=NO included, and HAVE_FSEEKO to use
+   fseeko()/ftello() instead of the non-"o" counterparts.
+
+   Hercules does not use the othre three macros.  Rather, these macros
+   control the expansion of target system headers when LFS is enabled.
 */
 
 #cmakedefine  _FILE_OFFSET_BITS   @_FILE_OFFSET_BITS@
 #cmakedefine  _LARGE_FILES        @_LARGE_FILES@
 #cmakedefine  _DARWIN_USE_64_BIT_INODE        @_DARWIN_USE_64_BIT_INODE@
 #cmakedefine  HAVE_FSEEKO         @HAVE_FSEEKO@
+#cmakedefine  DISABLE_LARGEFILE   @DISABLE_LARGEFILE@
 
 
 /*
@@ -227,8 +235,9 @@ Hercules link libs:   @link_alllibs@
 
 
 /*
-   Enable inclusion of sys/sockio.h on Solaris systems.  Other
-   BSD systems include sys/sockio.h in ioctl.h.  
+   Enable inclusion of sys/sockio.h on Solaris systems.  BSD systems
+   include sys/sockio.h in ioctl.h.  sys/sockio.h has a guard, so
+   we need not be selective about Solaris with this macro.
 */
 
 #cmakedefine  HAVE_SYS_SOCKIO_H   @HAVE_SYS_SOCKIO_H@

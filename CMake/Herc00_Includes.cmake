@@ -12,6 +12,7 @@ This library includes four functions and one macro that are used frequently
 throughout the build.
 
 Functions:
+- herc_Save_Error           - Save error message for presentation at build end.
 - herc_Define_Executable    - Define a target for an executable program
 - herc_Deine_Shared_Lib     - Define a target for a shared library
 - herc_Check_Include_Files  - Test for a header and set the HAVE_ variable
@@ -25,8 +26,6 @@ Functions:
 - herc_Check_Strict_Aliasing - Test for problems created by strict aliasing
 - herc_Check_User_Option_YesNo - Validate a user option as YES/NO/TARGET
 
-Macro:
-- herc_Save_Error           - Save error message for presentation at build end.
 
   --------------------------------------------------------------------  ]]
 
@@ -43,11 +42,11 @@ for presentation as a group at the end of the build.
 
 ]]
 
-macro( herc_Save_Error error_message scope)
+function( herc_Save_Error error_message )
         math( EXPR index "${herc_Error} + 1" )
-        set( herc_EMessage${index} "${error_message}" ${scope} )
-        set( herc_Error "${index}" ${scope} )
-endmacro( herc_Save_Error )
+        set( herc_EMessage${index} "${error_message}" CACHE INTERNAL "Error message ${index}" )
+        set( herc_Error "${index}" CACHE INTERNAL "Error count"  )
+endfunction( herc_Save_Error )
 
 
 
@@ -189,7 +188,7 @@ function( herc_Check_Include_Files header fail_flag )
     string( TOUPPER "${header_varname}" header_varname)
     CHECK_INCLUDE_FILES( "${header}" ${header_varname} )
     if( (NOT "${${header_varname}}") AND ("${fail_flag}" STREQUAL "FAIL") )
-        herc_Save_Error( "Required header '${header_name}' not found." PARENT_SCOPE )
+        herc_Save_Error( "Required header '${header_name}' not found." )
     endif( )
 
 endfunction ( herc_Check_Include_Files )
@@ -238,7 +237,7 @@ function( herc_Check_Struct_Member struct mem headers fail_flag )
     string( TOUPPER "${varname}" varname)
     CHECK_STRUCT_HAS_MEMBER( "struct ${struct}" "${mem}" "${headers}" ${varname} )
     if( (NOT "${${varname}}") AND ("${fail_flag}" STREQUAL "FAIL" ))
-        herc_Save_Error( "Required member '${mem}' not found in structure ${struct}." PARENT_SCOPE )
+        herc_Save_Error( "Required member '${mem}' not found in structure ${struct}." )
     endif( )
 
 endfunction ( herc_Check_Struct_Member )
@@ -284,7 +283,7 @@ function( herc_Check_Symbol_Exists var headers fail_flag )
     if( (NOT "${${varname}}") AND ("${fail_flag}" STREQUAL "FAIL" ))
 #               Strip out pre-requisite headers for error message
         string( REGEX REPLACE ".*;" "" header_name "${headers}" )
-        herc_Save_Error( "Required identifier '${var}' not found in ${header_name}." PARENT_SCOPE )
+        herc_Save_Error( "Required identifier '${var}' not found in ${header_name}." )
     endif( )
 
 endfunction ( herc_Check_Symbol_Exists )
@@ -323,7 +322,7 @@ function( herc_Check_Function_Exists func fail_flag )
     string( TOUPPER "HAVE_${func}" func_varname)
     CHECK_FUNCTION_EXISTS( ${func} ${func_varname} )
     if( (NOT "${${func_varname}}") AND ("${fail_flag}" STREQUAL "FAIL" ))
-        herc_Save_Error( "Required function '${func}' not found." PARENT_SCOPE )
+        herc_Save_Error( "Required function '${func}' not found." )
     endif( )
 
 endfunction ( herc_Check_Function_Exists )
@@ -374,14 +373,14 @@ try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR
 if( COMPILE_RESULT_VAR )
     if( ${RUN_RESULT_VAR} STREQUAL "NOT-FOUND" )
         set( C11_RunOutput "Execution of C11 atomics test program failed.  Execution output follows\n" ${C11_RunOutput} )
-        herc_Save_Error( "${C11_RunOutput}" PARENT_SCOPE )
+        herc_Save_Error( "${C11_RunOutput}" )
     else( )
         set( C11_ATOMICS_AVAILABLE 1 PARENT_SCOPE )
         file( WRITE  "${output_cmake_file}"  ${C11_RunOutput} )
     endif( )
 else( )
     set( C11_CompileOutput "Compile of C11 atomics test program failed.  Output follows:\n" ${C11_CompileOutput} )
-    herc_Save_Error( "${C11_CompileOutput}" PARENT_SCOPE )
+    herc_Save_Error( "${C11_CompileOutput}" )
 endif( COMPILE_RESULT_VAR )
 
 endfunction ( herc_Check_C11_Atomics )
@@ -434,14 +433,20 @@ try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR
 
 if( COMPILE_RESULT_VAR )
     if( ${RUN_RESULT_VAR} STREQUAL "NOT-FOUND" )
-        set( PS_RunOutput "Execution of packed structure test program failed.  Execution output follows\n" ${PS_RunOutput} )
-        herc_Save_Error( "${PS_RunOutput}" PARENT_SCOPE )
+        set( PS_RunOutput "Execution of structure padding test program failed.  Execution output follows\n" ${PS_RunOutput} )
+        herc_Save_Error( "${PS_RunOutput}" )
     elseif( ${RUN_RESULT_VAR} EQUAL 0 )
         set( ${result_var} 1 PARENT_SCOPE )
+    else( )
+        set( PS_RunOutput "Execution of packed structure test program detected padded structures.  Execution output follows\n" ${PS_RunOutput} )
+        herc_Save_Error( "${PS_RunOutput}" )
     endif( )
 else( )
-    set( PS_CompileOutput "Compile of packed structure test program failed.  Output follows:\n" ${PS_CompileOutput} )
-    herc_Save_Error( "${PS_CompileOutput}" PARENT_SCOPE )
+    string( CONCAT PS_CompileOutput
+            "Compile of structure padding test program failed.  Output follows:\n"
+            "${PS_CompileOutput}" )
+    herc_Save_Error( "${PS_CompileOutput}" )
+    unset( PS_CompileOutput )
 endif( COMPILE_RESULT_VAR )
 
 endfunction ( herc_Check_Struct_Padding )
@@ -497,13 +502,16 @@ try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR
 if( COMPILE_RESULT_VAR )
     if( ${RUN_RESULT_VAR} STREQUAL "NOT-FOUND" )
         set( PS_RunOutput "Execution of packed structure test program failed.  Execution output follows\n" ${PS_RunOutput} )
-        herc_Save_Error( "${PS_RunOutput}" PARENT_SCOPE )
+        herc_Save_Error( "${PS_RunOutput}" )
     elseif( ${RUN_RESULT_VAR} EQUAL 0 )
         set( ${result_var} 1 PARENT_SCOPE )
+    else( )
+        set( PS_RunOutput "Execution of packed structure test program detected unpacked structures.  Execution output follows\n" ${PS_RunOutput} )
+        herc_Save_Error( "${PS_RunOutput}" )
     endif( )
 else( )
     set( PS_CompileOutput "Compile of packed structure test program failed.  Output follows:\n" ${PS_CompileOutput} )
-    herc_Save_Error( "${PS_CompileOutput}" PARENT_SCOPE )
+    herc_Save_Error( "${PS_CompileOutput}" )
 endif( COMPILE_RESULT_VAR )
 
 endfunction ( herc_Check_Packed_Struct )
@@ -550,7 +558,7 @@ try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR
 if( COMPILE_RESULT_VAR )
     if( ${RUN_RESULT_VAR} STREQUAL "NOT-FOUND" )
         set( PS_RunOutput "Execution of packed structure test program failed.  Execution output follows\n" ${R3_RunOutput} )
-        herc_Save_Error( "${R3_RunOutput}" PARENT_SCOPE )
+        herc_Save_Error( "${R3_RunOutput}" )
     elseif( NOT ${RUN_RESULT_VAR} )
         set( ${result_var} 1 PARENT_SCOPE )
     else( )
@@ -649,7 +657,7 @@ try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR
 if( COMPILE_RESULT_VAR )
     if( ${RUN_RESULT_VAR} STREQUAL "NOT-FOUND" )
         set( PS_RunOutput "Execution of strict aliasing test program failed.  Execution output follows\n" ${SA_RunOutput} )
-        herc_Save_Error( "${SA_RunOutput}" PARENT_SCOPE )
+        herc_Save_Error( "${SA_RunOutput}" )
     elseif( NOT ${RUN_RESULT_VAR} )
         set( ${return_var} 1 PARENT_SCOPE )      # compiler strict aliasing should not be a problem
     else( )
@@ -657,7 +665,7 @@ if( COMPILE_RESULT_VAR )
     endif( )
 else( )
     set( PS_CompileOutput "Compile of strict aliasing test program failed.  Output follows:\n" ${SA_CompileOutput} )
-    herc_Save_Error( "${SA_CompileOutput}" PARENT_SCOPE )
+    herc_Save_Error( "${SA_CompileOutput}" )
 endif( COMPILE_RESULT_VAR )
 
 endfunction ( herc_Check_Strict_Aliasing )
@@ -710,7 +718,7 @@ if( DEFINED ${option_name} )
         elseif(("${option_value}" STREQUAL "TARGET") OR ("${option_value}" STREQUAL "T") )
             set( ${option_name} "" CACHE INTERNAL "${help_Sumry_${option_name}}" FORCE )
         elseif( "${fail_flag}" STREQUAL "FAIL" )
-            herc_Save_Error("Invalid value \"${${option_name}}\" for ${option_name}, not YES , NO, or TARGET" PARENT_SCOPE )
+            herc_Save_Error("Invalid value \"${${option_name}}\" for ${option_name}, not YES , NO, or TARGET" )
         endif( )
     endif( )
 endif( )

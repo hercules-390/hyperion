@@ -42,7 +42,7 @@ TEST_BIG_ENDIAN( WORDS_BIGENDIAN )
 
 CHECK_TYPE_SIZE("int" SIZEOF_INT LANGUAGE C )
 if( NOT SIZEOF_INT )
-    herc_Save_Error( "Unable to determine size of \"int\"." "" )
+    herc_Save_Error( "Unable to determine size of \"int\"." )
 endif( )
 
 
@@ -53,7 +53,7 @@ endif( )
 
 CHECK_TYPE_SIZE("size_t" SIZEOF_SIZE_T LANGUAGE C )
 if( NOT SIZEOF_SIZE_T )
-    herc_Save_Error( "Unable to determine size of \"size_t\"." "" )
+    herc_Save_Error( "Unable to determine size of \"size_t\"." )
 endif( )
 
 
@@ -62,7 +62,7 @@ endif( )
 
 CHECK_TYPE_SIZE("long" SIZEOF_LONG LANGUAGE C )
 if( NOT SIZEOF_LONG )
-    herc_Save_Error( "Unable to determine size of \"long\"." "" )
+    herc_Save_Error( "Unable to determine size of \"long\"." )
 endif( )
 
 
@@ -72,7 +72,7 @@ endif( )
 
 CHECK_TYPE_SIZE("int *" SIZEOF_INT_P LANGUAGE C )
 if( NOT SIZEOF_INT_P )
-    herc_Save_Error( "Unable to determine size of \"int *\"." "" )
+    herc_Save_Error( "Unable to determine size of \"int *\"." )
 endif( )
 
 
@@ -81,7 +81,19 @@ endif( )
 
 CHECK_TYPE_SIZE("off_t" SIZEOF_OFF_T LANGUAGE C )
 if( NOT SIZEOF_OFF_T )
-    herc_Save_Error( "Unable to determine size of \"off_t\"." "" )
+    herc_Save_Error( "Unable to determine size of \"off_t\"." )
+endif( )
+
+# If the host does not natively support large files and is an open
+# source system, see if it advertises the POSIX macros that indicate the
+# availability of large file support.  CMake variables HAVE_DECL_...
+# will be set for later testing in Herc28_OptSelect.cmake.  Find the
+# discussion of open system support for LFS in Herc28_OptSelect.cmake
+# under the heading of Option LARGEFILE.
+
+if( NOT (SIZEOF_OFF_T EQUAL 8) )
+    herc_Check_Symbol_Exists( _LFS_LARGEFILE    "unistd.h" OK )
+    herc_Check_Symbol_Exists( _LFS64_LARGEFILE  "unistd.h" OK )
 endif( )
 
 

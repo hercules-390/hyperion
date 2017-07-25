@@ -154,7 +154,7 @@ endif( )
 
 herc_Check_Struct_padding( GCC_STYLE_PACK STRUCT_NOT_PADDED )
 if( NOT (STRUCT_NOT_PADDED OR (CMAKE_SYSTEM_PROCESSOR MATCHES "ARM")) )
-    herc_Save_Error( "The c compiler pads structures to greater than a one-byte boundary" "")
+    herc_Save_Error( "The c compiler pads structures to greater than a one-byte boundary" )
 endif( )
 
 
@@ -166,7 +166,7 @@ endif( )
 
 herc_Check_Packed_Struct( GCC_STYLE_PACK STRUCT_PACKED_OK )
 if( NOT STRUCT_PACKED_OK  )
-    herc_Save_Error( "The c compiler does not support packed structures" "" )
+    herc_Save_Error( "The c compiler does not support packed structures" )
 endif( )
 
 

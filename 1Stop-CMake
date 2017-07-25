@@ -123,7 +123,7 @@ cd "$build"
 # get  the  arguments  used last time configure was run, but alas; they
 # are not shown quoted.  The shell cannotdo.
 
-cmake $where "$@"
+cmake $where -DS3FH_DIR="../s3fh" "$@"
 rv=$?
 
 if [ 0 -ne $rv ] ; then exit $rv ; fi

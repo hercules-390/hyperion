@@ -36,6 +36,8 @@ if( DEFINED HELP )
         endif( )
         message( "${pad} ${help_Sumry_${help_Text}}" )
     endforeach( )
+    unset( HELP CACHE )
+    unset( HELP )
     return( )
 endif( )
 
@@ -76,7 +78,7 @@ if( NOT ("${ADD-CFLAGS}" STREQUAL "") )
 
     if( NOT tc_return_var )
         set( opt_err_msg "ADD-CFLAGS \"${ADD-CFLAGS}\" rejected by c compiler.\n\n${tc_output_var}" )
-        herc_Save_Error( "${opt_err_msg}" "" )
+        herc_Save_Error( "${opt_err_msg}" )
         unset( opt_err_msg )
     endif( )
 endif( )
@@ -115,9 +117,9 @@ endif( )
 # make sure it is a directory.
 if( NOT (IS_DIRECTORY "${EXTPKG_ROOT}") )
     if( "${EXTPKG_DIR}" STREQUAL "")
-        herc_Save_Error( "Unable to locate or create default EXTPKG_DIR directory \"${buildwith_EXTPKG_DIR}\" (= \"${EXTPKG_ROOT}\") " "")
+        herc_Save_Error( "Unable to locate or create default EXTPKG_DIR directory \"${buildwith_EXTPKG_DIR}\" (= \"${EXTPKG_ROOT}\")" )
     else( )
-        herc_Save_Error( "Unable to locate or create specified EXTPKG_DIR directory \"${EXTPKG_DIR}\" (= \"${EXTPKG_ROOT}\") " "")
+        herc_Save_Error( "Unable to locate or create specified EXTPKG_DIR directory \"${EXTPKG_DIR}\" (= \"${EXTPKG_ROOT}\") " )
     endif( )
 
 else( )     # It is a directory.  Make sure we can create a subdirectory in it.
@@ -137,7 +139,7 @@ else( )     # It is a directory.  Make sure we can create a subdirectory in it.
                 "Unable to create directory, rc=${md_result_var}, in EXTPKG_DIR directory \"${EXTPKG_ROOT}\"\n"
                 "           Message: ${md_output_var}"
             )
-        herc_Save_Error( "${md_output_var}" "" )
+        herc_Save_Error( "${md_output_var}" )
     endif( )
     unset( md_result_var )
     unset( md_output_var )
@@ -156,9 +158,9 @@ if( NOT ( ("${MULTI-CPU}" STREQUAL "")
             OR ("${MULTI-CPU}" STREQUAL "YES")
             OR ("${MULTI-CPU}" STREQUAL "NO" ) ) )
     if( NOT ( ${MULTI-CPU} MATCHES "^[0-9]+$" ) )
-        herc_Save_Error( "Invalid value \"${MULTI-CPU}\" for MULTI-CPU, must be YES, NO, or a number between 1 and 128" "")
+        herc_Save_Error( "Invalid value \"${MULTI-CPU}\" for MULTI-CPU, must be YES, NO, or a number between 1 and 128" )
     elseif( (${MULTI-CPU} GREATER 128) OR (${MULTI-CPU} LESS 1) )
-        herc_Save_Error( "Out of range value \"${MULTI-CPU}\" for MULTI-CPU, must be YES, NO, or a number between 1 and 128" "")
+        herc_Save_Error( "Out of range value \"${MULTI-CPU}\" for MULTI-CPU, must be YES, NO, or a number between 1 and 128" )
     endif( )
 endif( )
 
@@ -184,7 +186,7 @@ if( NOT (${CMAKE_C_COMPILER_ID} IN_LIST herc_Compilers )
             OR ( ("${OPTIMIZATION}" STREQUAL "")
                 AND ("${buildWith_OPTIMIZATION}" STREQUAL "YES") ) )
         )
-    herc_Save_Error( "Unrecognized c compiler \"${CMAKE_C_COMPILER_ID}\" - automatic optimization not possible." "" )
+    herc_Save_Error( "Unrecognized c compiler \"${CMAKE_C_COMPILER_ID}\" - automatic optimization not possible." )
 endif( )
 
 unset( opt_flags)
@@ -212,7 +214,7 @@ if( NOT ("${opt_flags}" STREQUAL "") )
 
     if( NOT tc_return_var )      # Non-zero return code means compiler rejected flags
         set( opt_err_msg "OPTIMIZATION flags \"${opt_flags}\" rejected by c compiler\n\n${tc_output_var}" )
-        herc_Save_Error( "${opt_err_msg}" "" )
+        herc_Save_Error( "${opt_err_msg}" )
         unset( opt_err_msg )
     endif( )
 
@@ -237,7 +239,7 @@ if( NOT ( ("${SETUID-HERCIFC}" STREQUAL "YES")
             "This build script does not yet support changing the group ownership of hercifc.\n"
             "              \"YES\" and \"NO\" are the only supported values for SETUID-HERCIFC"
             )
-    herc_Save_Error( "${err_msg}" "" )
+    herc_Save_Error( "${err_msg}" )
     unset( err_msg )
 endif( )
 
@@ -263,7 +265,7 @@ if( NOT ("${HQA_INSTALL_DIR}" STREQUAL "") )
                 BASE_DIR "${CMAKE_BINARY_DIR}"
                 CACHE )
     if( NOT (IS_DIRECTORY "${HQA_INSTALL_DIR}" ) )
-#        herc_Save_Error( "Unable to locate HQA_DIR directory \"${HQA_INSTALL_DIR}\" " "")
+#        herc_Save_Error( "Unable to locate HQA_DIR directory \"${HQA_INSTALL_DIR}\" " )
     endif( )
 endif( )
 
@@ -280,13 +282,13 @@ if( NOT ("${S3FH_DIR}" STREQUAL "") )
                 BASE_DIR "${CMAKE_BINARY_DIR}"
                 CACHE )
     if( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}") )
-        herc_Save_Error( "Unable to locate specified S3FH_DIR directory \"${S3FH_INSTALL_DIR}\" (= \"${S3FH_INSTALL_DIR}\") " "")
+        herc_Save_Error( "Unable to locate specified S3FH_DIR directory \"${S3FH_INSTALL_DIR}\" (= \"${S3FH_INSTALL_DIR}\") " )
 
     elseif( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}/include") )
-        herc_Save_Error( "SoftFloat-3a include directory missing from \"${S3FH_INSTALL_DIR}\\\" " "" )
+        herc_Save_Error( "SoftFloat-3a include directory missing from \"${S3FH_INSTALL_DIR}\\\" " )
 
     elseif( NOT (IS_DIRECTORY "${S3FH_INSTALL_DIR}/lib") )
-        herc_Save_Error( "SoftFloat-3a lib directory missing from  \"${S3FH_INSTALL_DIR}\\\" " "" )
+        herc_Save_Error( "SoftFloat-3a lib directory missing from  \"${S3FH_INSTALL_DIR}\\\" " )
 
     else( )
 #       Make sure the header and include files for SoftFloat-3a are in the
@@ -303,7 +305,7 @@ if( NOT ("${S3FH_DIR}" STREQUAL "") )
         set( CMAKE_REQUIRED_INCLUDES "${S3FH_INSTALL_DIR}/include" )
         herc_Check_Include_Files( "stdint.h;softfloat.h" OK )
         if( NOT HAVE_SOFTFLOAT_H)
-            herc_Save_Error( "Unable to find SoftFloat-3a For Hercules public headers in \"${S3FH_INSTALL_DIR}/include\" " "" )
+            herc_Save_Error( "Unable to find SoftFloat-3a For Hercules public headers in \"${S3FH_INSTALL_DIR}/include\" " )
         endif( )
         set( CMAKE_REQUIRED_INCLUDES "" )
         check_library_exists( SoftFloat f32_add "${S3FH_INSTALL_DIR}/lib" HAVE_SOFTFLOAT )
@@ -313,7 +315,7 @@ if( NOT ("${S3FH_DIR}" STREQUAL "") )
             else( )
                 set(libname "libSoftFloat.a" )
             endif( )
-            herc_Save_Error( "Unable to find SoftFloat-3a For Hercules static library \"${S3FH_INSTALL_DIR}/lib/${libname}\" " "" )
+            herc_Save_Error( "Unable to find SoftFloat-3a For Hercules static library \"${S3FH_INSTALL_DIR}/lib/${libname}\" " )
         endif( NOT HAVE_SOFTFLOAT )
     endif( )
     unset( S3FH_INSTALL_DIR )           # Herc28_OptSelect.cmake will set for build

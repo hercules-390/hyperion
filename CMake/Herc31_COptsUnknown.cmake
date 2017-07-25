@@ -1,5 +1,5 @@
 # Herc31_COptsunknown.cmake  -  Set C compiler options when building
-#                               an unrecognized compiler.  
+#                               an unrecognized compiler.
 
 #[[   Copyright 2017 by Stephen Orso.
 
@@ -24,8 +24,8 @@
 
 set( CMAKE_C_FLAGS  "-DHAVE_CONFIG_H" )
 
-if( ("${OPTIMIZATION}" STREQUAL "YES" )
-    herc_Save_Error( "Automatic optimization not possible with unrecognized c compiler: \"${CMAKE_C_COMPILER_ID}\"\n" "")
+if( "${OPTIMIZATION}" STREQUAL "YES" )
+    herc_Save_Error( "Automatic optimization not possible with unrecognized c compiler: \"${CMAKE_C_COMPILER_ID}\"\n" )
     return( )
 endif( )
 

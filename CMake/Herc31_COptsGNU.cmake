@@ -79,7 +79,7 @@ in CMake scripts for Hercules.  See:
 # including macro definitions.  Set the calculated set of optimization
 # flags to the null string.
 
-set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_CONFIG_H -W -Wall -g3 -ggdb3" )
+set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_CONFIG_H -g3 -ggdb3" )
 
 
 # Flags needed to deal with issues in the toolchain.

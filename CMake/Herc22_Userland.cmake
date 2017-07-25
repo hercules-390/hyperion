@@ -105,8 +105,8 @@ herc_Check_Include_Files( "stddef.h;sys/sysctl.h" OK )
 
 
 # sys/sockio.h must be explicitly included on Solaris; it is included by
-# ioctl.h on other BSD systems.  Do the test here so the config.h macro
-# can be defined.
+# ioctl.h on BSD systems.  Do the test here so the config.h macro can be
+# defined.
 
 herc_Check_Include_Files( sys/sockio.h    OK )
 
@@ -282,25 +282,26 @@ herc_Check_Symbol_Exists( IFNAMSIZ        "${prereq_Headers};net/if.h"     OK )
 # Linux systems define IOCTL values as constants in linux/sockios.h
 # (note the plural), which is included by sys/ioctl.h.
 
-# For all BSD systems, the Hercules autotools tests never detected these
-# macros and so the corresponding functionality was never exposed in the
-# code and as a result was not tested.
+# BSD systems define IOCTL values as constants in sys/sockio.h (note the 
+# singular), which is included by sys/ioctl.h.
 
-# BSD systems define the IOCTL values such as SIOCSIFNETMASK as
-# preprocessor macros in sys/sockio.h.  Solaris does not by default
-# include sys/sockio.h inside sys/ioctl.h while other BSD systems do.
-# Because sys/sockio.h includes a guard, we can just include sockio.h
-# when testing BSD systems for IOCTL values.
+# Solaris systems also define IOCTL values as constants in sys/sockio.h 
+# (singular, just like BSD), and it must be included explicitly.
+
+# For BSD systems, the Hercules autotools tests never detected the SIOC* 
+# macros and so the corresponding functionality was never built in the
+# Hercules.  And as a result, functionality enabled by these macros has
+# not received much use on BSD.
 
 # IOCTL values are used in hostopts.h to get and/or set interface options
 # in the CTC modules ctc_ptp.c, hercifc.c, and tuntap.c.
 
 # So we shall check for the existence of linux/sockios.h as a tell-tale
 # for a Linux-based SIOC* implementation and sys/sockio.h as a tell-tale
-# for a BSD-based SIOC* implementation.  If neither exist, then none of
-# the values will be defined.  For BSD systems, we will include sys/sockio.h
-# to cover the case of Solaris, which does not by default include
-# sys/sockio.h inside of sys/ioctl.h
+# for a BSD or Solaris-based SIOC* implementation.  If neither exist, 
+# then none of the values will be defined.  If sys/sockio.h exists, we 
+# will include it in the build.  This allows builds on Solaris without
+# having to test for the Solaris target.  
 
 # For compatibilty with the autotools build, if this is a BSD-style
 # SIOC* macro definition set, the tests are skipped and config.h will
@@ -346,7 +347,7 @@ if( WIN32 )
     herc_Check_Include_Files( pthread.h OK )
 else( )
     if( NOT CMAKE_USE_PTHREADS_INIT )
-        herc_Save_Error( "Unable to use pthreads on this target.  Hercules requires pthreads on non-Windows systems." "" )
+        herc_Save_Error( "Unable to use pthreads on this target.  Hercules requires pthreads on non-Windows systems." )
     endif( )
     herc_Check_Include_Files( pthread.h FAIL )
 endif( )
@@ -372,7 +373,7 @@ else( )
     else( )
         if( ${HAVE_UNISTD_H} )  # Required, tested earlier.
         else( )
-            herc_Save_Error( "Neither stdint.h, inttypes.h, nor unistd.h found.  At least one is required" "")
+            herc_Save_Error( "Neither stdint.h, inttypes.h, nor unistd.h found.  At least one is required" )
         endif( )
     endif( )
 endif( )

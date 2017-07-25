@@ -28,27 +28,29 @@ Hercules will be built.
 See below if you wish to use build options or wish to have SoftFloat-3a
 built outside of the Hercules build tree.
 
+And see the FAQ if you wish to build with CMake but wish to continue to
+use 1Stop.
 
 
 *** Why should I use CMake to build Hercules?
 
 - You can build in any directory that is not the Hercules source
   directory.  There is no complex directory structure requirement.
-  
-- The CMake build will take care of all SoftFloat-3a build 
+
+- The CMake build will take care of all SoftFloat-3a build
   requirements, and will build SoftFloat-3a in a subdirectory of
-  the build directory.  
-  
-  (Options are provided to build SoftFloat-3a somewhere else, to share 
-  one SoftFloat-3a build directory with multiple CMake Hercules build 
-  directories, or to build SoftFloat-3a yourself if you wish.) 
+  the build directory.
+
+  (Options are provided to build SoftFloat-3a somewhere else, to share
+  one SoftFloat-3a build directory with multiple CMake Hercules build
+  directories, or to build SoftFloat-3a yourself if you wish.)
 
 - The CMake build supports Ninja and other generators in addition to
-  GNU or BSD Makefiles.  
-  
-- There is no need to have GNU autotools installed on your building 
-  system.  Just CMake 3.4.3 or better and a generator such as Makefiles
-  or Ninja.  And no need to run autogen.sh.  
+  Unix Makefiles (GNU or BSD).
+
+- There is no need to have GNU autotools installed on your building
+  system.  Just CMake 3.4.3 or better, a generator such as Makefiles
+  or Ninja, and gcc or clang.  And no need to run autogen.sh.
 
 
 
@@ -56,38 +58,50 @@ built outside of the Hercules build tree.
 
 What happened to using autogen.sh and configure to build Hercules?
 
-It is still there, and for the moment, either may be used to build 
+It is still there, and for the moment, either may be used to build
 Hercules.   But the time will come when the autogen.sh and configure
 build is deprecated, and later removed.  Much like Cygwin/MinGW builds
-for Windows.  
+for Windows.
+
+- Can I still use 1Stop?
+
+Yes, and if you use 1Stop, you will end up using autotools and configure
+to build Hercules.
+
+- What if I like 1Stop and want to build with CMake?
+
+If your system is set up to use 1Stop and you wish to build with
+CMake, use 1Stop-CMake.  1Stop-CMake does builds Hercules in the
+same manner as 1Stop, but it uses CMake rather than autotools to
+create the build files.
 
 What about Windows?
 
-At the moment, you cannot use CMake to build Hercules for Windows.  The 
-next major revision to the CMake build of Hercules will support 
-Windows builds.  
+At the moment, you cannot use CMake to build Hercules for Windows.  The
+next major revision to the CMake build of Hercules will support
+Windows builds.
 
 Does the CMake build work on Apple?
 
-Maybe.  We welcome testers.  An early test report showed that CMake 
-completed, SoftFloat-3a built successfully, but Hercules failed to 
+Maybe.  We welcome testers.  An early test report showed that CMake
+completed, SoftFloat-3a built successfully, but Hercules failed to
 compile.  We have not received console logs or other files to help
-diagnose the issue.  
+diagnose the issue.
 
 I tried it, but it did not work.  What should I do?
 
-See the section "** What to do when it fails" below, and build using 
-autogen.sh and configure.  
+See the section "** What to do when it fails" below, and build using
+autogen.sh and configure.
 
 I reported a problem.  When will it get fixed?
 
-The CMake build, like all of Hercules, is supported by volunteer 
+The CMake build, like all of Hercules, is supported by volunteer
 developers, conscientious programmers who hate to see their work
 fall short.  All of us have other demands on our time, so things
-may not be corrected as quickly as any of us would wish.  
+may not be corrected as quickly as any of us would wish.
 
 And of course, if you see the solution to an issue and are willing
-to share, we welcome your contribution.  
+to share, we welcome your contribution.
 
 
 
@@ -95,14 +109,15 @@ to share, we welcome your contribution.
 
 CMake may be used for Hercules open source system builds as an
 alternative to GNU autotools (autogen.sh followed by configure
-followed by make).  Tested on GNU/Linux and FreeBSD.
+followed by make).  Tested on GNU/Linux (Debian, Ubuntu, Leap),
+FreeBSD, and Solaris.
 
 
 Apple build support has been coded but testing on mac OS 10.10 Yosemite
 fails in the make command for Hercules; SoftFloat-3a builds
 successfully, and the CMake scripts complete without error.
 
-AIX and Solaris builds have not been tested.
+AIX builds have not been tested.
 
 Windows builds are not yet supported.  That's comming.
 
@@ -344,10 +359,14 @@ Note: SETUID-HERCIFC=<groupname> is not presently supported.
 Host/Target systems:
 
 - FreeBSD 11.0 64-bit: CMake 3.7.1, git 2.11.0, clang 3.8, Ninja 1.7.2 and BSD make
-- Debian 9 64-bit (stretch): CMake 3.7.2, git 2.11.0, gcc 6.3.0, GNU make 4.1
-- Debian 8 32-bit (jessie): CMake 3.7.1, git 2.1.4, gcc 4.9.2, GNU make 4.0
+- FreeBSD 11.0 32-bit: CMake 3.8.2, git 2.13.2, clang 3.8, and BSD make
+- Debian 9.0 64-bit: CMake 3.7.2, git 2.11.0, gcc 6.3.0, GNU make 4.1
+- Debian 9.0 32-bit: CMake 3.7.2, git 2.11.0, gcc 6.3.0, GNU make 4.1
+- Debian 8.6 64-bit: CMake 3.7.2, git 2.1.4, gcc 4.9.2, GNU make 4.0
+- Debian 8.6 32-bit: CMake 3.7.1, git 2.1.4, gcc 4.9.2, GNU make 4.0
 - Leap 42.2 64-bit: CMake 3.5.2, git 2.12.13, gcc 4.8.5, GNU make 4.0
 - Ubuntu 16.04: CMake 3.5.1, git 2.7.4, gcc 5.4.0, GNU make 4.1
+- Solaris 11.3 32-bit: CMake 3.6.3, git 1.7.9.2, gcc 4.8.2, GNU make 3.82
 - Windows Subsystem for Linux (Ubuntu 14.04): CMake 3.8.2, git 1.9.1, gcc 4.8.4, GNU make 3.81
 
 On Debian 9, exhaustive tests of build options were made.
@@ -356,17 +375,16 @@ On Debian 8, a test of the build option -MULTI-CPU=70 was performed to
 ensure a build on a 32-bit system would be limited to 64 CPUs.
 
 CMake was built from source on Windows Subsystem for Linux; WSL (Ubuntu 14.04 LTS)
-includes CMake 2.8.x, below the 3.4 minimum required for a Hercules CMake build.  
+includes CMake 2.8.x, below the 3.4 minimum required for a Hercules CMake build.
 
 On all systems:
 
 1) Fresh clone of Hyperion
-2) ./1Stop-CMake
-3) cd <build-dir>
-4) make test   (not make check)
-5) make install
-7) cd <guest-os-dir>
-8) IPL a primitive IBM OS, DOS/360, start the spooler, and shut it down.
+2) cd <build-dir>
+3) make test   (not make check)
+4) make install
+5) cd <guest-os-dir>
+6) IPL a primitive IBM OS, DOS/360, start the spooler, and shut it down.
 
 Testing of external package build support, which was developed and tested
 after the first round of testing described above, did not include steps 5-8.

@@ -87,7 +87,7 @@ set( help_Sumry_GETOPTWRAPPER       "=yes|NO  force use of the getopt wrapper kl
 set( help_Sumry_HET-BZIP2           "=YES|no  support bzip2 compression for emulated tapes" )
 set( help_Sumry_INTERLOCKED-ACCESS-FACILITY-2   "=YES|no  enable Interlocked Access Facility 2" )
 set( help_Sumry_IPV6                "=YES|no  include IPV6 support" )
-set( help_Sumry_LARGEFILE           "=YES|no  support for large files" )
+set( help_Sumry_LARGEFILE           "=YES|no  support for large files (32-bit systems only)" )
 set( help_Sumry_OBJECT-REXX         "=YES|no  Open Object rexx support" )
 set( help_Sumry_REGINA-REXX         "=YES|no  Regina Rexx support" )
 set( help_Sumry_SYNCIO              "=YES|no  (deprecated) syncio function and device options" )
@@ -155,10 +155,13 @@ else( )
     set( buildWith_HET-BZIP2          "YES" CACHE INTERNAL "${help_Sumry_HET-BZIP2}" )
     set( buildWith_INTERLOCKED-ACCESS-FACILITY-2   "YES" CACHE INTERNAL "${help_Sumry_INTERLOCKED-ACCESS-FACILITY-2}" )
     set( buildWith_IPV6               "YES" CACHE INTERNAL "${help_Sumry_IPV6}" )
-    set( buildWith_LARGEFILE          "YES" CACHE INTERNAL "${help_Sumry_LARGEFILE}" )
     set( buildWith_OBJECT-REXX        "YES" CACHE INTERNAL "${help_Sumry_OBJECT-REXX}" )
     set( buildWith_REGINA-REXX        "YES" CACHE INTERNAL "${help_Sumry_REGINA-REXX}" )
     set( buildWith_SYNCIO             "YES" CACHE INTERNAL "${help_Sumry_SYNCIO}" )
+
+# The "real" default for LARGEFILE cannot be known until SIZEOF_OFF_T is
+# determined in Userland probes.  So this is just a placeholder.
+    set( buildWith_LARGEFILE          "YES" CACHE INTERNAL "${help_Sumry_LARGEFILE}" )
 
 
 # The default for FTHREADS varies by target

@@ -171,7 +171,7 @@ herc_Check_Compile_Capability( "${herc_TestSource}" APPLE_GCC_ARGCT_BUSTED TRUE 
 if( APPLE_GCC_ARGCT_BUSTED AND ( CMAKE_C_COMPILER_VERSION VERSION_LESS "3.3.0" )
     set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -traditional-cpp -Wno-endif-labels" )
 else( )
-    herc_Save_Error( "Apple gcc preprocessor arg count broken and cpp-precomp not available" "")
+    herc_Save_Error( "Apple gcc preprocessor arg count broken and cpp-precomp not available" )
 endif( )
 
 unset( APPLE_GCC_ARGCT_BUSTED )

@@ -54,7 +54,7 @@ message( "Setting build options" )
 
 If( NOT "${HAVE_REGEX_H}"  )
     if( "${AUTOMATIC-OPERATOR}" )
-        herc_Save_Error( "AUTOMATIC-OPERATOR=YES specified but required header \"regex.h\" is missing." "" )
+        herc_Save_Error( "AUTOMATIC-OPERATOR=YES specified but required header \"regex.h\" is missing." )
     endif( )
 elseif( ("${AUTOMATIC-OPERATOR}" STREQUAL "YES") OR (${buildWith_AUTOMATIC-OPERATOR} AND (NOT "${AUTOMATIC-OPERATOR}" STREQUAL "NO")) )
     set( OPTION_HAO 1 )
@@ -81,13 +81,13 @@ endif( )
 If( NOT ("${HAVE_CAP}" AND "${HAVE_SYS_CAPABILITY_H}" AND (NOT "${NO_SETUID}")) )
     if( "${CAPABILITIES}" )
         if( NOT "${HAVE_CAP}" )
-            herc_Save_Error( "CAPABILITIES=YES specified but required library \"cap\" is missing." "")
+            herc_Save_Error( "CAPABILITIES=YES specified but required library \"cap\" is missing." )
         endif( )
         if( NOT "${HAVE_SYS_CAPABILITY_H}" )
-            herc_Save_Error( "CAPABILITIES=YES specified but required header \"sys/capability.h\" is missing." "")
+            herc_Save_Error( "CAPABILITIES=YES specified but required header \"sys/capability.h\" is missing." )
         endif( )
         if( "${NO_SETUID}" )
-            herc_Save_Error( "CAPABILITIES=YES specified but target system does not have setuid support." "")
+            herc_Save_Error( "CAPABILITIES=YES specified but target system does not have setuid support." )
         endif( )
     endif( )
 elseif( ("${CAPABILITIES}" STREQUAL "YES") OR (${buildWith_CAPABILITIES} AND (NOT "${CAPABILITIES}" STREQUAL "NO")) )
@@ -169,7 +169,7 @@ if( ("${FTHREADS}" STREQUAL "YES")
     if( WIN32 )
         set( OPTION_FTHREADS 1)
     else( )
-        herc_Save_error( "Option FTHREADS is supported only for target system Windows." "" )
+        herc_Save_error( "Option FTHREADS is supported only for target system Windows." )
     endif( )
 endif( )
 
@@ -232,7 +232,7 @@ if( ("${HQA_INSTALL_DIR}" STREQUAL "" )
                 BASE_DIR "${CMAKE_BINARY_DIR}"
                 CACHE )
     if( NOT (IS_DIRECTORY "${HQA_INSTALL_DIR}") )
-        herc_Save_Error( "Unable to locate default HQA installation directory \"${HQA_INSTALL_DIR}\\\" " "" )
+        herc_Save_Error( "Unable to locate default HQA installation directory \"${HQA_INSTALL_DIR}\\\" " )
     endif( )
 endif( )
 
@@ -292,21 +292,43 @@ endif( )
 
 # Option LARGEFILE
 
-# Used to enable Large File System (LFS) support on systems that do not
-# normally support it.  64-bit open source systems and Hercules-supported
-# Windows support LFS without requiring any config.h coding.  Hercules
-# determines LFS capabilities from the size of the off_t type, 4 bytes
-# meaning no LFS, 8 bytes meaning LFS, and anything else failing the
-# build.
+# Large file access requires a 64-bit file offset type (off_t) and file
+# control functions that use that type.  Some targets provide this as the
+# only choice, including 64-bit open source targets, FreeBSD of any
+# bitness since 2.0, and all Apple/Darwin (?) versions.  On these
+# targets, off_t starts out as a 64-bit type and large file support is
+# automatic and cannot be disabled.
 
-# 32-bit open source systems require _FILE_OFFSET_BITS to be set to 64
-# to enable the file system headers to generate LFS-capable filesystem
-# calls on open source systems that support LFS.  *(more needed here)*
+# Some 32-bit open source targets, notably GNU/Linux targets, use a
+# 32-bit file offset by default.  Defining _FILE_OFFSET_BITS=64 prior
+# to including any system headers causes those headers to define a
+# 64-bit off_t and corresponding file control functions.  To code being
+# compiled, such targets behave exactly the same as targets for which
+# a 64-bit off_t is the only choice.  The macro _LFS_LARGEFILE tells
+# code being compiled that large file support is possible.  But that
+# support must be specifically enabled before it can be used.
+
+# Some 32-bit targets (which ones?) only support transitional large file
+# support, which offers an alternative file offset type off64_t and file
+# control function alternates that can exist side-by-side with the non-
+# large type and functions.  Availability of transitional support is
+# revealed by the _LFS64_LARGEFILE macro.  Availability of transitional
+# cannot be suppresed.  If Hercules is to be built on a system that
+# includes transitional support, the build tools must instruct Hercules
+# to not use transitional support.
+
+# The _LFS_LARGEFILE and _LFS64_LARGEFILE macros are defined in posix_opt.h.
+
+# Open source LFS support options are defined in section "1.6 Conformance"
+# of http://www.unix.org/version2/whatsnew/lfs20mar.html.
+
+# Hercules code supports both native (64-bit off_t) and transitional
+# approaches to large file support).  The existence of _LFS_LARGEFILE
+# and/or _LFS64_LARGEFILE is tested in Herc20_TargetEnv.cmake.
+
 # Selected AIX systems need _LARGE_FILES set to 1 to enable LFS.
 # The _LARGE_FILES macro in AIX apparently serves the same purpose as
-# _FILE_OFFSET_BITS in 32-bit open source systems.  And I will give IBM
-# some credit for a binary macro (LFS or no LFS) rather than a rather
-# more cryptic 64-bit value for a file offset descriptor.
+# _FILE_OFFSET_BITS=64 in 32-bit open source systems.
 
 # Here is detail quoted from SG24-5674-01, "Developing and Porting C
 # and C++ Applications on AIX," June 2003, p. 129 , which applies to the
@@ -322,27 +344,76 @@ endif( )
 # 64-bit versions of AIX support LFS with the same preparations as
 # open source 64-bit systems, i.e., none.  See p. 139.
 
+message( "LFS: Size of OFF_T: ${SIZEOF_OFF_T} LARGEFILE: ${LARGEFILE} buildWith_LARGEFILE: ${buildWith_LARGEFILE} " )
 
-if( ${SIZEOF_OFF_T} EQUAL 4     # 4 means no LFS
-    AND ( ("${LARGEFILE}" STREQUAL "YES") OR (NOT "${buildWith_LARGEFILE}" STREQUAL "NO") ) )
-# LFS requested on a system that does not by default support it.
-# Try _FILE_OFFSET_BITS = 64 first and see if SIZEOF_OFF_T is 8.
-    unset( SIZEOF_OFF_T )
-    set( CMAKE_REQUIRED_DEFINITIONS "-D_FILE_OFFSET_BITS=64" )
-    CHECK_TYPE_SIZE( "off_t" SIZEOF_OFF_T LANGUAGE C )
-    if( ${SIZEOF_OFF_T} EQUAL 8 )
-        set( _FILE_OFFSET_BITS 64 )
-    else( )
-        unset( SIZEOF_OFF_T )
-        set( CMAKE_REQUIRED_DEFINITIONS "-D_LARGE_FILE=1" )
-        CHECK_TYPE_SIZE( "off_t" SIZEOF_OFF_T LANGUAGE C )
-        if( ${SIZEOF_OFF_T} EQUAL 8 )
-            set( _LARGE_FILE 1 )
+# If the target's off_t is 8 bytes (64 bits) by default, then large file
+# support is present by default and cannot be turned off or disabled.
+
+if( ${SIZEOF_OFF_T} EQUAL 8)
+    set( buildWith_LARGEFILE          "YES" CACHE INTERNAL "${help_Sumry_LARGEFILE}" )
+    if( "${LARGEFILE}" STREQUAL "NO" )
+        Herc_Save_Error( "Large file support cannot be disabled on this target; LARGEFILE=${LARGEFILE} rejected." )
+    endif( )
+endif( )
+
+# Change default for LFS support based on target capabilities.  And issue
+# diagnostic and fail the build if LARGEFILE requested on a system that
+# that does not have native or transitional large file support.
+
+if( ${SIZEOF_OFF_T} EQUAL 4)
+    if( NOT (HAVE_DECL__LFS_LARGEFILE OR HAVE_DECL__LFS64_LARGEFILE) )
+        set( buildWith_LARGEFILE          "NO"  CACHE INTERNAL "${help_Sumry_LARGEFILE}" )
+        if( "${LARGEFILE}" STREQUAL "YES" )
+            Herc_Save_Error( "Large File System support is not available on this target; LARGEFILE=${LARGEFILE} rejected." )
+        endif( )
+    endif( )
+endif( )
+
+if( (${SIZEOF_OFF_T} EQUAL 4)
+        AND ( (HAVE_DECL__LFS_LARGEFILE OR HAVE_DECL__LFS64_LARGEFILE) ) )
+
+# LFS-capable target and LFS support requested or defaulted.  See what
+# macro is needed to enable that support.
+    if( ("${LARGEFILE}" STREQUAL "YES")
+            OR ( ("${LARGEFILE}" STREQUAL "") AND ("${buildWith_LARGEFILE}" STREQUAL "YES") ) )
+        message( "LFS: testing compiler directives for large file support" )
+        # Try _FILE_OFFSET_BITS = 64 (GNU/Linux) first and see if
+        # SIZEOF_OFF_T changes from 4 to 8.
+        set( CMAKE_REQUIRED_DEFINITIONS "-D_FILE_OFFSET_BITS=64" )
+        set( CMAKE_EXTRA_INCLUDE_FILES "sys/types.h" )
+        CHECK_TYPE_SIZE( "off_t" SIZEOF_OFF_T_X LANGUAGE C )
+        message( "LFS: SIZEOF_OFF_T: ${SIZEOF_OFF_T_X} with _FILE_OFFSET_BITS=64" )
+        if( ${SIZEOF_OFF_T_X} EQUAL 8 )
+            set( _FILE_OFFSET_BITS 64 )
+            set( SIZEOF_OFF_T 8 CACHE INTERNAL "CHECK_TYPE_SIZE: sizeof(off_t)" FORCE)
+            message( "LFS: SIZEOF_OFF_T: ${SIZEOF_OFF_T} after _FILE_OFFSET_BITS=64 and cache set." )
         else( )
-            if( "${LARGEFILE}" STREQUAL "YES" )
-                herc_SaveError( "LARGEFILE=${LARGEFILE} specified but target system lacks Large File System support" "")
+            # Try _LARGE_FILE = 1 (AIX) and see if SIZEOF_OFF_T changes
+            # from 4 to 8.
+            unset( SIZEOF_OFF_T_X )
+            set( CMAKE_REQUIRED_DEFINITIONS "-D_LARGE_FILE=1" )
+            CHECK_TYPE_SIZE( "off_t" SIZEOF_OFF_T LANGUAGE C )
+            if( ${SIZEOF_OFF_T_X} EQUAL 8 )
+                set( SIZEOF_OFF_T 8 CACHE INTERNAL "CHECK_TYPE_SIZE: sizeof(off_t)" FORCE)
+                set( _LARGE_FILE 1 )
+            else( )
+                if( "${LARGEFILE}" STREQUAL "YES" )
+                    string( CONCAT err_msg "LARGEFILE=${LARGEFILE} specified and target system advertises large file support,\n"
+                            "but CMake is unable to determine how to enablet that support."
+                            )
+                    herc_Save_Error( "${err_msg}" )
+                    unset( err_msg )
+                endif( )
             endif( )
         endif( )
+        set( CMAKE_REQUIRED_DEFINITIONS "" )
+        set( CMAKE_EXTRA_INCLUDE_FILES "" )
+
+# LFS support specified or defaulted to NO.  Exclude use of transitional
+# LFS support in the Hercules build.
+    else( )
+        message( "Large file support supressed" )
+        set( DISABLE_LARGEFILE 1 )   # LARGEFILE specified or defaulted to NO.
     endif( )
 endif( )
 
@@ -386,10 +457,10 @@ elseif( NOT ("${temp_Multi_CPU}" STREQUAL "") )
                     "MULTI-CPU=${temp_Multi_CPU} exceeds maximum of 64 on systems without type __uint128_t\n"
                     "             Note: 32-bit systems do not generally include __uint128_t"
                     )
-            herc_Save_Error( "${err_msg}" "" )
+            herc_Save_Error( "${err_msg}" )
             unset( err_msg )
         else( )
-            herc_Save_Error( "Build default for MULTI-CPU=${temp_Multi_CPU} exceeds maximum of 64; see cmake/CMakeHercOptDef.cmake" "" )
+            herc_Save_Error( "Build default for MULTI-CPU=${temp_Multi_CPU} exceeds maximum of 64; see cmake/CMakeHercOptDef.cmake" )
         endif( )
     else( )
         set( MAX_CPU_ENGINES "${temp_Multi_CPU}" )
@@ -405,10 +476,10 @@ unset( temp_Multi_CPU )
 If( NOT ("${HAVE_REXX_H}" AND "${HAVE_OOREXXAPI_H}") )
     if( "${OBJECT-REXX}" )
         if( NOT "${HAVE_REXX_H}" )
-            herc_Save_Error( "OBJECT-REXX=YES specified but required header \"rexx.h\" is missing." "" )
+            herc_Save_Error( "OBJECT-REXX=YES specified but required header \"rexx.h\" is missing." )
         endif( )
         if( NOT "${HAVE_OOREXXAPI_H}" )
-            herc_Save_Error( "OBJECT_REXX=YES specified but required header \"oorexxapi.h\" is missing." "" )
+            herc_Save_Error( "OBJECT_REXX=YES specified but required header \"oorexxapi.h\" is missing." )
         endif( )
     endif( )
 elseif( ("${OBJECT-REXX}" STREQUAL "YES") OR (buildWith_OBJECT-REXX AND (NOT ("${OBJECT-REXX}" STREQUAL "NO"))) )
@@ -422,7 +493,7 @@ endif( )
 
 If( NOT ("${HAVE_REXXSAA_H}" OR "${HAVE_REGINA_REXXSAA_H}") )
     if( "${REGINA-REXX}" )
-        herc_Save_Error( "REGINA-REXX=YES specified but required header \"rexxsaa.h\" is missing." "" )
+        herc_Save_Error( "REGINA-REXX=YES specified but required header \"rexxsaa.h\" is missing." )
     endif( )
 elseif( ("${REGINA-REXX}" STREQUAL "YES") OR (buildWith_REGINA-REXX AND (NOT ("${REGINA-REXX}" STREQUAL "NO"))) )
     set( ENABLE_REGINA_REXX 1 )
@@ -453,7 +524,7 @@ endif( )
 if( NOT BUILD_HERCIFC )
     if( NOT ("${SETUID-HERCIFC}" STREQUAL ""
             OR "${SETUID-HERCIFC}" STREQUAL "NO") )
-        herc_Save_Error( "SETUID-HERCIFC=${SETUID-HERCIFC} specified but hercifc will not be built on this platform." "" )
+        herc_Save_Error( "SETUID-HERCIFC=${SETUID-HERCIFC} specified but hercifc will not be built on this platform." )
     endif( )
 else( )
     if( NOT "${SETUID-HERCIFC}" STREQUAL "NO" )
