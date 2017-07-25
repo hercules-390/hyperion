@@ -259,7 +259,7 @@ if [ ! -x hercules ] ; then
 fi
 
 if [ -f $hdir/config.h ] ; then
-   ptrsize=$(grep "^#define [ ]*SIZEOF_INT_P" config.h | tr -s ' '  | cut -d ' ' -f 3)
+   ptrsize=$(grep "^#define [ ]*SIZEOF_INT_P" $hdir/config.h | tr -s ' '  | cut -d ' ' -f 3)
    vars="$vars ptrsize=$ptrsize"
    # echo Pointer size is set to $ptrsize
 else
