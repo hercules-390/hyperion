@@ -5,11 +5,16 @@ ShareAlike 4.0 International License. To view a copy of this license,
 visit http://creativecommons.org/licenses/by-sa/4.0/ or send a letter
 to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
+Note: this is a prelminary readme, but it can and should be used
+when building Hercules using CMake.
 
-*** CMake build for Hercules quick-start
 
-Do the following to build Hercules using CMake on BSD or GNU/Linux
-open source systems.
+************************************************************************
+***     QUICK START: Build Hercules Using CMake                      ***
+************************************************************************
+
+Do the following to build Hercules using CMake on GNU/Linux or BSD
+open source systems or on Solaris.
 
 1. Clone or update your local clone of Hyperion, as needed.
 
@@ -22,17 +27,20 @@ open source systems.
 
 5. make test   (NOT make check)
 
-That's it.  If needed, SoftFloat-3a will be cloned and built, and
-Hercules will be built.
+6. make install    (if you wish)
 
-See below if you wish to use build options or wish to have SoftFloat-3a
+That's it.  SoftFloat-3a will be cloned and built inside the Hercules
+build directory, and Hercules will be built.
+
+See below if you wish to use build options or want to have SoftFloat-3a
 built outside of the Hercules build tree.
 
-And see the FAQ if you wish to build with CMake but wish to continue to
-use 1Stop.
+And see the FAQ if you wish to use 1Stop to build with CMake.
 
 
-*** Why should I use CMake to build Hercules?
+************************************************************************
+***     Why should I use CMake to build Hercules?                    ***
+************************************************************************
 
 - You can build in any directory that is not the Hercules source
   directory.  There is no complex directory structure requirement.
@@ -46,21 +54,27 @@ use 1Stop.
   directories, or to build SoftFloat-3a yourself if you wish.)
 
 - The CMake build supports Ninja and other generators in addition to
-  Unix Makefiles (GNU or BSD).
+  Unix Makefiles (either GNU make or BSD make).
 
 - There is no need to have GNU autotools installed on your building
-  system.  Just CMake 3.4.3 or better, a generator such as Makefiles
-  or Ninja, and gcc or clang.  And no need to run autogen.sh.
+  system, nor must you install GNU make on a BSD system.  You just
+  need git, CMake 3.4.3 or better, a generator such as UNIX Makefiles
+  or Ninja, and gcc or clang.
+
+- There is no need to run autogen.sh in the source directory before
+  building.
 
 
+************************************************************************
+***     FAQ: CMake Build Questions and Answers                       ***
+************************************************************************
 
-*** CMake Build FAQ
+- What happened to using autogen.sh and configure to build Hercules?
 
-What happened to using autogen.sh and configure to build Hercules?
-
-It is still there, and for the moment, either may be used to build
-Hercules.   But the time will come when the autogen.sh and configure
-build is deprecated, and later removed.  Much like Cygwin/MinGW builds
+They are still there.  You may continue to use autotools (autogen.sh,
+configure, and make) to build Hercules for the moment.  But the time
+will come when the autogen.sh and configure build for Hercules is
+deprecated and, later, removed.  Much like Cygwin/MinGW builds
 for Windows.
 
 - Can I still use 1Stop?
@@ -75,25 +89,25 @@ CMake, use 1Stop-CMake.  1Stop-CMake does builds Hercules in the
 same manner as 1Stop, but it uses CMake rather than autotools to
 create the build files.
 
-What about Windows?
+- What about Windows?
 
 At the moment, you cannot use CMake to build Hercules for Windows.  The
-next major revision to the CMake build of Hercules will support
+next major version of the CMake build for Hercules will support Windows
 Windows builds.
 
-Does the CMake build work on Apple?
+- Does the CMake build work on Apple?
 
 Maybe.  We welcome testers.  An early test report showed that CMake
 completed, SoftFloat-3a built successfully, but Hercules failed to
 compile.  We have not received console logs or other files to help
 diagnose the issue.
 
-I tried it, but it did not work.  What should I do?
+- I tried it, but it did not work.  What should I do?
 
-See the section "** What to do when it fails" below, and build using
-autogen.sh and configure.
+See the section "** What To Do When it Fails," below.  And while the
+issue is being sorted out, you can build using autogen.sh and configure.
 
-I reported a problem.  When will it get fixed?
+- I reported a problem.  When will it get fixed?
 
 The CMake build, like all of Hercules, is supported by volunteer
 developers, conscientious programmers who hate to see their work
@@ -105,13 +119,14 @@ to share, we welcome your contribution.
 
 
 
-*** CMake Build Process Status
+************************************************************************
+***     CMake Build Development Status                               ***
+************************************************************************
 
 CMake may be used for Hercules open source system builds as an
 alternative to GNU autotools (autogen.sh followed by configure
 followed by make).  Tested on GNU/Linux (Debian, Ubuntu, Leap),
-FreeBSD, and Solaris.
-
+FreeBSD, Windows Subsystem For Linux, and Solaris.
 
 Apple build support has been coded but testing on mac OS 10.10 Yosemite
 fails in the make command for Hercules; SoftFloat-3a builds
@@ -122,12 +137,13 @@ AIX builds have not been tested.
 Windows builds are not yet supported.  That's comming.
 
 
-** Changes from autotools build
+************************************************************************
+***     Changes From the Autotools Build                             ***
+************************************************************************
 
 Libtool is not used.
 
-Shared libraries are always built.  Work remains on those systems that
-do not support shared libraries.
+Shared libraries are always built.
 
 -O3 is never included in automatic optimization flags.  You may, if you
 wish, include -O3 in either the OPTIMIZATION option or the ADD-CFLAGS
@@ -139,25 +155,33 @@ Detailed test results from make test are not displayed on the console.
 Instead, detailed results for each test group are saved in files in the
 <build-dir>/Testing/Temporary directory.
 
-Ninja is supported as a generator and has been tested (version 1.7.2).
+Ninja is supported as a generator and has been tested (multiple versions
+on multiple target systems).
 
 
-** Command line changes
+************************************************************************
+***     Command Line Option Changes                                  ***
+************************************************************************
 
 -enable-xxx is replaced with -DXXX=yyy
 
-xxx is the configure.ac -enable option in caps.
+XXX is the configure.ac -enable option in caps.
 
 For example --enable-ipv6, as a configure.ac parameter would be passed
 to CMake as -DIPV6=YES; --disable-ipv6 as -DIPV6=NO.  The -D prefix is a
 CMake command line option, and what follows it is made available to
-CMake in much the same way that -D is used by a c compiler.
+CMake in much the same way that -D is used by a c compiler.  So these
+two command lines have the same effect on the Hercules build:
+
+  Autotools:  configure --disable-largefile
+  CMake:      cmake -DLARGEFILE=NO
 
 All command line options may be specified as environment variables.
+Omit the -D when setting an environment variable.  The following two
+lines set the same option for the CMake build:
 
-In the discussion that follows, -D is always shown for options to be
-passed to CMake.  It is of course omitted when options are defined as
-system environment variables.
+  export SYNCIO=NO
+  cmake -DSYNCIO=NO
 
 To see all supported options, use:
 
@@ -169,58 +193,64 @@ A list of current build options appears at the end of this readme as
 an appendix.
 
 
-** New Build Options
+************************************************************************
+***     New Build Options                                            ***
+************************************************************************
 
--DADD-CFLAGS
+  -DADD-CFLAGS
 
 If you need to define macros that are passed directly to the c compiler,
 use -DADD-CFLAGS="<flags>" where <flags> are replaced with the macro
 string.  For example
 
-cmake <source-dir> -DADD-CFLAGS="-DNO_ASM_BYTESWAP"
+  cmake <source-dir> -DADD-CFLAGS="-DNO_ASM_BYTESWAP"
 
 Compiler flags passed via -DADD-CFLAGS="" are appended to the flags
 set up by CMake, which gives the builder the opportunity to turn off
 things CMake may have turned on.
 
--DEXTPKG_DIR=<path>
+  -DEXTPKG_DIR=<path>
 
 Defines an absolute or relative path of the top level directory to be
 used for any external package that will be built by the Hercules build.
 If a relative path, it is relative to the Hercules build directory.
-If omitted, it defaults to "external/"  If the path does not exist, it
+If omitted, it defaults to "extpkg/"  If the path does not exist, it
 is created.
 
-See "Changes in use of external packages," next, for more information.
+See "Changes For External Packages," next, for more information.
 
 
-** Changes in use of external packages
+************************************************************************
+***     Changes For External Packages                                ***
+************************************************************************
 
-The CMake build will, by default, clone and build all required external
+The CMake build will by default clone and build all required external
 packages into the location specified or defaulted to in -DEXTPKG_DIR.
 An external package is one which resides in its own repository and is
 built separately from Hercules.
 
-Hercules presently uses one external package, SoftFloat-3a for Hercules.
+Hercules presently uses one external package, SoftFloat-3a For Hercules.
 Other packages might also become external packages in the future, for
-example in Windows PCRE, BZIP2, and ZLIB.
+example in Windows PCRE, BZIP2, and ZLIB.  The decNumber package may
+also be split in the same matter as SoftFloat-3a For Hercules.
 
-The autotools build for Hercules expected external packages to have been
+The autotools build for Hercules expects external packages to have been
 previously built either by the person doing the build or by the 1Stop
-scripts.  The package(s) were expected to reside at specific location(s)
-relative to the Hercules build directory.  An autotools --enable option
-allowed the builder to specify a location other than the default.
+script.  The package(s) were expected to be installed at specific
+location(s) relative to the Hercules build directory.  An autotools
+--enable option allowed the builder to specify a location other than the
+default.
 
 The CMake build uses its own capabilities and the capabilities of git
-and the  generator (e.g., Unix Makefiles, Ninja, or Visual Studio)
-to build the external package or components of the package only when
-required by updates to the package.  Package updates include commits to
-the remote repository from whatever source and alterations to source
-files, such as might be performed by an external package developer.
+and the  generator (e.g., Unix Makefiles, Ninja, or Xcode) to build
+the external package or components of the package only when required
+by updates to the package.  Package updates include commits to the
+remote repository and alterations to source files, such as might be
+performed by an external package developer.
 
 Command line options are provided to enable control of this automation.
 
--DS3FH_DIR=<path>
+  -DS3FH_DIR=<path>
 
 This existing option names the path to a previously built and installed
 external package.  It is the builder's responsibility to do the build;
@@ -229,16 +259,16 @@ installation directory has been specified.
 
 <path> may be absolute or relative to the Hercules build directory.
 
-This option is most useful to external package developers who are
-modifying an external package and wish to test changes pre-commit.
+The -DS3FH_DIR option is most useful to external package developers who
+are modifying an external package and wish to test changes pre-commit.
 
--DEXTPKG_DIR=<path>
+  -DEXTPKG_DIR=<path>
 
 <path> may be absolute or relative to the Hercules build directory.
 
 Specifies the path that the CMake build will use as the root of all
-external package directories for only those packages that CMake will
-build.  The external package directory structure looks like this:
+package directories for those external packages that CMake will build.
+The external package directory structure looks like this:
 
   extpkg/                    All external packages are placed in extpkg/,
                              with a separate subdirectory per package
@@ -269,17 +299,21 @@ directory specified by -DEXTPKG_DIR.  The directory specified by
 -DEXTPKG_DIR will be created.
 
 
-** Limitations:
+************************************************************************
+***     Current Limitations of the CMake Build                       ***
+************************************************************************
 
 No support for AIX builds.  Test subject needed.
 No support for Windows builds.  A Windows Build is the goal for Version 2
 No Support for Cygwin/MinGW. Formerly deprecated, now gone.
 No support for creating an installation or source tarball.  Future activity.
-No support for making hercifc setuid from within the build.  You will have to
-   do this manually.
+No support for making hercifc setuid from within the build.  You will
+   have to do this manually.
 
 
-** What to do when it fails
+************************************************************************
+***     What To Do When it Fails                                     ***
+************************************************************************
 
 Please create a github issue in Hercules-390/hyperion; feel free to add
 to an existing CMake build issue if one is open and you feel it is
@@ -296,26 +330,17 @@ to the issue in a tarball:
     Testing/Temporary/ (if the failure occurred during make test)
 
 
-** For further investigation:
+************************************************************************
+***     For further investigation:                                   ***
+************************************************************************
 
 Whether regparm(3) is busted may not need to be tested; this was
 tested to deal with a Cygwin-specific bug in gcc versions 3.2 and 3.3.
 
 
-** Appendix: Test methodology and systems
-
-1) <sourcedir>/1Stop-cmake
-2) cd <builddir>/
-3) make test
-4) cd ~/DOS360
-5) ipl, start spooler, end spooler, shut down
-
-Note: The Debian 9 `file` command reports "LSB shared object" rather than
-"LSB executable," and this breaks runtest.  To be addressed in Hercules
-runtest.
-
-
-** Appendix: Complete list of options.
+************************************************************************
+***     Appendix: Complete List of Command-Line Options              ***
+************************************************************************
 
 Caps indicates the default.  Case insensitive, and Y/N/y/n may be used in
 place of YES/NO.
@@ -354,7 +379,22 @@ SYNCIO:         =YES|no  (deprecated) syncio function and device options
 Note: SETUID-HERCIFC=<groupname> is not presently supported.
 
 
-** Testing Methodology
+************************************************************************
+***     Appendix: Test Methodology and Target Systems                ***
+************************************************************************
+
+1) clone into a new source directory
+2) make a build directory
+3) cd <builddir>/
+4) cmake <sourcedir>
+5) make
+6) make test
+7) cd ~/DOS360
+8) ipl, start spooler, end spooler, shut down
+
+Note: The Debian 9 `file` command reports "LSB shared object" rather than
+"LSB executable," and this breaks runtest.  To be addressed in Hercules
+runtest.
 
 Host/Target systems:
 
@@ -377,18 +417,6 @@ ensure a build on a 32-bit system would be limited to 64 CPUs.
 CMake was built from source on Windows Subsystem for Linux; WSL (Ubuntu 14.04 LTS)
 includes CMake 2.8.x, below the 3.4 minimum required for a Hercules CMake build.
 
-On all systems:
-
-1) Fresh clone of Hyperion
-2) cd <build-dir>
-3) make test   (not make check)
-4) make install
-5) cd <guest-os-dir>
-6) IPL a primitive IBM OS, DOS/360, start the spooler, and shut it down.
-
-Testing of external package build support, which was developed and tested
-after the first round of testing described above, did not include steps 5-8.
-
 Anomalous results:
 
 On Debian 8 (32-bit), the main storage test attempt to define a 16-exabyte
@@ -396,4 +424,7 @@ main storage failed with a message mismatch.  This was regarded as a
 testing oddity, not a defect in the Hercules CMake build, because 32-bit
 systems do not support 16-exabyte storage allocations.
 
+Many 32-bit systems support 2G memory allocations; maintest.tst assumes
+that a 32-bit system will return an error when setting mainsize to 2G.
+To be investigated further.
 
