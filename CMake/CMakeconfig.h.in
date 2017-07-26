@@ -144,25 +144,13 @@ Hercules link libs:   @link_alllibs@
 
 /*
    Sundry target hardware characteristics.
-
-   Note that runtest (shell version only) uses `cut -d ' ' ` to parse
-   SIZEOF_INT_P, and the result of that is used to determine bitness.
-   It remains to be seen how best to deal with this, but for the moment,
-   we will not make changes to runtest.  The current Windows version of
-   runtest.cmd is not affected by this issue.
-
-   Changing line 253 of runtest from
-      ptrsize=$(grep SIZEOF_INT_P $hdir/config.h | cut -d ' ' -f 3)
-   to
-      ptrsize=$(grep SIZEOF_INT_P config.h | sed -E "s/ +/ /g"  | cut -d ' ' -f 3)
-   would do the trick.
 */
 
 #cmakedefine  WORDS_BIGENDIAN     @WORDS_BIGENDIAN@
 #cmakedefine  SIZEOF_INT          @SIZEOF_INT@
 #cmakedefine  SIZEOF_LONG         @SIZEOF_LONG@
 #cmakedefine  SIZEOF_SIZE_T       @SIZEOF_SIZE_T@
-#cmakedefine SIZEOF_INT_P @SIZEOF_INT_P@
+#cmakedefine  SIZEOF_INT_P        @SIZEOF_INT_P@
 #cmakedefine  SIZEOF_OFF_T        @SIZEOF_OFF_T@
 
 

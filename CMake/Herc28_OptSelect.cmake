@@ -299,23 +299,23 @@ endif( )
 # targets, off_t starts out as a 64-bit type and large file support is
 # automatic and cannot be disabled.
 
-# Some 32-bit open source targets, notably GNU/Linux targets, use a
-# 32-bit file offset by default.  Defining _FILE_OFFSET_BITS=64 prior
-# to including any system headers causes those headers to define a
-# 64-bit off_t and corresponding file control functions.  To code being
-# compiled, such targets behave exactly the same as targets for which
-# a 64-bit off_t is the only choice.  The macro _LFS_LARGEFILE tells
-# code being compiled that large file support is possible.  But that
-# support must be specifically enabled before it can be used.
+# Some 32-bit open source targets, notably GNU/Linux targets, and
+# Solaris 32-bit use a 32-bit file offset by default.  Defining
+# _FILE_OFFSET_BITS=64 prior to including any system headers causes
+# those headers to define a 64-bit off_t and corresponding file control
+# functions.  To code being compiled, such targets behave exactly the
+# same as targets for which a 64-bit off_t is the only choice.  The
+# macro _LFS_LARGEFILE tells code being compiled that large file support
+# is possible but does not tell if that code is enabled.
 
 # Some 32-bit targets (which ones?) only support transitional large file
 # support, which offers an alternative file offset type off64_t and file
 # control function alternates that can exist side-by-side with the non-
 # large type and functions.  Availability of transitional support is
-# revealed by the _LFS64_LARGEFILE macro.  Availability of transitional
-# cannot be suppresed.  If Hercules is to be built on a system that
-# includes transitional support, the build tools must instruct Hercules
-# to not use transitional support.
+# revealed by the _LFS64_LARGEFILE macro.  No specific enablement is
+# needed for transitional support.  If Hercules is to be built without
+# large file support on a system that includes transitional support,
+# the build tools must instruct Hercules to not use transitional support.
 
 # The _LFS_LARGEFILE and _LFS64_LARGEFILE macros are defined in posix_opt.h.
 
@@ -344,7 +344,11 @@ endif( )
 # 64-bit versions of AIX support LFS with the same preparations as
 # open source 64-bit systems, i.e., none.  See p. 139.
 
-message( "LFS: Size of OFF_T: ${SIZEOF_OFF_T} LARGEFILE: ${LARGEFILE} buildWith_LARGEFILE: ${buildWith_LARGEFILE} " )
+# And off_t is defined consistent with the target's
+# large file support capabilities, 4 if none enabled, or 8 if large file
+# support is native or enabled.  If fseeko is not defined, then Hercules
+# will use fseek, which has a file offset parameter of long.
+
 
 # If the target's off_t is 8 bytes (64 bits) by default, then large file
 # support is present by default and cannot be turned off or disabled.
@@ -354,6 +358,7 @@ if( ${SIZEOF_OFF_T} EQUAL 8)
     if( "${LARGEFILE}" STREQUAL "NO" )
         Herc_Save_Error( "Large file support cannot be disabled on this target; LARGEFILE=${LARGEFILE} rejected." )
     endif( )
+    set( herc_LargeFile_Status "Using native large file support." )
 endif( )
 
 # Change default for LFS support based on target capabilities.  And issue
@@ -363,6 +368,8 @@ endif( )
 if( ${SIZEOF_OFF_T} EQUAL 4)
     if( NOT (HAVE_DECL__LFS_LARGEFILE OR HAVE_DECL__LFS64_LARGEFILE) )
         set( buildWith_LARGEFILE          "NO"  CACHE INTERNAL "${help_Sumry_LARGEFILE}" )
+        set( DISABLE_LARGEFILE 1 )
+        set( herc_LargeFile_Status "Not available on this target." )
         if( "${LARGEFILE}" STREQUAL "YES" )
             Herc_Save_Error( "Large File System support is not available on this target; LARGEFILE=${LARGEFILE} rejected." )
         endif( )
@@ -370,20 +377,19 @@ if( ${SIZEOF_OFF_T} EQUAL 4)
 endif( )
 
 if( (${SIZEOF_OFF_T} EQUAL 4)
-        AND ( (HAVE_DECL__LFS_LARGEFILE OR HAVE_DECL__LFS64_LARGEFILE) ) )
+        AND (NOT DISABLE_LARGEFILE) )
 
 # LFS-capable target and LFS support requested or defaulted.  See what
 # macro is needed to enable that support.
     if( ("${LARGEFILE}" STREQUAL "YES")
             OR ( ("${LARGEFILE}" STREQUAL "") AND ("${buildWith_LARGEFILE}" STREQUAL "YES") ) )
-        message( "LFS: testing compiler directives for large file support" )
         # Try _FILE_OFFSET_BITS = 64 (GNU/Linux) first and see if
         # SIZEOF_OFF_T changes from 4 to 8.
         set( CMAKE_REQUIRED_DEFINITIONS "-D_FILE_OFFSET_BITS=64" )
         set( CMAKE_EXTRA_INCLUDE_FILES "sys/types.h" )
         CHECK_TYPE_SIZE( "off_t" SIZEOF_OFF_T_X LANGUAGE C )
-        message( "LFS: SIZEOF_OFF_T: ${SIZEOF_OFF_T_X} with _FILE_OFFSET_BITS=64" )
         if( ${SIZEOF_OFF_T_X} EQUAL 8 )
+            set( herc_LargeFile_Status "Using specifically-enabled large file support." )
             set( _FILE_OFFSET_BITS 64 )
             set( SIZEOF_OFF_T 8 CACHE INTERNAL "CHECK_TYPE_SIZE: sizeof(off_t)" FORCE)
             message( "LFS: SIZEOF_OFF_T: ${SIZEOF_OFF_T} after _FILE_OFFSET_BITS=64 and cache set." )
@@ -394,6 +400,7 @@ if( (${SIZEOF_OFF_T} EQUAL 4)
             set( CMAKE_REQUIRED_DEFINITIONS "-D_LARGE_FILE=1" )
             CHECK_TYPE_SIZE( "off_t" SIZEOF_OFF_T LANGUAGE C )
             if( ${SIZEOF_OFF_T_X} EQUAL 8 )
+                set( herc_LargeFile_Status "Using specifically-enabled large file support." )
                 set( SIZEOF_OFF_T 8 CACHE INTERNAL "CHECK_TYPE_SIZE: sizeof(off_t)" FORCE)
                 set( _LARGE_FILE 1 )
             else( )
@@ -408,12 +415,8 @@ if( (${SIZEOF_OFF_T} EQUAL 4)
         endif( )
         set( CMAKE_REQUIRED_DEFINITIONS "" )
         set( CMAKE_EXTRA_INCLUDE_FILES "" )
-
-# LFS support specified or defaulted to NO.  Exclude use of transitional
-# LFS support in the Hercules build.
     else( )
-        message( "Large file support supressed" )
-        set( DISABLE_LARGEFILE 1 )   # LARGEFILE specified or defaulted to NO.
+        set( herc_LargeFile_Status "Available but suppressed by -DLARGEFILE=NO" )
     endif( )
 endif( )
 

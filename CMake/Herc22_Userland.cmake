@@ -282,13 +282,13 @@ herc_Check_Symbol_Exists( IFNAMSIZ        "${prereq_Headers};net/if.h"     OK )
 # Linux systems define IOCTL values as constants in linux/sockios.h
 # (note the plural), which is included by sys/ioctl.h.
 
-# BSD systems define IOCTL values as constants in sys/sockio.h (note the 
+# BSD systems define IOCTL values as constants in sys/sockio.h (note the
 # singular), which is included by sys/ioctl.h.
 
-# Solaris systems also define IOCTL values as constants in sys/sockio.h 
+# Solaris systems also define IOCTL values as constants in sys/sockio.h
 # (singular, just like BSD), and it must be included explicitly.
 
-# For BSD systems, the Hercules autotools tests never detected the SIOC* 
+# For BSD systems, the Hercules autotools tests never detected the SIOC*
 # macros and so the corresponding functionality was never built in the
 # Hercules.  And as a result, functionality enabled by these macros has
 # not received much use on BSD.
@@ -298,10 +298,10 @@ herc_Check_Symbol_Exists( IFNAMSIZ        "${prereq_Headers};net/if.h"     OK )
 
 # So we shall check for the existence of linux/sockios.h as a tell-tale
 # for a Linux-based SIOC* implementation and sys/sockio.h as a tell-tale
-# for a BSD or Solaris-based SIOC* implementation.  If neither exist, 
-# then none of the values will be defined.  If sys/sockio.h exists, we 
+# for a BSD or Solaris-based SIOC* implementation.  If neither exist,
+# then none of the values will be defined.  If sys/sockio.h exists, we
 # will include it in the build.  This allows builds on Solaris without
-# having to test for the Solaris target.  
+# having to test for the Solaris target.
 
 # For compatibilty with the autotools build, if this is a BSD-style
 # SIOC* macro definition set, the tests are skipped and config.h will
@@ -440,12 +440,18 @@ if( NOT WIN32 )
     herc_Check_Function_Exists( pipe FAIL )
 endif( )
 
-# If SIZEOF_OFF_T is 8, then large file support is possible.  Test for
-# fseeko so Hercules will use it if available.  Hercules will build
-# correctly without it.
+# Function fseeko() and ftello() use off_t for the file offset or returned
+# value respectively, instead of the long type used in fseek/ftell.  It
+# would surprise me to find a system with large file support, without
+# fseeko, and with long defined as less than sizeof(off_t) bytes.  But
+# one never knows.
 
 herc_Check_Function_Exists( fseeko OK )
-
+if( NOT HAVE_FSEEKO )
+    if( SIZEOF_OFF_T GREATER "${SIZEOF_LONG}" )
+        herc_Save_Error( "Native large file support provided but fseeko missing and sizeof(long)=${SIZEOF_LONG}, less than sizeof(off_t)=${SIZEOF_OFF_T}")
+    endif( )
+endif( )
 
 # On many systems, inet_aton is found in the basic c runtime.  On others
 # (e.g., SunOS, Solaris) it is included in libnsl.  For Windows, it does
