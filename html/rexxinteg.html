@@ -1,0 +1,365 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules: Shared Device Server</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+<link rel="shortcut icon" href="images/favicon.ico" />
+<link rel="icon" href="images/favicon.ico" />
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules-REXX Integration</h1>
+<hr noshade>
+<h2>Contents</h2>
+<ul>
+<li><a href="#overview">    Overview</a>
+<li><a href="#which">       Which REXX Interpreter Should I Use?</a>
+<li><a href="#reginarexx">  Regina Rexx</a>
+    <ul>
+    <li><a href="#reginanonstd">Installing Regina Rexx in other than the standard directories</a></li>
+    </ul>
+<li><a href="#oorexx">      Open Object Rexx</a>
+    <ul>
+    <li><a href="#oorexxnonstd">Installing Open Object Rexx in other than the standard directories</a></li>
+    <li><a href="#oorexxrxapi">The ooRexx rxapi Daemon/Service</a></li>
+    <li><a href="#oorexxrc1002">rc=1002 and Open Object Rexx</a></li>
+    </ul>
+<li><a href="#addtlrexx">Additional REXX resources</a></li>
+<li><a href="#sample">      Sample Hercules-REXX Script         </a>
+</ul>
+
+
+<hr noshade>
+<h2><a NAME="overview">Overview</a></h2>
+
+<p>Hercules-REXX integration allows you to use 
+<a href="http://rexxla.org/" target="_blank">REXX</a> scripts as 
+.rc files and to execute REXX scripts using the <code>exec</code> command.&nbsp;
+REXX scripts can issue commands to the Hercules console. 
+</p>
+<p>REXX integration is not required to use runtest, 
+which uses REXX for log analysis.
+REXX is used by runtest to run a script to analyse a Hercules 
+log after the test scripts have have been run.
+If all you wish to do is use runtest, 
+you do not need to integrate a REXX interpreter with Hercules.
+</p>
+<p>Hercules can be integrated with either or both of the following REXX interpreters.</p>
+<ul>
+    <li><a href="http://regina-rexx.sourceforge.net/" target="_blank">Regina Rexx Interpreter</a></li>
+    <li><a href="http://www.oorexx.org/" target="_blank">Open Object Rexx, also known as ooRexx</a></li>
+</ul>
+<p>Each interpreter,
+when integrated with Hercules, 
+offers the same set of capabilities.
+Open Object Rexx also allows for object-oriented REXX programming.  
+</p>
+<p>If Hercules is integrated with both REXX interpreters when built, 
+the <code>rexx start/enable</code> and <code>rexx stop/disable</code>
+are enabled; 
+these commands allow you to select which REXX interpreter should
+be used by Hercules following execution of the commands.  
+</p>
+
+
+    <p>&nbsp;</p>
+<h2><a NAME="which">Which REXX Interpreter Should I Use?</a></h2>
+<p>That depends.
+</p>
+<p>If you are new to integrating REXX with Hercules,
+Regina Rexx represents an easier path and offers 
+the capabilities of the traditional REXX language. 
+</p>
+<p>Regina Rexx is included in selected open source distributions, 
+including Debian, Leap/Tumbleweed, and Ubuntu, 
+and Windows and mac OS installables are available.  
+If you choose to build from source, 
+the build process includes targets for rpm and deb files for 
+later installation by your system's package manager.   
+And Regina Rexx will build from source on Solaris and FreeBSD,
+although <code>make install</code> is your next step on these systems;
+targets for those systems' package managers do not exist in 
+the Regina Rexx build scripts.
+</p>
+<p>If you have Open Object Rexx installed on your system
+and the rxapi daemon/service is set up to run at system start-up,
+then ooRexx is a fine choice.
+In addition to the traditional REXX language, 
+ooRexx includes object-oriented programming capabilities.  
+Open Object Rexx installable binaries exist for many older
+GNU/Linux distributions,
+and Leap 42.2 includes Open Object Rexx in its library of
+installable packages.  
+</p>
+<p>For most newer GNU/Linux distributions, though, 
+you will need to build from source.
+Open Object Rexx will not build on Solaris 11.3,
+nor on FreeBSD 11,
+so on these target systems, 
+Regina Rexx is your best choice.  
+</p>
+
+
+    <p>&nbsp;</p>
+<h2><a NAME="reginarexx">Regina Rexx Interpreter</a></h2>
+<p>You can find Regina Rexx at its  
+<a href="http://regina-rexx.sourceforge.net/" target="_blank">Sourceforge site.</a>
+The site includes links to documentation, release notices, and
+downloadable installation packages for a number of target systems.
+The installation packages seem to reflect target system releases
+avaialble in April, 2015.  
+</p>
+<p>Release 3.9.1, 
+available since April of 2015,
+has been tested with Hercules, 
+as has release 3.6.
+A review of release notices suggests that older 
+versions may work as well,
+although it makes sense to use the newest version available
+if you are starting from scratch.  
+Regina Rexx is also included in the software repositories
+of some newer open system distributions, 
+including:
+<ul>
+    <li><a href="https://packages.debian.org/search?keywords=regina-rexx" target="_blank">Debian</a></li>
+    <li><a href="https://software.opensuse.org/package/Regina-REXX" target="_blank">OpenSUSE Leap & Tumbleweed</a></li>
+    <li><a href="https://packages.ubuntu.com/search?keywords=regina-rexx" target="_blank">Ubuntu</a>, 
+            apparently based on the Debian installables</li>
+</ul>
+</p>
+<p>Regina Rexx is easily built from source using a standard 
+GNU autotools-based build (configure, make, make install).
+</p>
+
+
+<h4 id="reginanonstd">Installing Regina Rexx in other than the standard directories</h4>
+<p>You must do the following if you install Regina Rexx
+in other than the default installation directory:
+<ul>
+    <li>Issue <code>export LD_LIBRARY_PATH=&lt;ReginaRexxPrefix/lib&gt;</code> or <code>/lib64</code>
+        before starting Hercules so that Hercules can dynamically 
+        load the Regina Rexx libraries.</li>
+    <li>Identify the non-default Regina Rexx install location 
+        in flags provided to configure (GNU autotools) or CMake
+        when building Hercules. </li>
+</ul>
+</p>
+<p>File INSTALL in the Regina Rexx source tarball documents 
+the build from source process for many open source and UNIX-like platforms. 
+</p>
+
+
+    <p>&nbsp;</p>
+<h2><a NAME="oorexx">Open Object Rexx</a></h2>
+<p>Release 4.2.0, 
+available since Febuary 2014,
+has been tested with Hercules.
+A review of release notices suggests that older 
+versions may work as well,
+although it makes sense to use the newest version available
+if you are starting from scratch.  
+Open Object Rexx is also included in the software repositories
+of some newer open system distributions, 
+including:
+<ul>
+    <li><a href="https://apps.fedoraproject.org/packages/oorexx" target="_blank">Fedora</a></li>
+    <li><a href="https://software.opensuse.org/package/ooRexx" target="_blank">OpenSUSE Leap & Tumbleweed</a></li>
+</ul>
+</p>
+<p>Open Object Rexx is built from source using a standard 
+GNU autotools-based build (configure, make, make install).
+Open Object Rexx also requires a daemon/service process, rxapi, to enable
+its Application Programming Interface (API).  
+Hercules uses the ooRexx API as part of its integration with ooRexx.  
+Configuring the target system to start this process at boot-up
+is specific to the target OS (init.d, systemd, or something else).
+</p>
+<p>Files INSTALL and unix-like-build.txt included with the 
+source distribution provide guidance on building and installing 
+Open Object Rexx.  
+Also, you should review the file 
+<a href="https://downloads.sourceforge.net/project/oorexx/oorexx/4.2.0/_ReadMe.pdf?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Foorexx%2Ffiles%2Foorexx%2F4.2.0%2F&ts=1502238615&use_mirror=versaweb" target="_blank">
+_ReadMe.pdf</a> 
+in the <a href="https://sourceforge.net/projects/oorexx/files/oorexx/4.2.0/" target="_blank">ooRexx 4.2.0</a>
+directory on sourceforge.net.
+That file contains more detail about installing the rxapi service.  
+</p>
+
+
+<h4 id="oorexxnonstd">Installing Open Object Rexx in other than the standard directories</h4>
+<p>You must do the following if you install Open Object Rexx
+in other than the default installation directory:
+<ul>
+    <li>Issue <code>export LD_LIBRARY_PATH=&lt;OpenObjectRexxPrefix/lib&gt;</code> or <code>/lib64</code>
+        before starting Hercules so that Hercules can dynamically 
+        load the Open Object Rexx libraries.</li>
+    <li>Identify the non-default Open Object Rexx install location 
+        in flags provided to configure (GNU autotools) or CMake
+        when building Hercules. </li>
+    <li>Set up the rxapi service so that it is started from the 
+        correct non-default location.</li>
+    <li>Ensure there are no security exposures created by
+        running a system service from a directory that is 
+        not limited to those with root privileges. </li>
+</ul>
+</p>
+
+
+<h4 id="oorexxrxapi">The ooRexx rxapi Daemon/Service</h4>
+<p>The rxapi process, 
+either daemon or service depending on your target OS,
+must be running for Hercules to successfully integrate 
+with Open Object Rexx.  
+On open source and UNIX-like systems,
+the process name is <code>rxapi</code>.
+In <code>systemd</code> service name terms, 
+it is rxapid.service.  
+If rxapi is not running, 
+you will receive intermittent <a href="#oorexxrc1002">return code 1002</a>
+("out of memory") 
+errors when:
+<ul>
+    <li>trying to enable Open Object Rexx
+        (<code>rexx enable</code> command), </li>
+    <li>querying REXX integration status,
+        (<code>rexx</code> command without operands),
+        when Open Object Rexx has been previously enabled.</li>
+    <li>or running a REXX script
+        (<code>exec &lt;scriptname&gt;</code> command)
+        when Open Object Rexx has been previously enabled.  </li>
+</ul>
+</p>
+
+<p>The pre-packaged binaries normally make an attempt to set up
+rxapi as a daemon/service started at system boot, 
+but the attempt may or may not be successful.  
+The rxapi daemon/service will not start at system boot
+if you have built and installed Open Object Rexx in a 
+non-standard location, for example <code>--prefix=$HOME/ooRexx/</code>.
+</p>
+<p>The rxapi service may be started from the command line
+using root privileges via <code>sudo /usr/bin/rxapi</code> 
+or the equivalent if you prefer to use <code>su</code>.
+If you start it manually, 
+it will remain running until you reboot your system.  
+</p>
+
+
+<h4 id="oorexxrc1002">rc=1002 and Open Object Rexx</h4>
+<p>If you receive intermitent 1002 return codes from Hercules when 
+executing the <code>rexx</code> 
+command or running REXX scripts using the <code>exec</code>
+command,
+check to see that the rxapi process is running.
+</p>
+<p>On open source systems, 
+a missing rxapi daemon/service will be reported as 
+return code 1002.  
+Open Object Rexx documentation describes rc=1002 
+as an out of memory error, 
+but a missing rxapi process will generate the same
+return code. 
+</p>
+<p>If you get this return code, 
+consider the possibility that the rxapi process has failed. 
+See <a href="#oorexxrxapi">The ooRexx rxapi Daemon/Service</a>,
+above, 
+for additional information.
+</p>
+    <p>&nbsp;</p>
+<h2><a NAME="addtlrexx">Additional REXX resources</a></h2>
+<p>The following web sites have good information about 
+REXX script development and are worth a look:
+<ul>
+<li><a href="http://www.rexxinfo.org/html/oorexx.html" target="_blank">www.rexxinfo.org</a>: good information on this site.  
+        The site is targeted to ooRexx, but much of the information works for both ooRexx and Regina Rexx. </li>
+</ul>
+</p>
+    <p>&nbsp;</p>
+<h2><a NAME="sample">Sample Hercules-REXX Script</a></h2>
+
+<p>The following REXX script is a sample that can be used to
+verify that Hercules-REXX integration is working, 
+and it shows what can be accomplished using a REXX 
+script "inside" of Hercules.  
+It is taken from the 
+<a href="http://hercdoc.glanzmann.org/V400/HerculesUserReference.pdf" target="_blank">Hercules User Reference</a>,
+pages 376-377.  
+</p>
+
+<p>You can copy and past the example below into a file 
+sample.rexx on your system and give it a try.
+</p>
+<blockquote>
+<table style="border: 1px solid black">
+<tr>
+<td>
+<pre><code>/* REXX */
+ parse arg parms
+
+ parms = space(parms)
+ argc  = words(parms)
+
+ parse version ver
+ parse source src
+
+ env = address()
+
+ parse var src . . cmd
+ who = filespec("n",cmd)
+ parse var who who "." . 
+
+ say who " started"
+ say who " version . . . .  :" ver
+ say who " source  . . . .  :" src
+ say who " hostenv . . . .  :" env
+
+
+ say who " date  . . . . .  :" date()
+ say who " time  . . . . .  :" time() 
+ 
+ 
+ if parms = "" 
+ then do
+      say who " arguments . . .  : no arguments given"
+      ret = 0
+      end
+ else do
+      say who " arguments . . .  :" parms
+      ret = parms
+      end
+
+ Say who " Hercules version :" value('version',,'SYSTEM')
+ Say who " RC environment . :" value('HERCULES_RC',,'ENVIRONMENT')
+
+ address hercules 'uptime'
+
+ say who " ended"
+ 
+ exit ret
+ 
+</code></pre>
+</td>
+</tr>
+</table>
+</blockquote>
+
+<br />
+<hr />
+<p>
+<small>This web page Copyright &copy; 2017 by Stephen R. Orso.
+<br /><br />
+This work is licensed under the Creative Commons Attribution-
+ShareAlike 4.0 International License. 
+<br /><br />
+To view a copy of this license,
+visit 
+<a href="http://creativecommons.org/licenses/by-sa/4.0/" 
+        target="_blank">http://creativecommons.org/licenses/by-sa/4.0/</a> 
+or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+</small>
+</p>
+
+</BODY>
+</HTML>

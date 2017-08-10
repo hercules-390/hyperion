@@ -39,13 +39,13 @@ The Hercules System/370, ESA/390, and z/Architecture Emulator</TITLE>
 <p>
 
 This is official web page for the <b>Hercules 4.0</b> version
-of the Hercules mainframe emulator, code named <b>"Hyperion"</b>.
+of the Hercules mainframe emulator, working titled <b>"Hyperion"</b>.
 
 <br /><br />
 
 The <b>Hyperion</b> version of Hercules is the official development version of
-the Hercules emulator and contains the latest bleeding edge changes made by Hercules
-developers to address various bugs that may exist in the production version.
+the Hercules emulator and contains the latest corrections and enhancements made by volunteer Hercules
+developers.
 
 <br /><br />
 
@@ -59,6 +59,95 @@ and Mac OS X.
 
 Hercules is <a href="http://www.opensource.org/">OSI Certified Open Source Software</a>
 licensed under the terms of the <a href="herclic.html">Q Public Licence</a>.
+
+<h3>Minimum supported host platforms:</h3>
+<ul>
+
+    <li><b>Windows</b>
+        <p>
+        The current minimum supported Windows platform is Windows XP
+        x64 or Windows Server 2003 or greater. That will likely change
+        in the near future however since neither
+        are supported any longer by Microsoft (extended support for
+        both ended on April 2014 and July 2015 respectively).
+        </p>
+    <li><b>Open Source systems (Linux, BSD, etc)</b>
+        <p>
+        (varies)
+        </p>
+</ul>
+<h3>Installation Materials:</h3>
+<ul>
+    <li><a href="https://github.com/hercules-390/hyperion/releases/latest" target="_blank">Hyperion 4.0.0-rc0</a>.
+        is the current release candidate.  It includes zip'd Windows binaries 
+            and sources to build and install on open-source operating systems.&nbsp; <br />
+        <br />
+    </li>
+    <li>Windows installation instructions: 
+        The Windows binaries can be installed in the directory of your choice; change the Windows
+        Path statement to include that directory.  
+        Windows users will need a Microsoft Visual C++ Runtime.&nbsp; 
+        If not already installed on your computer, you can get it from Microsoft at this link:&nbsp; 
+        <a href="http://support.microsoft.com/kb/2019667" target="_blank">
+                Microsoft Visual C++ 2008 Runtime components</a>.<br />
+        <br />
+    </li>
+    <li>Open Source system installation instructions: see 
+        <a href="https://github.com/hercules-390/hyperion/blob/master/BUILDING.txt">BUILDING.txt</a> and 
+        <a href="https://github.com/hercules-390/hyperion/blob/master/README.BuildUNIX.txt">README.BuildUNIX.txt</a>
+    </li>
+
+</ul>
+
+<h3>Documentation:</h3>
+    <p>The Web/HTML documentation is in a "how-to" style with examples.  
+        The downloadable PDFs are comprehensive reference documentation.  </p>
+    <table style="border-style:none">
+    <tr style="border-style:none;text-align:center">
+        <th style="border-style:none">Web/HTML</th>
+        <th style="border-style:none">    </th>
+        <th style="border-style:none">Downloadable PDFs</th>
+    </tr>
+    <tr style="border-style:none">
+        <td style="border-style:none">
+        <ul>
+            <li><a href="hercinst.html">Hercules Installation and Operation</a></li>
+            <li><a href="hercconf.html">Hercules Configuration File</a></li>
+            <li><a href="hercmsg.html">Hercules System Messages</a></li>
+            <li><a href="hercfaq.html">Hercules Frequently-Asked Questions</a></li>
+            <li><a href="rexxinteg.html">Hercules-REXX Integration</a></li>
+            <li><a href="hercsupp.html">Technical Support</a></li>
+            <li><a href="herclic.html">The Q Public Licence</a></li>
+        </ul>
+        </td>
+        <td style="border-style:none">    </td>
+        <td style="border-style:none">
+        <ul>
+            <li><a href="http://hercdoc.glanzmann.org/V400/HerculesGeneralInfo.pdf">Hercules General Information</a>
+            <li><a href="http://hercdoc.glanzmann.org/V400/HerculesInstallation.pdf">Hercules Installation Guide</a>
+            <li><a href="http://hercdoc.glanzmann.org/V400/HerculesUserReference.pdf">Hercules User Reference Guide</a>
+            <li><a href="http://hercdoc.glanzmann.org/V400/HerculesOperationsandUtilities.pdf">Hercules Operations and Utilities Guide</a>
+            <li><a href="http://hercdoc.glanzmann.org/V400/HerculesMessagesandCodes.pdf">Hercules Messages and Codes</a>
+            <li><a href="http://hercdoc.glanzmann.org/V400/HerculesReferenceSummary.pdf">Hercules Reference Summary</a>
+        </ul>
+        </td>
+    </tr>
+</table>
+
+
+<h3>Additional helpful links</h3>
+<ul>
+    <li><a href="hercnew.html">What's new in this release</a>
+    <li><a href="hercrnot.html">Release notes</a>
+    <li><a href="https://github.com/hercules-390/hyperion/issues">Issue Tracker</a>
+    <li><a href="http://groups.yahoo.com/group/hercules-390">Support Forum</a>
+    <li><a href="https://github.com/hercules-390/hyperion/wiki">Developer Wiki</a>
+    <li><a href="https://github.com/hercules-390/hyperion" target="_blank">Source Code Repository</a></li>
+</ul>
+
+
+<center><hr width=15% noshade></center>
+
 
 <p>
 
@@ -228,135 +317,6 @@ http://linuxvm.org/Present/SHARE99/S2880JMa.pdf</a>
 
 <center><hr width=15% noshade></center>
 
-<h3>To find out more about Hercules 4.0 Hyperion, follow these links:</h3>
-
-<h4>Web documentation:</h4>
-<ul>
-    <li><a href="hercinst.html">Hercules Installation and Operation</a>
-    <li><a href="hercconf.html">Hercules Configuration File</a>
-    <li><a href="hercmsg.html">Hercules System Messages</a>
-    <li><a href="hercfaq.html">Hercules Frequently-Asked Questions</a>
-    <li><a href="hercsupp.html">Technical Support</a>
-    <li><a href="herclic.html">The Q Public Licence</a>
-</ul>
-
-<h4>PDF manuals:</h4>
-<ul>
-    <li><a href="http://hercdoc.glanzmann.org/V400/HerculesGeneralInfo.pdf">Hercules General Information</a>
-    <li><a href="http://hercdoc.glanzmann.org/V400/HerculesInstallation.pdf">Hercules Installation Guide</a>
-    <li><a href="http://hercdoc.glanzmann.org/V400/HerculesUserReference.pdf">Hercules User Reference Guide</a>
-    <li><a href="http://hercdoc.glanzmann.org/V400/HerculesOperationsandUtilities.pdf">Hercules Operations and Utilities Guide</a>
-    <li><a href="http://hercdoc.glanzmann.org/V400/HerculesMessagesandCodes.pdf">Hercules Messages and Codes</a>
-    <li><a href="http://hercdoc.glanzmann.org/V400/HerculesReferenceSummary.pdf">Hercules Reference Summary</a>
-</ul>
-
-<h4>What's New, Release Notes, etc:</h4>
-<ul>
-    <li><a href="hercnew.html">What's new in this release</a>
-    <li><a href="hercrnot.html">Release notes</a>
-    <li><a href="https://github.com/hercules-390/hyperion/issues">Issue Tracker</a>
-    <li><a href="http://groups.yahoo.com/group/hercules-390">Support Forum</a>
-    <li><a href="https://github.com/hercules-390/hyperion/wiki">Community Wiki</a>
-</ul>
-
-<h4>Source code and binaries:</h4>
-<ul>
-    <li>Source code:
-    <p>
-    <ul>
-        <li><a href="https://github.com/hercules-390/hyperion">Source code repository on Github</a>
-        <li><a href="https://github.com/hercules-390/hyperion/archive/master.zip">Source code .ZIP file from Github</a>
-    </ul>
-    <p>
-    <li>Windows binaries:
-        <p>
-        <ul>
-            <li><a href="http://www.softdevlabs.com/hyperion.html#prebuilt">Hyperion 4.00 Pre-built Binaries</a>: &nbsp; (SoftDevLabs)
-            <p>
-                <b>Note:</b> The above development snapshots of Hercules 4.0 Hyperion
-                do not come with an installer to install the required Microsoft Visual
-                C++ 2008 Runtime components. The above .zip files contain only the Hercules
-                binaries. You will need to either manually install the
-                <a href="http://support.microsoft.com/kb/2019667">Microsoft Visual C++ 2008 Runtime components</a>
-                yourself, or else install one of the products from Fish's
-                <a href="http://www.softdevlabs.com">SoftDevLabs</a> web site
-                which come with their own standard Windows installers to
-                automatically install the Visual C++ 2008 Runtime components for you.
-        </ul>
-</ul>
-
-<center><hr width=15% noshade></center>
-
-<h3>GitHub source code repositories:</h3>
-
-<p>
-The complete source code and development history for
-Hercules is also available via anonymous access from
-the below git repositories.
-<p>
-<b>Please note</b> that <i>either</i> repository may contain faults which
-may be fixed at an unspecified later date. Additionally, the
-<b>hyperion</b> development repository may contain experimental code
-that might not appear in future spinhawk production releases.
-
-<p>
-Build instructions are contained in the source files <tt>BUILDING</tt>
-and <tt>INSTALL</tt> (for Unix) or <tt>README.WIN64</tt> (for Windows)
-in each of the repositories. Fish also has a
-"<a href="http://www.softdevlabs.com/hercules-msvc-build.html">Hercules Windows Build Instructions</a>"
-web page on his SoftDevLabs web site.
-
-<br /><br />
-
-<blockquote>
-<dl>
-    <dt>
-        <a href="https://github.com/rbowler/spinhawk" target="_blank">
-        https://github.com/rbowler/<b>spinhawk</b></a>
-    <dd>
-        <p>
-        The <b>spinhawk</b> repository is used to build the 3.xx series
-        of &#147;gold&#148; releases.
-        The intent of the 3.xx release stream is to provide regular
-        production-quality releases fully compatible with version 3.07,
-        containing additional architectural features and bug fixes,
-        as well as selected enhancements from the developer sandbox.
-        </p>
-
-    <br />
-
-    <dt>
-        <a href="https://github.com/hercules-390/hyperion" target="_blank">
-        https://github.com/hercules-390/<b>hyperion</b></a>
-    <dd>
-        <p>
-        The <b>hyperion</b> repository is used by a group of developers
-        as a cutting-edge developer sandbox. It is currently designated
-        as version 4.00. This repository evolved from Hercules version 3.07
-        enriched by a series of user interface changes and usability enhancements
-        produced during the TurboHercules period. It also contains
-        experimental support for the QDIO and MPCPTP6 networking interfaces
-        and a redesigned I/O subsystem.
-        </p>
-</dl>
-</blockquote>
-
-<h3>Minimum supported host platforms:</h3>
-<ul>
-
-    <li><b>Windows</b>
-        <p>
-        The current minimum supported Windows platform is Windows XP
-        x64 or Windows Server 2003 or greater. That will likely change
-        in the <i><u>very</u></i> near future however since neither
-        are supported any longer by Microsoft (extended support for
-        both ended on April 2014 and July 2015 respectively).
-        </p>
-    <li><b>Non-Windows</b>
-        <p>
-        (varies)
-        </p>
-</ul>
 
 <center><hr width=15% noshade></center>
 
