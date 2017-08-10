@@ -67,6 +67,7 @@
 #define REGINA_LIBRARY        "regina.dll"
 #define OOREXX_LIBRARY        "rexx.dll"
 #define OOREXX_API_LIBRARY    "rexxapi.dll"
+#define OOREXX_UTIL_LIBRARY   "rexxutil.dll"
 
 #elif   defined ( __APPLE__ )
 #define EXTNDELIM             ":"
@@ -76,6 +77,7 @@
 #define REGINA_LIBRARY        "libregina.dylib"
 #define OOREXX_LIBRARY        "librexx.dylib"
 #define OOREXX_API_LIBRARY    "librexxapi.dylib"
+#define OOREXX_UTIL_LIBRARY   "librexxutil.dylib"
 
 #else
 #define EXTNDELIM             ":"
@@ -85,6 +87,7 @@
 #define REGINA_LIBRARY        "libregina.so"
 #define OOREXX_LIBRARY        "librexx.so"
 #define OOREXX_API_LIBRARY    "librexxapi.so"
+#define OOREXX_UTIL_LIBRARY   "librexxutil.so"
 #endif
 
 #define REXX_START                  "RexxStart"

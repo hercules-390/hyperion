@@ -46,6 +46,7 @@
 
 extern void *hRexxLibHandle;        /* Library handle */
 extern void *hRexxApiLibHandle;     /* Api Library handle */
+extern void *hRexxUtilLibHandle;    /* Utility Lbrary handle ooRexx */
 
 extern char *RexxPackage;
 
@@ -74,11 +75,24 @@ static PFNREXXALLOCATEMEMORY        hRexxAllocateMemory;
 static PFNREXXFREEMEMORY            hRexxFreeMemory;
 static PFNREXXVARIABLEPOOL          hRexxVariablePool;
 
+/*
+    TAKE NOTE, TAKE NOTE:  The ooRexx libraries, all three of them, must be
+    opened, in the order librexxapi.so, librexx.so, and librexxutil.so, and 
+    with the RTLD_GLOBAL flag set.  The first two libraries have dependencies
+    on each other.  When built with libtool, these dependencies seem to be
+    addressed but it could be good luck.  Without libtool, not so much luck.  
+    See David Ashley's post dated 3 Nov 2010 in the ooRexx bug tracker at
+    https://sourceforge.net/p/oorexx/mailman/message/26544162/.  The entire
+    thread is worth a look.  (David Ashley is an ooRexx developer.)
+*/
+
 int ObjectRexxDynamicLoader()
 {
-    HDLOPEN( hRexxLibHandle, OOREXX_LIBRARY, RTLD_LAZY);
+    HDLOPEN( hRexxApiLibHandle, OOREXX_API_LIBRARY, RTLD_LAZY | RTLD_GLOBAL);
 
-    HDLOPEN( hRexxApiLibHandle, OOREXX_API_LIBRARY, RTLD_LAZY);
+    HDLOPEN(hRexxLibHandle, OOREXX_LIBRARY, RTLD_LAZY | RTLD_GLOBAL);
+
+    HDLOPEN(hRexxUtilLibHandle, OOREXX_UTIL_LIBRARY, RTLD_LAZY | RTLD_GLOBAL);
 
     HDLSYM ( hRexxStart, hRexxLibHandle, REXX_START);
 

@@ -95,6 +95,7 @@ int ReginaRexxExecSub();
 
 void *hRexxLibHandle = NULL;       /* Library handle */
 void *hRexxApiLibHandle = NULL;    /* Api Library handle ooRexx*/
+void *hRexxUtilLibHandle = NULL;   /* Utility Lbrary handle ooRexx */
 
 #if defined(ENABLE_OBJECT_REXX)  && !defined(ENABLE_REGINA_REXX)
 char *RexxPackage = OOREXX_PACKAGE;
