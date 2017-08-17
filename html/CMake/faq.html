@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Using CMake to Build Hercules Version 4.0</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="../hercules.css">
+<link rel="shortcut icon" href="../images/favicon.ico" />
+<link rel="icon" href="../images/favicon.ico" />
+</HEAD>
+
+<style>
+li:not(:last-child) {
+    margin-bottom: 5px;
+}
+    </style>
+
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+
+<h1>Using CMake to Build Hercules Version 4.0</h1>
+<hr />
+<h2>CMake Build Questions and Answers</h2>
+
+<p><strong>What happened to using autogen.sh and configure to build Hercules?</strong></p>
+<p>They are still there. You may continue to use autotools 
+(autogen.sh, configure, and make) to build Hercules for the moment. 
+But the time will come when the autogen.sh and configure build for 
+Hercules is deprecated and, later, removed.
+Much like Cygwin/MinGW builds for Windows. 
+</p>
+
+<p><strong>Can I still use the <code>1Stop</code> script?</strong> </p>
+<p>Yes, and if you use <code>1Stop</code>, 
+you will use autotools,
+configure,
+and make to build Hercules.
+</p>
+
+<p><strong>What if I like <code>1Stop</code> and want to build with CMake? </strong></p>
+<p>If your system is set up to use <code>1Stop</code> and you wish to build with
+CMake, use the <code>1Stop-CMake</code> script.  
+The <code>1Stop-CMake</code> script builds Hercules in the same manner as <code>1Stop</code>,
+but it uses CMake rather than autotools to create the build files.
+</p>
+
+<p><strong>What about Windows?</strong></p>
+<p>At the moment, 
+you cannot use CMake to build Hercules for Windows.  
+The next major version of the CMake build for Hercules will support
+Windows builds.
+</p>
+
+<p><strong>Does the CMake build work on Apple?</strong> </p>
+<p>Maybe.  We welcome testers.  An early test report showed that CMake
+completed, SoftFloat-3a built successfully, but Hercules failed to
+compile.  
+</p>
+
+<p><strong>I tried it, but it did not work.  What should I do?</strong></p>
+<p>Please see <a href="index.html#What_To_Do_When_it_Fails">What To Do When it Fails</a>.  
+And while the issue is being sorted out, 
+you can build using autogen.sh and configure.
+</p>
+
+<p><strong>I reported a problem.  When will it get fixed?</strong></p>
+<p>The CMake build, like all of Hercules, is supported by volunteer
+developers, conscientious programmers who hate to see their work
+fall short.  But all of us have other demands on our time, so things
+may not be corrected as quickly as any of us would wish. 
+</p>
+<p>And of course, if you see the solution to an issue and are willing
+to share, we welcome your contribution. </p>
+<br />
+
+<hr />
+<p>
+<small>This web page Copyright &copy; 2017 by Stephen R. Orso.
+<br /><br />
+This work is licensed under the Creative Commons Attribution-
+ShareAlike 4.0 International License. 
+<br /><br />
+To view a copy of this license,
+visit 
+<a href="http://creativecommons.org/licenses/by-sa/4.0/" 
+        target="_blank">http://creativecommons.org/licenses/by-sa/4.0/</a> 
+or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+</small>
+</p>
+
+</BODY>
+
+</HTML>

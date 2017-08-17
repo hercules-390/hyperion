@@ -39,8 +39,8 @@ a real System/390.  The configuration file is an ASCII text file.
     #                       <a href="#system_parameters">SYSTEM PARAMETERS</a>
     #------------------------------------------------------------------
 
-    <a href="#ARCHLVL"         >##ARCHMODE</a>   ESA/390                                  (use ARCHLVL)
-    <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (use ARCHLVL DISABLE ASN_AND_LX_REUSE)
+    <a href="#ARCHLVL">##ARCHMODE</a>   ESA/390                                  (deprecated)
+    <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated)
 
     <a href="#ARCHLVL">ARCHLVL</a>    ESA/390
     <a href="#OSTAILOR">OSTAILOR</a>   OS/390
@@ -66,8 +66,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#YROFFSET">YROFFSET</a>   -28
     <a href="#TZOFFSET">TZOFFSET</a>   -0500
 
-    <a href="#HTTPPORT">##HTTPPORT</a>   8081 NOAUTH                              (use HTML)
-    <a href="#HTTPROOT">##HTTPROOT</a>   /usr/local/share/hercules/               (ditto)
+    <a href="#HTTPPORT">##HTTPPORT</a>   8081 NOAUTH                              (deprecated)
+    <a href="#HTTPROOT">##HTTPROOT</a>   /usr/local/share/hercules/               (deprecated)
 
     <a href="#HTTPPORT">HTTP</a>       PORT   8081  NOAUTH
     <a href="#HTTPROOT">HTTP</a>       ROOT   /usr/local/share/hercules/
@@ -103,9 +103,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#AUTOMOUNT">AUTOMOUNT</a>  +/tapes
     <a href="#AUTOMOUNT">AUTOMOUNT</a>  -/tapes/vault
 
-    # Do not specify MODPATH and LDMOD for normal operation
-    <a href="#MODPATH">MODPATH</a>    /opt/hercules
-    <a href="#LDMOD"  >LDMOD</a>      my_very_own_module
+    <a href="#MODPATH">MODPATH</a>    /usr/local/hercules
+    <a href="#LDMOD">LDMOD</a>      dyncrypt
 
     <a href="#PGMPRDOS">PGMPRDOS</a>   restricted
     <a href="#ECPSVM">ECPSVM</a>     no
@@ -521,10 +520,10 @@ a real System/390.  The configuration file is an ASCII text file.
     bind to (listen for connections on). If not specified the server
     will accept connections from any host interface.
     <p>
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a> 
     for additional information about setting up a telnet or tn3270 client.
     <p>
-
+    
 <a name="CONKPALV"></a>
 <dt><code>CONKPALV &nbsp; <i>(idle,intv,count)</i></code>
 <dd><p>
@@ -585,7 +584,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUIDFMT"></a>
-<dt><code>CPUIDFMT &nbsp; BASIC &#124; <u>0</u> &#124; 1</code>
+<dt><code>CPUIDFMT &nbsp; 0 &#124; 1</code>
 <dd><p>
     Specifies the format of the CPU ID the STIDP instruction should store.
     Refer to the <a href="#LPARNUM">LPARNUM</a> statement for more information.
@@ -870,15 +869,11 @@ a real System/390.  The configuration file is an ASCII text file.
 <dt><code>LDMOD &nbsp; <em>module list</em></code>
 <dd><p>
     Specifies additional modules that are to be loaded by the Hercules dynamic loader.
-    The default search order is with the hercules directory in
-    the default DLL search
-    path or LD_LIBRARY_PATH on most UNIXen (LDPATH on AIX).
-    Most systems also support absolute filenames (ie names starting with '/'
+    The default search order is with the hercules directory in the default DLL search
+    path. Most systems also support absolute filenames (ie names starting with '/'
     or '.') in which case the default search path is not taken.
     <p>
     Multiple LDMOD statements may be used.
-    <p>
-    Note that <code>dyncrypt</code> is loaded automatically.
     <p>
 
 <a name="LEGACYSENSEID"></a>
@@ -933,7 +928,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="LPARNUM"></a>
-<dt><code>LPARNUM &nbsp; BASIC &#124; <u>1</u> &#124; <em>xx</em></code>
+<dt><code>LPARNUM &nbsp; <em>xx</em> &#124; BASIC</code>
 <dd><p>
     Specifies the one- or two-digit hexadecimal LPAR identification
     number stored by the STIDP instruction, or BASIC.
@@ -944,10 +939,7 @@ a real System/390.  The configuration file is an ASCII text file.
     If zero or a two-digit hexadecimal number (except 10 hexadecimal)
     is specified, then STIDP stores a format-1 CPU ID. For LPARNUM
     10 the current <a href="#CPUIDFMT">CPUIDFMT</a> is not changed.
-    When LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID
-    (six-hexadecimal digit serial number when MAXCPU = 1, or a
-    one-hexadeciaml digit CPU number and five-hexadecimal digit serial
-    number when MAXCPU > 1).
+    If LPARNUM is BASIC, then STIDP stores a basic-mode CPU ID.
     <p>
     The default is LPARNUM 1 with a format-0 CPU ID.
     <p>
@@ -1067,25 +1059,14 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="MODPATH"></a>
 <dt><code>MODPATH &nbsp; <em>path</em></code>
 <dd><p>
-    Specify the path whence dynamic modules are loaded only when the
-    default path is not appropriate.
-    That is, use MODPATH only when the automatic load of all device managers fails.
-    If only a subset of modules fails to load, you should use LDMOD for those failing modules
-    rather than MODPATH.
-    <p>
-    The default is <code>{prefix}/lib/hercv4</code>, where <code>{prefix}</code> represents
-    the prefix specified when Hercules was configured;
-    perhaps
-    <code>/usr/local/lib/hercv4</code>.
-    <p>
-    When a modpath
+    Specifies the path where dynamic modules are loaded from. When a modpath
     statement is specified, the path on the modpath statement is searched before
-    the default path is searched.
-    Note that unlike normal UNIX behaviour, you cannot us colon (:)
-    or semicolon (;) to specify a list of directories to be searched.
-    When a relative path is specified, it is interpreted
-    as a relative path within the default search path; if an absolute path is
-    specified, it is interpreted as such.
+    the default path is searched. When a relative path is specified is interpreted
+    as a relative path within the default search path, if an absolute path is
+    specified is interpreted as such.
+    <p>
+    The default MODPATH is hercules, which means modules are loaded from the
+    directory hercules within the default LD_LIBRARY_PATH.
     <p>
 
 <a name="MOUNTED_TAPE_REINIT"></a>
@@ -2169,7 +2150,7 @@ a real System/390.  The configuration file is an ASCII text file.
     To use this device, a tn3270 client must connect to the host machine
     via the port number specified on the <a href="#CNSLPORT">CNSLPORT</a>
     statement. A valid tn3270 device type, such as IBM-3278, must be used.
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a> 
     for additional information about setting up a tn3270 client.
     <p>
 
@@ -2271,8 +2252,8 @@ a real System/390.  The configuration file is an ASCII text file.
     Use tn3270 client software to connect to the SYSG console device via the port number
     specified on the <a href="#CNSLPORT">CNSLPORT</a> statement, just as you would connect
     to a regular local non-SNA 3270 device.
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
-    for additional information about setting up a tn3270 client.
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a> 
+    for additional information about setting up a tn3270 client. 
     <p>
 
     The SYSG console configuration statement recognizes optional arguments which specify
@@ -2362,7 +2343,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     To use this device, a telnet client must connect to the host machine
     via the port number specified on the <a href="#CNSLPORT">CNSLPORT</a> statement.
-    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a>
+    See the <a href="telnet.html">Telnet/tn3270 Console How-To</a> 
     for additional information about setting up a telnet or tn3270 client.
     <p>
 

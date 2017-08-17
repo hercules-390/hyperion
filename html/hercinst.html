@@ -3,19 +3,22 @@
 <HEAD><TITLE>
 Hercules Version 4: Installation and Operation</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+<link rel="shortcut icon" href="images/favicon.ico" />
+<link rel="icon" href="images/favicon.ico" />
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
 
 <h1>Hercules Version 4: Installation and Operation</h1>
 
-<p><hr>
+<p><hr></p>
 
 <h2>Contents</h2>
 <blockquote>
     <p>
         <a href="#install">Installation Procedure</a>
         <ul>
+            <li><a href="#instcmake">Building with CMake (open source)</a></li>
             <li><a href="#instsource">Building from source</a>
             <li><a href="#instbinary">Pre-built binaries</a>
         </ul>
@@ -42,9 +45,32 @@ Hercules Version 4: Installation and Operation</TITLE>
     </p>
 </blockquote>
 
-<p><hr><a name="install"></a>
+<p><hr><a name="install"></a></p>
 <h2>Installation Procedure</h2>
-<a name="instsource"></a>
+
+<h3 id="instcmake">Building using CMake (open source)</h3>
+<p>You may build Hercules on open source systems using CMake, 
+or using the older 
+<a href="#bldautotools">GNU autotools-build</a>
+procedure described below.
+</p>
+<p>The procedure and options for the CMake build are described in
+<a href="CMake/index.html">Using CMake to Build Hercules Version 4.0</a>.
+</p>
+<p>The CMake build is a new addition to Hercules and has been tested 
+on Debian, Ubuntu, FreeBSD, Solaris, 
+and the Windows Subsystem for Linux (Windows 10).
+</p>
+<p>Should you experience difficulties using CMake to 
+build Hercules v4, 
+please follow the guidance provided in 
+<a href="CMake/index.html#What_To_Do_When_it_Fails">What To Do When it Fails</a>
+and use the 
+<a href="#bldautotools">GNU autotools build</a>
+below to build Hercules.  
+</p>
+
+
 <h3>Building from source - Windows</h3>
 <ol>
 <li>Download the
@@ -85,7 +111,8 @@ at <a href="http://brew.sh/">http://brew.sh/</a>
 <li>Proceed with <i>Building from source - Linux and Mac OS X</i> below.<br /><br />
 </ol>
 
-<h3>Building from source - Linux and Mac OS X</h3>
+<h3 id="bldautotools">Building from source - open source, UNIX-like, and Mac OS X systems</h3>
+<p>Hercules is normally built on these platforms using GNU autotools.</p>
 <ol>
 <li>Download the
 <a href="https://github.com/hercules-390/hyperion/archive/master.zip">source code .ZIP file</a>

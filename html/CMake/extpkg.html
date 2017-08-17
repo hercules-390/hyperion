@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Using CMake to Build Hercules Version 4.0</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="../hercules.css">
+<link rel="shortcut icon" href="../images/favicon.ico" />
+<link rel="icon" href="../images/favicon.ico" />
+</HEAD>
+
+<style>
+li:not(:last-child) {
+    margin-bottom: 5px;
+}
+    </style>
+
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+
+<h1>Using CMake to Build Hercules Version 4.0</h1>
+<hr />
+
+<h2>Controlling the Automatic Build of External Packages</h2>
+<p>The CMake build for Hercules will clone and build all required external
+packages into the location specified or defaulted to in 
+<code>-DEXTPKG_DIR</code>.
+An external package is one which resides in its own repository and is
+built separately from Hercules.
+</p>
+<p>Hercules presently uses one external package, 
+SoftFloat-3a For Hercules.
+Other packages might also become external packages in the future,
+for example in Windows Perl Compatible Regular Expressions, BZIP2, and ZLIB.  
+The decNumber package and the html directory may also be split 
+into external packages just as SoftFloat-3a For Hercules was split.
+</p>
+
+<p>The autotools build for Hercules expects external packages to have been
+previously built either by the person doing the build or by the <code>1Stop</code>
+script.  
+The package(s) were expected to be installed at specific
+location(s) relative to the Hercules build directory.  
+An autotools <code>--enable</code> option allowed the builder 
+to specify a location other than the default.
+</p>
+<p>The CMake build uses its own capabilities and the capabilities of git
+and the  generator (e.g., Unix Makefiles, Ninja, or Xcode) to build
+the external package or components of the package only when required
+by updates to the package.  
+Package updates include commits to the remote repository and 
+alterations to source files, 
+such as might be performed by an external package developer.
+</p>
+<p>Command line options are provided to enable control of this automation.
+</p>
+
+<h4><code>-DS3FH_DIR=&lt;path&gt;</code></h4>
+<p><code>&lt;path&gt;</code> may be absolute or relative to the Hercules build directory.
+</p>
+<p>The <code>-DS3FH_DIR</code> option is most useful to external package developers who
+are modifying an external package and wish to test changes pre-commit.
+</p>
+<p>This existing option names the path to a previously built and installed
+external package.  It is the builder's responsibility to do the build;
+CMake will not automatically build an external package when an
+installation directory has been specified.
+</p>
+
+<h4><code>-DEXTPKG_DIR=&lt;path&gt;</code></h4>
+
+<p><code>&lt;path&gt;</code> may be absolute or relative to the Hercules build directory.
+</p>
+
+<p>The <code>-DEXTPKG_DIR=&lt;path&gt;</code> option is most useful to Hercules developers who may have multiple
+Hercules build directories, 
+or who wish to erase and recreate the build
+directory without rebuilding all external packages.
+</p>
+
+<p>This option specifies the path that the CMake build will use as the root of all
+package directories for those external packages that CMake will build.
+The external package directory structure looks like this:
+</p>
+
+<table style="margin-left: 40px">
+    <tr>
+        <td><code>extpkg/</code></td>
+        <td>All external packages are placed in <code>extpkg/</code>,
+            with a separate subdirectory per package
+        </td>
+    </tr>
+    <tr>
+        <td><code>extpkg/&lt;pkgname&gt;/</code></td>
+        <td>directory for one external package, named "pkgname"</td>
+    </tr>
+    <tr>
+        <td><code>extpkg/&lt;pkgname&gt;/pkgsrc</code></td>
+        <td>source directory, generally from a git repository.</td>
+    </tr>    
+    <tr>
+        <td><code>extpkg/&lt;pkgname&gt;/build</code></td>
+        <td>build directory for an external package.</td>
+    </tr>    
+    <tr>
+        <td><code>extpkg/&lt;pkgname&gt;/install</code></td>
+        <td>install directory for the built package</td>
+    </tr>    
+</table>
+
+<p>The default value for this directory is <code>&lt;build-dir&gt;/extpkg</code>, 
+which causes CMake to build all external packages in the Hercules build directory
+tree.  
+This default enables a casual builder to build Hercules without
+having to be aware of external packages at all.  
+And should the casual builder tire of Hercules, 
+deleting the build directory also deletes the
+external package repositories, builds, and installation directories.
+</p>
+<p>Note:
+<code>-DS3FH_DIR</code> and <code>-DEXTPKG_DIR</code> 
+may both be specified for a given build.
+If they are, then CMake will use the pre-built SoftFloat-3a For Hercules
+and will build all other external packages (currently none) in the
+directory specified by <code>-DEXTPKG_DIR</code>.  
+The directory specified by <code>-DEXTPKG_DIR</code> will be created.
+</p>
+<br />
+
+<hr />
+<p>
+<small>This web page Copyright &copy; 2017 by Stephen R. Orso.
+<br /><br />
+This work is licensed under the Creative Commons Attribution-
+ShareAlike 4.0 International License. 
+<br /><br />
+To view a copy of this license,
+visit 
+<a href="http://creativecommons.org/licenses/by-sa/4.0/" 
+        target="_blank">http://creativecommons.org/licenses/by-sa/4.0/</a> 
+or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+</small>
+</p>
+
+</BODY>
+
+</HTML>

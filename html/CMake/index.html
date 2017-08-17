@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Using CMake to Build Hercules Version 4.0</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="../hercules.css">
+<link rel="shortcut icon" href="images/favicon.ico" />
+<link rel="icon" href="images/favicon.ico" />
+</HEAD>
+
+<style>
+li:not(:last-child) {
+    margin-bottom: 5px;
+}
+    </style>
+
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+
+<h1>Using CMake to Build Hercules Version 4.0</h1>
+<hr />
+<h3>QUICK START: Build Hercules Using CMake</h3>
+<p>To build Hercules on your computer using CMake, 
+you need the following software installed:
+</p>
+<ul>
+<li>CMake 3.4 or better.</li>
+<li>A git client</li>
+<li>A c compiler.  Both gcc and clang have been tested</li>
+<li>If you wish to use <code>1Stop-Cmake</code>, sed</li>
+<li>If you wish to run <code>make&thinsp;test</code>, 
+    the replacement for <code>make&thinsp;check</code>, 
+    a REXX interpreter, 
+    either Regina Rexx or Open Object Rexx.&nbsp; </li>
+</ul>
+<p>
+Do the following to build Hercules using CMake on GNU/Linux or BSD
+open source systems or on Solaris.
+</p>
+    <ol>
+        <li>Clone or update your local clone of Hyperion, as needed.</li>
+
+        <li>Create a build directory.  Anywhere you wish, so long as the 
+            directory is writable.</li>
+
+        <li>cmake &lt;hyperion-source-dir&gt</li>
+
+        <li>make</li>
+
+        <li>make test&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<em>not</em> make check)</li>
+
+        <li>make install&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(if you wish)</li>
+        
+    </ol>
+
+<p>That's it.  SoftFloat-3a will be cloned and built inside the Hercules
+build directory, and Hercules will be built.</p>
+<p>
+See the <a href="buildopts.html">Build Options</a>
+page for more information on those build options 
+that are specific to building Hercules.&nbsp;
+A separate page, 
+<a href="cmakeopts.html">CMake Build Options</a>, 
+details how selected standard CMake options may be used when building Hercules.&nbsp;
+</p>
+    <p>
+        Visit <a href="extpkg.html">External Packages</a> to change how and where CMake builds SoftFloat-3a.
+</p>
+<p>
+And see the <a href="faq.html">FAQ</a> if you wish to use 1Stop to build with CMake.
+</p>
+    <p>
+        &nbsp;</p>
+<hr />
+
+
+<h3>Why should I use CMake to build Hercules?</h3>
+
+
+<ul>
+    <li>You can build in any directory that is not the Hercules source
+        directory.  There is no specific directory structure requirement. </li>
+    <li>There is no need to run autogen.sh in the source directory before
+        building. </li>
+    <li>The CMake build will take care of all SoftFloat-3a build
+        requirements and will build SoftFloat-3a in a subdirectory of
+        the build directory.
+        Options are provided to build SoftFloat-3a in another directory,
+        to share one SoftFloat-3a build directory with 
+        multiple CMake Hercules build directories, 
+        or to use a previously-built SoftFloat-3a.</li>
+    <li>CMake supports either GNU make or BSD make.  
+        There is no need to install GNU make on a FreeBSD system. </li>
+    <li>The CMake build supports Ninja, a replacement for make.</li>
+    <li>There is no need to have GNU autotools installed on your building
+        system.  
+        You just need git, 
+        CMake 3.4.3 or better, 
+        a generator such as UNIX Makefiles or Ninja, 
+        and gcc or clang.</li>
+</ul>
+<br />
+
+<hr />
+<h3>CMake Build Development Status</h3>
+
+<ul>
+
+    <li>CMake may be used for Hercules open source system builds as an
+    alternative to GNU autotools (autogen.sh followed by configure).  
+    </li>
+
+    <li>The CMake build for Hercules has been tested on 
+    GNU/Linux (Debian, Ubuntu, Leap),
+    FreeBSD, 
+    Windows Subsystem For Linux, 
+    and Solaris.
+    </li>
+
+    <li>Apple build support has been coded but testing on mac OS 10.10 Yosemite
+    fails in the make command for Hercules; 
+    SoftFloat-3a builds successfully, 
+    and the CMake scripts complete without error.
+    </li>
+
+    <li>AIX builds have not been tested. </li>
+
+    <li>Native (Visual Studio) Windows builds are not yet supported.  
+    That's comming.</li>
+    <li>Apple mac OS native Xcode builds have not been tested. </li>
+
+</ul>
+<br />
+<hr />
+<h3>Changes From the Autotools Build</h3>
+
+<ul>
+    <li>Libtool is not used.
+    Shared libraries are always built.
+        See below for the issue this creates with Open Object Rexx.</li>
+
+    <li><code>-O3</code> is never included in automatic optimization flags.  
+    You may, 
+    if you wish, 
+    include <code>-O3</code> in either the 
+    <code>OPTIMIZATION</code> option or the
+    <code>ADD-CFLAGS</code>
+    option.
+    </li>
+
+    <li>A <code>make&thinsp;check</code> target is not generated.  
+        Use <code>make&thinsp;test</code> or <code>CTest</code> instead.</li>
+
+    <li>Detailed test results from make test are not displayed on the console.
+    Instead, detailed results for each test group are saved in files in the
+    <code>&lt;build-dir&gt;/Testing/Temporary</code> directory.
+    </li>
+
+    <li>Ninja is supported as a generator and has been tested 
+    (multiple versions on multiple target systems). 
+    </li>
+</ul>
+<h4>Open Object Rexx and Hercules</h4>
+<p>The current release of Open Object Rexx, 4.2.0, 
+fails when integrated with Hercules built using CMake
+on Leap 42.2 and Ubuntu 16.04.  
+The failure has been reproduced using a simple c program that
+dynamically loads the shared ooRexx libraries and attempts 
+to run a sample REXX script script based on the example on
+page <nobr>376-377</nobr> of the 
+<a href="http://hercdoc.glanzmann.org/V400/HerculesUserReference.pdf" target="_blank">
+Hercules User Reference</a>. 
+</p>
+<p>Open Object Rexx integrates without issue to Hercules
+when built with autotools.  
+The ooRexx 5.0.0 beta as of August 2017 can be used to 
+run the simple c program without error.  
+The beta version operates without issue when integrated
+with Hercules build using CMake. 
+</p>
+<p>One might speculate that ooRexx 4.2.0 has an issue
+when called dynamically from programs that are not built to use 
+libtool.  
+Further research would be needed to verify this,
+specifically building the small c program using libtool.  
+</p>
+<p>The alternatives for this issue are:
+</p>
+<ul>
+<li>Use the 5.0.0 beta version of Open Object Rexx.</li>
+<li>Use Regina Rexx as the REXX interpreter integrated with Hercules.</li>
+</ul>
+
+<br />
+
+<hr />
+<h3>Command Line Option Changes</h3>
+<h4><code>--enable-xxx</code> is replaced with <code>-DXXX=yyy</code></h4>
+
+<p>XXX is the configure.ac -enable option in caps.
+</p>
+<p>For example <code>--enable-ipv6</code>, 
+as a configure.ac command line option, 
+would be specified on the CMake command line as <code>-DIPV6=YES</code>;
+code>--disable-ipv6</code> as <code>-DIPV6=NO</code>.  
+The <code>-D</code> prefix identifies a CMake command line option, 
+and what follows it is made available to CMake in much 
+the same way that -D is used by a c compiler.  
+</p>
+<p>So these two command lines have the same effect on the Hercules build:
+</p>
+<table style="margin-left: 40px">
+    <tr>
+        <td>Autotools:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td>
+        <td><code>configure --disable-largefile</code> </td>
+    </tr>
+    <tr>
+        <td>CMake:</td>
+        <td><code>cmake -DLARGEFILE=NO</code></td>
+    </tr>
+</table>
+
+<p>All command line options may be specified as environment variables.
+Omit the -D when setting an environment variable.  The following two
+lines set the same option for the CMake build:</p>
+
+<table style="margin-left: 40px">
+    <tr>
+        <td><code>export SYNCIO=NO </code></td>
+    </tr>
+    <tr>
+        <td><code>cmake -DSYNCIO=NO</code></td>
+    </tr>
+</table>
+
+
+<h4><code>--help</code> is replaced with <code>-DHELP=YES</code></h4>
+<p>To see all supported options, use:
+</p>
+<p style="margin-left: 40px"><code>cmake &lt;source-dir&gt; -DHELP=YES</code>
+</p>
+<p>If you use <code>-DHELP=YES</code>, no build files are created.
+</p>
+<br />
+
+<hr />
+<h3>New Build Options</h3>
+<h4><code>-DADD-CFLAGS</code></h4>
+<p>If you need to set compiler options or define macros that are passed directly to the c compiler,
+use <code>-DADD-CFLAGS="&lt;flags&gt;
+"</code> where <code>&lt;flags&gt;</code> is replaced with the string of options and macros.  
+For example: 
+</p>
+<p><code>cmake &lt;source-dir&gt; -DADD-CFLAGS="-DNO_ASM_BYTESWAP"</code>
+</p>
+<p>Compiler flags passed via <code>-DADD-CFLAGS=""</code> are appended to the flags
+set up by CMake, which gives the builder the opportunity to turn off
+things CMake may have turned on.
+The default is a null string, which adds no additional c flags.
+</p>
+
+<h4><code>-DEXTPKG_DIR=&lt;path&gt;</code></h4>
+
+<p>Defines an absolute or relative path of the top level directory to be
+used for any external package that will be built by the Hercules build.
+If a relative path, it is relative to the Hercules build directory.  
+If the path does not exist, it is created.
+The relative directory <code>extpkg/</code> is used as a default.  
+</p>
+
+<p>See <a href="extpkg.html">"Controlling the Automatic Build of External Packages"</a> 
+for more information.
+</p>
+<br />
+
+<hr />
+
+<h3>Current Limitations of the CMake Build</h3>
+
+<ul>
+<li>No support for AIX builds.  Test subject needed.</li>
+<li>No support for Windows builds. A Windows Build is the next goal.</li>
+<li>No Support for Cygwin/MinGW. Formerly deprecated, now gone.</li>
+<li>No support for creating an installation or source tarball.  Future activity.</li>
+<li>No support for making hercifc setuid from within the build.  
+    You will have to do this manually.</li>
+</ul>
+<br />
+
+<hr />
+<h3 id="What_To_Do_When_it_Fails">What To Do When it Fails</h3>
+
+<p>Please 
+<a href="https://github.com/hercules-390/hyperion/issues/new" target="_blank">
+        create a github issue
+</a>
+in Hercules-390/hyperion.  
+The following information will be needed and can be posted
+to the issue in a tarball: 
+</p>
+
+<ul>
+    <li>config.h</li>
+    <li>CMakeCache.txt</li>
+    <li>commitinfo.h</li>
+    <li>CMakeFiles/CMakeError.log</li>
+    <li>CMakeFiles/CMakeOutput.log</li>
+    <li>CMake console log</li>
+    <li>Make console log</li>
+    <li>Contents of the Testing/Temporary/ directory if the failure occurred during make test</li>
+</ul>
+
+<br /><hr />
+<p>
+<small>This web page Copyright &copy; 2017 by Stephen R. Orso.
+<br /><br />
+This work is licensed under the Creative Commons Attribution-
+ShareAlike 4.0 International License. 
+<br /><br />
+To view a copy of this license,
+visit 
+<a href="http://creativecommons.org/licenses/by-sa/4.0/" 
+        target="_blank">http://creativecommons.org/licenses/by-sa/4.0/</a> 
+or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+</small>
+</p>
+
+</BODY>
+
+</HTML>
