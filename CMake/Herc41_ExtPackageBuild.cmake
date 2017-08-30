@@ -81,6 +81,11 @@ encouragement.
 
 ]]
 
+# Be certain to use the same generator, toolset, and platform as was
+# specified for the main project.  Platform is critical, as mismatches
+# break the link of the executable or library that includes the package.
+# Generator and toolset mismatches may be survivable, especially on UNIX-
+# like systems, but they confuse matters a great deal.
 
 # If the builder did not specify a SoftFloat-3a For Hercules installation
 # directory, then we need to add an external project for S3GH so that it
@@ -95,7 +100,9 @@ if( "${S3FH_INSTALL_DIR}" STREQUAL "" )
             INSTALL_DIR       ${EXTPKG_ROOT}/SoftFloat-3a/install
             GIT_REPOSITORY    https://github.com/hercules-390/softfloat-3a
             GIT_TAG           master
-            CMAKE_GENERATOR   ${CMAKE_GENERATOR}
+            CMAKE_GENERATOR           ${CMAKE_GENERATOR}
+            CMAKE_GENERATOR_TOOLSET   ${CMAKE_GENERATOR_TOOLSET}
+            CMAKE_GENERATOR_PLATFORM  ${CMAKE_GENERATOR_PLATFORM}
             CMAKE_ARGS
                     -DBUILD_TYPE=Release
                     -DINSTALL_PREFIX=<INSTALL_DIR>
