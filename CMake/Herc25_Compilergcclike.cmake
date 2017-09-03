@@ -185,17 +185,23 @@ string( CONCAT herc_TestSource    # Test for __attribute__ ((format(printf,x,y))
 herc_Check_Compile_Capability( "${herc_TestSource}" HAVE_ATTR_PRINTF TRUE )
 
 
-# The autotools build for __attribute__ ((regparm(1))) was first tested if it
-# existed and then tested if it was broken.  Just as easy to only test if
-# is broken.  Whether its broken because __attribute__ ((regparm(1))) does
-# not exist or because it incorrectly handles regparm(3) does not matter.
+# The autotools build for __attribute__ ((regparm(1))) first tested if it
+# existed and then tested if it was broken when using regparm(3).  The
+# second test required program execution, complicating cross-compilation.
 
 # The regparm(3) test in configure.ac dealt with a gcc error in versions
 # 3.2 and 3.3 that affected Cygwin (and MinGW?) builds, and this CMake
-# script does not support Cygwin nor MinGW.  So it is not clear that
-# testing for a busted regparm(3) is even required.  But we
+# script does not support Cygwin nor MinGW.  So we must only run  the
+# compile-time check to see if __attribute__ (( regparm(3) )) compiles.
 
-herc_Check_Regparm_Works( HAVE_ATTR_REGPARM )
+string( CONCAT herc_TestSource    # Test __attribute__ (( regparm(3) ))
+            "/* Test acceptance of __attribute__ (( regparm(3) )) */\n"
+            "int __attribute__ (( regparm(3) )) func( int a, int b, int c )\n"
+            "    {return a + b + c;}\n"
+            "int main()\n"
+            "    {return func( 1, 2, 3 );}\n"
+            )
+herc_Check_Compile_Capability( "${herc_TestSource}" HAVE_ATTR_REGPARM TRUE )
 
 string( CONCAT herc_TestSource    # Test for gcc diagostic pragma
             "/* Test an ancient diagnostic */\n"
