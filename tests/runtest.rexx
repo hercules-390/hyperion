@@ -194,8 +194,14 @@ else do
     type_or_cat = 'cat'
     exe_suffix = ''
     loadmod_suffix = '.so'
-    address command 'uname -s' with output stem plat.
+    address command 'uname -s | rxqueue '
+    i = 0
+    do while queued()
+        i = i + 1
+        parse pull plat.i
+        end
     platform = plat.1
+    drop plat.
     end
 
 call parse_command_line
@@ -257,7 +263,6 @@ hercules_runtest_cmd = options.h_ || 'hercules' ,
                         '-f' options.d_ || 'tests.conf' ,
                         '-r' input_script ,
 
-
 /* If Hercules should exit after testing (no -x option) then redirect   */
 /* stderr and stdout.  The input test script already has the exit       */
 /* if needed.                                                           */
@@ -290,7 +295,7 @@ if RC = 0 then do
 /* announcing complete success in a single line                         */
 
 if RC == 0 then
-    say 'All tests ran successfully'
+    say 'All tests ran successfully.  See' redtest_log 'for a summary and' output_log 'for details.'
 else do
     do while lines( redtest_log )
         redtest_log_line =  linein( redtest_log )
@@ -373,18 +378,21 @@ build_test_script_file:
 
         end  /* do i = 1 to test_script_list.0   */
 
-        if \options.x_ then do
-            rc = lineout( input_script, '' )
-            rc = lineout( input_script, '' )
-            rc = lineout( input_script, 'exit' )
-            end
+    rc = lineout( input_script, '' )
+    rc = lineout( input_script, '' )
+    rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
+    rc = lineout( input_script, '' )
+    rc = lineout( input_script, '* End of Hercules test case input script'  )
+    rc = lineout( input_script, '' )
+    rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
+
+    if \options.x_ then do
         rc = lineout( input_script, '' )
         rc = lineout( input_script, '' )
-        rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
-        rc = lineout( input_script, '' )
-        rc = lineout( input_script, '* End of Hercules test case input script'  )
-        rc = lineout( input_script, '' )
-        rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
+        rc = lineout( input_script, 'exit' )
+        end
+
+    call stream input_script, 'C', 'close'
 
     return 0
 
@@ -483,7 +491,7 @@ parse_command_line:
             option_value = translate( parse_quoted_string(), path_sep, wrong_path_sep )
 
             if lastpos('.', option_value) <= lastpos(path_sep, option_value) then
-                option_value = option_value || '.' || options.e_
+                option_value = option_value || options.e_
             options.f_.0 = options.f_.0 + 1
             i = options.f_.0
             options.f_.i = option_value
@@ -499,7 +507,7 @@ parse_command_line:
         when x == '-h' then do   /* Hercules executable directory       */
             options.h_ = validate_path( "-h Hercules executable path" )
             if options.h_ \== '' then do
-                rc = SysFileTree( options.h || exe_name || exe_suffix, sftresult, 'F' )
+                rc = SysFileTree( options.h_ || exe_name || exe_suffix, sftresult, 'F' )
                 if sftresult.0 == 0 then do
                     say "-h Hercules executable '" || exe_name || exe_suffix ,
                             || "' not found in '" || options.h_ "'"
@@ -785,7 +793,7 @@ set_option_defaults:
     if options.p_ == "" then   /* default dir for loadable modules.     */
         options.p_ = options.h_
         if platform \== 'Windows' then do
-            call SysFileTree options.h || '.libs' || path_sep ,
+            call SysFileTree options.h_ || '.libs' || path_sep ,
                     || 'hercules' || exe_suffix, sftresult, 'F'
             if sftresult.1 == 1 then
                 options.p_ = options.p_ || ".libs" || path_sep
