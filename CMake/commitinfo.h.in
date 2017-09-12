@@ -1,4 +1,4 @@
-/* Created by CMakeHercGitVer.txt ${GIT_COMMIT_STAMP}    */
+/* Created by Herc01_GitVer.cmake ${GIT_COMMIT_STAMP}    */
 #define COMMIT_COUNT      @GIT_COMMIT_COUNT@
 #define COMMIT_MESSAGE    @GIT_COMMIT_MESSAGE@
 #define COMMIT_BRANCH     "@GIT_BRANCH@"
