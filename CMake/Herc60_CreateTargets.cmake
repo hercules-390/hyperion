@@ -31,6 +31,67 @@ Notes
 
 ]]
 
+# It was no small effort to get the following to work for both GNU Make,
+# BSD Make, Ninja, and Visual Studio.  (NMake is an open question.)
+
+# Create the custom target to create the commitinfo.h header, which is
+# included in version.c.  The commitinfo.h header needs to be re-created
+# each time the git status of the source directory changes.  The CMake
+# script Herc01_GitVer.cmake addresses creation and updates of commitinfo.h
+# and must be executed each time a build is done.
+
+# Custom targets are always out of date; this target will be re-executed
+# every time Hercules is built.  When it is built is an interesting question
+# and build tool dependent.  To make it work the way we wish, a dependency
+# on the custom target must be included in the target (hercu) that includes
+# the potentially new commitinfo.h.  So the dependency in hercu on
+# commitinfo_phonytarget ensures that commitinfo_phonytarget is built before
+# compiling the components of hercu.  And commitinfo_phonytarget triggers
+# the custom command that "creates" commitinfo.phony and as a byproduct
+# creates commitinfo.h.  Ninja needs the BYPRODUCTS clause in the
+# add_custom_command() signature.  GNU make and Visual Studio do not.
+
+# Key to all of this working as expected is the fact that CMake does not
+# test to see that add_custom_command() actually creates the OUTPUT file
+# named in add_custom_command().  In the Hercules CMake build,
+# add_custom_command _does not_ by design create the named OUTPUT file,
+# which ensures the target and the command are run on every build.
+
+add_custom_target( commitinfo_phonytarget ALL
+            DEPENDS ${PROJECT_BINARY_DIR}/commitinfo.phony
+        )
+
+add_custom_command(
+            COMMAND ${CMAKE_COMMAND}
+                -DBDIR=${PROJECT_BINARY_DIR}
+                -DSDIR=${PROJECT_SOURCE_DIR}
+                -P ${PROJECT_SOURCE_DIR}/CMake/Herc01_GitVer.cmake
+            BYPRODUCTS ${PROJECT_BINARY_DIR}/commitinfo.h
+            OUTPUT ${PROJECT_BINARY_DIR}/commitinfo.phony
+            COMMENT "Checking git status to update commitinfo.h if needed"
+        )
+
+# It is not clear that the following is necessary.  commitinfo.h is not
+# named in a target source files list (doing so creates problems when
+# building with GNU make).  But it does not hurt, so we leave it in.
+
+set_source_files_properties(
+    ${PROJECT_BINARY_DIR}/commitinfo.h
+    PROPERTIES
+            GENERATED TRUE
+            HEADER_FILE_ONLY TRUE
+    )
+
+
+# We need not re-link targets if a dependent target that is a shared
+# library is rebuilt unless header(s) in common between the target and
+# the dependent target have changed (so-called interface headers.)
+
+# This will need to be reviewed for Windows builds because Windows
+# uses a very different approach to implicitly-loaded shared libraries.
+
+set( CMAKE_LINK_DEPENDS_NO_SHARED 1 )
+
 
 # Map source files to the shared (non-dynamic) libraries herc, hercs, hercu,
 # hercd, and herct.  A variable <libname>_sources is created for each library.
@@ -55,6 +116,7 @@ add_subdirectory( decNumber )
 
 herc_Define_Shared_Lib( hercs  hsys.c            ""      shared )
 herc_Define_Shared_Lib( hercu "${hercu_sources}" "hercs;${herc_Threads_Target}" shared )
+add_dependencies( hercu commitinfo_phonytarget )  # Needed to trigger commitinfo.h build
 herc_Define_Shared_Lib( hercd "${hercd_sources}" "hercu" shared )
 herc_Define_Shared_Lib( herct "${herct_sources}" "hercu" shared )
 herc_Define_Shared_Lib( herc  "${herc_sources}"  "hercu;hercd;herct;decNumber;SoftFloat" shared )

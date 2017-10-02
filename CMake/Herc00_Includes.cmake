@@ -21,7 +21,6 @@ Functions:
 - herc_Check_Symbol_Exists  - Test whether a string exists as a macro or identifier
 - herc_Check_C11_Atomics    - Collect lock free status of C11 atomic intrinics
 - herc_Check_Packed_Struct  - Determine if packed structs are supported
-- herc_Check_Regparm_Works  - Test if __attribute__ ((regparm(3)) works
 - herc_Check_Compile_Capability - Test sundry compiler capabilities
 - herc_Check_Strict_Aliasing - Test for problems created by strict aliasing
 - herc_Check_User_Option_YesNo - Validate a user option as YES/NO/TARGET
@@ -515,60 +514,6 @@ else( )
 endif( COMPILE_RESULT_VAR )
 
 endfunction ( herc_Check_Packed_Struct )
-
-
-
-#[[ ###########   function herc_Check_Regparm_Works   ###########
-
-Function/Operation
-- Determine whether the c compiler supports __attribute__ ((regparm(x)))
-  and whether that support is broken when using regparm(3).
-- This function runs a c program CMakeHercTestRegparm3.c.  If the
-  compile fails, then regparm is not supported.  If the compile works
-  but the program ends with a non-zero return code, then regparm(x) works
-  for values of 0, 1, and 2.  (A value of zero seems silly.)
-- __attribute__ ((regparm(x))) is not required to build Hercules.
-
-Input Parameters
-- The name of the result variable to be set to 1 if the compiler supports
-  __attribute__ ((regparm(x))) for values up to 3.
-
-Output
-- The caller provided result variable is set to 1 if regparm works.
-- No error or other indication is provided if it does not.
-
-Notes
-- The c program CMakeHercTestRegparm3.c is executed by this function.
-- Only the Compression Call instructions use regparm(3).  It would be
-  reasonable to enhance the build such that if regparm works but not
-  for regparm(3), that cmpsc.h be changed to use regparm(2).
-
-]]
-
-function( herc_Check_Regparm_Works result_var )
-
-try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR
-        ${PROJECT_BINARY_DIR}
-        SOURCES ${PROJECT_SOURCE_DIR}/CMake/CMakeHercTestRegparm3.c
-        COMPILE_DEFINITIONS "-O3 -fomit-frame-pointer"
-        COMPILE_OUTPUT_VARIABLE R3_CompileOutput
-        RUN_OUTPUT_VARIABLE R3_RunOutput
-        )
-
-if( COMPILE_RESULT_VAR )
-    if( ${RUN_RESULT_VAR} STREQUAL "NOT-FOUND" )
-        set( PS_RunOutput "Execution of packed structure test program failed.  Execution output follows\n" ${R3_RunOutput} )
-        herc_Save_Error( "${R3_RunOutput}" )
-    elseif( NOT ${RUN_RESULT_VAR} )
-        set( ${result_var} 1 PARENT_SCOPE )
-    else( )
-        set( ${result_var} 0 PARENT_SCOPE )
-    endif( )
-else( )
-    set( ${result_var} 0 PARENT_SCOPE )
-endif( COMPILE_RESULT_VAR )
-
-endfunction ( herc_Check_Regparm_Works )
 
 
 

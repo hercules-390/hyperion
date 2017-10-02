@@ -16,34 +16,45 @@
 ]]
 
 #[[
+   Function/Operation -
+     - Create commitinfo.h from commitinfo.h.in using the status of the
+       git repository pointed to by SDIR.
+     - Do not disturb the current commitinfo.h if there has been no
+       change in the git repository status since commitinfo.h was last
+       re-created.
+     - If SDIR does not point to a git repository, or if a git client
+       is not installed, issue a message and create a dummy commitinfo.h.
+     - This script is intended to be run at build time using "cmake -P".
+       As a result, this script:
+         - does not have access to cached variables
+         - cannot change cached variables.
+     - This script is written using CMake so that it can be target system
+       independent.  It replaces the GetGitHash, GetGitHash.cmd, and
+       _dynamic_version.cmd scripts.
+
    Arguments -
-     - None
+     - SDIR - The source directory for the build.  Required.
+     - BDIR - The binary (build) directory for the build.  Optional;
+       if omitted, the current working directory is used.  The header
+       commitinfo.h will be written to BDIR.
 
    Other Input -
      - Git status as collected by various git command executions
      - commitinfo.h.in, template for the commitinfo.h file
-     - CMakeCache.txt, with current values for the following:
-         HERC_GIT_BRANCH         - name of the git branch being built
-         HERC_GIT_COMMIT_HASH    - git hash of last commit
-         HERC_GIT_COMMIT_COUNT   - count of commits made to repository
-         HERC_GIT_CHANGED_FILES  - count of files changed since last commit
-         HERC_GIT_NEW_FILES      - count of files added since last commit
+     - Current commitinfo.h, which is used to test if the status of the
+       git repository has changed.  If a current commitinfo.h does not
+       exist, then the repository status is presumed to have changed.
+       This happens on the first build in a given build directory.
 
    Output -
-     - Variables in the caller's state:
-         GIT_BRANCH         - name of the git branch being built
-         GIT_COMMIT_HASH    - git hash of last commit
-         GIT_COMMIT_COUNT   - count of commits made to repository
-         GIT_CHANGED_FILES  - count of files changed since last commit
-         GIT_NEW_FILES      - count of files added since last commit
-     - CMakeCache.txt, updated with the cached versions of the above variables.
-     - commitinfo.h, but only if the file does not exist or has been changed.
+     - A new commitinfo.h, but only if the new commitinfo.h differs from
+       the current commitinfo.h or a current commitinfo.h does not exist.
 
    Return Code -
-     - Not set.  Yet....
+     - Always zero.
 
    Notes -
-     - If commitinfo.h does not exist, it is created and variable values cached.
+     - If commitinfo.h does not exist in the build directory, it is created.
      - If the build is not from a clone of a git repository, a null commitinfo.h
        is created.
      - If a git command line tool cannot be found, a commitinfo.h file is created
@@ -51,6 +62,42 @@
        to stdout.  Likewise if the source directory is not a clone of a git
        respository.
 ]]
+
+function( create_commitinfo )
+# configure commitinfo.h to pass current git status to source
+configure_file(
+      "${SDIR}/CMake/commitinfo.h.in"
+      "${BDIR}/commitinfo.h.new"
+      )
+file( STRINGS ${BDIR}/commitinfo.h.new commitinfo_new_lines REGEX "^#define +COMMIT_" )
+
+# if the new commitinfo.h differs from the current file or there is no
+# current commitinfo.h, delete any current file and rename the new file.
+
+if( EXISTS ${BDIR}/commitinfo.h )
+    file( STRINGS ${BDIR}/commitinfo.h commitinfo_lines REGEX "^#define +COMMIT_" )
+endif( )
+if( commitinfo_lines STREQUAL commitinfo_new_lines )
+    set( GIT_DELTA "unchanged:" PARENT_SCOPE )
+    execute_process( COMMAND ${CMAKE_COMMAND} -E remove -f ${BDIR}/commitinfo.h.new )
+else( )
+    if( "${commitinfo_lines}" STREQUAL "")      # if blank, then first build this directory
+        set( GIT_DELTA "new build directory:" PARENT_SCOPE )
+    else( )
+        set( GIT_DELTA "changed:" PARENT_SCOPE )
+        execute_process( COMMAND ${CMAKE_COMMAND} -E remove ${BDIR}/commitinfo.h )
+    endif( )
+    execute_process( COMMAND ${CMAKE_COMMAND} -E rename ${BDIR}/commitinfo.h.new ${BDIR}/commitinfo.h
+            OUTPUT_VARIABLE res
+            ERROR_VARIABLE res )
+    if( NOT "${res}" STREQUAL "" )
+        message( "Rename failed: ${BDIR}/commitinfo.h.new to ${BDIR}/commitinfo.h with message " )
+        message( "${res}" )
+    endif( )
+    unset( res )
+endif( )
+
+endfunction( )
 
 
 # List of directory names to exclude from counts of new and changed files.
@@ -61,26 +108,10 @@
 
 set( EXCLUDE_LIBS "tests/|html/|man/|scripts/|util/" )
 
-# Macro to cache current git status values and create commitinfo.h
-macro( create_commitinfo )
-# Update CMakeCache.txt with updated git status values
-    set( HERC_GIT_BRANCH         ${GIT_BRANCH}         CACHE INTERNAL "Git branch being built"              FORCE )
-    set( HERC_GIT_COMMIT_HASH    ${GIT_COMMIT_HASH}    CACHE INTERNAL "Hash of most recent commit"          FORCE )
-    set( HERC_GIT_COMMIT_MESSAGE ${GIT_COMMIT_MESSAGE} CACHE INTERNAL "Message from most recent commit"     FORCE )
-    set( HERC_GIT_COMMIT_COUNT   ${GIT_COMMIT_COUNT}   CACHE INTERNAL "Count of commits in repo"            FORCE )
-    set( HERC_GIT_CHANGED_FILES  ${GIT_CHANGED_FILES}  CACHE INTERNAL "Count of changed files since commit" FORCE )
-    set( HERC_GIT_NEW_FILES      ${GIT_NEW_FILES}      CACHE INTERNAL "Count of new files since commit"     FORCE )
-# configure commitinfo.h to pass current git status to source
-configure_file(
-      "${PROJECT_SOURCE_DIR}/CMake/commitinfo.h.in"
-      "${PROJECT_BINARY_DIR}/commitinfo.h"
-      )
-endmacro( create_commitinfo )
-
 
 # Do we have a shot at filling in the variables?  Check for a .git directory,
 # and then check for an installed git command.
-if( EXISTS ${CMAKE_SOURCE_DIR}/.git )
+if( EXISTS ${SDIR}/.git )
     find_package( Git )          # Set GIT_FOUND, GIT_EXECUTABLE, and GIT_VERSION
     if ( NOT GIT_FOUND )
         message(WARNING "Git directory '.git' found but git not installed.  No git status available")
@@ -111,7 +142,7 @@ endif()
 # Get the date and time of the most recent commit
 execute_process(
     COMMAND ${GIT_EXECUTABLE} log -1 --format="based on the last commit on %ci by %cn"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${SDIR}
     OUTPUT_VARIABLE GIT_COMMIT_STAMP
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -121,7 +152,7 @@ separate_arguments( GIT_COMMIT_STAMP UNIX_COMMAND ${GIT_COMMIT_STAMP} )
 # Get the current working branch
 execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${SDIR}
     OUTPUT_VARIABLE GIT_BRANCH
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -129,14 +160,14 @@ execute_process(
 # Get the latest abbreviated commit hash of the working branch
 execute_process(
     COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${SDIR}
     OUTPUT_VARIABLE GIT_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 # Get the commit message included with the latest commit to the working branch
 execute_process(
     COMMAND ${GIT_EXECUTABLE} log -n 1 --pretty=format:"%s"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${SDIR}
     OUTPUT_VARIABLE GIT_COMMIT_MESSAGE
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -144,7 +175,7 @@ execute_process(
 # Get the count of commits to the current working branch
 execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-list ${GIT_BRANCH} --count
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${SDIR}
     OUTPUT_VARIABLE GIT_COMMIT_COUNT
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -152,7 +183,7 @@ execute_process(
 # Get the list of new/changed/deleted files
 execute_process(
     COMMAND ${GIT_EXECUTABLE} status --porcelain
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${SDIR}
     RESULT_VARIABLE RC
     OUTPUT_VARIABLE NEW_CHANGED_FILES
     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -180,25 +211,7 @@ else()
     endif()
 endif()
 
-
-# if the current git signature differs from that which has been cached, recreate commitinfo.h
-# and cache the new values.  If commitinfo.h does not exist, create it anyway.
-
-if(       (${HERC_GIT_BRANCH}         MATCHES  ${GIT_BRANCH})
-      AND (${HERC_GIT_COMMIT_HASH}    MATCHES  ${GIT_COMMIT_HASH})
-      AND (${HERC_GIT_COMMIT_MESSAGE} MATCHES  ${GIT_COMMIT_MESSAGE})
-      AND (${HERC_GIT_COMMIT_COUNT}   MATCHES  ${GIT_COMMIT_COUNT})
-      AND (${HERC_GIT_CHANGED_FILES}  MATCHES  ${GIT_CHANGED_FILES})
-      AND (${HERC_GIT_NEW_FILES}      MATCHES  ${GIT_NEW_FILES})
-      )
-    set( GIT_DELTA "unchanged:" )
-    if( NOT EXISTS ${PROJECT_BINARY_DIR}/commitinfo.h )
-        create_commitinfo( )
-    endif( )
-else( )
-    create_commitinfo( )
-    set( GIT_DELTA "changed:" )
-endif( )
+create_commitinfo( )
 
 message("Git status ${GIT_DELTA} branch ${GIT_BRANCH}, hash ${GIT_COMMIT_HASH}, commits ${GIT_COMMIT_COUNT}, changed files ${GIT_CHANGED_FILES}, new files ${GIT_NEW_FILES}")
 

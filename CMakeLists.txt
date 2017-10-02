@@ -44,7 +44,7 @@ cmake_policy(SET CMP0048 NEW)          # Set version variables from project dire
 # from within a CMakeLists.txt, so we must just instruct the builder.
 # And if the builder fails to clean up the source directory, the stale
 # CMakeCache.txt file in the source directory will confound the build
-# process until it is remove.  So we will check for it and complain if
+# process until it is removed.  So we will check for it and complain if
 # one is found.
 
 get_filename_component( SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
@@ -354,8 +354,14 @@ link_directories( ${PROJECT_BINARY_DIR}
 # do the top border here.
 
 message( "------------------------------------------------------------------------" )
-include( CMake/Herc01_GitVer.cmake )     # Set values for git repository variables
-                                         # And display a message about it.
+execute_process( COMMAND ${CMAKE_COMMAND}
+                    -DBDIR=${PROJECT_BINARY_DIR}
+                    -DSDIR=${PROJECT_SOURCE_DIR}
+                    -P ${PROJECT_SOURCE_DIR}/CMake/Herc01_GitVer.cmake
+                OUTPUT_VARIABLE result_var
+                ERROR_VARIABLE result_var
+            )
+message( "${result_var}")
 
 
 # Share some information about where things are going and how they get there.

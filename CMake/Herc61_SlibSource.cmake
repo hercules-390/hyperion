@@ -128,7 +128,6 @@ set(hercu_sources
                 parser.c ;
                 pttrace.c ;
                 version.c ;
-                ltdl.c
       )
 
 

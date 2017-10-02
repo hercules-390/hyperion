@@ -176,26 +176,28 @@ timeout_max_adj =  ,
 /*         V---------------- MAX_RUNTEST_FACTOR ---------------V    V-V   V----V    */ ,
     trunc( (((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) / 1000000.0) / 300 + .05, 1)
 
-/* And of course, should you discover the constants have changed,       */
-/* just copy the above say into a temporary REXX script with the        */
-/* new values and execute it.                                           */
+/* And of course, should you discover the constants have changed in     */
+/* hconst.h, just adjust the values above.                              */
+
+/* Set some constant values based on the host running this script.      */
 
 if upper(left(host,3)) == 'WIN' then do
-    path_sep = '\'
-    wrong_path_sep = '/'
-    type_or_cat = 'type'
-    exe_suffix = '.exe'
-    loadmod_suffix = '.dll'
-    platform="Windows"
+    path_sep        = '\'
+    wrong_path_sep  = '/'
+    type_or_cat     = 'type'
+    exe_suffix      = '.exe'
+    loadmod_suffix  = '.dll'
+    platform        =  "Windows"
     end
 else do
-    path_sep = '/'
-    wrong_path_sep = '\'
-    type_or_cat = 'cat'
-    exe_suffix = ''
-    loadmod_suffix = '.so'
-    address command 'uname -s' with output stem plat.
-    platform = plat.1
+    path_sep        = '/'
+    wrong_path_sep  = '\'
+    type_or_cat     = 'cat'
+    exe_suffix      = ''
+    loadmod_suffix  = '.so'
+/*  We defer setting the platform value for non-Windows hosts until     */
+/*  after options are processed so we can use the filename specified    */
+/*  or defaulted for -w to capture the output from uname -s.            */
     end
 
 call parse_command_line
@@ -244,18 +246,38 @@ if error_count > 0 then do      /* any errors?  yes..abort.  */
     return 1
     end
 
+
+/* If not Windows, run uname -s with output redirected to a file.       */
+/* Then read the ouput from the first line of the file.   There are     */
+/* other ways to do this (rxqueue, WITH OUTPUT stem.), but those are    */
+/* not portable or not bulletproof.  This approach is simple, portable, */
+/* and hard to break.                                                   */
+
+if upper(left(host,3)) \== 'WIN' then do
+    uname_s_fname = options.w_ || '.uname-s'  /* cobble up a filename   */
+    'uname -s  >' uname_s_fname
+    if lines( uname_s_fname ) then            /* did we get a result?   */
+        platform = linein( uname_s_fname )    /* ..yes, save it         */
+    else
+        platform = 'Unknown'         /* ..no, not the end of the world  */
+    address command 'cmake -E remove' uname_s_fname
+    drop uname_s_fname
+    end /* if host not Windows */
+
+
 call build_test_script_file
 
 
 /* After what must seem an eternity of getting things put together,     */
 /* we can now run Hercules against the test scripts                     */
 
-hercules_runtest_cmd = options.h_ || 'hercules' ,
-                        '-p' options.p_ ,
-                        options.l_ ,
-                        options.t_ ,
-                        '-f' options.d_ || 'tests.conf' ,
-                        '-r' input_script ,
+hercules_runtest_cmd =                                                     ,
+        options.h_ || 'hercules'    /* Hercules executable              */ ,
+        '-p' options.p_             /* Directory of loadable modules    */ ,
+        options.l_                  /* Loadable module list             */ ,
+        options.t_                  /* timeout adjustment factor        */ ,
+        '-f' options.d_ || 'tests.conf'    /* Hercules config for tests */ ,
+        '-r' input_script           /* .rc file of test commands        */
 
 
 /* If Hercules should exit after testing (no -x option) then redirect   */
@@ -276,6 +298,10 @@ hercules_runtest_cmd
 
 if RC = 0 then do
     say 'Performing analysis of test results...'
+
+    /* Pass the platform name to redtest.rexx as platform=<platform>    */
+    options.v_ = options.v_ platform_name || '=' || platform
+
     save_trace = trace()
     if save_trace = 'N' then
         trace O
@@ -290,7 +316,7 @@ if RC = 0 then do
 /* announcing complete success in a single line                         */
 
 if RC == 0 then
-    say 'All tests ran successfully'
+    say 'All tests ran successfully.  See' redtest_log 'for a summary and' output_log 'for details.'
 else do
     do while lines( redtest_log )
         redtest_log_line =  linein( redtest_log )
@@ -373,18 +399,21 @@ build_test_script_file:
 
         end  /* do i = 1 to test_script_list.0   */
 
-        if \options.x_ then do
-            rc = lineout( input_script, '' )
-            rc = lineout( input_script, '' )
-            rc = lineout( input_script, 'exit' )
-            end
+    rc = lineout( input_script, '' )
+    rc = lineout( input_script, '' )
+    rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
+    rc = lineout( input_script, '' )
+    rc = lineout( input_script, '* End of Hercules test case input script'  )
+    rc = lineout( input_script, '' )
+    rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
+
+    if \options.x_ then do
         rc = lineout( input_script, '' )
         rc = lineout( input_script, '' )
-        rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
-        rc = lineout( input_script, '' )
-        rc = lineout( input_script, '* End of Hercules test case input script'  )
-        rc = lineout( input_script, '' )
-        rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
+        rc = lineout( input_script, 'exit' )
+        end
+
+    call stream input_script, 'C', 'close'
 
     return 0
 
@@ -400,17 +429,6 @@ call build_herc_command
 
 return 0
 
-
-
-/*
-    Build the hercules command line such that it can be executed with
-    address command.  This includes a full path to the executable and
-    all options.
-*/
-
-build_herc_command:
-
-return 0
 
 
 /*
@@ -483,7 +501,7 @@ parse_command_line:
             option_value = translate( parse_quoted_string(), path_sep, wrong_path_sep )
 
             if lastpos('.', option_value) <= lastpos(path_sep, option_value) then
-                option_value = option_value || '.' || options.e_
+                option_value = option_value || options.e_
             options.f_.0 = options.f_.0 + 1
             i = options.f_.0
             options.f_.i = option_value
@@ -499,7 +517,7 @@ parse_command_line:
         when x == '-h' then do   /* Hercules executable directory       */
             options.h_ = validate_path( "-h Hercules executable path" )
             if options.h_ \== '' then do
-                rc = SysFileTree( options.h || exe_name || exe_suffix, sftresult, 'F' )
+                rc = SysFileTree( options.h_ || exe_name || exe_suffix, sftresult, 'F' )
                 if sftresult.0 == 0 then do
                     say "-h Hercules executable '" || exe_name || exe_suffix ,
                             || "' not found in '" || options.h_ "'"
@@ -524,7 +542,7 @@ parse_command_line:
             i = options.l_.0
             options.l_.i = parse_quoted_string()
             if loadmod_suffix \== '' ,
-                    & right(options.l_.i, lenght(loadmod_suffix)) \== loadmod_suffix then
+                    & right(options.l_.i, length(loadmod_suffix)) \== loadmod_suffix then
                 options.l_.i = options.l_.i || loadmod_suffix
             if right( options.i_.i, length( dyncrypt_mod ) ) == dyncrypt_mod then do
                 say 'Dyncrypt is loaded by Hercules and cannot be specified in -l'
@@ -612,9 +630,9 @@ parse_command_line:
 
 
 /*
-    -w  Specify the test case filename of the .rc file used to start
-        Hercules.  The test cases specified for this execution of
-        are concatenated to this file.
+    -w  Specify the filename used for the .rc file used to start
+        Hercules, the log file from Hercules, and the output from
+        redtest.rexx.
 */
         when x == '-w' then    /* Name the test workfile                */
             options.w_ = parse_quoted_string()
@@ -785,7 +803,7 @@ set_option_defaults:
     if options.p_ == "" then   /* default dir for loadable modules.     */
         options.p_ = options.h_
         if platform \== 'Windows' then do
-            call SysFileTree options.h || '.libs' || path_sep ,
+            call SysFileTree options.h_ || '.libs' || path_sep ,
                     || 'hercules' || exe_suffix, sftresult, 'F'
             if sftresult.1 == 1 then
                 options.p_ = options.p_ || ".libs" || path_sep
@@ -848,6 +866,7 @@ validate_environment:
             end
         end
 
+
     /* Ensure all named test scripts exist.  We cannot do this as we    */
     /* process the -f options because -d has to be set/defaulted first. */
     /* We also unwind any globbing that exists in the -f option(s)      */
@@ -905,7 +924,7 @@ validate_environment:
     /* and -p in turn depends on -d having been set or defaulted.       */
     /*                                                                  */
     /* Note that if loadable modules are required to have a suffix,     */
-    /* processing in the -h command line option has ensured it is       */
+    /* processing in the -l command line option has ensured it is       */
     /* there.                                                           */
     /*                                                                  */
     /* While validating the existence of the load modules, the Hercules */
@@ -931,7 +950,7 @@ validate_environment:
                 end  /* if sftresult.0 > 1   */
 
             otherwise
-                opttions.l_ = '-l' options.l_.i
+                options.l_ = '-l' options.l_.i
 
             end /*  select  */
 
