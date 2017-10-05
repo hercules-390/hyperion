@@ -235,7 +235,9 @@ typedef struct _OSA_GRP {
     U32   seqnumcm;             /* MPC_RRH sequence number cm        */
 
     U32   ipas;                 /* Supported IP assist mask          */
-    U32   ipae;                 /* Enabled IP assist mask            */
+    U32   ipae0;                /* Enabled IP assist mask            */
+    U32   ipae4;                /* Enabled IP assist mask IPv4       */
+    U32   ipae6;                /* Enabled IP assist mask IPv6       */
     U32   iir;                  /* Interface ID record               */
 
     BYTE  iMAC[IFHWADDRLEN];    /* MAC of the interface              */

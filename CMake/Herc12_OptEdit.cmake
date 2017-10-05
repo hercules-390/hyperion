@@ -303,7 +303,7 @@ if( NOT ("${S3FH_DIR}" STREQUAL "") )
 #       SoftFloat-3a For Hercules issue #5 "Problems building ieee.c in
 #       Hercules using SoftFloat-3a public headers."
         set( CMAKE_REQUIRED_INCLUDES "${S3FH_INSTALL_DIR}/include" )
-        herc_Check_Include_Files( "stdint.h;softfloat.h" OK )
+        herc_Check_Include_Files( "softfloat.h" OK )
         if( NOT HAVE_SOFTFLOAT_H)
             herc_Save_Error( "Unable to find SoftFloat-3a For Hercules public headers in \"${S3FH_INSTALL_DIR}/include\" " )
         endif( )
