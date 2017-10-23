@@ -1113,6 +1113,48 @@ void cgibin_xml_rates_info(WEBBLK *webblk)
 }
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
+void cgibin_blinkenlights_cpu(WEBBLK *webblk)
+{
+    REGS *regs;
+    QWORD   qword;                            /* quadword work area      */
+
+    int cpu, i;
+
+    hprintf(webblk->sock,"Expires: 0\n");
+    hprintf(webblk->sock,"Content-type: text/csv;\n\n");   /* CSV document */
+
+    for (cpu = 0; cpu < sysblk.maxcpu; cpu++) {
+        regs = sysblk.regs[cpu];
+        if (!regs) regs = &sysblk.dummyregs;
+
+        if( regs->arch_mode != ARCH_900 )
+        {
+            copy_psw (regs, qword);
+            hprintf(webblk->sock, "CPU%4.4d,PSW,%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n",
+		cpu, 
+                qword[0], qword[1], qword[2], qword[3],
+                qword[4], qword[5], qword[6], qword[7]);
+        }
+        else
+        {
+            copy_psw (regs, qword);
+            hprintf(webblk->sock, "CPU%4.4d,PSW,%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n",
+		cpu,
+                qword[0], qword[1], qword[2], qword[3],
+                qword[4], qword[5], qword[6], qword[7],
+                qword[8], qword[9], qword[10], qword[11],
+                qword[12], qword[13], qword[14], qword[15]);
+        }
+
+        if(regs->arch_mode != ARCH_900)
+            for (i = 0; i < 16; i++)
+                hprintf(webblk->sock, "CPU%4.4d,GR%2.2d,%8.8X\n", cpu, i, regs->GR_L(i));
+        else
+            for (i = 0; i < 16; i++)
+                hprintf(webblk->sock, "CPU%4.4d,GR%1.1X=%16.16"PRIX64"\n", cpu, i,
+                    (U64)regs->GR_G(i));
+    }
+}
 
 //  cgibin_hwrite: helper function to output HTML
 
@@ -1253,6 +1295,7 @@ CGITAB cgidir[] = {
     { "registers/general", &cgibin_reg_general },
     { "registers/control", &cgibin_reg_control },
     { "registers/psw", &cgibin_psw },
+    { "blinkenlights/cpu", &cgibin_blinkenlights_cpu },
 #if defined(OPTION_MIPS_COUNTING)
     { "xml/rates", &cgibin_xml_rates_info },
 #endif /*defined(OPTION_MIPS_COUNTING)*/
