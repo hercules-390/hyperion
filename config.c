@@ -1021,6 +1021,9 @@ TID   tid;
         return HERRCPUOFF; /* CPU offline */
     }
 
+    /* Initialise the CPU's thread clockid so that clock_gettime() can use it */
+    pthread_getcpuclockid(sysblk.cputid[cpu], &sysblk.cpuclockid[cpu]);
+
     /* Find out if we are a cpu thread */
     tid = thread_id();
     for (i = 0; i < sysblk.maxcpu; i++)
@@ -1104,6 +1107,7 @@ TID tid = thread_id();
     }
 
     sysblk.cputid[cpu] = 0;
+    sysblk.cpuclockid[cpu] = 0;
 
 #if defined(FEATURE_CONFIGURATION_TOPOLOGY_FACILITY)
     /* Set topology-change-report-pending condition */
