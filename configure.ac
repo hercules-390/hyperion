@@ -1145,6 +1145,7 @@ if test "$hc_cv_have_pthread_h" = "yes"; then
     CFLAGS="$CFLAGS -pthread"
     AC_CHECK_FUNCS( pthread_create ) dnl tester for method of checking...
     AC_CHECK_FUNCS( pthread_getcpuclockid )
+    AC_CHECK_FUNCS( pthread_rwlockattr_setpshared )
     CFLAGS="$save_CFLAGS"
 fi
 
