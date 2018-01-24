@@ -230,7 +230,7 @@ char *validate_cmsfile(char *fn,char *ft,char *fm)
         sprintf(msg,"Invalid character in CMS file type at position %d",i);
         return msg;
     }
-    if(!isalpha(fm[0]))
+    if(!Isalpha(fm[0]))
     {
         return "CMS File mode must start with a letter";
     }
@@ -260,7 +260,7 @@ void str_toupper(char *s)
 
     for(i=0;s[i];i++)
     {
-        if(islower(s[i])) s[i]=toupper(s[i]);
+        if(Islower(s[i])) s[i]=Toupper(s[i]);
     }
 }
 

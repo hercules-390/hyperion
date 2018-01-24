@@ -1609,7 +1609,7 @@ char    hex[17];                        /* Character work areas      */
             }
             sprintf(hex+2*j, "%2.2X", xbuf[bufpos+offset+i]);
             c = guest_to_host(xbuf[bufpos+offset+i]);
-            if (!isprint(c)) c = '.';
+            if (!Isprint(c)) c = '.';
             chars[j] = c;
         } /* end for(i) */
         XMINFF (4, "%-16.16s %-8.8s", hex, chars);
@@ -2236,7 +2236,7 @@ char            hex[49];                /* Character work areas      */
             }
             sprintf(hex+2*j, "%2.2X", dirent->pds2usrd[i]);
             c = guest_to_host(dirent->pds2usrd[i]);
-            if (!isprint(c)) c = '.';
+            if (!Isprint(c)) c = '.';
             chars[j] = c;
         } /* end for(i) */
         if (i <= 8)

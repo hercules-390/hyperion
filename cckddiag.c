@@ -347,7 +347,7 @@ char               *p;
         p = s;
         if ( (*s == '0') && (*(s+1) == 'x') ) {
             s = s + 2;
-            for (v = 0; isxdigit(*s); ++s)
+            for (v = 0; Isxdigit(*s); ++s)
                 v = (v << 4) + xv[strchr(xd, *s) - xd];
             if (debug)
                 // "OFFTIFY hex string '%s' = 0x%16.16"PRIX64", dec %"PRId64"."

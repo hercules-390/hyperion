@@ -78,7 +78,7 @@ static char *prefix[] = {
     for(i = 0; i < sizeof(name)-1; i++)
     {
         name[i] = guest_to_host(name[i]);
-        if(!isprint(name[i]) || isspace(name[i]))
+        if(!Isprint(name[i]) || Isspace(name[i]))
         {
             name[i] = '\0';
             break;

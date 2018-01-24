@@ -3807,7 +3807,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            the key, which will usually be a dataset name or member
            name and can provide useful debugging information */
         if ((*unitstat & CSW_SM) && dev->ckdkeytrace
-            && isprint(guest_to_host(iobuf[0])))
+            && Isprint(guest_to_host(iobuf[0])))
         {
             BYTE module[45];
             str_guest_to_host( iobuf, module, (u_int)num );

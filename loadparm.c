@@ -100,8 +100,8 @@ static GSYSINFO gsysinfo;
     if (_source) \
         { \
         for (; i < n; i++) \
-             if (isprint(_source[i])) \
-                 _target[i] = host_to_guest((int)toupper(_source[i])); \
+             if (Isprint(_source[i])) \
+                 _target[i] = host_to_guest((int)Toupper(_source[i])); \
              else \
                  _target[i] = 0x40; \
         } \
@@ -119,9 +119,9 @@ static GSYSINFO gsysinfo;
     BYTE    temp[sizeof(_target)]; \
     memset(temp, 0x40, sizeof(temp) ); \
     for (i = 0, n = 0; name && i < strlen(name) && i < sizeof(temp); i++) \
-        if (isalnum(name[i])) \
+        if (Isalnum(name[i])) \
         { \
-            temp[i] = host_to_guest((int)toupper(name[i])); \
+            temp[i] = host_to_guest((int)Toupper(name[i])); \
             n++; \
         } \
         else \
@@ -183,9 +183,9 @@ static int copy_stringz_to_ebcdic(BYTE* fld, size_t len, char *name)
     copylen = MIN(strlen(name), len);
 
     for ( i = 0, n = 0; i < copylen; i++ )
-        if ( isalnum(name[i]) )
+        if ( Isalnum(name[i]) )
         {
-            temp_fld[i] = host_to_guest((int)toupper(name[i]));
+            temp_fld[i] = host_to_guest((int)Toupper(name[i]));
             n++;
         }
         else
@@ -220,7 +220,7 @@ static int copy_ebcdic_to_stringz(char *name, size_t nlen, BYTE* fld, size_t fle
     {
         c = guest_to_host(fld[i]);
 
-        if ( c == SPACE || !isalnum(c) )
+        if ( c == SPACE || !Isalnum(c) )
             break; /* there should not be any embedded blanks */
 
         name[i] = c;

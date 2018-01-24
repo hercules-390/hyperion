@@ -930,10 +930,10 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                 strupper( group, argv[ac] );
 
                 for (i=1, rc=0; i < (int) strlen( group ) && rc == 0; i++)
-                    if (!isalnum( group[i] ))
+                    if (!Isalnum( group[i] ))
                         rc = -1;
 
-                if (rc == 0 && isalpha( group[0] ))
+                if (rc == 0 && Isalpha( group[0] ))
                     strlcpy( dev->filename, group, sizeof( dev->filename ));
                 else
                 {
@@ -1180,7 +1180,7 @@ static struct sockaddr_in* parse_sockspec( const char* sockspec )
 
     // Convert port to number
 
-    if (isdigit( *port ))
+    if (Isdigit( *port ))
         sin->sin_port = htons( atoi( port ));
     else
     {
@@ -4218,7 +4218,7 @@ BYTE    stat;                           /* Unit status               */
             c = guest_to_host( iobuf[len] );
             /* Replace any non-printable characters with a blank
                except keep carriage returns and newlines as-is. */
-            if (!isprint(c) && c != '\r' && c!= '\n')
+            if (!Isprint(c) && c != '\r' && c!= '\n')
                 c = ' ';
             iobuf[len] = c;   /* only printable or CR/LF allowed */
         } /* end for(len) */

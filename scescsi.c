@@ -718,7 +718,7 @@ int n;
 
         if(!(!ntf->name
           && !strncasecmp("type",argv[1],4)
-          && isdigit(*(argv[1]+4))
+          && Isdigit(*(argv[1]+4))
           && sscanf(argv[1]+4, "%u%c", &file, &c) == 1
           && file < HWL_MAXFILETYPE))
         {
@@ -769,7 +769,7 @@ int  ldind;  /* Load / Dump indicator */
 
     UNREFERENCED(cmdline);
 
-    ldind = ((islower(*argv[0]) ? toupper(*argv[0]) : *argv[0] ) == 'L')
+    ldind = ((Islower(*argv[0]) ? Toupper(*argv[0]) : *argv[0] ) == 'L')
           ? 0 : 1;
 
     if(argc > 1)

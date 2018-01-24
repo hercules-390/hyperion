@@ -194,7 +194,7 @@ DLL_EXPORT char* w32_w32errmsg( int errnum, char* pszBuffer, size_t nBuffSize )
     // (remove trailing whitespace)
     {
         char* p = pszBuffer + dwBytesReturned - 1;
-        while ( p >= pszBuffer && isspace(*p) ) p--;
+        while ( p >= pszBuffer && Isspace(*p) ) p--;
         *++p = 0;
     }
 
@@ -1470,7 +1470,7 @@ DLL_EXPORT BYTE *hostpath( BYTE *outpath, const BYTE *inpath, size_t buffsize )
         if (1
             && inlen >= 11
             && strncasecmp((const char *)inpath,"/cygdrive/",10) == 0
-            && isalpha(inpath[10])
+            && Isalpha(inpath[10])
         )
         {
             *outpath++ = inpath[10];
@@ -4334,7 +4334,7 @@ DLL_EXPORT pid_t w32_poor_mans_fork ( char* pszCommandLine, int* pnWriteToChildS
 
         // Now print ALL captured messages AT ONCE (if any)...
 
-        while (pPipedProcessCtl->nStrLen && isspace( pPipedProcessCtl->pszBuffer[ pPipedProcessCtl->nStrLen - 1 ] ))
+        while (pPipedProcessCtl->nStrLen && Isspace( pPipedProcessCtl->pszBuffer[ pPipedProcessCtl->nStrLen - 1 ] ))
             pPipedProcessCtl->nStrLen--;
         if (pPipedProcessCtl->nStrLen)
         {
@@ -4483,7 +4483,7 @@ void w32_parse_piped_process_stdxxx_data ( PIPED_PROCESS_CTL* pPipedProcessCtl, 
         *pend = 0;                      // (change newline character to null)
         pmsgend = pend;                 // (start removing blanks from here)
 
-        while (--pmsgend >= pbeg && isspace(*pmsgend)) {*pmsgend = 0; --nlen;}
+        while (--pmsgend >= pbeg && Isspace(*pmsgend)) {*pmsgend = 0; --nlen;}
 
         // If we were passed a PIPED_PROCESS_CTL pointer, then the root thread
         // wants us to just capture the o/p and IT will issue the logmsg within
@@ -4659,10 +4659,10 @@ DLL_EXPORT char*  w32_strcasestr( const char* haystack, const char* needle )
 
     while ( haystack[++i] != '\0' )
     {
-        if ( tolower( haystack[i] ) == tolower( needle[0] ) )
+        if ( Tolower( haystack[i] ) == Tolower( needle[0] ) )
         {
             int j=i, k=0, match=0;
-            while ( tolower( haystack[++j] ) == tolower( needle[++k] ) )
+            while ( Tolower( haystack[++j] ) == Tolower( needle[++k] ) )
             {
                 match=1;
                 // Catch case when they match at the end

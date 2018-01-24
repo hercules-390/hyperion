@@ -984,7 +984,7 @@ BYTE       c;                           /* Character work area       */
     for (i = 0; i < 8; i++)
     {
         c = (*puser == '\0' ? SPACE : *(puser++));
-        buf[16+i] = host_to_guest(toupper(c));
+        buf[16+i] = host_to_guest(Toupper(c));
     }
 
     /* Bytes 24-31 contain the program product bitmap */
@@ -1109,10 +1109,10 @@ char    msgbuf[512];                    /* Message work area         */
         int shcmd = 0;
         {
             char* p = bufo;
-            while (*p && isspace(*p)) p++;
+            while (*p && Isspace(*p)) p++;
             if ((*(p+0) == 's' || *(p+0) == 'S') &&
                 (*(p+1) == 'h' || *(p+1) == 'H') &&
-                isspace(*(p+2))) shcmd = 1;
+                Isspace(*(p+2))) shcmd = 1;
         }
         if ((sysblk.diag8cmd & DIAG8CMD_ENABLE)
             && (!shcmd || (sysblk.shcmdopt & (SHCMDOPT_ENABLE + SHCMDOPT_DIAG8)))

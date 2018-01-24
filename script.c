@@ -100,13 +100,13 @@ DLL_EXPORT int parse_args (char* p, int maxargc, char** pargv, int* pargc)
 
     while (*p && *pargc < maxargc)
     {
-        while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
+        while (*p && Isspace(*p)) p++; if (!*p) break; // find start of arg
 
         if (*p == '#' && *pargc) break; // stop when line comment reached
 
         *pargv = p; ++*pargc; // count new arg
 
-        while (*p && !isspace(*p) && *p != '\"' && *p != '\'') p++; if (!*p) break; // find end of arg
+        while (*p && !Isspace(*p) && *p != '\"' && *p != '\'') p++; if (!*p) break; // find end of arg
 
         if (*p == '\"' || *p == '\'')
         {
@@ -174,7 +174,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             if (c == '\0' || c == '\r') continue;
 
             /* Check if it is a white space and no other character yet */
-            if(!lstarted && isspace(c)) continue;
+            if(!lstarted && Isspace(c)) continue;
             lstarted=1;
 
             /* Check that statement does not overflow buffer */
@@ -895,7 +895,7 @@ int     rc;                             /* (work)                    */
 #if defined(ENABLE_OBJECT_REXX) || defined(ENABLE_REGINA_REXX)
 
     /* Skip past blanks to start of command */
-    for (p = stmt; isspace( *p ); p++)
+    for (p = stmt; Isspace( *p ); p++)
         ; /* (nop; do nothing) */
 
     /* Execute REXX script if line begins with "Slash '/' Asterisk '*'" */
@@ -917,11 +917,11 @@ int     rc;                             /* (work)                    */
         stmtnum++;
 
         /* Skip past blanks to start of statement */
-        for (p = stmt; isspace( *p ); p++)
+        for (p = stmt; Isspace( *p ); p++)
             ; /* (nop; do nothing) */
 
         /* Remove trailing whitespace */
-        for (stmtlen = (int)strlen(p); stmtlen && isspace(p[stmtlen-1]); stmtlen--);
+        for (stmtlen = (int)strlen(p); stmtlen && Isspace(p[stmtlen-1]); stmtlen--);
         p[stmtlen] = 0;
 
         /* Special handling for 'pause' and other statements */
@@ -1141,7 +1141,7 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
             args = p2;
 #endif
 
-        if (isalpha( args[0] ))  /* [RESTART|START|<oldpsw>]? */
+        if (Isalpha( args[0] ))  /* [RESTART|START|<oldpsw>]? */
         {
 #define MAX_KW_LEN 15
             char kw[ MAX_KW_LEN + 1 ] = {0};

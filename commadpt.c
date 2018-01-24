@@ -1058,7 +1058,7 @@ static void commadpt_read_tty(COMMADPT *ca, BYTE * bfr, int len)
             }
             if  (ca->uctrans && c >= 'a' && c <= 'z')
             {
-                c = toupper( c );     /* make uppercase */
+                c = Toupper( c );     /* make uppercase */
             }
             /* now map the character from ASCII into proper S/370 byte format */
             if (ca->term == COMMADPT_TERM_TTY)

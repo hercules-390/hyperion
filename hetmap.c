@@ -666,7 +666,7 @@ Print_Standard_Labels (void )
     TERMINATE(lLblType);
     TERMINATE(lLblNum);
 
-    if ( isdigit( lLblNum[0] ) )
+    if ( Isdigit( lLblNum[0] ) )
     { if ( lLblNum[0] < '1' || lLblNum[0] > '9' ) return ( FALSE ); } /* this should be transportable to EBCDIC machines */
     else
         return ( FALSE );
@@ -757,7 +757,7 @@ Print_Standard_Labels (void )
 
                     if ( lLblType[0] == 'E' )
                     {
-                        for ( i = 0; i < 4; i++ ) { if ( !isdigit( ebcnt[i] ) ) ebcnt[i] = '0'; }
+                        for ( i = 0; i < 4; i++ ) { if ( !Isdigit( ebcnt[i] ) ) ebcnt[i] = '0'; }
                         ebcnt[4] = '\0';
                     }
                     else

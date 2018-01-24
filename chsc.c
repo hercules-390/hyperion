@@ -741,7 +741,7 @@ BYTE dumpbuf[32*1024] = {0};
         MSGBUF( hex, "%2.2X", *p );
         strlcat(hexbuf, hex, sizeof(hexbuf));
         c = guest_to_host(*p);
-        if (!isprint(c) || iscntrl(c)) c = '.';
+        if (!Isprint(c) || Iscntrl(c)) c = '.';
         charbuf[disp & 15] = c;
     }
 

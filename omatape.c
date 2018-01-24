@@ -211,7 +211,7 @@ char           *strtok_str = NULL;      /* last token position       */
                 tdffilenm[i] = '/';
 /* JCS */
 //            else
-//                tdffilenm[i] = tolower(tdffilenm[i]);
+//                tdffilenm[i] = Tolower(tdffilenm[i]);
         } /* end for(i) */
 
         /* Prefix the file name with the base path name and

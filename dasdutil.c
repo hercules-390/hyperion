@@ -50,7 +50,7 @@ DLL_EXPORT void string_to_upper (char *source)
 int     i;                              /* Array subscript           */
 
     for (i = 0; source[i] != '\0'; i++)
-        source[i] = toupper(source[i]);
+        source[i] = Toupper(source[i]);
 
 } /* end function string_to_upper */
 
@@ -62,7 +62,7 @@ DLL_EXPORT void string_to_lower (char *source)
 int     i;                              /* Array subscript           */
 
     for (i = 0; source[i] != '\0'; i++)
-        source[i] = tolower(source[i]);
+        source[i] = Tolower(source[i]);
 
 } /* end function string_to_lower */
 
@@ -167,9 +167,9 @@ int             lastsame = 0;
             if (offset < (U32)len) {
                 sprintf(hex_chars+xi, "%2.2X", c);
                 print_chars[i] = '.';
-                if (isprint(c)) print_chars[i] = c;
+                if (Isprint(c)) print_chars[i] = c;
                 c = guest_to_host(c);
-                if (isprint(c)) print_chars[i] = c;
+                if (Isprint(c)) print_chars[i] = c;
             }
             offset++;
             xi += 2;
@@ -544,7 +544,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         char *p;
         for (p = rmtdev + 1; *p && *p != ':'; p++)
         {
-            if (!isdigit(*p))  /* (port numbers are always numeric) */
+            if (!Isdigit(*p))  /* (port numbers are always numeric) */
             {
                 /* Not a port number ==> not really a remote device */
                 rmtdev = NULL;
@@ -2265,7 +2265,7 @@ DLL_EXPORT int valid_dsname( const char *pszdsname )
     for ( i = 0; i < iLen; i++ )
     {
         BYTE c = pszdsname[i];
-        if ( isalnum( c ) )
+        if ( Isalnum( c ) )
             continue;
         else if ( c == '$' )
             continue;

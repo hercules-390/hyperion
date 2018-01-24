@@ -1529,7 +1529,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 }
                 else if ( rc == 2 )
                 {
-                    switch (toupper(f))
+                    switch (Toupper(f))
                     {
                         case 'K':
                             maxsize <<= SHIFT_KIBIBYTE;
@@ -1592,7 +1592,7 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
                 }
                 else if ( rc == 2 )
                 {
-                    switch (toupper(f))
+                    switch (Toupper(f))
                     {
                         case 'K':
                             eotmargin <<= SHIFT_KIBIBYTE;

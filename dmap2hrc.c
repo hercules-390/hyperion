@@ -181,7 +181,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
            locate the output filename. */
         strncpy(output_type, device.type, 4);
         output_type[4] = '\0';
-        if (isprint(device.parms.disk.volser[0]))
+        if (Isprint(device.parms.disk.volser[0]))
             output_filename = device.parms.disk.filename;
         else output_filename = device.parms.other.filename;
 
