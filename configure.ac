@@ -737,7 +737,7 @@ AC_CHECK_HEADERS( linux/ipv6.h,   [hc_cv_have_linux_ipv6_h=yes],   [hc_cv_have_l
       #include <sys/socket.h>
     #endif
 ] )
-AC_CHECK_HEADERS( net/if_var.h,   [hc_cv_have_net_in_var_h=yes],   [hc_cv_have_net_in_var_h=no],
+AC_CHECK_HEADERS( net/if_var.h,   [hc_cv_have_net_if_var_h=yes],   [hc_cv_have_net_if_var_h=no],
 [
     #include <sys/types.h>
     #ifdef HAVE_SYS_SOCKET_H
