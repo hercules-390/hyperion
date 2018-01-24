@@ -1140,6 +1140,13 @@ if test "$hc_cv_have_getset_uid" != "yes"; then
     )
 fi
 
+if test "$hc_cv_have_pthread_h" = "yes"; then
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -pthread"
+    AC_CHECK_FUNCS( pthread_create ) dnl tester for method of checking...
+    AC_CHECK_FUNCS( pthread_getcpuclockid )
+    CFLAGS="$save_CFLAGS"
+fi
 
 #  FIXME: Disabled because some builtin ffs seem to be causing a problem.
 #         (gcc 3.4 barfs on certain 'march=' settings?)
