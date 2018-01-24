@@ -110,7 +110,7 @@ int main( int argc, char **argv )
 
         switch( ctlreq.iCtlOp )
         {
-#if !defined(__APPLE__) && !defined(__FreeBSD__)
+#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
         case TUNSETIFF:
             pOp  = "TUNSETIFF";
             pArg = &ctlreq.iru.hifr.ifreq;
