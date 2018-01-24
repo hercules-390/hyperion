@@ -753,8 +753,10 @@ AC_CHECK_HEADERS( netinet/in_var.h,  [hc_cv_have_netinet_in_var_h=yes],  [hc_cv_
     #ifdef HAVE_SYS_SOCKET_H
       #include <sys/socket.h>
     #endif
-    #ifdef HAVE_NET_IF_VAR_H
+    #ifdef HAVE_NET_IF_H
       #include <net/if.h>
+    #endif
+    #ifdef HAVE_NET_IF_VAR_H
       #include <net/if_var.h>
     #endif
     #ifdef HAVE_NETINET_IN_H
@@ -767,8 +769,10 @@ AC_CHECK_HEADERS( netinet6/in6_var.h,  [hc_cv_have_netinet6_in6_var_h=yes],  [hc
     #ifdef HAVE_SYS_SOCKET_H
       #include <sys/socket.h>
     #endif
-    #ifdef HAVE_NET_IF_VAR_H
+    #ifdef HAVE_NET_IF_H
       #include <net/if.h>
+    #endif
+    #ifdef HAVE_NET_IF_VAR_H
       #include <net/if_var.h>
     #endif
     #ifdef HAVE_NETINET_IN_VAR_H
@@ -1222,10 +1226,16 @@ AC_CHECK_MEMBERS( [struct in6_ifreq.ifr_ifru.ifru_flags],
     #ifdef HAVE_LINUX_IPV6_H
       #include <linux/ipv6.h>
     #endif
-    #ifdef HAVE_NETINET6_IN6_VAR_H
+    #ifdef HAVE_NET_IF_H
       #include <net/if.h>
+    #endif
+    #ifdef HAVE_NET_IF_VAR_H
       #include <net/if_var.h>
+    #endif
+    #ifdef HAVE_NETINET_IN_H
       #include <netinet/in.h>
+    #endif
+    #ifdef HAVE_NETINET6_IN6_VAR_H
       #include <netinet/in_var.h>  // Not the ipv6 file, please
     #endif
 ] )
