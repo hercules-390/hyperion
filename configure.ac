@@ -359,7 +359,6 @@ fi
 modexecdir='$(libdir)/$(PACKAGE)'
 AC_SUBST(modexecdir)
 
-
 # -----------------------------------------------------------------------------
 #
 #  AC_LIBTOOL_DLOPEN
@@ -394,6 +393,30 @@ AC_LIBTOOL_DLOPEN()                     # (we need libtool's dlopen support)
 
 AC_LIBTOOL_WIN32_DLL()                  # (we need Win32 support in libtool)
 
+
+# -----------------------------------------------------------------------------
+#  This is a hack:
+#
+#    On NetBSD, override how libtool decides that a library can be linked into
+#    a shared library. The libSoftFloat.a library is not permissible by the
+#    usual rule, which allows *.so and *_pic.a (because all code in a shared
+#    library must be Position Independent Code).
+#    The result is that the shared libraries are not built and hercules
+#    does not work.
+#    Linux commonly seems to have "pass_all" for this setting.
+#    We want to affect the line deplibs_check_method=... in the copied
+#    libtool script.
+#    Hercules 3 still built a libsoftfloat.so.  Building libSoftFloat as
+#    shared lib again would be the best solution.
+#    In the mean time, let's hope it is at least built as PIC.
+# -----------------------------------------------------------------------------
+
+case $host_os in
+    netbsd*)
+	#lt_cv_deplibs_check_method="match_pattern /lib[^/]+(\\.so|_pic\\.a|\\.a)\$"
+	lt_cv_deplibs_check_method="pass_all"
+	;;
+esac
 
 # -----------------------------------------------------------------------------
 #  See: 'AC_PROG_LIBTOOL' below.
@@ -2832,6 +2855,7 @@ if test "x$hc_cv_optimization_flags" = "x"; then
 else
     AC_MSG_RESULT( [$hc_cv_optimization_flags] )
 fi
+
 
 AC_CACHE_SAVE()
 
