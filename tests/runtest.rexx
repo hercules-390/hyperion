@@ -78,11 +78,16 @@ Exits
   * If redtest.rexx returns a non-zero return code, that return code is used
     as this script's return code.
 
-   See the help text in this routine for options and for differences
+
+Notes
+ * When Open Object Rexx is invoked from within CMake Ctest (on Windows?),
+   ooRexx does not remove the double quotes from the arguments (Regina
+   Rexx does).  So if argument processing sees leading and trailing
+   quotes, they are removed before any editing or processing is done.
+ * See the help text in this routine for options and for differences
    in options from the earlier runtest shell script and runtest.cmd
    Windows script.
-
-   N.B., the two scripts that were the basis for this script used
+ * N.B., the two scripts that were the basis for this script used
    overlapping command line options with some incompatibilities.  This
    script uses the same command line options for Windows and open source
    systems.  Where conflicts existed, the open source options are
@@ -121,6 +126,8 @@ Exits
     4) So if this script determines that it has been invoked under
        Regina Rexx using the rexx command, it uses address command
        to re-invoke itself using the regina command.
+    5) For reasons not understood, this script fails to run on Regina
+       Rexx 3.3.  Issue discovered during testing with Debian 5.4.
 */
 
 
@@ -130,7 +137,7 @@ parse source host invocation script_path  /* get invocation information */
 
 /* the following rxfuncadd always returns rc=0 on ooRexx.  On Regina    */
 /* Rexx, rc=60 means the script was invoked using the rexx command,     */
-/* which does not support rxfuncadd()or other loadable utility          */
+/* which does not support rxfuncadd()or other loadable utilities.       */
 /* So if we get rc=60, re-invoke this script using the regina command.  */
 /* To keep CMake simple, and to simplify the life of users running this */
 /* runtest.rexx, we assume that reinvocation when using Regina Rexx is  */
@@ -463,214 +470,227 @@ parse_command_line:
     dyncrypt_mod = 'dyncrypt' || loadmod_suffix
 
     do  while opts \== ''      /* process entire argument string.       */
-    parse var opts x opts      /* get the next command line option      */
 
-    select
+        parse var opts x opts      /* get the next command line option      */
+
+        /* For reasons not understood, ooRexx does not strip the quotes     */
+        /* surrounding arguments when passed by CTest, while Regina Rexx    */
+        /* does.  So we shall strip them when found.  File/path names are   */
+        /* not affected; quotes or no quotes, things seem to work.          */
+
+        if left( x, 1 ) == '"' & right( x, 1 )  == '"' then do
+            x = substr( x, 2, (length(x) - 2) )
+            end
+
+        select
 
 /*
-    -d   Specify test case directory.
+        -d   Specify test case directory.
 */
-        when x == '-d' then do   /* test case directory                 */
-            options.d_ = validate_path( "-d test script path" )
-            end   /* when x == '-d'   */
+            when x == '-d' then do   /* test case directory                 */
+                options.d_ = validate_path( "-d test script path" )
+                end   /* when x == '-d'   */
 
 /*
-    -e  Specify default extension for test case files.  This option may
-        be specified multiple times, and each time it is specified, it
-        used for all succeeding -f options that do not include an
-        extension until the next -e option is specified.  If the option
-        is missing the leading '.', no matter: just add it.
+        -e  Specify default extension for test case files.  This option may
+            be specified multiple times, and each time it is specified, it
+            used for all succeeding -f options that do not include an
+            extension until the next -e option is specified.  If the option
+            is missing the leading '.', no matter: just add it.
 */
                                /* default test case filename extension  */
-        when x=='-e' then do
-            parse var opts options.e_ opts
-            if left( options.e_, 1 ) \== '.' then
-                options.e_ = '.' || options.e_
-            end
+            when x=='-e' then do
+                parse var opts options.e_ opts
+                if left( options.e_, 1 ) \== '.' then
+                    options.e_ = '.' || options.e_
+                end
 
 
 /*
-    -f   Specify test case file name.  If no extension is included, then
-        the extension specified in the last -e (or the default for -e if
-        no -e commmand line option was specified yet) is used as the
-        extension.
+        -f   Specify test case file name.  If no extension is included, then
+            the extension specified in the last -e (or the default for -e if
+            no -e commmand line option was specified yet) is used as the
+            extension.
 */
-        when x=='-f' then do   /* provide name of a test script.        */
-        /* Note: globs are OK, as are absolute or relative paths        */
+            when x=='-f' then do   /* provide name of a test script.        */
+            /* Note: globs are OK, as are absolute or relative paths        */
 
-            option_value = translate( parse_quoted_string(), path_sep, wrong_path_sep )
+                option_value = translate( parse_quoted_string(), path_sep, wrong_path_sep )
 
-            if lastpos('.', option_value) <= lastpos(path_sep, option_value) then
-                option_value = option_value || options.e_
-            options.f_.0 = options.f_.0 + 1
-            i = options.f_.0
-            options.f_.i = option_value
-            end
+                if lastpos('.', option_value) <= lastpos(path_sep, option_value) then
+                    option_value = option_value || options.e_
+                options.f_.0 = options.f_.0 + 1
+                i = options.f_.0
+                options.f_.i = option_value
+                end
 
 
 /*
-    -h  Specify Hercules executable directory.  The default is the
-        working directory.  And this directory, specified or defaulted,
-        is used as the basis for the default for the Hercules loadable
-        modules directory -p.
+        -h  Specify Hercules executable directory.  The default is the
+            working directory.  And this directory, specified or defaulted,
+            is used as the basis for the default for the Hercules loadable
+            modules directory -p.
 */
-        when x == '-h' then do   /* Hercules executable directory       */
-            options.h_ = validate_path( "-h Hercules executable path" )
-            if options.h_ \== '' then do
-                rc = SysFileTree( options.h_ || exe_name || exe_suffix, sftresult, 'F' )
-                if sftresult.0 == 0 then do
-                    say "-h Hercules executable '" || exe_name || exe_suffix ,
-                            || "' not found in '" || options.h_ "'"
-                    options.h_ = ''
+            when x == '-h' then do   /* Hercules executable directory       */
+                options.h_ = validate_path( "-h Hercules executable path" )
+                if options.h_ \== '' then do
+                    rc = SysFileTree( options.h_ || exe_name || exe_suffix, sftresult, 'F' )
+                    if sftresult.0 == 0 then do
+                        say "-h Hercules executable '" || exe_name || exe_suffix ,
+                                || "' not found in '" || options.h_ "'"
+                        options.h_ = ''
+                        error_count = error_count + 1
+                        end         /* sftresult.0 == 0   */
+                    end             /* options.h_ \== '' */
+
+                end   /* when x == '-h'   */
+
+
+/*
+        -l  Specify a loadable module.  The module will be loaded from the
+            directory specified by or defaulted for the -p command line
+            option.  Append the load module suffix if not already provided,
+            and accumulate the loadable modules in a stem options.l_.  An
+            attempt to load dyncrypt will be rejected; Hercules loads it
+            automatically on start-up.
+*/
+            when x == '-l' then do   /* provide name of a loadable module   */
+                options.l_.0 = options.l_.0 + 1
+                i = options.l_.0
+                options.l_.i = parse_quoted_string()
+                if loadmod_suffix \== '' ,
+                        & right(options.l_.i, length(loadmod_suffix)) \== loadmod_suffix then
+                    options.l_.i = options.l_.i || loadmod_suffix
+                if right( options.i_.i, length( dyncrypt_mod ) ) == dyncrypt_mod then do
+                    say 'Dyncrypt is loaded by Hercules and cannot be specified in -l'
                     error_count = error_count + 1
-                    end  /* sftresult.0 == 0   */
-                end /* options.h_ \== '' */
-
-            end   /* when x == '-h'   */
+                    end
+                end  /* x == '-l'  */
 
 
 /*
-    -l  Specify a loadable module.  The module will be loaded from the
-        directory specified by or defaulted for the -p command line
-        option.  Append the load module suffix if not already provided,
-        and accumulate the loadable modules in a stem options.l_.  An
-        attempt to load dyncrypt will be rejected; Hercules loads it
-        automatically on start-up.
+        -p  Specify loadable module directory.  If not specified, the
+            default is determined below based on the the Hercules executable
+            directory and whether Hecules was built with libtool support.
 */
-        when x == '-l' then do   /* provide name of a loadable module   */
-            options.l_.0 = options.l_.0 + 1
-            i = options.l_.0
-            options.l_.i = parse_quoted_string()
-            if loadmod_suffix \== '' ,
-                    & right(options.l_.i, length(loadmod_suffix)) \== loadmod_suffix then
-                options.l_.i = options.l_.i || loadmod_suffix
-            if right( options.i_.i, length( dyncrypt_mod ) ) == dyncrypt_mod then do
-                say 'Dyncrypt is loaded by Hercules and cannot be specified in -l'
-                error_count = error_count + 1
-                end
-            end  /* x == '-l'  */
+            when x == '-p' then do   /* loadable module directory           */
+                options.p_ = validate_path( "-p loadable module path " )
+                end   /* x == '-p' */
 
 
 /*
-    -p  Specify loadable module directory.  If not specified, the
-        default is determined below based on the the Hercules executable
-        directory and whether Hecules was built with libtool support.
+        -q   Pass -v QUIET to make redtest.rexx run more quietly.
 */
-        when x == '-p' then do   /* loadable module directory           */
-            options.p_ = validate_path( "-p loadable module path " )
-            end   /* x == '-p' */
+            when x == '-q' then    /* redtest to run quietly if -q          */
+                options.q_ = 1
 
 
 /*
-    -q   Pass -v QUIET to make redtest.rexx run more quietly.
+        -r   Specify the repeat count for the test cases to be run.
 */
-        when x == '-q' then    /* redtest to run quietly if -q          */
-            options.q_ = 1
+            when x == '-r' then do   /* Repeat test cases n times          */
+                options.r_ = parse_quoted_string()
+                if \datatype(options.r_, 'N') then do
+                    say "-r test repeat count value '" || options.r_ || "' not numeric"
+                    error_count = error_count + 1
+                    end
+                end   /* x == '-r' */
 
 
 /*
-    -r   Specify the repeat count for the test cases to be run.
-*/
-        when x == '-r' then do   /* Repeat test cases n times          */
-            options.r_ = parse_quoted_string()
-            if \datatype(options.r_, 'N') then do
-                say "-r test repeat count value '" || options.r_ || "' not numeric"
-                error_count = error_count + 1
-                end
-            end   /* x == '-r' */
+        -t   Specify default timeout adjustment factor in the range 1.0 to
+             14.3.  Note that while we require the space between -t and the
+             adjustment factor, Hercules requires no space.
 
+             -t 2.2 to runtest.rexx becomes -t2.2 on its way to redtest.rexx.
+
+             14.3 is the result, rounded to the nearest 0.1 of a second, of
+             the constants defined in hconst.h; see above for the details.
+*/
+            when x == '-t' then do   /* default timeout value                 */
+                options.t_ = parse_quoted_string()
+                if \datatype(options.t_, 'N') then do
+                    say "-t timeout adjustment factor '" || options.t_ || "' not numeric"
+                    error_count = error_count + 1
+                    end
+                else do
+                    if options.t_ < 1.0 || options.t_ > timeout_max_adj then do
+                        say "-t timeout adjustment factor '" || options.t_ ,
+                                || "' must be between 1.0 and' timeout_max_adj 'inclusive"
+                        error_count = error_count + 1
+                        end
+                    else
+                        options.t_ = '-t' || options.t_
+                    end  /* else, options.t_ numeric  */
+                end    /* x == '-t' */
 
 /*
-    -t   Specify default timeout adjustment factor in the range 1.0 to
-         14.3.  Note that while we require the space between -t and the
-         adjustment factor, Hercules requires no space.
-
-         -t 2.2 to runtest.rexx becomes -t2.2 on its way to redtest.rexx.
-
-         14.3 is the result, rounded to the nearest 0.1 of a second, of
-         the constants defined in hconst.h; see above for the details.
+        -v  Specify variables and values to be provided to the Hercules
+            environment while the test cases are being run. <var>=<value>
+            is the syntax.  The -v option may be specified multiple times,
+            and each variable/value is passed to Hercules.
 */
-        when x == '-t' then do   /* default timeout value                 */
-            options.t_ = parse_quoted_string()
-            if \datatype(options.t_, 'N') then do
-                say "-t timeout adjustment factor '" || options.t_ || "' not numeric"
-                error_count = error_count + 1
-                end
-            else do
-                if options.t_ < 1.0 || options.t_ > timeout_max_adj then do
-                    say "-t timeout adjustment factor '" || options.t_ || "' must be between 1.0 and' timeout_max_adj 'inclusive"
+            when x == '-v' then do /* provide vars & values to redtest      */
+                                   /* and if -v ptrsize= found, indicate    */
+                                   /* this for validate_environment().      */
+                option_value = parse_quoted_string()
+                if left(option_value,length(ptrsize_name)) == ptrsize_name then
+                    ptrsize_found = 1
+                if left(option_value,length(platform_name)) == platform_name then do
+                    say 'platform variable for redtest.rexx cannot be overridden: ' ,
+                            "'-v " || option_value || "'"
                     error_count = error_count + 1
                     end
                 else
-                    options.t_ = '-t' || options.t_
-                end  /* else, options.t_ numeric  */
-            end    /* x == '-t' */
+                    options.v_ = options.v_ option_value
+
+                end   /* x == '-v' */
+
 
 /*
-    -v  Specify variables and values to be provided to the Hercules
-        environment while the test cases are being run. <var>=<value>
-        is the syntax.  The -v option may be specified multiple times,
-        and each variable/value is passed to Hercules.
+        -w  Specify the filename used for the .rc file used to start
+            Hercules, the log file from Hercules, and the output from
+            redtest.rexx.
 */
-        when x == '-v' then do /* provide vars & values to redtest      */
-                               /* and if -v ptrsize= found, indicate    */
-                               /* this for validate_environment().      */
-            option_value = parse_quoted_string()
-            if left(option_value,length(ptrsize_name)) == ptrsize_name then
-                ptrsize_found = 1
-            if left(option_value,length(platform_name)) == platform_name then do
-                say 'platform variable for redtest.rexx cannot be overridden: ' ,
-                        "'-v " || option_value || "'"
+            when x == '-w' then    /* Name the test workfile                */
+                options.w_ = parse_quoted_string()
+
+
+/*
+        -x  Leave Hercules running after test case script execution.
+*/
+            when x == '-x' then    /* Leave Hercules running after tests    */
+                options.x_ = 1
+
+/*
+        --help   display summary runtest.rexx help.
+*/
+            when x == '--help'   then do
+                options.help_ = 1
+                call help_text
+                return 0
+                end
+
+
+/*
+        --helplong   display detailed runtest.rexx help.
+*/
+            when x == '--helplong'   then do
+                options.help_ = 1
+                call help_text
+                call helplong_text
+                return 0
+                end
+
+            otherwise do
+                say 'option' x 'is not a known option.'
+                options.unknown_ = 1
                 error_count = error_count + 1
                 end
-            else
-                options.v_ = options.v_ option_value
 
-            end   /* x == '-v' */
+            end     /*select*/
 
-
-/*
-    -w  Specify the filename used for the .rc file used to start
-        Hercules, the log file from Hercules, and the output from
-        redtest.rexx.
-*/
-        when x == '-w' then    /* Name the test workfile                */
-            options.w_ = parse_quoted_string()
-
-
-/*
-    -x  Leave Hercules running after test case script execution.
-*/
-        when x == '-x' then    /* Leave Hercules running after tests    */
-            options.x_ = 1
-
-/*
-    --help   display summary runtest.rexx help.
-*/
-        when x == '--help'   then do
-            options.help_ = 1
-            call help_text
-            return 0
-            end
-
-
-/*
-    --helplong   display detailed runtest.rexx help.
-*/
-        when x == '--helplong'   then do
-            options.help_ = 1
-            call help_text
-            call helplong_text
-            return 0
-            end
-
-        otherwise do
-            say 'option' x 'is not a known option.'
-            options.unknown_ = 1
-            error_count = error_count + 1
-            end
-        end     /*select*/
-    end        /*do while*/
+        end        /*do while*/
 
     return error_count
 
@@ -693,7 +713,7 @@ validate_path:
 
     path_name = translate( parse_quoted_string(), path_sep, wrong_path_sep)
 
-    rc = SysFileTree( path_name, sftresult, 'D' )    /* does path exist?  */
+    rc = SysFileTree( path_name, sftresult, 'd' )    /* does path exist?  */
 
     select
         when sftresult.0 = 1 then do    /* one directory returned */
