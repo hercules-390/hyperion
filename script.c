@@ -1108,7 +1108,8 @@ static int test_abort( SCRCTL *pCtl )
 {
     // "Script %d: test: aborted"
     WRMSG( HHC02331, "E", pCtl->scr_id );
-    panel_command( "sysclear");
+    panel_command("stopall");
+    panel_command("sysreset");
     return -1;
 }
 
