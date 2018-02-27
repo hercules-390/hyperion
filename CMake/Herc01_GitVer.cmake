@@ -63,6 +63,15 @@
        respository.
 ]]
 
+
+# ----------------------------------------------------------------------
+#
+# Function create_commitinfo: Create a commitinfo.h.new and compare it
+#                             to the current commitinfo.h.  Replace the
+#                             current header if the new one is different.
+#
+# ----------------------------------------------------------------------
+
 function( create_commitinfo )
 # configure commitinfo.h to pass current git status to source
 configure_file(
@@ -100,6 +109,13 @@ endif( )
 endfunction( )
 
 
+# ----------------------------------------------------------------------
+#
+# Main: collect information from the git local repository and create
+#       a commitinfo.h.new.
+#
+# ----------------------------------------------------------------------
+
 # List of directory names to exclude from counts of new and changed files.
 # Each directory is rooted at the source directory and must end with a
 # forward slash.  CMake deals with Windows versus open source directory
@@ -107,16 +123,17 @@ endfunction( )
 # as part of a regular expression.
 
 set( EXCLUDE_LIBS "tests/|html/|man/|scripts/|util/" )
+find_package( Git )          # Set GIT_FOUND, GIT_EXECUTABLE, and GIT_VERSION
 
 
 # Do we have a shot at filling in the variables?  Check for a .git directory,
 # and then check for an installed git command.
+
 if( EXISTS ${SDIR}/.git )
-    find_package( Git )          # Set GIT_FOUND, GIT_EXECUTABLE, and GIT_VERSION
     if ( NOT GIT_FOUND )
         message(WARNING "Git directory '.git' found but git not installed.  No git status available")
     endif()
-else()
+else( )
     message(WARNING "Git directory '.git' not found.  No git status available")
     set( GIT_FOUND "NO")
     set( GIT_VERSION "None")
@@ -164,6 +181,7 @@ execute_process(
     OUTPUT_VARIABLE GIT_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+
 # Get the commit message included with the latest commit to the working branch
 execute_process(
     COMMAND ${GIT_EXECUTABLE} log -n 1 --pretty=format:"%s"
@@ -188,7 +206,6 @@ execute_process(
     OUTPUT_VARIABLE NEW_CHANGED_FILES
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-
 
 if( NOT ${RC} EQUAL 0 )
     set( GIT_NEW_FILES "invalid" )
