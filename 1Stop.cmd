@@ -20,19 +20,80 @@ SETLOCAL EnableDelayedExpansion
 :: defaults, they will re-issue the makefile.bat command with their
 :: own parameters.
 
-if /i "%PLATFORM%"=="X86" (
-
-  set "build_arch=x86"
-  set "build_cmd=makefile.bat RETAIL makefile.msvc 32 %*"
-
+if DEFINED PLATFORM (
+    set "build_arch=%PLATFORM%"
 ) else (
-
-  set "build_arch=%PROCESSOR_ARCHITECTURE%"
-  set "build_cmd=makefile.bat RETAIL-X64 makefile.msvc 64 %*"
-
+    if DEFINED PROCESSOR_ARCHITEW6432 (
+        set "build_arch=%PROCESSOR_ARCHITEW6432%"
+    ) else (
+        set "build_arch=%PROCESSOR_ARCHITECTURE%"
+    )
 )
 
-echo Hercules will be build with command/parameters '%build_cmd%'
+:: PLATFORM is either x86 or x64, PROCESSORS_ARCHITECTURE is either
+:: x86 or AMD64.  Conform x64 to AMD64.
+
+If /I "%build_arch%"=="x64" (
+    set "build_arch=AMD64"
+)
+
+
+:: Visual Studio 2012 and higher command prompts can be identified by
+:: checking the environment variable VisualStudioVersion.  Older than
+:: 2012, we can parse the PATH variable, but that will fail if the
+:: builder installed Visual Studio in a non-default directory.  There
+:: is no help for that beyond understanding the difficulty and
+:: documenting it.
+
+:: If Visual Studio 9.0 2008 is identified as the the newest version
+:: installed, it is assumed to be the Express Edition.  VS2008EE is
+:: limited to building 32-bit applications out of the box, and 1Stop
+:: will therefore only build a 32-bit Hercules when VS2008EE is in use.
+:: Otherwise the bitness will be determined by the hardware architecture.
+
+:: (Yes, there are VS2008EE hacks to enable 64-bit builds, and a builder
+:: who uses those hacks will need to use the more flexible build tools
+:: like makefile.bat.)
+
+:: If there are multiple versions of Visual Studio installed, well,
+:: 1Stop  will end badly if someone wishes to use an older VS version to
+:: build.  In that case, we will expect the builder to use more flexible
+:: build tools.
+
+if "%VisualStudioVersion%" == "15.0" (
+    set "build_arch=%build_arch%"
+) else if "%VisualStudioVersion%" == "14.0" (
+    set "build_arch=%build_arch%"
+) else if "%VisualStudioVersion%" == "12.0" (
+    set "build_arch=%build_arch%"
+) else if "%VisualStudioVersion%" == "11.0" (
+    set "build_arch=%build_arch%"
+) else if "%VisualStudioVersion%" == "10.0" (
+    set "build_arch=%build_arch%"
+) else if "%VisualStudioVersion%" == "9.0" (
+    set "build_arch=x86"
+) else if NOT "%PATH:Visual Studio 10.0=%"=="%PATH%" (
+    set "build_arch=%build_arch%"
+) else if NOT "%PATH:Visual Studio 9.0=%"=="%PATH%" (
+    echo Visual Studio 9 ^(2008^) identified as build tool.  Assuming Express Edition.
+    echo Building 32-bit executables and shared libraries.
+    set "build_arch=x86"
+) else (
+    echo Unable to determine Visual Studio version.
+    echo Unable to match VisualStudioVersion "%VisualStudioVersion%" to a valid version.
+    echo Unable to to determine version from PATH environment variable.
+    echo Terminating.
+    exit /b 12
+)
+
+if /i "%build_arch%"=="X86" (
+    set "build_cmd=makefile.bat RETAIL makefile.msvc 32 %*"
+) else (
+    set "build_cmd=makefile.bat RETAIL-X64 makefile.msvc 64 %*"
+)
+
+
+echo Hercules will be built with command/parameters '%build_cmd%'
 
 set "gitconf=.git\config"
 set "sfdir=SoftFloat-3a"
@@ -235,7 +296,7 @@ set "rv=%errorlevel%"
 popd
 if not "%rv%" == "0" (
     echo Could not build %sfdir%, %sfdir% 1Stop rv=%rv%. >&2
-    return 17
+    exit /b 17
 )
 
 :: If a non-default SoftFloat-3a directory was specified via environment
