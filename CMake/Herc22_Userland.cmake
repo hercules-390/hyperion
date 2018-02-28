@@ -378,6 +378,14 @@ else( )
     endif( )
 endif( )
 
+# Test for stdbool.h.  Its presence or absence needs to be recorded
+# for correct expansion of the SoftFloat-3a headers included in ieee.c.
+# Hercules will build without stdbool.h, but Hercules will not work
+# when it is built without knowing about stdbool.h and SoftFloat-3a
+# is built with it.
+
+herc_Check_Include_Files( stdbool.h OK )
+
 
 # check for functions and libraries required to build Hercules.  CMake
 # caching complicates this in two ways:

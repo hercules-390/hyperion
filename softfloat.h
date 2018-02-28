@@ -53,12 +53,6 @@ All such modifications placed in the public domain by Stephen R. Orso
 #ifndef softfloat_h
 #define softfloat_h 1
 
-#if !defined(false) 
-#include <stdbool.h> 
-#endif
-#if !defined(int32_t) 
-#include <stdint.h>             /* C99 standard integers */ 
-#endif
 
 #include "softfloat_types.h"
 
@@ -69,7 +63,7 @@ All such modifications placed in the public domain by Stephen R. Orso
 /****************************************************************************************/
 
 #ifdef IBM_IEEE
- 
+
  /* We never need anything fancy from softfloat_raiseFlag(), so there is no need    */
  /* to call a function.  A macro that does the logical or is quite sufficient.      */
 

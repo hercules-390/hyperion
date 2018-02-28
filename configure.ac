@@ -667,6 +667,8 @@ AC_CACHE_SAVE()
 
 HC_CHECK_HQA_DIR()                # (Hercules Build Configuration QA Testing)
 
+AC_CHECK_HEADERS( stdbool.h )
+
 #------------------------------------------------------------------------------
 #  PROGRAMMING NOTE: on Darwin and *BSD sys/socket.h must be included before
 #  net/if.h, net/route.h, or netinet/in.h can be #included, and on OS X 10.3
