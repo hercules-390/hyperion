@@ -242,6 +242,14 @@ Hercules link libs:   @link_alllibs@
 
 
 /*
+   The following is needed for correct expansion of the SoftFloat-3a
+   headers in ieee.c (and nowhere else...yet).
+*/
+
+#cmakedefine  HAVE_STDBOOL_H       @HAVE_STDBOOL_H@
+
+
+/*
    Base functions required for the build.
 */
 
