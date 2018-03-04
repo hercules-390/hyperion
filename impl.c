@@ -1306,9 +1306,9 @@ int     c = 0;                        /* Next option flag            */
                     {
                     int j;
                         for( j = 0; j < (int)strlen( sym ); j++ )
-                            if ( islower( sym[j] ) )
+                            if ( Islower( sym[j] ) )
                             {
-                                sym[j] = toupper( sym[j] );
+                                sym[j] = Toupper( sym[j] );
                             }
                         set_symbol(sym, value);
                     }
@@ -1387,7 +1387,7 @@ int     c = 0;                        /* Next option flag            */
         default:
             {
                 char buf[16];
-                if (isprint( optopt ))
+                if (Isprint( optopt ))
                     MSGBUF( buf, "'-%c'", optopt );
                 else
                     MSGBUF( buf, "(hex %2.2x)", optopt );

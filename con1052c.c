@@ -319,7 +319,7 @@ static void* con1052_panel_command( char *cmd )
             input = cmd + pfxlen;
 
             for (i=0; i < dev->bufsize && input[i] != '\0'; i++)
-                dev->buf[i] = isprint( input[i] ) ?
+                dev->buf[i] = Isprint( input[i] ) ?
                         host_to_guest( input[i] ) : ' ';
 
             /* Update number of bytes in keyboard buffer */
@@ -404,7 +404,7 @@ BYTE    c;                              /* Print character           */
             if (1
                 && c != 0x0d
                 && c != 0x0a
-                && !isprint(c)
+                && !Isprint(c)
             )
                 c = ' ';
             iobuf[len] = c;

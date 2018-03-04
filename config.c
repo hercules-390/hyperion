@@ -1022,7 +1022,11 @@ TID   tid;
     }
 
     /* Initialise the CPU's thread clockid so that clock_gettime() can use it */
+#if HAVE_PTHREAD_GETCPUCLOCKID
     pthread_getcpuclockid(sysblk.cputid[cpu], &sysblk.cpuclockid[cpu]);
+#else
+    sysblk.cpuclockid[cpu] = CLOCK_VIRTUAL;
+#endif
 
     /* Find out if we are a cpu thread */
     tid = thread_id();

@@ -65,6 +65,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 
 #if HAVE_CTYPE_H
 #  include <ctype.h>
+#  define Isspace(c)	isspace((int)(unsigned char)(c))
+#  define Isalnum(c)	isalnum((int)(unsigned char)(c))
 #endif
 
 #if HAVE_MALLOC_H
@@ -2859,10 +2861,10 @@ UNREFERENCED(deplibs);
   p = deplibs;
   while (*p)
     {
-      if (!isspace ((int) *p))
+      if (!Isspace (*p))
     {
       char *end = p+1;
-      while (*end && !isspace((int) *end))
+      while (*end && !Isspace(*end))
         {
           ++end;
         }
@@ -2911,14 +2913,14 @@ UNREFERENCED(deplibs);
   p = deplibs;
   while (*p)
     {
-      if (isspace ((int) *p))
+      if (Isspace (*p))
     {
       ++p;
     }
       else
     {
       char *end = p+1;
-      while (*end && !isspace ((int) *end))
+      while (*end && !Isspace (*end))
         {
           ++end;
         }
@@ -3160,7 +3162,7 @@ try_dlopen (phandle, filename)
         size_t i;
         for (i = 0; i < (unsigned int)(ext - base_name); ++i)
       {
-        if (isalnum ((int)(base_name[i])))
+        if (Isalnum(base_name[i]))
           {
             name[i] = base_name[i];
           }

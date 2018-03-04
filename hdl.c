@@ -304,8 +304,8 @@ size_t       m;
     strlcat(dtname,ltype,m);
 
     for(n = 0; n < strlen(dtname); n++)
-        if(isupper(dtname[n]))
-            dtname[n] = tolower(dtname[n]);
+        if(Isupper(dtname[n]))
+            dtname[n] = Tolower(dtname[n]);
 
     return dtname;
 }

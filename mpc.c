@@ -183,9 +183,9 @@ DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, i
                 print_ebcdic[i] = print_ascii[i] = '.';
                 e = guest_to_host( c );
 
-                if( isprint( e ) )
+                if( Isprint( e ) )
                     print_ebcdic[i] = e;
-                if( isprint( c ) )
+                if( Isprint( c ) )
                     print_ascii[i] = c;
             }
             else

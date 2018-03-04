@@ -495,7 +495,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
             if (c == '\0' ) break;
 
             /* Check if it is a white space and no other character yet */
-            if(!lstarted && isspace(c)) continue;
+            if(!lstarted && Isspace(c)) continue;
             lstarted=1;
 
             /* Check that statement does not overflow buffer */

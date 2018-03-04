@@ -164,7 +164,7 @@ int inet_socket (char* spec)
         memcpy(&sin.sin_addr, he->h_addr_list[0], sizeof(sin.sin_addr));
     }
 
-    if (isdigit(service[0]))
+    if (Isdigit(service[0]))
     {
         sin.sin_port = htons(atoi(service));
     }

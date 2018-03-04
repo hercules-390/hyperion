@@ -722,7 +722,7 @@ void *panel_command (void *cmdline)
     /* If the command starts with a -, then strip it and indicate
      * that we do NOT want the command echoed to the console. */
     hercecho = 1; /* (default) */
-    while (*pCmdLine && isspace( *pCmdLine ))
+    while (*pCmdLine && Isspace( *pCmdLine ))
         pCmdLine++;
     i = 0;
     while (*pCmdLine && i < (MAX_CMD_LEN-1))
@@ -737,7 +737,7 @@ void *panel_command (void *cmdline)
             {
                 pCmdLine++;         /* (skip past the '-' ... */
                                     /* ... and remove blanks) */
-                while (*pCmdLine && isspace(*pCmdLine))
+                while (*pCmdLine && Isspace(*pCmdLine))
                     pCmdLine++;     /* (get past blank) */
             }
         }

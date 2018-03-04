@@ -1449,7 +1449,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                     }
                     j += snprintf( hbuf+j, sizeof(hbuf)-j, "%2.2X", c );
                     if ( g_to_h) c = guest_to_host(c);
-                    cbuf[k++] = ( !isprint(c) ? '.' : c );
+                    cbuf[k++] = ( !Isprint(c) ? '.' : c );
                 } /* end for(i) */
                 WRMSG( HHC01486, "I", ( ( o >> 4 ) & 0xf ), hbuf, cbuf, ( ( o >> 4 ) & 0xf ) );
             }
@@ -1600,7 +1600,7 @@ DLL_EXPORT BYTE* prt_guest_to_host( const BYTE *psinbuf, BYTE *psoutbuf, const u
     for( count = 0; count < ilength; count++ )
     {
         c = guest_to_host(psinbuf[count]);
-        if ( !isprint(c) )
+        if ( !Isprint(c) )
             c = '.';
         psoutbuf[count] = c;
     }
@@ -1620,7 +1620,7 @@ DLL_EXPORT BYTE* prt_host_to_guest( const BYTE *psinbuf, BYTE *psoutbuf, const u
             pad = TRUE;
         if ( !pad )
         {
-            psoutbuf[count] = isprint      (psinbuf[count]) ?
+            psoutbuf[count] = Isprint      (psinbuf[count]) ?
                               host_to_guest(psinbuf[count]) :
                               host_to_guest('.');
         }

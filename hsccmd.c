@@ -3056,7 +3056,7 @@ char *strtok_str = NULL;
         for (cpu = 0; styp != NULL; )
         {
             count = 1;
-            if (isdigit(styp[0]))
+            if (Isdigit(styp[0]))
             {
                 if (0
                     || sscanf(styp, "%d%c", &count, &c) != 2
@@ -3423,7 +3423,7 @@ BYTE    f = ' ', c = '\0';
 
         if ( rc == 2 )
         {
-            switch (toupper(f))
+            switch (Toupper(f))
             {
             case 'B':
                 overflow = 0;
@@ -3583,7 +3583,7 @@ u_int   locktype = 0;
                                                             : sizeof(U32);
         if ( rc == 2 )
         {
-            switch (toupper(f))
+            switch (Toupper(f))
             {
             case 'B':
                 shiftsize >>= SHIFT_MEBIBYTE;
@@ -4234,7 +4234,7 @@ int cnslport_cmd(int argc, char *argv[], char *cmdline)
 
         for (i=0; i < (int) strlen( port ); i++)
         {
-            if (!isdigit(port[i]))
+            if (!Isdigit(port[i]))
             {
                 // "Invalid value %s specified for %s"
                 WRMSG( HHC01451, "E", port, argv[0] );
@@ -4522,7 +4522,7 @@ int sh_cmd(int argc, char *argv[], char *cmdline)
     if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
     {
         cmd = cmdline + 2;
-        while (isspace(*cmd)) cmd++;
+        while (Isspace(*cmd)) cmd++;
         if (*cmd)
         {
             rc = herc_system(cmd);
@@ -4587,7 +4587,7 @@ int cd_cmd(int argc, char *argv[], char *cmdline)
     if (sysblk.shcmdopt & SHCMDOPT_ENABLE)
     {
         path = cmdline + 2;
-        while (isspace(*path)) path++;
+        while (Isspace(*path)) path++;
 #ifdef _MSVC_
         {
             char* strtok_str = NULL;
@@ -4993,7 +4993,7 @@ int stsi_model_cmd(int argc, char *argv[], char *cmdline)
             {
                 for (i=0; i < len; i++)
                 {
-                    if (!isalnum(model[m][i]))
+                    if (!Isalnum(model[m][i]))
                     {
                         char msgbuf[64];
 
@@ -5069,7 +5069,7 @@ int stsi_plant_cmd(int argc, char *argv[], char *cmdline)
 
         for ( i = 0; i < strlen(argv[1]); i++ )
         {
-            if ( isalnum(argv[1][i]) )
+            if ( Isalnum(argv[1][i]) )
                 continue;
             WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters" );
             return -1;
@@ -5120,7 +5120,7 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 
         for ( i = 0; i < strlen(argv[1]); i++ )
         {
-            if ( isalnum(argv[1][i]) )
+            if ( Isalnum(argv[1][i]) )
                 continue;
 
             WRMSG( HHC02205, "E", argv[1], "; argument contains invalid characters" );
@@ -5743,8 +5743,8 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
             int i;
             strlcpy( devtype, argv[1], sizeof(devtype) );
             for ( i = 0; i < (int)strlen( devtype ); i++ )
-                if ( isalpha( devtype[i] ) )
-                    devtype[i] = toupper( devtype[i] );
+                if ( Isalpha( devtype[i] ) )
+                    devtype[i] = Toupper( devtype[i] );
         }
     }
 
@@ -6117,7 +6117,7 @@ int qd_cmd(int argc, char *argv[], char *cmdline)
                 if (j%4 == 0)
                     len += sprintf(buf + len, " ");
                 len += sprintf(buf + len, "%2.2X", iobuf[j]);
-                cbuf[j%16] = isprint(guest_to_host(iobuf[j])) ? guest_to_host(iobuf[j]) : '.';
+                cbuf[j%16] = Isprint(guest_to_host(iobuf[j])) ? guest_to_host(iobuf[j]) : '.';
             }
             len += sprintf(buf + len, " |%s|", cbuf);
             WRMSG(HHC02280, "I", buf);
@@ -6826,7 +6826,7 @@ BYTE     unitstat, code = 0;
     {
         for (rc = 0; rc < (int)strlen(argv[3]); rc++)
         {
-            if ( !isdigit(argv[3][rc]) )
+            if ( !Isdigit(argv[3][rc]) )
             {
                 WRMSG( HHC02205, "E", argv[3], "; not in range of 1-9999");
                 return -1;
@@ -7473,7 +7473,7 @@ int defsym_cmd(int argc, char *argv[], char *cmdline)
     {
         int i;
         for ( i = 0; sym[i] != '\0'; i++ )
-            sym[i] = toupper( sym[i] );
+            sym[i] = Toupper( sym[i] );
     }
 #endif
 
@@ -7544,7 +7544,7 @@ int delsym_cmd(int argc, char *argv[], char *cmdline)
     {
         int i;
         for ( i = 0; sym[i] != '\0'; i++ )
-            sym[i] = toupper( sym[i] );
+            sym[i] = Toupper( sym[i] );
     }
 #endif
 

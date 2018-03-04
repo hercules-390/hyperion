@@ -103,7 +103,7 @@ do { \
     for (i = 0; i < num; i++) \
     { \
         c = guest_to_host(iobuf[i]); \
-        if (dev->fold) c = toupper(c); \
+        if (dev->fold) c = Toupper(c); \
         if (c == 0) c = SPACE; \
         dev->buf[dev->bufoff] = c; \
         dev->bufoff++; \

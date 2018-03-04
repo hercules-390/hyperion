@@ -1573,7 +1573,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         {
                             for (i = 0; i < event_msglen; i++)
                             {
-                                message[i] = isprint(guest_to_host(event_msg[i])) ?
+                                message[i] = Isprint(guest_to_host(event_msg[i])) ?
                                     guest_to_host(event_msg[i]) : 0x20;
                             }
                             message[i] = '\0';

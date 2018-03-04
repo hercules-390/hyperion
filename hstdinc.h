@@ -92,6 +92,17 @@
 #include <string.h>
 #include <setjmp.h>
 #include <ctype.h>
+#define Isspace(c)	isspace((int)(unsigned char)(c))
+#define Isprint(c)	isprint((int)(unsigned char)(c))
+#define Isdigit(c)	isdigit((int)(unsigned char)(c))
+#define Isxdigit(c)	isxdigit((int)(unsigned char)(c))
+#define Iscntrl(c)	iscntrl((int)(unsigned char)(c))
+#define Isalnum(c)	isalnum((int)(unsigned char)(c))
+#define Isalpha(c)	isalpha((int)(unsigned char)(c))
+#define Isupper(c)	isupper((int)(unsigned char)(c))
+#define Islower(c)	islower((int)(unsigned char)(c))
+#define Toupper(c)	toupper((int)(unsigned char)(c))
+#define Tolower(c)	tolower((int)(unsigned char)(c))
 #include <errno.h>
 #include <fcntl.h>
 #ifndef O_BINARY

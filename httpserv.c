@@ -355,7 +355,7 @@ static void http_verify_path(WEBBLK *webblk, char *path)
     int i;
 
     for (i = 0; path[i]; i++)
-        if (!isalnum((int)path[i]) && !strchr("/.-_", path[i]))
+        if (!Isalnum((int)path[i]) && !strchr("/.-_", path[i]))
             http_error(webblk, "404 File Not Found","",
                                "Illegal character in filename");
 #endif

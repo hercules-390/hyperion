@@ -426,9 +426,9 @@ int  rest_loadparm = FALSE;
                 }
                 for ( j = 0; j < (int)strlen(argv[i]) && maxb < MAXPARMSTRING; j++ )
                 {
-                    if ( islower(argv[i][j]) )
+                    if ( Islower(argv[i][j]) )
                     {
-                        argv[i][j]=toupper(argv[i][j]);
+                        argv[i][j]=Toupper(argv[i][j]);
                     }
                     sysblk.iplparmstring[maxb]=host_to_guest(argv[i][j]);
                     maxb++;

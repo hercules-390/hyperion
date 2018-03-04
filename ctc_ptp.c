@@ -2917,7 +2917,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
         char * s = pPTPBLK->szTUNIfName + strlen(pPTPBLK->szTUNIfName);
 
-        while(isdigit(s[- 1])) s--;
+        while(Isdigit(s[- 1])) s--;
         strlcat( pPTPBLK->szTUNCharDevName,  s, sizeof(pPTPBLK->szTUNCharDevName) );
     }
 #endif

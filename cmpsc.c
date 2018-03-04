@@ -1899,7 +1899,7 @@ static int ARCH_DEP(cmpsc_vstore)(struct ec *ec, BYTE *buf, unsigned len)
           logmsg(" ");
         else
         {
-          if(isprint(guest_to_host(buf[i + j])))
+          if(Isprint(guest_to_host(buf[i + j])))
             logmsg("%c", guest_to_host(buf[i + j]));
           else
             logmsg(".");
