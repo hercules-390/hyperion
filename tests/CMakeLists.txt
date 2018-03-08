@@ -50,10 +50,20 @@ set(test_names_004-storage
     sske390
     )
 
+set(test_names_005-mainsize
+    mainsize
+    )
+
 set(test_names_011-tapeio
     awsbsf
+    )
+
+# if Zlib is included, include the hetbsf test, which needs Zlib.
+if( HAVE_LIBZ )
+    set( test_names_011-tapeio ${test_names_011-tapeio}
     hetbsf
     )
+endif( )
 
 set(test_names_051-binary-fp  bfp-* )
 
@@ -86,6 +96,19 @@ set(test_names_099-other
     wild
     )
 
+# Determine the pointer size.  On UNIX-like systems, config.h is in the
+# same directory as the Hercules executable, and runtest.rexx will parse
+# it to determine the pointer size.  When using Windows Visual Studio,
+# the Hercules executable is built in a subdirectory.  In either case,
+# we can just determine the pointer size from CMAKE_SIZEOF_VOID_P and
+# provide it in a -v parameter.
+
+if( CMAKE_SIZEOF_VOID_P GREATER 4 )
+    set( __ptr_size ptrsize=8 )
+else( )
+    set( __ptr_size ptrsize=4 )
+endif( )
+
 
 # Create CMake tests, one per test group.  Each CMake test uses one
 # invocation of runtest to run the tests in the test group.  Tests
@@ -95,20 +118,26 @@ set(test_names_099-other
 
 foreach( test_group IN LISTS test_group_names )
 
-#   Accumulate -f options for the test, one per test case in the group.
-    set( test_name_list "" )
+    # Accumulate -f options for the test, one per test case in the group.
+    unset( test_name_list )
     foreach( test_name IN LISTS test_names_${test_group} )
-        set( test_name_list "${test_name_list} -f ${test_name}" )
+        set( test_name_list ${test_name_list} -f ${test_name}  )
     endforeach( )
 
-#   Create the CMake test case.  Following syntax is for open source
-#   systems only; the Windows runtest.cmd uses a different syntax.
+    set( test_parms   )
+    # Create the CMake test case.  The runtest command assumes that the
+    # tests directory has been copied to the build directory.  The
+    # runtest timer is slowed (-t 10) to avoid false positives when
+    # testing on a busy system.
     add_test( NAME ${test_group}
-            COMMAND ${PROJECT_SOURCE_DIR}/tests/runtest
-                        -d ${PROJECT_SOURCE_DIR}/tests
-                        ${test_name_list}
-                        -p ${PROJECT_BINARY_DIR}
-                        -w Testing/Temporary/${test_group}
+            COMMAND rexx ${PROJECT_BINARY_DIR}/tests/runtest.rexx
+                    -d ${PROJECT_BINARY_DIR}/tests
+                    -h $<TARGET_FILE_DIR:hercules>
+                    -t 10
+                    ${test_name_list}
+                    -v ${__ptr_size}
+                    -p ${PROJECT_BINARY_DIR}
+                    -w Testing/Temporary/${test_group}
             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
             )
 

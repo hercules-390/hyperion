@@ -23,8 +23,6 @@
 
 
            To Do List
-- Create an 'uninstall' target
-- Create a 'clean' target.
 - Write a prolog(ue) to match that written for CMakeHercGitVer.cmake
 - Write a brief task-oriented update tutorial, to deal with at least
   adding a new compilation unit to an existing executable or shared
@@ -35,8 +33,35 @@
 
 --------------------------------------------------------------------------- ]]
 
+
+# ----------------------------------------------------------------------
+# Preamble: basic CMake setup, prevent an in-source build, set
+# configuration type(s), set the minimum CMake version required, and
+# define the install directory structure appropriate for the target
+# system.
+# ----------------------------------------------------------------------
+
+
 cmake_minimum_required( VERSION 3.4 )  # 3.4 is required for the Windows export library support.
-cmake_policy(SET CMP0048 NEW)          # Set version variables from project directive
+#  cmake_policy(SET CMP0048 NEW)          # Set version variables from project directive
+cmake_policy( VERSION 3.4 )            # Use new policies in effect as of 3.4
+
+# Enable shallow git clones if using CMake 3.6 or better.  The GIT_SHALLOW
+# option and its value must be passed in two variables; CMake will not
+# accept them in a single string.  These two variables are used in
+# Herc03_ExtPackageBuild.cmake.
+
+if( NOT ( ${CMAKE_VERSION} VERSION_LESS "3.6.0" ) )
+    set( GIT_SHALLOW_OPTION        "GIT_SHALLOW" )
+    set( GIT_SHALLOW_OPTION_VALUE  "1" )
+endif( )
+
+# Git to be at least 1.8.5.1; 1.8.5 fails.
+
+find_package( Git )          # Set GIT_FOUND, GIT_EXECUTABLE, and GIT_VERSION_STRING
+if( "${GIT_VERSION_STRING}" VERSION_LESS "1.8.5.1" )
+    herc_Save_Error( "Git client must be at least version 1.8.5.1, found ${GIT_VERSION_STRING}" )
+endif( )
 
 
 # Prevent an in-source build.  REALPATH resolves any symlinks.  There is
@@ -44,8 +69,8 @@ cmake_policy(SET CMP0048 NEW)          # Set version variables from project dire
 # from within a CMakeLists.txt, so we must just instruct the builder.
 # And if the builder fails to clean up the source directory, the stale
 # CMakeCache.txt file in the source directory will confound the build
-# process until it is removed.  So we will check for it and complain if
-# one is found.
+# process until it is removed.  So check for it, and if one is found,
+# complain and fail the configure.
 
 get_filename_component( SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
 get_filename_component( BINARY_DIR "${CMAKE_BINARY_DIR}" REALPATH)
@@ -62,12 +87,12 @@ if( (EXISTS ${SOURCE_DIR}/CMakeCache.txt )
 "Existing file CMakeCache.txt and directory CMakeFiles/ *MUST*\n"
 "be removed from the source directory:\n\n"
 "    ${CMAKE_SOURCE_DIR}\n\n"
-"Hercules cannot be built until CMakeCache.txt and CMakeFiles/.\n"
-"are removed from ${CMAKE_SOURCE_DIR}.\n"
+"Hercules cannot be configured until CMakeCache.txt and\n"
+"CMakeFiles/. are removed from ${CMAKE_SOURCE_DIR}.\n"
 "-------------------------------------------------------------\n"
     )
     message( ${error_message} )
-    message( FATAL_ERROR "Hercules will not be built" )
+    message( FATAL_ERROR "Hercules will not be configured" )
 endif( )
 
 if( "${SOURCE_DIR}" STREQUAL "${BINARY_DIR}" )
@@ -81,30 +106,134 @@ if( "${SOURCE_DIR}" STREQUAL "${BINARY_DIR}" )
 "-------------------------------------------------------------"
     )
     message( ${error_message} )
-    message( FATAL_ERROR "Hercules will not be built" )
+    message( FATAL_ERROR "Hercules will not be configured" )
 endif( )
 execute_process( COMMAND ${CMAKE_COMMAND} -E remove ${PROJECT_SOURCE_DIRECTORY}/CMakeCache.txt )
 set( CMAKE_DISABLE_IN_SOURCE_BUILD ON )
 set( CMAKE_DISABLE_SOURCE_CHANGES  ON )
 
 
-project( Hercules VERSION 4.0.0.0 )
+project( Hercules VERSION 4.0.0.0 LANGUAGES C )
 string( TIMESTAMP BUILD_TIMESTAMP "Date: %Y-%m-%d Time: %H:%M:%S UTC" UTC )
+
+# Everything (almost) in Hercules must be compiled with position-
+# independent code, so we shall just make it global.
+
+set( CMAKE_POSITION_INDEPENDENT_CODE TRUE )
+
+# Determine the configuration type if using a single-configuration
+# generator, and remove extraneous configuration types if using a
+# multiple-configuration generator.
+
+if( "${CMAKE_CONFIGURATION_TYPES}" STREQUAL "" )
+    # Generator in use creates build scripts for exactly one configuration.
+    # Determine whether this is a release or debug build.
+    if( DEBUG )
+        set( CMAKE_BUILD_TYPE "Debug" )
+    else( )
+        set( CMAKE_BUILD_TYPE "Release" )
+    endif( )
+    message( STATUS "Single configuration generator; configuring for ${CMAKE_BUILD_TYPE}" )
+
+else( )
+    # For generators that support multiple configurations with build-time
+    # configuration selection (Visual Studio or mac OS Xcode), CMake
+    # defaults to four configurations: Release, Debug, MinSizeRel, and
+    # RelWithDebInfo.  For now, only the first two are needed.  Remove the
+    # other two.
+    list( REMOVE_ITEM CMAKE_CONFIGURATION_TYPES
+                MinSizeRel
+                RelWithDebInfo
+                )
+    message ( STATUS "Available configuration Types: ${CMAKE_CONFIGURATION_TYPES}"  )
+endif( )
+
+
+# It is deucedly difficult to determine which bitness of Windows is
+# being configured by CMake.  If using the NMake generator, the Windows
+# environment variable Platform is either x86 or x64.  If using any
+# Visual Studio generator, the bitness may be either a suffix to the
+# generator name ("Win64") or specified by the CMake --build option
+# -A [Arch], which may be either x86 or x64.
+
+set( WINDOWS_64BIT FALSE )      # Assume 32-bit build for now
+if( ( "${CMAKE_GENERATOR}" MATCHES "^NMake Makefiles" )
+            AND ( $ENV{PLATFORM} MATCHES "[Xx]64" ) )
+    set( WINDOWS_64BIT TRUE )
+elseif( ( "${CMAKE_GENERATOR}" MATCHES "^Visual Studio" )
+            AND ( "${CMAKE_GENERATOR_PLATFORM}" MATCHES "[Xx]64" ) )
+    set( WINDOWS_64BIT TRUE )
+elseif( ( "${CMAKE_GENERATOR}" MATCHES "^Visual Studio" )
+            AND ( "${CMAKE_GENERATOR}" MATCHES "Win64$" ) )
+    set( WINDOWS_64BIT TRUE )
+endif( )
+
+# There is also some CMAKE_INSTALL_PREFIX fixup to be done when using
+# the NMake Makefiles generator on Windows.  This generator always
+# assumes an install prefix of "C\Program Files (x86)\<projname>", but
+# the actual bitness of the build is set by which Visual Studio command
+# prompt is used.  The Windows variable PLATFORM identifies the bitness
+# of the Visual Studio command prompt; we will remove " (x86)" from
+# the install prefix for 64-bit builds.
+
+# And if the builder specifies CMAKE_INSTALL_PREFIX, we will leave it
+# alone.
+
+if( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT
+            AND WINDOWS_64BIT )
+    string( REPLACE " (x86)" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" )
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "CMake install prefix for x64 Windows" FORCE)
+endif( )
 
 
 # Define variables for the installation targets, one for libraries, one for
 # executables, one for the html content.  The relative paths are used in
 # install() directives, and the full paths are passed to the compiler in
-# -D options, to be changed to config.h when this CMake process creates a
-# config.h
+# config.h for documentation purposes.
 
-set( exec_rel_dir      "bin" )
-set( library_rel_dir   "bin" )              # shared libraries in the bin directory for now
-set( http_rel_dir      "share/hercules" )   # target for Hercules' console web server
+# Note that for Windows targets, the package name is included in
+# CMAKE_INSTALL_PREFIX; the documentation of this variable is incorrect
+# through CMake release 3.6.3.  See the gitlab report at
+# https://gitlab.kitware.com/cmake/cmake/issues/16211.
+
+
+# For non-Windows builds, we will append the project name to the share
+# directory, which is used for http sources.
+
+# This is the expected installation directory structure, assuming a
+# default CMAKE_INSTALLATION_PREFIX:
+
+# Windows 64-bit:
+#   c:\Program Files\Hercules         Executables and DLLs
+#   c:\Program Files\Hercules\share   http server root
+
+# Windows 32-bit:
+#   c:\Program Files (x86)\Hercules         Executables and DLLs
+#   c:\Program Files (x86)\Hercules\share   http server root
+
+# UNIX-like systems:
+#   /usr/local/bin/                   executables and dynamic libraries
+#   /usr/local/lib/                   shared libraries
+#   /usr/local/share/Hercules         http server root
+
+if( WIN32 )
+    set( exec_rel_dir      "." )        # executables destination
+    set( library_rel_dir   "." )        # shared libraries (DLL) destination
+    set( http_rel_dir      "share" )    # target for Hercules' web server
+else(  )
+    set( exec_rel_dir      "bin" )      # executables destination
+    set( library_rel_dir   "lib" )      # shared libraries destination
+    set( http_rel_dir      "share/${PROJECT_NAME}" )   # target for Hercules' console web server
+endif( )
+
 set( exec_dir          "${CMAKE_INSTALL_PREFIX}/${exec_rel_dir}" )
 set( library_dir       "${CMAKE_INSTALL_PREFIX}/${library_rel_dir}" )
 set( http_dir          "${CMAKE_INSTALL_PREFIX}/${http_rel_dir}" )
 
+
+# ----------------------------------------------------------------------
+# Define sets of useful constant strings.
+# ----------------------------------------------------------------------
 
 # Define list of supported compilers and Intel processers for IN_LIST
 # tests.  See https://cmake.org/cmake/help/v3.4/variable/CMAKE_LANG_COMPILER_ID.html
@@ -112,30 +241,40 @@ set( http_dir          "${CMAKE_INSTALL_PREFIX}/${http_rel_dir}" )
 
 set( herc_CompilerClang Clang )
 set( herc_CompilerGNU   GNU   )
-set( herc_Compilers ${herc_CompilerClang} ${herc_CompilerGNU} )
+set( herc_CompilerMSVC  MSVC  )
+set( herc_Compilers ${herc_CompilerClang} ${herc_CompilerGNU} ${herc_CompilerMSVC})
 
-set( herc_Intel_32  "I386;I486;I586;I686;I786" )
-set( herc_Intel_64  "X86_64;AMD64" )
-set( herc_Intel     "${herc_Intel_32};${herc_Intel_64}" )
-set( herc_YES_NO  "YES;NO" )
 
-# Ensure /usr/local/include is part of the compiler preprocessor -I
-# includes.  We may wish to do the same for /usr/local/lib.  And
-# because the local directory is used to build Hercules, it should
-# also be used for all CMake tests for public headers.
+# Lists of supported Intel processor types, used for optimization and flag
+# setting when compiling for an Intel target.
 
-include_directories( BEFORE SYSTEM "/usr/local/include" )
-set( CMAKE_REQUIRED_INCLUDES "/usr/local/include" )
+set( herc_Intel_32         "I386;I486;I586;I686;I786;X86" )
+set( herc_Intel_64         "X86_64;AMD64" )
+set( herc_Intel            "${herc_Intel_32};${herc_Intel_64}" )
+
+
+# Windows target version names and codes, used to ensure compilations
+# target the correct version of the Windows internal API.  The names are
+# our own invention; the hex strings are defined by Microsoft and
+# documented at https://msdn.microsoft.com/en-us/library/windows/desktop/aa383745(v=vs.85).aspx
+# and in header SDKDDKVer.h.  The specified or default version code is
+# included in the generated config.h; the default version is the version
+# of the target machine and SDK used to build Hercules.
+
+set( herc_Windows_vers     "WINXP364; WINVISTA; WIN7;   WIN8;   WIN10"  )
+set( herc_Windows_vercodes "0x0502;   0x0600;   0x0601; 0x0602; 0x0A00" )
+
+
+# Sundry other helpful list definitions
+
+set( herc_YES_NO           "YES;NO" )
 
 
 # Reference strings for library names.  libm is required and the build
-# will be failed if it is missing.  libz and libbz2 are option and included
-# in the build if installed on the target system.  The remaining libraries
-# are included in the build if required for the target system (librt,
-# libnsl) or by build options (libcap).
+# will be failed if it is missing.  The remaining libraries are included
+# in the build if required for the target system (librt, libnsl) or by
+# build options (libcap).
 
-set( name_libz         "z"   )    # zlib commpression library
-set( name_libbz2       "bz2" )    # bzip2 compression library
 set( name_libm         "m"   )    # IEEE math library, needed for STSI instruction
 set( name_librt        "rt"  )    # POSIX real time extensions library, needed for Solaris
 set( name_libnsl       "nsl" )    # Nameserver lookup library, needed for Solaris
@@ -143,19 +282,32 @@ set( name_libcap       "cap" )    # POSIX 1003.1e capabilities interface library
 set( name_libsocket    "socket" ) # Socket library for Solaris, HP-UX, maybe others
 
 
-# Everything (almost) in Hercules must be compiled with position-independent
-# code, so we shall just make it global.  On systems that support it of course.
+# ----------------------------------------------------------------------
+# Set up CMake to correctly probe the target system.
+# ----------------------------------------------------------------------
 
-set( CMAKE_POSITION_INDEPENDENT_CODE TRUE )
+
+# Ensure /usr/local/include is part of the compiler preprocessor -I
+# includes.  We may wish to do the same for /usr/local/lib.  And
+# because the local directory is used to build Hercules, it should
+# also be used for all CMake tests for public headers.
+
+if( NOT WIN32 )
+    include_directories( BEFORE SYSTEM "/usr/local/include" )
+    set( CMAKE_REQUIRED_INCLUDES "/usr/local/include" )
+endif( )
 
 
-# Set the shared library suffix appropriate to the target_link_libraries
-# Darwin / OS/X will come later.  This should be in CMakeTargetOS.cmake
+# Set c compiler flag string to a) enable all warnings and b) treat all
+# warnings as errors.  This must be done early because herc12_OptEdit.cmake
+# does compilations to edit options.  These flags are only used during
+# probes of the target system; they are not the start of the C compiler
+# option string that will be used to build Hercules.
 
-if( WIN32 )
-    set( shared_lib_suffix ".dll" )
+if( "${CMAKE_C_COMPILER_ID}" STREQUAL "${herc_CompilerMSVC}" )
+    set( all_warnings_are_errors "/W4 /WX" )
 else( )
-    set( shared_lib_suffix ".so" )
+    set( all_warnings_are_errors "-Wall -Werror" )
 endif( )
 
 
@@ -171,9 +323,7 @@ include( CheckSymbolExists )        # Enable existence tests for symbols & funct
 include( CheckFunctionExists )      # Enable tests for function existence
 include( CheckPrototypeDefinition ) # Enable tests of function prototypes
 include( CheckSymbolExists )        # Enable tests for specific symbols
-
 include( GenerateExportHeader )     # Required for implicitly loaded Windows DLLs
-
 include( ExternalProject )          # enable build of SoftFloat-3a, other
                                     # external projects
 
@@ -185,13 +335,14 @@ include( InstallRequiredSystemLibraries )  # CPack: required to build CPack inst
 
 include( CMake/Herc00_Includes.cmake ) # Get Hercules-specific CMake functions and macros
 
-
 set( herc_Error 0 CACHE INTERNAL "Error count" )                 # No errors detected yet
 
-
+# ----------------------------------------------------------------------
 # Define all user options and edit them.  If user option HELP is defined,
 # CMakeHercOptEdit.cmake will display help and return without doing any
 # other processing.  And if help is displayed, then nothing else is done.
+# ----------------------------------------------------------------------
+
 
 include( CMake/Herc10_OptDef.cmake )          # define user options and build defaults
 
@@ -201,41 +352,42 @@ if( HELP )
 endif( )
 
 
-# probe the target hardware and operating system, the Userland, and the
-# characteristics of the c compiler.
+# ----------------------------------------------------------------------
+# probe the target system hardware, operating system, userland, and c
+# compiler.
+# ----------------------------------------------------------------------
+
 
 include( CMake/Herc20_TargetEnv.cmake )       # collect info about the target system
-include( CMake/Herc22_Userland.cmake )        # check for userland requirements.
-include( CMake/Herc25_Compilergcclike.cmake ) # check compiler capabilities
+
+if( WIN32 )
+    include( CMake/Herc22_UserlandWin.cmake )     # check for Windowns userland requirements.
+else( )
+    include( CMake/Herc22_Userland.cmake )        # check for userland requirements.
+endif( )
+
+# Probe the characteristics of the c compiler.  For the moment we assume
+# that if the MSVC compiler is not in use, the compiler is gcc-like
+
+if( "${CMAKE_C_COMPILER_ID}" STREQUAL "${herc_CompilerMSVC}" )
+    include( CMake/Herc25_CompilerMSVC.cmake ) # check compiler capabilities
+else( )
+    include( CMake/Herc25_Compilergcclike.cmake ) # check compiler capabilities
+endif( )
 
 
+# ----------------------------------------------------------------------
 # Interpret builder-specified options in the context of the target
-# environment and set build options accordingly, particularly where the
-# builder allows one or more options to default.
+# system.  Set compiler and build options based accordingly.
+# ----------------------------------------------------------------------
+
 
 include( CMake/Herc28_OptSelect.cmake )       # Make selected options effective
 
-
-# Four different routines are used to set options for the c compiler:
-# one each for clang, gcc, Apple gcc, and unknown.  Expect three
-# additional routines: Windows, Intel C, and AIX.
-
-# While early versions of Apple mac OS used gcc for some or all of the
-# compilation, the Apple gcc compiler is modified from the base
-# equivalent version.  So setting Apple gcc options is separate from but
-# very similar to that for gcc.
-
-# Apple may also have modified clang for use with mac OS, but this is
-# not certain.  For the moment, the same script is used to set clang
-# options on Apple and non-Apple platforms.
-
-# Versions newer than gcc 4.2.1 were never used by Apple because, in my
-# opinion, those newer versions are licensed GPL3.  So this script
-# assumes that if a gcc version newer than 4.2.1 is in use, it is a
-# user-built gcc that was not modified by Apple, and gcc compiler options
-# can be handled in the same way it is for GNU/Linux or BSD systems.
-# Apple gcc 4.2.1 or older is presumed to be the Apple-specific compiler
-# included in Xcode or CodeWarrior.
+# Five different routines are used to set options for the c compiler,
+# one each for clang, gcc, Apple gcc, Windows, and unknown.  Expect
+# additional routines for Windows-clang, Apple-clang, Intel C, and AIX.
+# If we can find test articles.
 
 # When the c compiler is not recognized, there is little we can do, but
 # we can let the builder specify an optimization string.  If a builder
@@ -253,20 +405,29 @@ elseif( "${CMAKE_C_COMPILER_ID}" STREQUAL "${herc_CompilerGNU}" )
         include( CMake/Herc31_COptsGNU.cmake )
     endif( )
 
+elseif( "${CMAKE_C_COMPILER_ID}" STREQUAL "${herc_CompilerMSVC}" )
+    include( CMake/Herc31_COptsMSVC.cmake )
+
 else( )
     include( CMake/Herc31_COptsUnknown.cmake )
 
 endif( )
+
+# This should really be done in the respective Herc31
 
 if( NOT ("${ADD-CFLAGS}" STREQUAL "") )
     set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADD-CFLAGS}" )
 endif( )
 
 
+# ----------------------------------------------------------------------
 # Anything that can abort the build has already been detected.  If there
 # are any error messages, send them to stderr and abort the build.
+# ----------------------------------------------------------------------
 
 if( herc_Error )
+    message( "Generator:              ${CMAKE_GENERATOR} ${CMAKE_GENERATOR_PLATFORM}" )
+
     message( "Generation and build terminated due to ${herc_Error} errors:" )
     foreach( index RANGE 1 ${herc_Error} )
         message( "Error ${index}/${herc_Error}: ${herc_EMessage${index}}" )
@@ -276,10 +437,34 @@ if( herc_Error )
 endif( herc_Error )
 
 
-# Define targets for the external projects used by Hercules.  At the
-# moment there is only one, SoftFloat-3a For Hercules.
+# ----------------------------------------------------------------------
+# Define targets for the external projects used by Hercules.  For now,
+# external packages include BZip2, SoftFloat-3a For Hercules, and Zlib.
+# When the target system is Windows, PCRE is added to that list.
+# ----------------------------------------------------------------------
 
 include( CMake/Herc41_ExtPackageBuild.cmake )
+
+
+
+# ----------------------------------------------------------------------
+# Assemble the include directory set, the link library set, and the
+# install RPATH (UNIX-like only).  Create a configured config.h.
+# ----------------------------------------------------------------------
+
+
+# Include directories for compiles.  The binary directory will include
+# config.h.  The decNumber directory precedes the source directory so
+# that we get the authoritative public headers, not just something that
+# lets an IDE do reasonable incremental compilation.
+
+include_directories( ${PROJECT_BINARY_DIR}
+                     ${PROJECT_SOURCE_DIR}
+        )
+
+if( "${HAVE_HQA_H}" )
+    include_directories( BEFORE ${HQA_INSTALL_DIR} )
+endif( )
 
 
 # Assemble the link library string to be used for compilation units.  This
@@ -289,8 +474,6 @@ include( CMake/Herc41_ExtPackageBuild.cmake )
 
 set( link_alllibs
             ${link_libm}
-            ${link_libz}
-            ${link_libbz2}
             ${link_librt}
             ${link_libnsl}
             ${link_libcap}
@@ -298,54 +481,57 @@ set( link_alllibs
             ${CMAKE_DL_LIBS}
       )
 
+if( WIN32 )
+    set( link_alllibs ${link_alllibs} ws2_32 )
+endif( )
 
-# create config.h
 
-configure_file( CMake/CMakeconfig.h.in config.h @ONLY )
+# Set the RPATH to be used when installing targets.
 
-
-# Set the RPATH to be used when installing targets
 # Use (don't skip) the full RPATH for the build tree, and do not use the
-#    install directory RPATH when building.  This enables execution from
-#    the build directory prior to install.  CMake will update the RPATH
-#    when installing.  A side-effect of this approach is that older CMake
-#    versions will re-link everything on an install.
-# Snide Note: Autotools build always re-links on an install, so the CMake
-#    approach is no worse and sometimes better.
+# install directory RPATH when building.  This enables execution from
+# the build directory prior to install.  CMake correctly handles setup
+# of RPATH for execution from the build tree, regardless of whether
+# external packages are built by the Hercules CMake build or previously
+# built outside the Hercules build tree.
 
-set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/bin" )
+# CMake will update the RPATH in place in the executable or shared
+# library when installing.  Note that libtool always relinks everything
+# on install.
+
 set( CMAKE_SKIP_BUILD_RPATH  FALSE )
 set( CMAKE_BUILD_WITH_INSTALL_RPATH FALSE )
 
 
-# Include directories for compiles.  The binary directory includes
-# config.h, created (eventually, but not now) herein.  The decNumber and
-# s3fh directories precede the source directory so that we get the
-# authoritative public headers, not just something that lets an IDE do
-# incremental compilation.
+# If Hercules is to be installed in other than a standard location for
+# the target system, include the non-standard lib directory in the
+# installation RPATH.  The lib directory is relative to $ORIGIN, the
+# linking loader's synonym for the directory from which the executable
+# was fetched.
 
-include_directories( ${PROJECT_BINARY_DIR}
-                     ${PROJECT_SOURCE_DIR}/decNumber
-                     ${S3FH_INSTALL_DIR}/include
-                     ${PROJECT_SOURCE_DIR}
-        )
+# Following taken from the CMake Wiki RPATH page at
+# https://cmake.org/Wiki/CMake_RPATH_handling.
+# See that page for copyright, attribution, and license.
+list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${library_dir}" isSystemDir)
+if("${isSystemDir}" STREQUAL "-1")
+    set( CMAKE_INSTALL_RPATH "\$ORIGIN/../${library_rel_dir}" )
+endif("${isSystemDir}" STREQUAL "-1")
+# End of code taken from Wiki
 
-if( "${HAVE_HQA_H}" )
-    include_directories( BEFORE ${HQA_INSTALL_DIR} )
+
+# create config.h.
+
+configure_file( CMake/CMakeconfig.h.in config.h @ONLY )
+
+if( WIN32 )
+    set( CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} /DHAVE_CONFIG_H" )
 endif( )
 
 
-# Link directories.  When the CMake build is completed, all shared libraries
-# will be built into the same build directory.  No more shared/dynamic
-# libraries in subdirectories.  There are not that many libraries.  When
-# fully implemented, some of the hunting for shared libraries that happens
-# in hdl_open() in hdl.c can be removed.
-
-link_directories( ${PROJECT_BINARY_DIR}
-                  ${PROJECT_BINARY_DIR}/decNumber
-                  ${S3FH_INSTALL_DIR}/lib
-        )
-
+# ----------------------------------------------------------------------
+# Create the initial commitinfo.h.  This file will be recreated on each
+# build when the git repository has been updated.
+# ----------------------------------------------------------------------
 
 # If the source directory is a git repository, extract the git status into
 # commitinfo.h so the status can be displayed on startup.  If not a git
@@ -357,6 +543,8 @@ message( "----------------------------------------------------------------------
 execute_process( COMMAND ${CMAKE_COMMAND}
                     -DBDIR=${PROJECT_BINARY_DIR}
                     -DSDIR=${PROJECT_SOURCE_DIR}
+                    -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+                    -DGIT_FOUND=${GIT_FOUND}
                     -P ${PROJECT_SOURCE_DIR}/CMake/Herc01_GitVer.cmake
                 OUTPUT_VARIABLE result_var
                 ERROR_VARIABLE result_var
@@ -368,25 +556,52 @@ message( "${result_var}")
 
 message( "\n------------------------------------------------------------------------" )
 message( "Install prefix          ${CMAKE_INSTALL_PREFIX}" )
-message( "Source directory        ${PROJECT_SOURCE_DIR}" )
-message( "Build directory         ${PROJECT_BINARY_DIR}" )
-message( "SoftFloat-3a directory  ${S3FH_INSTALL_DIR}" )
 message( "Executable directory    ${exec_dir}" )
 message( "Library directory       ${library_dir}" )
 message( "Data Directory (http)   ${http_dir}" )
-message( "Generator               ${CMAKE_GENERATOR}" )
+message( "Source directory        ${PROJECT_SOURCE_DIR}" )
+message( "Build directory         ${PROJECT_BINARY_DIR}" )
+if( "${CMAKE_GENERATOR_TOOLSET}" STREQUAL "" )
+    message( "Generator:              ${CMAKE_GENERATOR} ${CMAKE_GENERATOR_PLATFORM}" )
+else( )
+    message( "Generator & toolset:     ${CMAKE_GENERATOR}, ${CMAKE_GENERATOR_TOOLSET}" )
+endif( )
 message( "Build command line:     ${CMAKE_MAKE_PROGRAM}" )
 message( "C compiler version:     ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}" )
-message( "C compiler options:     ${CMAKE_C_FLAGS}" )
+message( "C options (Release):    ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}" )
+message( "C options (Debug):      ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}" )
+if( WIN32 )
+    message( "Resource compiler opt:  ${CMAKE_RC_FLAGS}" )
+    message( "Linker opts (.exe):     ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_RELEASE}" )
+    message( "Linker opts (.dll):     ${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS_RELEASE}" )
+endif( )
 message( "Large file support:     ${herc_LargeFile_Status}" )
 message( "Hercules link libs:     ${link_alllibs}" )
 message( "Target processor:       ${CMAKE_SYSTEM_PROCESSOR}" )
 message( "------------------------------------------------------------------------\n\n" )
 
 
+
+# ----------------------------------------------------------------------
+#
 # Create all targets and tests needed to build Hercules.
+#
+# ----------------------------------------------------------------------
+
 
 include( CMake/Herc60_CreateTargets.cmake )
+
+# If the target system is Windows, create targets to copy the external
+# package DLLs to the directory that contains the Hercules executable.
+
+if( WIN32 )
+    include( CMake/Herc65_ExtPackageWinCopy.cmake )
+endif( )
+
+# Copy the tests directory to the build tree so that execution of test
+# scripts do not require the source tree.
+
+file( COPY ${PROJECT_SOURCE_DIR}/tests/ DESTINATION ${PROJECT_BINARY_DIR}/tests )
 
 # That's it.
 
@@ -457,58 +672,5 @@ return( )
 #### #                    [hc_cv_have_mtget_mt_gstat=no   ],
 #### #                    [#include <sys/mtio.h>] )
 #### #fi
-
-
-
-
-
-
-
-
-
-
-
-
-#### #
-#### ################################################################################
-#### ##   DONE! -- Define our OUTPUT values and then exit...
-#### ################################################################################
-#### #
-#### #
-#### ##---------------------------------------------------------------#
-#### ##  (place only AC_DEFINE here; place AC_DEFINE_UNQUOTED above)  #
-#### ##---------------------------------------------------------------#
-#### #
-#### #test "$hc_cv_is_windows"                  = "yes"  &&  AC_DEFINE(WIN32)
-#### #
-#### #
-#### #
-#### ##--------------------------------------------------#
-#### ##  CFLAGS  (compiler flags)                        #
-#### ##--------------------------------------------------#
-#### #
-#### #if test "$hc_cv_is_windows"             = "yes"; then
-#### #
-#### #    if test "$hc_cv_have_pthread_h"         = "yes" &&
-#### #       test "x$hc_cv_alt_pthread_location" != "x";  then
-#### #
-#### #        CFLAGS="$CFLAGS -I${hc_cv_alt_pthread_location}"
-#### #    fi
-#### #
-#### #    CFLAGS="$CFLAGS -Wno-format"
-#### #fi
-#### #
-#### #
-
-# Note: Following test creates macro USE_DLLTOOL, which not referenced
-# in Hercules.  It appears that USE_DLLTOOL was a macro needed when
-# doing a MinGW / Cygwin build of Hercules.
-
-#### #AM_CONDITIONAL( USE_DLLTOOL,         [ test "$hc_cv_is_windows"       = "yes" ] )
-
-
-
-
-
 
 

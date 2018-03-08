@@ -36,7 +36,7 @@ Notes
 
 ]]
 
-message( "Testing gcc-like c compiler capabilities and characteristics" )
+message( "Testing MSVC c compiler capabilities and characteristics" )
 
 
 # Test for the pre-defined types required by Hercules.  There are not
@@ -128,21 +128,10 @@ if( NOT (C11_ATOMICS_AVAILABLE OR HAVE_ATOMIC_INTRINSICS) )
 endif( )
 
 
-# Test for support of C99 flexible arrays.  These are supported by clang
-# (and other compilers), but we will run the test before we set the variable.
+# All versions of Windows supported by Hercules support C99 flexible arrays.
 
-if( NOT CMAKE_REQUIRED_QUIET )
-    message( STATUS "Checking for C99 flexible arrays" )
-endif( )
-try_compile(C99_FLEXIBLE_ARRAYS
-        ${PROJECT_BINARY_DIR}
-        SOURCES ${PROJECT_SOURCE_DIR}/CMake/CMakeHercTestC99FlexArrays.c
-        )
-if( C99_FLEXIBLE_ARRAYS )
-    set( C99_FLEXIBLE_ARRAYS 1 )    # for autotools compatibility
-else( )
-    unset( C99_FLEXIBLE_ARRAYS )
-endif( )
+set( C99_FLEXIBLE_ARRAYS 1 )    # for autotools compatibility
+
 
 
 # Test if the compiler pads structures to other than a byte boundary.
@@ -151,10 +140,11 @@ endif( )
 # structures to other than a byte boundary.
 
 # On other architectures, any padding found fails the build.
-
-herc_Check_Struct_padding( GCC_STYLE_PACK STRUCT_NOT_PADDED )
-if( NOT (STRUCT_NOT_PADDED OR (CMAKE_SYSTEM_PROCESSOR MATCHES "ARM")) )
-    herc_Save_Error( "The c compiler pads structures to greater than a one-byte boundary" )
+if(NOT DEFINED STRUCT_NOT_PADDED OR "x${STRUCT_NOT_PADDED}" STREQUAL "")
+    herc_Check_Struct_padding( MSVC_STYLE_PACK STRUCT_NOT_PADDED )
+    if( NOT (STRUCT_NOT_PADDED OR (CMAKE_SYSTEM_PROCESSOR MATCHES "ARM")) )
+        herc_Save_Error( "The c compiler pads structures to greater than a one-byte boundary" )
+    endif( )
 endif( )
 
 
@@ -164,99 +154,38 @@ endif( )
 
 # Packed structure support is required to build Hercules.
 
-if( NOT DEFINED STRUCT_PACKED_OK OR "${STRUCT_PACKED_OK}" STREQUAL "" )
-    herc_Check_Packed_Struct( GCC_STYLE_PACK STRUCT_PACKED_OK )
+if(NOT DEFINED STRUCT_PACKED_OK OR "x${STRUCT_PACKED_OK}" STREQUAL "")
+    herc_Check_Packed_Struct( MSVC_STYLE_PACK STRUCT_PACKED_OK )
     if( NOT STRUCT_PACKED_OK  )
         herc_Save_Error( "The c compiler does not support packed structures" )
     endif( )
 endif( )
 
 
-# Test for compiler support of sundry other things that are helpful in the
-# Hercules build.  Absence of any of these does not impact the build apart
-# from reflecting presence or absence in config.h.   Because CMake always
-# links as part of try_compile, we need to ensure fully formed c main
-# programs.
-
-if( NOT DEFINED HAVE_ATTR_PRINTF OR "${HAVE_ATTR_PRINTF}" STREQUAL "" )
-    string( CONCAT herc_TestSource    # Test for __attribute__ ((format(printf,x,y)))
-                "__attribute__ ((format(printf,1,2))) void logmsg(char *str, ...)\n"
-                "   {return;}\n"
-                "int main()\n"
-                "   {return 0;}\n"
-                )
-    herc_Check_Compile_Capability( "${herc_TestSource}" HAVE_ATTR_PRINTF TRUE )
-endif( )
+# Windows has printf/scanf format checking as of Visual Studio 2015.  But
+# IDE version, if even used, is not important; it's the C compiler version
+# that is.  VS015 corresponds to 19.00.  This will work for IDE, Build Tools,
+# and maybe nmake on VS2008.  Note also that MSVC does _not_ use __attribute__
+# ((printef)) to enable format checking.  Rather, specific warnings are used,
+# c4473-c4478 and c4773-c4778.  These warnings range from W1 to W4; see
+# https://blogs.msdn.microsoft.com/vcblog/2015/06/22/format-specifiers-checking/
+# for details.  So nothing needs to be done; the warnings are issued or
+# not depending on compiler capabilities.
 
 
-# The autotools build for __attribute__ ((regparm(1))) first tested if it
-# existed and then tested if it was broken when using regparm(3).  The
-# second test required program execution, complicating cross-compilation.
+# Windows always passes the first few parameters in registers.  There is
+# no need to test for it.  HAVE_ATTR_REGPARM can remain unset.
 
-# The regparm(3) test in configure.ac dealt with a gcc error in versions
-# 3.2 and 3.3 that affected Cygwin (and MinGW?) builds, and this CMake
-# script does not support Cygwin nor MinGW.  So we must only run  the
-# compile-time check to see if __attribute__ (( regparm(3) )) compiles.
+# Windows has its own diagnostic pragma, and the gcc form is never used
+# when building under MSVC.  So there is no need to test, and no need to
+# set HAVE_GCC_DIAG_PRAGMA.
 
-if( NOT DEFINED HAVE_ATTR_REGPARM OR "${HAVE_ATTR_REGPARM}" STREQUAL "" )
-    string( CONCAT herc_TestSource    # Test __attribute__ (( regparm(3) ))
-                "/* Test acceptance of __attribute__ (( regparm(3) )) */\n"
-                "int __attribute__ (( regparm(3) )) func( int a, int b, int c )\n"
-                "    {return a + b + c;}\n"
-                "int main()\n"
-                "    {return func( 1, 2, 3 );}\n"
-                )
-    herc_Check_Compile_Capability( "${herc_TestSource}" HAVE_ATTR_REGPARM TRUE )
-endif( )
+# HAVE_GCC_DIAG_PUSHPOP is tested only once, in ccnowarn.h, and only if
+# HAVE_GCC_DIAG_PRAGMA is defined.  So on MSVC, there is no need to test,
+# nor no need to set.  Likewise for HAVE_GCC_SET_UNUSED_WARNING.
 
-
-if( NOT DEFINED HAVE_GCC_DIAG_PRAGMA OR "${HAVE_GCC_DIAG_PRAGMA}" STREQUAL "" )
-    string( CONCAT herc_TestSource    # Test for gcc diagostic pragma
-                "/* Test an ancient diagnostic */\n"
-                "#pragma GCC diagnostic ignored \"-Wformat\"\n"
-                "int main()\n"
-                "   {return 0;}\n"
-                )
-    herc_Check_Compile_Capability( "${herc_TestSource}" HAVE_GCC_DIAG_PRAGMA TRUE )
-endif( )
-
-
-if( NOT DEFINED HAVE_GCC_DIAG_PUSHPOP OR "${HAVE_GCC_DIAG_PUSHPOP}" STREQUAL "" )
-    string( CONCAT herc_TestSource    # Test for gcc diagnostic push/pop pragma
-                "/* Test for push/pop */\n"
-                "#pragma GCC diagnostic push \n"
-                "int main()\n"
-                "   {return 0;}\n"
-                )
-    herc_Check_Compile_Capability( "${herc_TestSource}" HAVE_GCC_DIAG_PUSHPOP TRUE )
-endif( )
-
-
-if( NOT DEFINED HAVE_GCC_UNUSED_FUNC_WARNING OR "${HAVE_GCC_UNUSED_FUNC_WARNING}" STREQUAL "" )
-    string( CONCAT herc_TestSource    # Test for 'function defined but not used' warnings],
-                "static int unused() {return 1;}"
-                "int main(int argc, char **argv)"
-                "{  return 0;   }"
-                )
-    herc_Check_Compile_Capability( "${herc_TestSource}" HAVE_GCC_UNUSED_FUNC_WARNING FALSE )
-endif( )
-
-
-if( NOT DEFINED HAVE_GCC_SET_UNUSED_WARNING OR "${HAVE_GCC_SET_UNUSED_WARNING}" STREQUAL "" )
-    string( CONCAT herc_TestSource    # Test for variable set but not used' warnings]
-                "int main(int argc, char **argv)"
-                "{int rc;  rc = 2;"
-                "    return 0;"
-                "}"
-                )
-    herc_Check_Compile_Capability( "${herc_TestSource}" HAVE_GCC_SET_UNUSED_WARNING FALSE )
-endif( )
-
-
-if( NOT DEFINED HAVE_VERY_STRICT_ALIASING OR "${HAVE_VERY_STRICT_ALIASING}" STREQUAL "" )
-    herc_Check_Strict_Aliasing( HAVE_VERY_STRICT_ALIASING )
-endif( )
-
+# MSVC does not check for strict aliasing, so there is no need to test
+# for it, and no option to disable it either.  
 
 return( )
 

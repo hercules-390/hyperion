@@ -10,106 +10,130 @@
 
 #[[
 
-Build any required external packages, such as SoftFloat-3a For Hercules,
-that are required by Hercules.  If the builder provided an installation
-directory for a given package, then there is no need for it to be built
-here, and the ExternalProject_Add for that package is skipped.
+Build any required external packages that are required by Hercules or
+have been requested by the builder or defaulted.
 
-Definitions:
-
-<extpkg_dir>   Root of directories created for external packages built
-               by CMake for Hercules.  Specified by the EXTPKG_DIR
-               option, with a default of <build_dir>/extpkg.  The CMake
-               variable EXTPKG_ROOT contains the expanded (absolute)
-               path of the specified or defaulted external package
-               directory.
-
-<pkg>          The target name of the package.  This name is used as the
-               name of the target that creates the package and the top
-               level directory of the source, build, and installation
-               directories used by CMake to build the external package.
-               An add_dependencies() function must name <pkg> as a
-               dependency of some other target (executable, library,
-               or something else) for CMake to actually build the
-               external package.
-
-<pkgid>        A short string, all caps, that identifies a single
-               external package needed by Hercules.  Used as the prefix
-               for a CMake variable that names the installation directory
-               for the package, <pkgid>_INSTALL_DIR.  For SoftFloat-3a
-               For Hercules, the <pkgid> is S3FH.
-
-And if this process were to be fully parameterized, here are the
-additional definitions:
-
-<pkgrepo>      Complete URL for the external project repository.  At the
-               moment, only git repositories are supported, although it
-               would not be much effort to include Mercurial.
-
-<pkgbranch>    Branch of the repository to be cloned, typically master.
+Package         Target
+SoftFloat-3a    SoftFloat       Required by Hercules
+BZip2           bz2             Optional, but included by default
+PCRE            pcre            Windows only, optional, included by default
+Zlib            zlib            Optional, but included by default
 
 
-If an external package is built, then the internal variable for the
-installation directory, <pkgid>_INSTALL_DIR, is set to the installation
-directory resulting from the build, generally ${EXTPKG_ROOT}/<pkg>/install.
-
-Hercules C flags are passed to the CMake command that builds the external
-project.  The external project may or may not use the provided C flags.
-
-The generator specified or defaulted for Hercules is also used for all
-external projects built by the Hercules CMake build.
-
-Directory convention:
-
-<extpkg_dir>/   All external packages are placed in <extpkg_dir>/, with a
-                separate subdirectory per package
-
-<extpkg_dir>/<pkg>/          directory for one external package with
-                             package id "pkg."
-<extpkg_dir>/<pkg>/pkgsrc    source directory for the package,
-                             ...generally from a git repository
-<extpkg_dir>/<pkg/build     build directory for an external package
-<extpkg_dir>/<pkg/install   install directory for the built package
-
-The ExternalProject_Add function could have been put into a function
-coded in herc00_Includes.cmake.  But to retain flexibility about how
-a package is cloned and built, we will code a separate function call
-for each external package.  And those who follow with further updates
-to this build may do as they think best with my blessing and
-encouragement.
+If the builder provided an installation directory for a given package,
+then there is no need for it to be built here.  The import target for
+a builder-specified package was imported in Herc28_OptSelect.cmake.
 
 
 ]]
 
-# Be certain to use the same generator, toolset, and platform as was
-# specified for the main project.  Platform is critical, as mismatches
-# break the link of the executable or library that includes the package.
-# Generator and toolset mismatches may be survivable, especially on UNIX-
-# like systems, but they confuse matters a great deal.
+include( CMake/Herc02_ExtPackageBuild.cmake )
 
-# If the builder did not specify a SoftFloat-3a For Hercules installation
-# directory, then we need to add an external project for S3GH so that it
-# gets built.  If the builder did provide a directory, then neither the
-# external project nor the dependency are needed.
 
-if( "${S3FH_INSTALL_DIR}" STREQUAL "" )
-    ExternalProject_Add( SoftFloat-3a
-            PREFIX            ${EXTPKG_ROOT}/SoftFloat-3a
-            SOURCE_DIR        ${EXTPKG_ROOT}/SoftFloat-3a/pkgsrc
-            BINARY_DIR        ${EXTPKG_ROOT}/SoftFloat-3a/build
-            INSTALL_DIR       ${EXTPKG_ROOT}/SoftFloat-3a/install
-            GIT_REPOSITORY    https://github.com/hercules-390/softfloat-3a
-            GIT_TAG           master
-            CMAKE_GENERATOR           ${CMAKE_GENERATOR}
-            CMAKE_GENERATOR_TOOLSET   ${CMAKE_GENERATOR_TOOLSET}
-            CMAKE_GENERATOR_PLATFORM  ${CMAKE_GENERATOR_PLATFORM}
-            CMAKE_ARGS
-                    -DBUILD_TYPE=Release
-                    -DINSTALL_PREFIX=<INSTALL_DIR>
-                    -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-            INSTALL_COMMAND "${CMAKE_COMMAND}" "-P" "cmake_install.cmake"
-        )
-    set( S3FH_INSTALL_DIR "${EXTPKG_ROOT}/SoftFloat-3a/install" )
+# ----------------------------------------------------------------------
+#
+# SoftFloat-3a package, CMake target SoftFloat.
+#
+# ----------------------------------------------------------------------
+
+if( NOT HAVE_S3FH_TARGET )
+    herc_ExtPackageBuild( SoftFloat-3a S3FH SoftFloat git://github.com/hercules-390/SoftFloat-3a master )
+    set( herc_building_SoftFloat-3a TRUE )
+    add_dependencies( SoftFloat S3FH )
+
 endif( )
+
+
+# ----------------------------------------------------------------------
+#
+# BZip2 package, CMake target bz2
+#
+# ----------------------------------------------------------------------
+
+if( NOT "${BZIP2}" STREQUAL "NO" )
+
+    if( NOT ( BZIP2_FOUND OR HAVE_BZIP2_TARGET ) )
+        herc_ExtPackageBuild( BZip2 BZIP2 bz2 git://github.com/hercules-390/h390BZip master )
+        set( herc_building_BZip2 TRUE )
+        set( HAVE_BZIP2_TARGET "${EXTPKG_ROOT}/BZip2/build/bzip2_target" )
+
+    elseif( HAVE_BZIP2_TARGET )
+
+    elseif( BZIP2_FOUND )
+        message( STATUS "Creating target bz2 for BZip2 ${BZIP2_VERSION_STRING} installed on target system" )
+        herc_Create_System_Import_Target( bz2 BZIP2 )
+
+    endif()
+
+# if we are not using a target system-provided BZip2 library, install it.
+
+    if( HAVE_BZIP2_TARGET )
+        herc_Install_Imported_Target( bz2 BZip2 )
+    endif( )
+
+    set( HAVE_BZLIB_H 1 )
+
+endif( NOT "${BZIP2}" STREQUAL "NO" )
+
+
+# ----------------------------------------------------------------------
+#
+# PCRE package, CMake target pcre
+#
+# ----------------------------------------------------------------------
+
+
+if( WIN32 AND ( NOT "${PCRE}" STREQUAL "NO" ) )
+
+    if( NOT HAVE_PCRE_TARGET )
+        herc_ExtPackageBuild( PCRE PCRE pcre git://github.com/hercules-390/h390PCRE master )
+        set( herc_building_PCRE TRUE )
+        set( HAVE_PCRE_TARGET "${EXTPKG_ROOT}/PCRE/build/pcre_target" )
+    endif( )
+
+# if we are not using a target system-provided ZLib library, install it.
+
+    if( HAVE_PCRE_TARGET )
+        herc_Install_Imported_Target( pcre PCRE )
+        herc_Install_Imported_Target( pcreposix PCREPOSIX )
+    endif( )
+
+    set( HAVE_PCRE 1 )
+
+endif( WIN32 AND ( NOT "${PCRE}" STREQUAL "NO" )  )
+
+
+# ----------------------------------------------------------------------
+#
+# Zlib package, CMake target zlib
+#
+# ----------------------------------------------------------------------
+
+if( NOT "${ZLIB}" STREQUAL "NO" )
+
+    if( NOT ( ZLIB_FOUND OR HAVE_ZLIB_TARGET ) )
+        herc_ExtPackageBuild( Zlib ZLIB zlib git://github.com/hercules-390/h390Zlib master )
+        set( herc_building_Zlib TRUE )
+        set( HAVE_ZLIB_TARGET "${EXTPKG_ROOT}/Zlib/build/zlib_target" )
+
+    elseif( HAVE_ZLIB_TARGET )
+
+    elseif( ZLIB_FOUND )
+        message( STATUS "Creating target zlib for Zlib ${ZLIB_VERSION_STRING} installed on target system" )
+        herc_Create_System_Import_Target( zlib ZLIB )
+
+    endif( )
+
+# if we are not using a target system-provided ZLib library, install it.
+
+    if( HAVE_ZLIB_TARGET )
+        herc_Install_Imported_Target( zlib Zlib )
+    endif( )
+
+    set( HAVE_ZLIB_H 1 )
+    set( HAVE_LIBZ   1 )
+
+endif( NOT "${ZLIB}" STREQUAL "NO" )
+
 
 

@@ -68,7 +68,7 @@
    ---------------------------------------------------------------------------------------- */
 
 #ifdef _MSVC_
-#  if (_MSC_VER < VS2015)
+#  if (_MSC_VER < VS2015) || defined(HAVE_MATH_H_FIRST)
 #    include <math.h>
 #  endif
   #include <xmmintrin.h>

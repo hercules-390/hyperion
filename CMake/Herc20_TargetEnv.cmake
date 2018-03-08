@@ -26,21 +26,38 @@ SIZEOF_SIZE_T     used as a proxy to determine 32/64 bit system.  Also required
                   for large file support.
 WORDS_BIGENDIAN   undefined means little-endian, but we should address the matter
                   explicitly.
+WINDOWS_BUILD     Building on Windows.  Windows is different enough from
+                  UNIX-like systems that it gets its own variable.
 ]]
 
-message( "Checking target system hardware properties" )
+message( "Checking target system properties" )
 
 
 # The big one comes first: is the target hardware bigendian or not
 
-TEST_BIG_ENDIAN( WORDS_BIGENDIAN )
+test_big_endian( WORDS_BIGENDIAN )
+
+# Test for a Windows build.  Defining WINDOWS_BUILD does a few things in
+# config.h for compatibility with Hercules, which currently assumes all
+# Windows builds have no config.h
+
+if( WIN32 )
+    set( WINDOWS_BUILD 1 )
+    if( WINDOWS_64BIT )
+        set( HOST_ARCH "x64" )
+    else( )
+        set( HOST_ARCH "x86" )
+    endif( )
+else( )
+    set( HOST_ARCH "${CMAKE_SYSTEM_PROCESSOR}" )
+endif( )
 
 
 # Size of int.  This is used to determine for some architectures the
 # word defined by VADR_L.  Why this is important is not clear on a
 # first read of the code, but stuff does not work if it is wrong.
 
-CHECK_TYPE_SIZE("int" SIZEOF_INT LANGUAGE C )
+check_type_size("int" SIZEOF_INT LANGUAGE C )
 if( NOT SIZEOF_INT )
     herc_Save_Error( "Unable to determine size of \"int\"." )
 endif( )
@@ -51,7 +68,7 @@ endif( )
 # Used in tape support for maximum tape size.  Also used when determining the
 # maximum disk size that can be reported.
 
-CHECK_TYPE_SIZE("size_t" SIZEOF_SIZE_T LANGUAGE C )
+check_type_size("size_t" SIZEOF_SIZE_T LANGUAGE C )
 if( NOT SIZEOF_SIZE_T )
     herc_Save_Error( "Unable to determine size of \"size_t\"." )
 endif( )
@@ -60,7 +77,7 @@ endif( )
 # Size of long.  This is used to determine print format sizes and
 # for a part of large filesystem support.
 
-CHECK_TYPE_SIZE("long" SIZEOF_LONG LANGUAGE C )
+check_type_size("long" SIZEOF_LONG LANGUAGE C )
 if( NOT SIZEOF_LONG )
     herc_Save_Error( "Unable to determine size of \"long\"." )
 endif( )
@@ -68,9 +85,9 @@ endif( )
 
 # Size of int *.  This macro is used frequently in the 3705 device emulation
 # code and to determine how large an integer pointer is when a pointer needs
-# to be prindf'd.
+# to be printf'd.
 
-CHECK_TYPE_SIZE("int *" SIZEOF_INT_P LANGUAGE C )
+check_type_size("int *" SIZEOF_INT_P LANGUAGE C )
 if( NOT SIZEOF_INT_P )
     herc_Save_Error( "Unable to determine size of \"int *\"." )
 endif( )
@@ -79,10 +96,11 @@ endif( )
 # The size of off_t determines in part whether the build will support
 # large files on non-AIX systems.  AIX always requires LFS support
 
-CHECK_TYPE_SIZE("off_t" SIZEOF_OFF_T LANGUAGE C )
+check_type_size("off_t" SIZEOF_OFF_T LANGUAGE C )
 if( NOT SIZEOF_OFF_T )
     herc_Save_Error( "Unable to determine size of \"off_t\"." )
 endif( )
+
 
 # If the host does not natively support large files and is an open
 # source system, see if it advertises the POSIX macros that indicate the
@@ -91,7 +109,9 @@ endif( )
 # discussion of open system support for LFS in Herc28_OptSelect.cmake
 # under the heading of Option LARGEFILE.
 
-if( NOT (SIZEOF_OFF_T EQUAL 8) )
+# Hercules-supported Windows versions always support large files.
+
+if( NOT ( (SIZEOF_OFF_T EQUAL 8) OR WIN32 ) )
     herc_Check_Symbol_Exists( _LFS_LARGEFILE    "unistd.h" OK )
     herc_Check_Symbol_Exists( _LFS64_LARGEFILE  "unistd.h" OK )
 endif( )
@@ -111,3 +131,4 @@ elseif( UNIX )
         set( BUILD_HERCIFC 1 )
     endif( )
 endif( )
+

@@ -39,18 +39,26 @@ Hercules link libs:   @link_alllibs@
    define these here as there are no autotools oddities to deal with.
 */
 
-#define  MODULESDIR         "@exec_dir@"
+#define  MODULESDIR         "@library_dir@"
 #define  PKGDATADIR         "@http_dir@"
 
 /*
    Project information...
+
+   Hercules version.c presumes that HOST_ARCH is unquoted for Windows
+   builds and quoted otherwise.  This should really be a fixup in
+   version.c, but we shall wait for the retirement of the current
+   Windows build.
 */
 
-#define  HOST_ARCH           "@CMAKE_SYSTEM_PROCESSOR@"
+#define  HOST_ARCH           "@HOST_ARCH@"
 #define  VERS_MAJ            @PROJECT_VERSION_MAJOR@
 #define  VERS_INT            @PROJECT_VERSION_MINOR@
 #define  VERS_MIN            @PROJECT_VERSION_PATCH@
+#define  VERS_BLD            0
 #define  VERSION             "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"
+
+#cmakedefine  WINDOWS_BUILD       @WINDOWS_BUILD@
 
 
 /*
@@ -163,14 +171,14 @@ Hercules link libs:   @link_alllibs@
 
 
 /*
-   Turn off libtool.  Configure.ac always used libtool.  This CMake
-   build never uses libtool, and it always builds shared libraries and
-   dynamically loaded modules.  Set the suffix to be used for shared
-   libraries (target-dependent).
+   Do not turn on libtool.  Configure.ac always used libtool.  This
+   CMake-generated build never uses libtool, and it always builds shared
+   libraries and dynamically loaded modules.  Set the target-specific
+   suffix to be used for shared libraries.
 */
 
 #define  HDL_BUILD_SHARED 1
-#define  LTDL_SHLIB_EXT "@shared_lib_suffix@"
+#define  LTDL_SHLIB_EXT "@CMAKE_SHARED_LIBRARY_SUFFIX@"
 #define  OPTION_DYNAMIC_LOAD 1
 
 
@@ -476,6 +484,7 @@ Hercules link libs:   @link_alllibs@
 #cmakedefine  HAVE_LIBZ               @HAVE_LIBZ@
 #cmakedefine  HAVE_ZLIB_H             @HAVE_ZLIB_H@
 #cmakedefine  HAVE_REGEX_H            @HAVE_REGEX_H@
+#cmakedefine  HAVE_REXXSAA_H          @HAVE_REXXSAA_H@
 #cmakedefine  HAVE_REGINA_REXXSAA_H   @HAVE_REGINA_REXXSAA_H@
 
 
@@ -542,11 +551,91 @@ Hercules link libs:   @link_alllibs@
 
 
 /*
+   If this is a Windows build, undefine macros that are #define'd in
+   hercwind.h and other header files.
+
+    Notes:
+    1.  Note that for Windows, if PKGDATADIR is unset, httpserv.c uses a
+        default of the html subdirectory of the directory from which the
+        hercules.exe executable was retrieved.  On UNIX-like systems,
+        "/usr/local/share/hercules/" is the default.
+    2.  _MSVC_ is used throughout Hercules code to test for both "building
+        for Windows" _and_ "using the Visual Studio c compiler."  While it
+        is true that if one is using Visual Studio c, one is building for
+        Windows, the converse is not true: both clang and Intel c compilers
+        exist for non-Cygwin Windows builds.
+    3.  Supported versions of Windows always support C99_FLEXIBLE_ARRAYS,
+        TCP/IP Partial Keepalive, and large files.  The C99 and KEEPALIVE
+        macros are defined in hercwind.h.
+    4.  FTHREADS is the only threading model currently supported by the
+        Hercules Windows build, and it is defined in hercwind.h
+    5.  OPTION_NO_EXTERNALGUI must be defined to exclude External GUI
+        support.  It is not enough to leave EXTERNALGUI undefined.  See
+        lines 149-155 in hercwind.h.  This requirement reflects the fact
+        that the previous nmake build did not have a generator for config.h;
+        undefined was the normal state for most build control macros.
+    6.  If building for distribution, Hercules CMake option WINVER _must_
+        be set to WINXP364 to target Windows XP SP3 64-bit.
+*/
+
+#ifdef WINDOWS_BUILD
+
+ /* For now, presume Microsoft Visual C                                 */
+#   define _MSVC_ 1
+
+#cmakedefine  HAVE_PCRE     @HAVE_PCRE@
+
+ /* Suppress some deprecation warnings that aren't really deprecation   */
+ /* warnings                                                            */
+#   define _CRT_SECURE_NO_DEPRECATE
+#   define _CRT_NONSTDC_NO_DEPRECATE
+
+ /* Increase the sockets set size limit/default to be the same value as */
+ /* used on most non-Windows platforms (1024)                           */
+#   define FD_SETSIZE 1024
+
+ /* MSVC does not have C99 flexible arrays, nor should large file       */
+ /* support be disabled.  All supported Windows versions support it     */
+#   undef C99_FLEXIBLE_ARRAYS
+#   undef DISABLE_LARGEFILE
+
+ /* Windows supports only partial TCP Keepalive                         */
+#   undef HAVE_PARTIAL_KEEPALIVE
+#   undef HAVE_BASIC_KEEPALIVE
+
+ /* Fthreads is an option only for non-Windows builds.  Inclusion       */
+ /* of OPTION_FTHREADS messes up the Windows build.                     */
+#   undef OPTION_FTHREADS
+
+ /* Only the executable directory should be searched for Hercules       */
+ /* shared libraries (.DLL).  The HTTP server                           */
+#   undef MODULESDIR
+#   undef PKGDATADIR
+
+#   ifndef EXTERNALGUI
+#       define OPTION_NO_EXTERNALGUI
+#   endif
+
+ /* If PCRE has been built (the likely case), then the name of the      */
+ /* pcreposix.h header needs to be defined in PCRE_INCNAME.  Back in    */
+ /* the old days, there was some variability in the header name.  There */
+ /* is no longer, but source compatibility compels this definition.     */
+#   if defined(HAVE_PCRE)
+#       define PCRE_INCNAME "pcreposix.h"
+#   endif
+
+#cmakedefine   WINVER           @WINVER@
+#cmakedefine   _WIN32_WINNT     @_WIN32_WINNT@
+#cmakedefine   NTDDI_VERSION    @NTDDI_VERSION@
+
+#endif    /* Windows build  */
+
+
+/*
    *********************************************************************
                     End of config.h generated by CMake
    *********************************************************************
 */
-
 
 
 

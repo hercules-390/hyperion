@@ -34,20 +34,35 @@ are:
    terminated.
  * All exceptions are documented in CMakeHercOptDef.cmake
 
-
+Notes
+- See the following thread for a discussion of the issues around use of
+  file( DOWNLOAD ... ), which is used  here to determine the version
+  of external packages included in the Hercules-390 github project.
+     https://cmake.org/pipermail/cmake-developers/2013-July/019416.html
 ]]
 
 message( "Setting build options" )
 
+message( STATUS "External package root is ${EXTPKG_ROOT}" )
 
+
+
+# ----------------------------------------------------------------------
+#
 # Option ADD-CFLAGS
+#
+# ----------------------------------------------------------------------
 
 # We cannot process the ADD-CFLAGS here.  If specified, it must be
 # appended to CMAKE_C_FLAGS after all C Compiler Options CMake scripts
 # have run.  ADD-CFLAGS will be appended in CMakeLists.txt
 
 
+# ----------------------------------------------------------------------
+#
 # Option AUTOMATIC-OPERATOR
+#
+# ----------------------------------------------------------------------
 
 # Automatic Operator requires regular expression support, indicated by
 # the presence of the regex.h header.
@@ -61,7 +76,104 @@ elseif( ("${AUTOMATIC-OPERATOR}" STREQUAL "YES") OR (${buildWith_AUTOMATIC-OPERA
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
+# Options BZIP2 and BZIP2_DIR
+#
+# ----------------------------------------------------------------------
+
+# If BZIP2=SYSTEM, do nothing.  Herc12_OptEdit.cmake has already
+# confirmed existence of a system BZip2 library.
+
+# If BZIP2=NO, do nothing.  BZip2 support will be excluded.
+
+# If BZIP2=YES or blank and BZIP2_DIR pointed to a valid BZip2
+# development directory, then Herc12_OptEdit.cmake found the import
+# target script and set HAVE_BZIP2_TARGET to its directory.  It will be
+# imported here.
+
+# If BZIP2=HERCULES, and BZIP2_DIR was not set, do nothing.  The script
+# Herc12_OptEdit.cmake does not check for a system installed package
+# in this case, and therefore BZIP2_FOUND will not be set.  The script
+# Herc41_ExtPackageBuild.cmake will build the BZIP2 package.
+
+# If BZIP2=YES, HERCULES, or blank, BZIP2_DIR was not set, and the
+# target system has a version of BZip2 installed, compare the versions
+# of the target system with the Hercules-390 BZip2 repository.  If the
+# target system BZip2 is older, unsed BZIP2_FOUND so that it will not be
+# used.   Herc41_ExtPackageBuild.cmake will build the BZIP2 package from
+# the Hercules-390 BZip2 repository.
+
+if( "${BZIP2}" STREQUAL "NO" )
+    message( STATUS "BZIP2=NO: BZip2 support excluded from Hercules" )
+    unset( HAVE_BZIP2_TARGET )
+    unset( BZIP2_FOUND )
+
+elseif( "${BZIP2}" STREQUAL "SYSTEM" )
+    message( STATUS "BZIP2=SYSTEM: Using BZip2 ${BZIP2_VERSION_STRING} from system libraries." )
+    unset( HAVE_BZIP2_TARGET )
+
+elseif( HAVE_BZIP2_TARGET )
+    include( ${HAVE_BZIP2_TARGET}/bzip2.cmake )
+    message( STATUS "Using BZip2 found in specified directory ${BZIP2_INSTALL_DIR}" )
+    unset( BZIP2_FOUND )
+
+elseif( BZIP2_FOUND AND ( NOT "${BZIP2}" STREQUAL "HERCULES" ) )
+    # Target system has a BZip2 library installed and builder does not
+    # require use of the BZip2 in the Hercules-390 repository.  Use the
+    # repository version only if it is newer than the library on the
+    # target system.
+
+    # Make a temporary file name
+    set(_counter 0)
+    while(EXISTS "${PROJECT_BINARY_DIR}/bzip_h_${_counter}.tmp")
+        math(EXPR _counter "${_counter} + 1")
+    endwhile( )
+    set( _bzipver_temp "${PROJECT_BINARY_DIR}/bzip_h_${_counter}.tmp" )
+
+    # get bzlib.h from hercules repo.  Note: URL below is the result
+    # of the redirect done when displaying the file on github and
+    # clicking the "raw" button.
+    file( DOWNLOAD http://raw.githubusercontent.com/Hercules-390/h390BZip/master/pkg_src/bzlib.h
+            "${_bzipver_temp}"
+            TIMEOUT 10
+            LOG _dl_log
+            STATUS _bzip2_dl_status )
+
+    if( NOT "${_bzip2_dl_status}" STREQUAL "0;\"No error\"" )
+        message( WARNING "Unable to locate bzlib.h in Hercules-390 project: ${_bzip2_dl_status}" )
+        message( WARNING "From file( DOWNLOAD ):\n${_dl_log}" )
+
+    else( )
+        # Get the BZip2 version from bzlib.h in the repository.  Tset it
+        # agaist the version found on the target system by
+        # find_package( BZip2 MODULE ).
+        file( STRINGS "${_bzipver_temp}" herc_BZip2_Version
+                REGEX "bzip2/libbzip2 version [0-9]+\\.[^ ]+ of [0-9]+ " )
+        string( REGEX
+                REPLACE ".* bzip2/libbzip2 version ([0-9]+\\.[^ ]+) of [0-9]+ .*" "\\1"
+                herc_BZip2_Version "${herc_BZip2_Version}" )
+        file( REMOVE "${_bzipver_temp}" )
+        if( herc_BZip2_Version VERSION_GREATER BZIP2_VERSION_STRING )
+            message( STATUS "Using BZip2 ${herc_BZip2_Version} from Hercules-390 project." )
+            unset( BZIP2_FOUND )
+        else( )
+            message( STATUS "Using BZip2 ${BZIP2_VERSION_STRING} from system libraries." )
+        endif( )
+    endif( )
+
+    unset( _counter )
+    unset( _bzipver_temp )
+    unset( _bzip2_dl_status )
+
+endif( )
+
+
+# ----------------------------------------------------------------------
+#
 # Option CAPABILITIES
+#
+# ----------------------------------------------------------------------
 
 # This option allows finer control of process privileges than that
 # afforded by setuid() all by itself.  And setuid() is a pre-requisite
@@ -97,26 +209,28 @@ endif( )
 
 
 
+# ----------------------------------------------------------------------
+#
 # Option CCKD-BZIP2
+#
+# ----------------------------------------------------------------------
 
-# The bz2 library and the bzip2.h public header are required for support
-# of bzip2 compression of CCKD files.
+# The bz2 library and public header are required for support of bzip2
+# compression of CCKD files.  Note that if herc12_OptEdit.cmake did not
+# identify a suitable bzip2 library, Herc41_ExtPackageBuild.cmake will
+# build one.  So there is never a case where CCKD_BZIP2=YES cannot
+# be honored.
 
-If( NOT ("${HAVE_BZ2}" AND "${HAVE_BZLIB_H}") )
-    if( "${CCKD-BZIP2}" )
-        if( NOT "${HAVE_BZ2}" )
-            herc_Save_Error( "CCKD-BZIP2=YES specified but required library \"bz2\" is missing." )
-        endif( )
-        if( NOT "${HAVE_BZLIB_H}" )
-            herc_Save_Error( "CCKD-BZIP2=YES specified but required header \"bzlib.h\" is missing." )
-        endif( )
-    endif( )
-elseif( ("${CCKD-BZIP2}" STREQUAL "YES") OR (${buildWith_CCKD-BZIP2} AND (NOT "${CCKD-BZIP2}" STREQUAL "NO")) )
+if( ("${CCKD-BZIP2}" STREQUAL "YES") OR (${buildWith_CCKD-BZIP2} AND (NOT "${CCKD-BZIP2}" STREQUAL "NO")) )
     set( CCKD_BZIP2 1 )
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option CUSTOM
+#
+# ----------------------------------------------------------------------
 
 # If specified, set the variable CUSTOM_BUILD_STRING so the generated
 # config.h includes it as a quoted string.
@@ -125,7 +239,12 @@ if( CUSTOM )
     set( CUSTOM_BUILD_STRING "${CUSTOM}" )
 endif( )
 
+
+# ----------------------------------------------------------------------
+#
 # Option DEBUG
+#
+# ----------------------------------------------------------------------
 
 # Option DEBUG is a bit tricky because the CMake build option and the
 # config.h preprocessor variable to be set have the same name.  We
@@ -142,7 +261,11 @@ if( ("${DEBUG}" STREQUAL "YES") OR (${buildWith_DEBUG} AND (NOT "${DEBUG}" STREQ
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option EXTERNAL-GUI
+#
+# ----------------------------------------------------------------------
 
 # Option EXTERNAL-GUI requires OPTION_DYNAMIC_LOAD.  But OPTION_DYNAMIC_LOAD
 # is a basic requirement of Hercules, so there is nothing to test.
@@ -153,14 +276,22 @@ if( ("${EXTERNAL-GUI}" STREQUAL "YES")
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option EXTPKG_DIR
+#
+# ----------------------------------------------------------------------
 
 # Edits on EXTPKG_DIR have validated the path, created the path, and set
 # EXTPKG_ROOT to either the builder-specified or default external
 # package path.  There is nothing to be done here.
 
 
+# ----------------------------------------------------------------------
+#
 # Option FTHREADS
+#
+# ----------------------------------------------------------------------
 
 # FTHREADS is supported only on Windows builds.
 
@@ -174,7 +305,11 @@ if( ("${FTHREADS}" STREQUAL "YES")
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option GETOPTWRAPPER
+#
+# ----------------------------------------------------------------------
 
 # autoconfig had a fairly complex test for the need for the getoptwrapper
 # kludge.  And this has been transformed into a non-libtool version.  But
@@ -189,26 +324,28 @@ if( ("${GETOPTWRAPPER}" STREQUAL "YES")
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option HET-BZIP2
+#
+# ----------------------------------------------------------------------
 
-# The bz2 library and the bzip2.h public header are required for support
-# of bzip2 compression of het tape files.
+# The bz2 library and public header are required for support of bzip2
+# compression of het files.  Note that if herc12_OptEdit.cmake did not
+# identify a suitable bzip2 library, Herc41_ExtPackageBuild.cmake will
+# build one.  So there is never a case where HET_BZIP2=YES cannot
+# be honored.
 
-If( NOT ("${HAVE_BZ2}" AND "${HAVE_BZLIB_H}") )
-    if( "${HET-BZIP2}" )
-        if( NOT "${HAVE_BZ2}" )
-            herc_Save_Error( "HET-BZIP2=YES specified but required library \"bz2\" is missing." )
-        endif( )
-        if( NOT "${HAVE_BZLIB_H}" )
-            herc_Save_Error( "HET-BZIP2=YES specified but required header \"bzlib.h\" is missing." )
-        endif( )
-    endif( )
-elseif( ("${HET-BZIP2}" STREQUAL "YES") OR (${buildWith_HET-BZIP2} AND (NOT "${HET-BZIP2}" STREQUAL "NO")) )
+if( ("${HET-BZIP2}" STREQUAL "YES") OR (${buildWith_HET-BZIP2} AND (NOT "${HET-BZIP2}" STREQUAL "NO")) )
     set( HET_BZIP2 1 )
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option HQA_DIR
+#
+# ----------------------------------------------------------------------
 
 # If HQA_INSTALL_DIR is non-blank, then CMakeHercOptEdit.cmake has
 # validated that the directory, whether specified as an environment
@@ -249,7 +386,11 @@ if( NOT ("${HQA_INSTALL_DIR}" STREQUAL "") )
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option INTERLOCKED-ACCESS-FACILITY-2
+#
+# ----------------------------------------------------------------------
 
 # This option requires some kind of atomic operation.  However, hatomic.h
 # adapts to what the target host provides, even if that is nothing.  So
@@ -265,7 +406,11 @@ else( )
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option IPV6.
+#
+# ----------------------------------------------------------------------
 
 # If required headers exist and not explicitly excluded by the builder,
 # set the variable ENABLES_IPV6 to 1.  If required headers are missing
@@ -290,23 +435,33 @@ elseif( ("${IPV6}" STREQUAL "YES") OR (${buildWith_IPV6} AND (NOT "${IPV6}" STRE
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option LARGEFILE
+#
+# ----------------------------------------------------------------------
 
-# Large file access requires a 64-bit file offset type (off_t) and file
-# control functions that use that type.  Some targets provide this as the
-# only choice, including 64-bit open source targets, FreeBSD of any
-# bitness since 2.0, and all Apple/Darwin (?) versions.  On these
-# targets, off_t starts out as a 64-bit type and large file support is
-# automatic and cannot be disabled.
+# All Windows versions supported by Hercules have large file support.
+# Windows implements large file support by implementing a separate API
+# for file operations, similar to UNIX-like transitional large file
+# support.
 
-# Some 32-bit open source targets, notably GNU/Linux targets, and
-# Solaris 32-bit use a 32-bit file offset by default.  Defining
-# _FILE_OFFSET_BITS=64 prior to including any system headers causes
-# those headers to define a 64-bit off_t and corresponding file control
-# functions.  To code being compiled, such targets behave exactly the
-# same as targets for which a 64-bit off_t is the only choice.  The
-# macro _LFS_LARGEFILE tells code being compiled that large file support
-# is possible but does not tell if that code is enabled.
+# Large file access on UNIX-like systems requires a 64-bit file offset
+# type (off_t) and file control functions that use that type.
+
+# Some targets provide this as the only choice, including 64-bit open
+# source targets, FreeBSD of any bitness since 2.0, and all Apple/Darwin
+# (?) versions.  On these targets, off_t starts out as a 64-bit type and
+# large file support is automatic and cannot be disabled.
+
+# Some 32-bit open source targets, notably GNU/Linux targets, and Solaris
+# use a 32-bit file offset by default.  Defining _FILE_OFFSET_BITS=64
+# prior to including any system headers causes those headers to define a
+# 64-bit off_t and corresponding file control functions.  To code being
+# compiled, such targets behave exactly the same as targets for which a
+# 64-bit off_t is the only choice.  The macro _LFS_LARGEFILE tells code
+# being compiled that large file support is possible but does not tell
+# if that code is enabled.
 
 # Some 32-bit targets (which ones?) only support transitional large file
 # support, which offers an alternative file offset type off64_t and file
@@ -350,22 +505,20 @@ endif( )
 # will use fseek, which has a file offset parameter of long.
 
 
-# If the target's off_t is 8 bytes (64 bits) by default, then large file
-# support is present by default and cannot be turned off or disabled.
-
-if( ${SIZEOF_OFF_T} EQUAL 8)
+if( ( ${SIZEOF_OFF_T} EQUAL 8 ) OR WIN32 )
+# If the target's off_t is 8 bytes (64 bits) by default or we are building
+# for Windows, then large file support is present by default and cannot
+# be turned off or disabled.
     set( buildWith_LARGEFILE          "YES" CACHE INTERNAL "${help_Sumry_LARGEFILE}" )
     if( "${LARGEFILE}" STREQUAL "NO" )
         Herc_Save_Error( "Large file support cannot be disabled on this target; LARGEFILE=${LARGEFILE} rejected." )
     endif( )
     set( herc_LargeFile_Status "Using native large file support." )
-endif( )
 
+else( )
 # Change default for LFS support based on target capabilities.  And issue
 # diagnostic and fail the build if LARGEFILE requested on a system that
 # that does not have native or transitional large file support.
-
-if( ${SIZEOF_OFF_T} EQUAL 4)
     if( NOT (HAVE_DECL__LFS_LARGEFILE OR HAVE_DECL__LFS64_LARGEFILE) )
         set( buildWith_LARGEFILE          "NO"  CACHE INTERNAL "${help_Sumry_LARGEFILE}" )
         set( DISABLE_LARGEFILE 1 )
@@ -376,9 +529,7 @@ if( ${SIZEOF_OFF_T} EQUAL 4)
     endif( )
 endif( )
 
-if( (${SIZEOF_OFF_T} EQUAL 4)
-        AND (NOT DISABLE_LARGEFILE) )
-
+if( NOT ( (${SIZEOF_OFF_T} EQUAL 8) OR WIN32 OR DISABLE_LARGEFILE ) )
 # LFS-capable target and LFS support requested or defaulted.  See what
 # macro is needed to enable that support.
     if( ("${LARGEFILE}" STREQUAL "YES")
@@ -392,7 +543,6 @@ if( (${SIZEOF_OFF_T} EQUAL 4)
             set( herc_LargeFile_Status "Using specifically-enabled large file support." )
             set( _FILE_OFFSET_BITS 64 )
             set( SIZEOF_OFF_T 8 CACHE INTERNAL "CHECK_TYPE_SIZE: sizeof(off_t)" FORCE)
-            message( "LFS: SIZEOF_OFF_T: ${SIZEOF_OFF_T} after _FILE_OFFSET_BITS=64 and cache set." )
         else( )
             # Try _LARGE_FILE = 1 (AIX) and see if SIZEOF_OFF_T changes
             # from 4 to 8.
@@ -434,7 +584,11 @@ if( (${SIZEOF_OFF_T} equal 8)
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option MULTI-CPU
+#
+# ----------------------------------------------------------------------
 
 # If YES, support for 8 CPUs is generated.  If NO, a single-CPU Hercules
 # is build.  If a number (already edited to be between 1 and 128) that
@@ -472,7 +626,11 @@ endif( )
 unset( temp_Multi_CPU )
 
 
+# ----------------------------------------------------------------------
+#
 # Option OBJECT_REXX
+#
+# ----------------------------------------------------------------------
 
 # Object Rexx requires two headers, rexx.h and oorexxapi.h.
 
@@ -490,7 +648,50 @@ elseif( ("${OBJECT-REXX}" STREQUAL "YES") OR (buildWith_OBJECT-REXX AND (NOT ("$
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
+# Options PCRE and PCRE_DIR
+#
+# ----------------------------------------------------------------------
+
+# If PCRE=NO, do nothing.  PCRE support will be excluded.
+
+# If PCRE=YES or blank and PCRE_DIR pointed to a valid PCRE development
+# directory, then Herc12_OptEdit.cmake found the import target script
+# and set HAVE_PCRE_TARGET to its directory.  It will be imported here.
+
+# If PCRE=YES or blank and PCRE_DIR was not set,
+# Herc41_ExtPackageBuild.cmake will build the PCRE package from
+# the Hercules-390 PCRE repository.
+
+# We ensure that PCRE_FOUND is unset even though Windows systems do not
+# have a system-installed version of PCRE because that lets the code for
+# PCRE processing in this build to be consistent with that for BZip2 and
+# Zlib.
+
+# The PCRE build creates two targets: PCRE and PCREPOSIX.  Both are
+# included in the pcre.cmake target import script.
+
+if( WIN32 )
+    if( "${PCRE}" STREQUAL "NO" )
+        message( STATUS "PCRE=NO: PCRE support excluded from Hercules" )
+        unset( HAVE_PCRE_TARGET )
+        unset( PCRE_FOUND )
+
+    elseif( HAVE_PCRE_TARGET )
+        include( ${HAVE_PCRE_TARGET}/pcre.cmake )
+        message( STATUS "Using PCRE found in specified directory ${PCRE_INSTALL_DIR}" )
+        unset( PCRE_FOUND )
+
+    endif( )
+endif( )
+
+
+# ----------------------------------------------------------------------
+#
 # Option REGINA_REXX
+#
+# ----------------------------------------------------------------------
 
 # Regina Rexx needs rexxsaa.h, which may or may not be in the regina subdirectory.
 
@@ -503,21 +704,28 @@ elseif( ("${REGINA-REXX}" STREQUAL "YES") OR (buildWith_REGINA-REXX AND (NOT ("$
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option S3FH_DIR
+#
+# ----------------------------------------------------------------------
 
-# If S3FH_DIR is blank, then CMake will build SoftFloat-3a and no
-# further action is required.
+# If S3FH_DIR is blank, then Herc41_ExtPackageBuild.cmake will build
+# SoftFloat-3a and import its targets.  No action is required.
 
-# If S3FH_DIR is non-blank, then CMakeHercOptEdit.cmake has validated
-# that the directory exists, has the required structure, and has the
-# required contents.  We will just set S3FH_INSTALL_DIR.
+# If S3FH_DIR is non-blank, then Herc12_OptEdit.cmake has validated
+# that an import target script exits.  We will import it here.
 
-if( NOT ("${S3FH_DIR}" STREQUAL "") )
-    set( S3FH_INSTALL_DIR "${S3FH_DIR}" )
+if( HAVE_S3FH_TARGET )
+    include( ${HAVE_S3FH_TARGET}/s3fh.cmake )
 endif( )
 
 
+# ----------------------------------------------------------------------
+#
 # Option SETUID-HERCIFC
+#
+# ----------------------------------------------------------------------
 
 # The decision to build hercifc is based on platform and made in CMakeHercTarget.
 # If we are not building hercifc, then SETUID-HERCIFC is invalid.  If
@@ -540,7 +748,11 @@ else( )
 endif( NOT BUILD_HERCIFC )
 
 
+# ----------------------------------------------------------------------
+#
 # Option SYNCIO
+#
+# ----------------------------------------------------------------------
 
 # The default for this is currently yes, but will change in the near
 # future.  There are no header or library requirements for this option.
@@ -549,6 +761,109 @@ if( ("${SYNCIO}" STREQUAL "YES") OR (${buildWith_SYNCIO} AND (NOT "${SYNCIO}" ST
     set( OPTION_SYNCIO 1 )
 else( )
     set( OPTION_NOSYNCIO 1 )
+endif( )
+
+
+# ----------------------------------------------------------------------
+#
+# Option WINTARGET
+#
+# ----------------------------------------------------------------------
+
+# Preprocessor variables for WINTARGET were set in herc12_OptEdit.cmake.
+# Nothing needs to be done here.
+
+
+# ----------------------------------------------------------------------
+#
+# Options ZLIB and ZLIB_DIR
+#
+# ----------------------------------------------------------------------
+
+# If ZLIB=SYSTEM, do nothing.  Herc12_OptEdit.cmake has already
+# confirmed existence of a system Zlib library.
+
+# If ZLIB=NO, do nothing.  Zlib support will be excluded.
+
+# If ZLIB=YES or blank and ZLIB_DIR pointed to a valid Zlib
+# development directory, then Herc12_OptEdit.cmake found the import
+# target script and set HAVE_ZLIB_TARGET to its directory.  It will be
+# imported here.
+
+# If ZLIB=HERCULES, and ZLIB_DIR was not set, do nothing.  The script
+# Herc12_OptEdit.cmake does not check for a system installed package
+# in this case, and therefore ZLIB_FOUND will not be set.  The script
+# Herc41_ExtPackageBuild.cmake will build the ZLIB package.
+
+# If ZLIB=YES, HERCULES, or blank, ZLIB_DIR was not set, and the
+# target system has a version of Zlib installed, compare the versions
+# of the target system with the Hercules-390 Zlib repository.  If the
+# target system Zlib is older, unsed ZLIB_FOUND so that it will not be
+# used.   Herc41_ExtPackageBuild.cmake will build the ZLIB package from
+# the Hercules-390 Zlib repository.
+
+if( "${ZLIB}" STREQUAL "NO" )
+    message( STATUS "ZLIB=NO: Zlib support excluded from Hercules" )
+    unset( HAVE_ZLIB_TARGET )
+    unset( ZLIB_FOUND )
+
+elseif( "${ZLIB}" STREQUAL "SYSTEM" )
+    message( STATUS "ZLIB=SYSTEM: Using Zlib ${ZLIB_VERSION_STRING} from system libraries." )
+    unset( HAVE_ZLIB_TARGET )
+
+elseif( HAVE_ZLIB_TARGET )
+    include( ${HAVE_ZLIB_TARGET}/zlib.cmake )
+    message( STATUS "Using Zlib found in specified directory ${ZLIB_INSTALL_DIR}" )
+    unset( ZLIB_FOUND )
+
+elseif( ZLIB_FOUND AND ( NOT "${ZLIB}" STREQUAL "HERCULES" ) )
+    # Target system has a Zlib library installed and builder does not
+    # require use of the Zlib in the Hercules-390 repository.  Use the
+    # repository version only if it is newer than the library on the
+    # target system.
+
+    # Make a temporary file name
+    set(_counter 0)
+    while(EXISTS "${PROJECT_BINARY_DIR}/zlib_h_${_counter}.tmp")
+        math(EXPR _counter "${_counter} + 1")
+    endwhile( )
+    set( _zlibver_temp "${PROJECT_BINARY_DIR}/zlib_h_${_counter}.tmp" )
+
+    # get bzlib.h from hercules repo.  Note: URL below is the result
+    # of the redirect done when displaying the file on github and
+    # clicking the "raw" button.
+    file( DOWNLOAD http://raw.githubusercontent.com/Hercules-390/h390Zlib/master/pkg_src/zlib.h
+            "${_zlibver_temp}"
+            TIMEOUT 10
+            LOG _dl_log
+            STATUS _zlib_dl_status )
+
+    if( NOT "${_zlib_dl_status}" STREQUAL "0;\"No error\"" )
+        message( WARNING "Unable to locate zlib.h in Hercules-390 project: ${_zlib_dl_status}" )
+        message( WARNING "From file( DOWNLOAD ):\n${_dl_log}" )
+
+    else( )
+        # Get the Zlib version from zlib.h in the repository.  Tset it
+        # agaist the version found on the target system by
+        # find_package( Zlib MODULE ).  The Zlib version is #define'd.
+        file( STRINGS "${_zlibver_temp}" herc_Zlib_Version
+                    REGEX "^#define[ \t]+ZLIB_VERSION[ \t]+\"[^\"]*\"$")
+        string( REGEX
+                REPLACE "^#define +ZLIB_VERSION +\"([0-9]+\\.[^\"]+).*" "\\1"
+                herc_Zlib_Version "${herc_Zlib_Version}" )
+        file( REMOVE "${_zlibver_temp}" )
+        if( herc_Zlib_Version VERSION_GREATER ZLIB_VERSION_STRING )
+            message( STATUS "Using Zlib ${herc_Zlib_Version} from Hercules-390 project." )
+            unset( ZLIB_FOUND )
+        else( )
+            message( STATUS "Using Zlib ${ZLIB_VERSION_STRING} from system libraries." )
+        endif( )
+    endif( )
+
+    unset( _counter )
+    unset( _zlibver_temp )
+    unset( _zlib_dl_status )
+
 endif( )
 
 

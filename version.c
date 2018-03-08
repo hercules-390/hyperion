@@ -300,7 +300,7 @@ static const char *build_info[] = {
   #error HOST_ARCH is undefined
 #endif
 
-#if defined(_MSVC_)
+#if !defined(HAVE_CONFIG_H)
   #define QSTR_HOST_ARCH    QSTR(HOST_ARCH)
 #else
   #define QSTR_HOST_ARCH         HOST_ARCH

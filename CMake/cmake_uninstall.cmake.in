@@ -1,0 +1,42 @@
+# cmake_uninstall_cmake.in - CMake script to uninstall a project
+
+#[[   This file is taken from the Kitware public Wiki for CMake at:
+
+        https://cmake.org/Wiki/RecipeAddUninstallTarget
+
+      There is no copyright information on that posting.  The Wiki
+      itself is copyrighted and licensed under the Creative Commons
+      Attribution 2.5 Generic (CC BY 2.5).  Please visit the above link
+      for license details.
+]]
+
+
+# Installation paths, which include the file name, are stored in
+# install_manifest.txt, a file created by install target.
+
+if( NOT EXISTS "@PROJECT_BINARY_DIR@/install_manifest.txt")
+  message( FATAL_ERROR "Cannot find install manifest: \"@PROJECT_BINARY_DIR@/install_manifest.txt\"")
+endif( NOT EXISTS "@PROJECT_BINARY_DIR@/install_manifest.txt")
+
+# Remove each installed file.
+
+file( READ "@PROJECT_BINARY_DIR@/install_manifest.txt" files )
+string( REGEX REPLACE "\n" ";" files "${files}" )
+
+foreach( file ${files} )
+    message(STATUS "Uninstalling \"$ENV{DESTDIR}${file}\"")
+    if( EXISTS "$ENV{DESTDIR}${file}" )
+        exec_program(
+                "@CMAKE_COMMAND@" ARGS -E remove $ENV{DESTDIR}${file}
+                OUTPUT_VARIABLE rm_out
+                RETURN_VALUE rm_retval
+                )
+        if( NOT "${rm_retval}" STREQUAL 0 )
+            message( STATUS "Remove file RC=${rm_retval}, \"${rm_out}\"" )
+            message( STATUS "Problem when removing \"$ENV{DESTDIR}${file}\"" )
+        endif( NOT "${rm_retval}" STREQUAL 0 )
+    else( EXISTS "$ENV{DESTDIR}${file}" )
+        message( STATUS "File \"$ENV{DESTDIR}${file}\" does not exist." )
+    endif( EXISTS "$ENV{DESTDIR}${file}" )
+endforeach( file )
+

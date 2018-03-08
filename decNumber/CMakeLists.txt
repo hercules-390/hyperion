@@ -14,17 +14,61 @@
 
 set(target_name "decNumber" )
 
+set( ${target_name}_public_headers
+      )
+
 set( ${target_name}_sources
-        decContext.c ;
-        decimal32.c ;
-        decimal64.c ;
-        decimal128.c ;
-        decNumber.c ;
+        decContext.h
+        decNumber.h
+        decNumberLocal.h
+        decDPD.h
+        decimal128.h
+        decimal32.h
+        decimal64.h
+        decNumberLocal.h
+        decPacked.h
+        decContext.c
+        decimal32.c
+        decimal64.c
+        decimal128.c
+        decNumber.c
         decPacked.c
       )
 
-add_library(${target_name} SHARED ${${target_name}_sources} )
-install( TARGETS ${target_name} DESTINATION ${library_rel_dir})
+# include the export definitions file if building under Windows
+
+if( WIN32 )
+    set( ${target_name}_sources ${${target_name}_sources} decnumber.def )
+endif( )
+
+
+add_library( ${target_name} SHARED
+        ${${target_name}_sources};${${target_name}_public_headers}
+        )
+
+
+# If building on Windows, disable C4244 "conversion from 'x' to 'y',
+# possible loss of data"  This needs to be done here because much of
+# decNumber does not include config.h, where it could be done as
+# a pragma, and because we do not wish to suppress 4244 for all of
+# Hercules.
+
+if( WIN32 )
+    target_compile_options( ${target_name} PRIVATE /wd4244 )
+endif( )
+
+
+# Install the shared library, which is included in LIBRARY on non-DLL
+# platforms and in RUNTIME on DLL platforms.  The Windows import
+# library is included in ARCHIVE, which is not required because
+# decNumber is consumed by other targets in this script.  If
+# decNumber gets built as an external package, then ARCHIVE would be
+# needed in the install command.
+
+install(    TARGETS ${target_name}
+            LIBRARY DESTINATION ${library_rel_dir}
+            RUNTIME DESTINATION ${library_rel_dir}
+            )
 
 
 # Include directories for compiles.  The decNumber library is not
@@ -43,20 +87,15 @@ include_directories( ${PROJECT_BINARY_DIR}
 link_directories( ${PROJECT_BINARY_DIR}/decNumber )
 
 
-# if building on Windows, export headers and add a post-build command to
-# copy the generated DLL to the project build directory
+# if building on Windows, add a post-build command to copy the generated
+# DLL to the project build directory.  This does not seem to be needed.
 
 if( WIN32 )
     add_custom_command(
-            TARGET decNumber POST_BUILD
+            TARGET ${target_name} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/decNumber.dll
-                ${PROJECT_BINARY_DIR}/$<CONFIG>
-          )
-    generate_export_header( ${target_name}
-            BASE_NAME ${target_name}
-            EXPORT_MACRO_NAME decNumber_EXPORT
-            EXPORT_FILE_NAME decNumber_Export.h
-            STATIC_DEFINE decNumber_BUILT_AS_STATIC
-          )
+                $<TARGET_FILE:${target_name}>
+                $<TARGET_FILE_DIR:hercs>
+            )
 endif()
+

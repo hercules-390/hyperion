@@ -19,6 +19,7 @@
 **    Don't forget to update the 'makefile.bat' file too!
 **
 **
+**    MSVC++ 15.0     _MSC_VER = 1910     (Visual Studio 2017)
 **    MSVC++ 14.0:    _MSC_VER = 1900     (Visual Studio 2015)
 **    MSVC++ 12.0:    _MSC_VER = 1800     (Visual Studio 2013)
 **    MSVC++ 11.0:    _MSC_VER = 1700     (Visual Studio 2012)
@@ -31,6 +32,7 @@
 **    MSVC++  5.0:    _MSC_VER = 1100
 */
 
+#define VS2017      1910                /* Visual Studio 2017 */
 #define VS2015      1900                /* Visual Studio 2015 */
 #define VS2013      1800                /* Visual Studio 2013 */
 #define VS2012      1700                /* Visual Studio 2012 */
@@ -40,6 +42,7 @@
 #define VS2003      1310                /* Visual Studio 2003 */
 #define VS2002      1300                /* Visual Studio 2002 */
 
+#define MSVC15      1910                /* Visual Studio 2017 */
 #define MSVC14      1900                /* Visual Studio 2015 */
 #define MSVC12      1800                /* Visual Studio 2013 */
 #define MSVC11      1700                /* Visual Studio 2012 */
@@ -72,21 +75,37 @@
 **   in file 'VERSION.msvc'), so the below will normally never be
 **   invoked. Should we update to a build system that doesn't use
 **   win32.mak however, then the below values *will* be required.
+**
+**   SECOND NOTE: if Hercules is being built using CMake, that 
+**   configure process either sets the _WIN32_WINNT macros to 
+**   values set during configuration or expects those values to be
+**   set to those that match the host system based on the code in
+**   SDKDDKVer.h.  So...  when building with Visual Studio 2008,
+**   which does not seem to include an SDK that includes SDKDDKVer.h,
+**   we shall set preprocessor variables to WinXP SP3 64-bit.  
+**   Otherwise, we will let SDKDDKVer.h set them to values appropriate
+**   for the host system, which is presumed to be the target.  
 */
-#ifndef   _WIN32_WINNT
-  #define _WIN32_WINNT      0x0502      /* XP 64-bit or Server 2003  */
-  #define WINVER            0x0502      /* XP 64-bit or Server 2003  */
-  #define NTDDI_VERSION     0x05020100  /* XP 64-bit or Server 2003  */
-  #define _WIN32_IE         0x0603      /* IE 6.0 SP2                */
+#if _MSC_VER < VS2010
+  #ifndef   _WIN32_WINNT
+    #define _WIN32_WINNT      0x0502      /* XP 64-bit or Server 2003  */
+    #define WINVER            0x0502      /* XP 64-bit or Server 2003  */
+    #define NTDDI_VERSION     0x05020100  /* XP 64-bit or Server 2003  */
+    #define _WIN32_IE         0x0603      /* IE 6.0 SP2                */
+  #endif
 #endif
 
 /* Report _WIN32_WINNT value being used and thus our target platform */
+/* but only if this is not a build from a CMake configure step,      */
+/* because CMake configure announces the target Windows version.     */
 
-#define FQ( _s )        #_s
-#define FQSTR( _s )     FQ( _s )
-#pragma message( "Target platform = _WIN32_WINNT " FQSTR(_WIN32_WINNT))
-#undef  FQ
-#undef  FQSTR
+#ifndef HAVE_CONFIG_H
+  #define FQ( _s )        #_s
+  #define FQSTR( _s )     FQ( _s )
+  #pragma message( "Target platform = _WIN32_WINNT " FQSTR(_WIN32_WINNT))
+  #undef  FQ
+  #undef  FQSTR
+#endif 
 
 /* Need to #include SDKDDKVer.h with later versions of Visual Studio */
 

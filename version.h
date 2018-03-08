@@ -19,7 +19,9 @@
 /* What follows is a relatively ugly kludge to let the Windows build  */
 /* catch up gracefully to the recent enhancements to the open source  */
 /* build.                                                             */
-#ifdef _MSVC_
+/* Note: for CMake builds, _dynamic_version is replaced by #defines   */
+/* in config.h                                                        */
+#if defined(_MSVC_) && !defined(HAVE_CONFIG_H)
 #include "_dynamic_version.h"
 #endif  /* _MSVC_  */
 

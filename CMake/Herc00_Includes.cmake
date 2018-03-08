@@ -8,13 +8,15 @@
 ]]
 
 #[[
-This library includes four functions and one macro that are used frequently
-throughout the build.
+This library includes numerous functions and one macro that are used frequently
+throughout the build.  herc_Save_Error is a macro so that it runs in the
+context of the caller.  It is not not important for the functions to be
+run in the caller's context.
 
 Functions:
 - herc_Save_Error           - Save error message for presentation at build end.
 - herc_Define_Executable    - Define a target for an executable program
-- herc_Deine_Shared_Lib     - Define a target for a shared library
+- herc_Define_Shared_Lib    - Define a target for a shared library
 - herc_Check_Include_Files  - Test for a header and set the HAVE_ variable
 - herc_Check_Function       - Test for a function and set the HAVE_ variable
 - herc_Check_Struct_Member  - Test a structure for a member and set HAVE_STRUCT
@@ -24,6 +26,9 @@ Functions:
 - herc_Check_Compile_Capability - Test sundry compiler capabilities
 - herc_Check_Strict_Aliasing - Test for problems created by strict aliasing
 - herc_Check_User_Option_YesNo - Validate a user option as YES/NO/TARGET
+- herc_Install_Imported_Target - Install files provided by imported target
+- herc_Create_System_Import_Target - Create import target for system shared library.
+
 
 
   --------------------------------------------------------------------  ]]
@@ -74,9 +79,11 @@ Notes
 ]]
 
 function( herc_Define_Executable executable sources libs )
+
     add_executable( ${executable} ${sources} )
     target_link_libraries( ${executable} ${libs} ${link_alllibs} )
     install(TARGETS ${executable} DESTINATION ${exec_rel_dir} )
+
 endfunction ( herc_Define_Executable )
 
 
@@ -110,6 +117,12 @@ Input Parameters
 Output
 - A target defining the shared library and its build, link, and post-build
   actions.
+- If building for Windows and the binary directory for the shared library
+  differs from the project binary directory, then the shared library is
+  being built in a subdirectory (decNumber, crypto).  A custom_command
+  is added to copy the shared library to the project binary directory to
+  enable execution from the build directory, aka the project binary
+  directory.
 
 Notes
 - Target link libraries are transitive...if hercu requires hercs and hercu
@@ -125,15 +138,17 @@ function( herc_Define_Shared_Lib libname sources libs dynamiclib)
         SET_TARGET_PROPERTIES( ${libname} PROPERTIES PREFIX "" )
     endif( )
 
-    install( TARGETS ${libname} DESTINATION ${library_rel_dir} )
+# Install the shared library, which is included in LIBRARY on non-DLL
+# platforms and in RUNTIME on DLL platforms.  (The Windows import
+# library is included in ARCHIVE.)
 
-    if( WIN32 )
-        generate_export_header( ${libname}
-              BASE_NAME ${libname}
-              EXPORT_MACRO_NAME ${libname}_EXPORT
-              EXPORT_FILE_NAME ${libname}_Export.h
-              STATIC_DEFINE ${libname}_BUILT_AS_STATIC
-              )
+    install(    TARGETS ${libname}
+                LIBRARY DESTINATION ${library_rel_dir}
+                RUNTIME DESTINATION ${library_rel_dir}
+                )
+
+    if( WIN32 AND NOT
+                ( "${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${PROJECT_BINARY_DIR}") )
         add_custom_command(
               TARGET ${libname} POST_BUILD
               COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -551,7 +566,7 @@ file( WRITE ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/HercTempProg.c "
 
 try_compile( ${return_var} ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}
             SOURCES ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/HercTempProg.c
-            COMPILE_DEFINITIONS "-Wall -Werror"
+            COMPILE_DEFINITIONS ${all_warnings_are_errors}
             OUTPUT_VARIABLE tc_output_var
         )
 
@@ -562,7 +577,6 @@ elseif( NOT (${want_clean} OR ${return_var}) )  # sucess means a return code
 else( )
     set( ${return_var} 0 PARENT_SCOPE )    # failed.
 endif( )
-
 file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/HercTempProg.c )
 
 endfunction ( herc_Check_Compile_Capability )
@@ -637,9 +651,9 @@ Input Parameters
   of YES|NO.
 
 Output
-- If valid, and a synonym for Yes or No, the variable is canonicallized to
-  YES or NO.
-- If invalid and fail_flag is TRUE, an error message is saved in the
+- If valid and an abbreviation for Yes or No, the variable is
+  canonicallized to YES or NO.
+- If invalid and fail_flag is FAIL, an error message is saved in the
   herc_EMessage array, and as a result, the build is failed.
 
 Notes
@@ -670,3 +684,198 @@ endif( )
 
 endfunction( herc_Check_User_Option_YesNo )
 
+
+#[[ ###########   function herc_Check_User_Option_YesNoSys   ###########
+
+Function/Operation
+- Validate a Yes/No/SYSTEM/HERCULES user option.  Valid values are YES,
+  NO, a null string, or SYSTEM.  The test is case insensitive, and
+  values may be abbreviated to their first character.
+- If a valid value is provided, it is converted to canonical form (YES,
+  NO, SYSTEM, or HERCULES).
+- These options are used to control the configuration of external
+  packages.  SYSTEM forces the use of the package installed on the target
+  system, even if the Hercules-390 repository has a newer package.
+  HERCULES forces the use of the package in the Hercules-390 repository,
+  even if a equivalent or newer version is installed on the target system.
+- If the user specified other than YES, NO, SYSTEM, or HERCULES, set the
+  fail_flag to true and store an error message for later issuance.
+  Storing the error message will fail the build.
+- If an option is null, it was not specified, and this function returns
+  to the caller without performing any actions.
+
+Input Parameters
+- The name of the Yes/No/System/Hercules variable to be validated.
+- A flag indicating whether other thaa value of other than YES, NO,
+  SYSTEM, or HERCULES is allowed.
+
+Output
+- If valid and an abbreviation for Yes, No, System, or Hercules, the
+  variable is canonicallized to YES, NO, SYSTEM, or HERCULES
+  respectively.
+- If invalid and fail_flag is TRUE, an error message is saved in the
+  herc_EMessage array, and as a result, the build is failed.
+
+Notes
+- It is up to the balance of the build to examine the user option variable
+  if a buildWith_ option is not supported by the target.  If the user did
+  not specify the option, the subject feature should be excluded from the
+  build without comment.  If it was explicitly requested, then the build
+  is expected to issue a message.
+
+]]
+
+function( herc_Check_User_Option_YesNoSysHerc option_name fail_flag )
+
+if( DEFINED ${option_name} )
+    if ( NOT ("${${option_name}}" STREQUAL "") )
+        STRING( TOUPPER "${${option_name}}" option_value )
+        if( ("${option_value}" STREQUAL "YES") OR ("${option_value}" STREQUAL "Y") )
+            set( ${option_name} YES CACHE STRING "${help_Sumry_${option_name}}" FORCE)
+        elseif(("${option_value}" STREQUAL "NO") OR ("${option_value}" STREQUAL "N") )
+            set( ${option_name} NO CACHE INTERNAL "${help_Sumry_${option_name}}" FORCE )
+        elseif(("${option_value}" STREQUAL "SYSTEM") OR ("${option_value}" STREQUAL "S") )
+            set( ${option_name} "SYSTEM" CACHE INTERNAL "${help_Sumry_${option_name}}" FORCE )
+        elseif(("${option_value}" STREQUAL "HERCULES") OR ("${option_value}" STREQUAL "H") )
+            set( ${option_name} "HERCULES" CACHE INTERNAL "${help_Sumry_${option_name}}" FORCE )
+        elseif( "${fail_flag}" STREQUAL "FAIL" )
+            herc_Save_Error("Invalid value \"${${option_name}}\" for ${option_name}, not YES , NO, or SYSTEM" )
+        endif( )
+    endif( )
+endif( )
+
+endfunction( herc_Check_User_Option_YesNoSysHerc )
+
+
+#[[ ###########   function herc_Install_Imported_Target   ###########
+
+Function/Operation
+- Install the files provided by an imported shared library target.
+  Install( TARGET ) cannot be used for imported targets.
+- External packages that are provided as shared libraries must be
+  included in the project install directory, lest execution of an
+  installed Hercules have a dependency on the external package build
+  or install directory.
+- The imported shared library target is queried for the name(s) of the
+  libraries included in the target.  Install( FILES ) commands are used
+  for each library offered by the imported target.
+- Only the Debug, Release, and "NoConfig" configurations are tested.
+  Other configurations that may be in the target are not queried and
+  will not be installed.
+- The Install( FILES ) commands install to the Hercules install
+  directory, not to a system or other installation directory.
+
+Input Parameters
+- The name of the imported shared library target to be installed.
+- A descriptive name for  the shared library target, to be used in any
+  descriptive message issued by this function.
+
+Output
+- Install( FILES ) commands for each library offered by the target.
+  Configuration-specific libraries are installed only when the specified
+  configuration is built.
+
+Notes
+- The include directory, containing the public headers, is not required
+  for Hercules execution and is not installed with Hercules.
+
+]]
+
+function( herc_Install_Imported_Target target target_desc )
+
+    get_target_property( __${target}_lib_release ${target} IMPORTED_LOCATION_RELEASE )
+    if( __${target}_lib_release )
+        install( FILES "${__${target}_lib_release}"
+                DESTINATION "${library_rel_dir}"
+                CONFIGURATIONS Release
+                )
+    endif( )
+
+    get_target_property( __${target}_lib_debug ${target} IMPORTED_LOCATION_DEBUG )
+    if( __${target}_lib_debug )
+        install( FILES "${__${target}_lib_debug}"
+                DESTINATION "${library_rel_dir}"
+                CONFIGURATIONS Debug
+                )
+    endif( )
+
+    get_target_property( __${target}_lib ${target} IMPORTED_LOCATION )
+    if( __${target}_lib )
+        install( FILES "${__${target}_lib}"
+                DESTINATION "${library_rel_dir}"
+                )
+    endif( )
+
+endfunction( herc_Install_Imported_Target )
+
+
+#[[ ###########   function herc_Create_System_Import_Target   ###########
+
+Function/Operation
+- Create an import target for a shared library package installed on a
+  target system from the distribution for that system.
+- An import target is created for these libraries to enable a common
+  CMake code path regardless of whether the build will use the package
+  provided with the target system or the package included in a
+  Hercules-390 repository.  The libraries in the Hercules-390
+  repositories are named differently, and import targets provide a
+  very useful way of hiding those differencies from the Hercules build
+  script.
+- This function is only used for the BZip2 and Zlib directories, which
+  are often found on UNIX-like distributions.
+- Only the Debug, Release, and "NoConfig" configurations are created.
+
+Input Parameters
+- The name of the imported shared library target to be installed.
+- The prefix for the CMake variables created by the find_package( MODULE)
+  command used to find the target system-installed version of the
+  external.
+
+Output
+- An imported shared library target for the libraries and include files
+  needed to build Hercules using the system-installed version of the
+  packages.
+
+Notes
+- None.
+
+]]
+
+function( herc_Create_System_Import_Target target target_id )
+
+    add_library( ${target} SHARED IMPORTED)
+    set_target_properties( ${target}
+                    PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${${target_id}_INCLUDE_DIR}" )
+
+    if( ${target_id}_LIBRARY_RELEASE )
+        set_property( TARGET ${target}
+                      APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE )
+        set_target_properties( ${target}
+                      PROPERTIES IMPORTED_LOCATION_RELEASE "${${target_id}_LIBRARY_RELEASE}" )
+        if( ${target_id}_IMPORT_LIB_RELEASE )
+            set_target_properties( ${target}
+                          PROPERTIES IMPORTED_IMPLIB_RELEASE "${${target_id}_IMPORT_LIB_RELEASE}" )
+        endif( )
+    endif()
+
+    if( ${target_id}_LIBRARY_DEBUG )
+        set_property( TARGET ${target}
+                     APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG )
+        set_target_properties( ${target}
+                     PROPERTIES IMPORTED_LOCATION_DEBUG "${${target_id}_LIBRARY_DEBUG}" )
+        if( ${target_id}_IMPORT_LIB_DEBUG )
+            set_target_properties( ${target}
+                          PROPERTIES IMPORTED_IMPLIB_DEBUG "${${target_id}_IMPORT_LIB_DEBUG}" )
+        endif( )
+    endif()
+
+#    if(NOT ${target_id}_LIBRARY_RELEASE AND NOT ${target_id}_LIBRARY_DEBUG)
+        set_property( TARGET ${target}
+                      APPEND PROPERTY IMPORTED_LOCATION "${${target_id}_LIBRARY}")
+        if( ${target_id}_IMPORT_LIB_DEBUG )
+            set_target_properties( ${target}
+                          PROPERTIES IMPORTED_IMPLIB "${${target_id}_IMPORT_LIB}" )
+        endif( )
+#    endif()
+
+endfunction( herc_Create_System_Import_Target )

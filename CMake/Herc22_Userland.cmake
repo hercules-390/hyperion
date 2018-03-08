@@ -530,6 +530,28 @@ if( WIN32 )
 endif ( WIN32 )
 
 
+# Prior to version 2.17 of glibc, clock_gettime() was included in the rt
+# library.  See https://sourceware.org/ml/libc-announce/2012/msg00001.html
+# for the December 2012 announcement of glibc 2.17; the second to the
+# last bullet documents the move.  So if glibc is older than 2.17, we
+# need to include rt.  Note that rather than testing version numbers,
+# we will just test for clock_gettime(), first without rt, then with.
+# (The legacy build configure.ac always included rt if it existed on the
+# target system.)
+
+set( CMAKE_REQUIRED_LIBRARIES ${link_librt} )
+herc_Check_Function_Exists( clock_gettime OK )
+if( NOT HAVE_CLOCK_GETTIME )
+    unset( HAVE_CLOCK_GETTIME CACHE )
+    set( CMAKE_REQUIRED_LIBRARIES "${name_librt}" )
+    herc_Check_Function_Exists( clock_gettime FAIL)
+    if( HAVE_CLOCK_GETTIME )
+        set( link_librt ${name_librt} CACHE INTERNAL "include POSIX real time extensions" )
+    endif( HAVE_CLOCK_GETTIME )
+endif( NOT HAVE_CLOCK_GETTIME )
+set( CMAKE_REQUIRED_LIBRARIES "" )
+
+
 # The function sched_yield is required; its absence will fail the build.
 # If not part of the basic c runtime, it can be found in librt, the
 # POSIX Real-time Extensions library (Solaris, SunOS).  And if librt
@@ -658,46 +680,6 @@ if( HAVE_DECL_OPTRESET )
 endif( )
 
 
-
-# check for required/desirable macros.
-
-# The following is only required for Windows builds, w32util.h,
-# and if it does not exist, it is typedef'd to long.
-
-#### AC_CHECK_TYPES( useconds_t, [hc_cv_have_useconds_t=yes], [hc_cv_have_useconds_t=no] )  (in types.h)
-
-# The following is only required for Windows builds, hscutl2.h,
-# and if it does not exist, it is typedef'd to unsigned long.
-
-#### AC_CHECK_TYPES( id_t,       [hc_cv_have_id_t=yes],       [hc_cv_have_id_t=no]       )  (in sys/types.h)
-
-
-# The following test for which header includes a timespec structure is
-# used only for Windows builds that use fthreads (i.e., most Windows
-# builds.  It is not required for open source builds.
-
-#### AC_CHECK_MEMBERS( [struct timespec.tv_nsec],
-####     [
-####         hc_cv_timespec_in_sys_types_h=yes
-####         hc_cv_timespec_in_time_h=no
-####     ],
-####     [
-####         AC_CHECK_MEMBERS( [struct timespec.tv_nsec],
-####             [
-####                 hc_cv_timespec_in_sys_types_h=no
-####                 hc_cv_timespec_in_time_h=yes
-####             ],
-####             [
-####                 hc_cv_timespec_in_sys_types_h=no
-####                 hc_cv_timespec_in_time_h=no
-####             ],
-####             [#include <time.h>]
-####         )
-####     ],
-####     [#include <sys/types.h>]
-#### )
-
-
 # Any of the following four types, if not defined, are typedef'd in htypes.h
 # to unsigned versions of the underlying type.  They can be found on BSD
 # systems in sys/types.h and on Windows systems in winsock.h.  So we need
@@ -824,37 +806,6 @@ herc_Check_Symbol_Exists( MTEWARN    sys/mtio.h   OK)
 herc_Check_Include_Files(   sys/un.h        OK )
 
 
-# See if zlib is installed.  Both the library and the public header need
-# to be checked so the HAVE_ variables are set as needed for the build.
-# If the library and header are missing, the build can continue.
-
-herc_Check_Include_Files( zlib.h OK )
-if( HAVE_ZLIB_H )
-    set( CMAKE_REQUIRED_LIBRARIES ${link_libz} )
-    check_library_exists( z uncompress "" HAVE_LIBZ )
-    if( HAVE_LIBZ )
-        set( link_libz ${name_libz} CACHE INTERNAL "include zlib commpression" )
-    endif( )
-    set( CMAKE_REQUIRED_LIBRARIES "" )
-endif( )
-
-
-# See if bzip2 is installed.  Both the library and the public header need
-# to be checked so the HAVE_ variables are set as needed for comparison
-# with any specified bzip2 user options.  Hercules does not require bzip2
-# unless a user option requires it.
-
-herc_Check_Include_Files( bzlib.h OK )
-if( HAVE_BZLIB_H )
-    set( CMAKE_REQUIRED_LIBRARIES ${link_libbz2} )
-    check_library_exists( bz2 BZ2_bzBuffToBuffDecompress "" HAVE_BZ2 )
-    if( HAVE_BZ2 )
-        set( link_libbz2 ${name_libbz2} CACHE INTERNAL "include bzip2 compression" )
-    endif( )
-endif( )
-set( CMAKE_REQUIRED_LIBRARIES "" )
-
-
 # See if Open Object Rexx is installed.  Open Object Rexx will be
 # included in the Hercules build if avaiable and not excluded by user
 # option.  Hercules does not require Open Object Rexx to build correctly.
@@ -879,6 +830,7 @@ herc_Check_Include_Files( regina/rexxsaa.h OK )
 if( NOT HAVE_REGINA_REXXSAA_H )
     herc_Check_Include_Files( rexxsaa.h OK )
 endif( )
+
 
 # Check for regular expression support as indicated by regex.h.
 # Hercules does not require regular expression support to build.

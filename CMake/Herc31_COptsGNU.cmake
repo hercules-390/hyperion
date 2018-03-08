@@ -103,6 +103,9 @@ endif( )
 # ----------------------------------------------------------------------
 # Above this point, everything that has been added to c flags is needed
 # for compilation and has nothing to do with optimization.
+# Below this point, everything affects the optimization flags.  We will
+# set CMAKE_C_FLAGS_RELEASE only based on -DOPTIMIZE string or the flags
+# determined by this script.
 # ----------------------------------------------------------------------
 
 # Builder-specified automatic optimization not YES nor NO.  So the
@@ -110,7 +113,7 @@ endif( )
 
 if( NOT ("${OPTIMIZATION}" STREQUAL "") )
     if( NOT (${OPTIMIZATION} IN_LIST herc_YES_NO) )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPTIMIZATION}" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${OPTIMIZATION}" )
         return( )
     endif( )
 endif( )
@@ -124,25 +127,16 @@ if( DEBUG_BUILD
         OR ( ("${buildWith_OPTIMIZATION}" STREQUAL "NO")
                 AND ("${OPTIMIZATION}" STREQUAL "") )
         )
-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -O0" )
+    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-omit-frame-pointer -O0" )
     return( )
 endif( )
 
 
-# Not a debug build, no builder-specified automatic optimization, and
-# the default automatic optimization not YES or NO.  So the default
-# automatic optimization is a string that we shall use.  Note: this is
-# a really unlikely case, but if a Hercules maintainer decides that a
-# default optimization string should be provided, we will respect it.
+# Not a debug build, builder-specified automatic optimization is not
+# NO, and if builder-specified automatic optimization is not blank,
+# the builder-specified automatic optimization is not NO.
 
-# And such a default may well be a poor idea because the default string
-# would have to be compiler-agnostic.
-
-if( NOT ("${buildWith_OPTIMIZATION}" STREQUAL "YES") )
-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${buildWith_OPTIMIZATION}" )
-    return( )
-endif( )
-
+# Determine automatic optizimation options.
 
 # ----------------------------------------------------------------------
 # Automatic optimization requested or defaulted
@@ -151,15 +145,18 @@ endif( )
 # Automatic optimization specified as or defaulted to YES.  Now the fun
 # begins.  The first part is easy: -O2.  We do not do -O3; there is no
 # consensus that it represents a better choice.  And if -O3 is the
-# builder's wish, OPTIMIZATION="-O3" is the way to do it.
+# builder's wish, OPTIMIZATION="-O3" is the way to do it.  Note: the
+# spaces at the beginning and end of the input expression are essential.
 
-set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2" )
+string(REGEX REPLACE " -O3 " " "
+       CMAKE_C_FLAGS_RELEASE " ${CMAKE_C_FLAGS_RELEASE} "
+       )
+set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2" )
 
 
 # Now see if we can improve on things.  Improvements are typically
 # target-processor dependent, and that is the case now, but who knows
 # the future brings....
-
 
 # Determine if this is this a cross-platform build.
 
@@ -188,17 +185,17 @@ string( TOUPPER "${CMAKE_SYSTEM_PROCESSOR}" target_processor )
 if( "${target_processor}" IN_LIST herc_Intel_64 )
 
     if( NOT host_is_target )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=${CMAKE_SYSTEM_PROCESSOR}" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=x86_64" )
     else( )
         if( CMAKE_C_COMPILER_VERSION VERSION_LESS "4.2.0" )
-            set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=K8" )
+            set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=K8" )
         else( )
-            set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native" )
+            set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native" )
         endif( )
     endif( )
 
     if( CMAKE_C_COMPILER_VERSION VERSION_GREATER "4.2.9" )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -minline-stringops-dynamically" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -minline-stringops-dynamically" )
     endif( )
     unset( target_processor )
     unset( host_is_target )
@@ -226,24 +223,24 @@ endif( )
 if( "${target_processor}" IN_LIST herc_Intel_32 )
 
     if( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i786" )
-        set( I386_target "Pentium4" )
+        set( I386_target "-march=pentium4" )
     elseif( ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i686")
             AND (CMAKE_C_COMPILER_VERSION VERSION_EQUAL "2.9.6")
             )
-        set( I386_target "I586" )
+        set( I386_target "-march=I586" )
     elseif( host_is_target
             AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER "4.1.9")
             )
-        set( I386_target "native" )
+        set( I386_target "-march=native" )
     else( )
-        set( I386_target "${CMAKE_SYSTEM_PROCESSOR}" )
+        set( I386_target "-march=${CMAKE_SYSTEM_PROCESSOR}" )
     endif( )
 
-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=${I386_target}" )
+    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${I386_target}" )
     unset( I386_target )
 
     if( CMAKE_C_COMPILER_VERSION VERSION_GREATER "4.2.9" )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -minline-stringops-dynamically" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -minline-stringops-dynamically" )
     endif( )
     unset( target_processor )
     unset( host_is_target )
@@ -251,54 +248,43 @@ if( "${target_processor}" IN_LIST herc_Intel_32 )
 endif( )
 
 
-# The older ARM processor is just reported as "ARM" in CMAKE_SYSTEM_PROCESSOR.
-# There is not much that can be added for the original ARM.
+# Optimization flags for ARM
+
+set( optimization_flags "")
 
 if( "${target_processor}" STREQUAL "ARM" )
+    # The older ARM processor is just reported as "ARM" in CMAKE_SYSTEM_PROCESSOR.
+    # There is not much that can be added for the original ARM.
     string( CONCAT optimization_flags "${optimization_flags} "
             "-frename-registers"
             )
-    unset( target_processor )
-    unset( host_is_target )
-    return( )
-endif( )
 
-
-# Newer ARM prcoessors, those with a number after "ARM", apparently
-# benefit from -mcpu and -mtune, while older ones do not. This is
-# apparently true for Xscale cpus too, but it is not clear how those
-# systems are identified.
-
-if( "${target_processor}" STREQUAL "ARM" )
+elseif( "${target_processor}" MATCHES "ARM" )
+    # Newer ARM prcoessors, those with a number after "ARM", apparently
+    # benefit from -mcpu and -mtune, while older ones do not. This is
+    # apparently true for Xscale cpus too, but it is not clear how those
+    # systems are identified.
     string( CONCAT optimization_flags "${optimization_flags} "
             "-mcpu=${CMAKE_SYSTEM_PROCESSOR} "
             "-mtune=${CMAKE_SYSTEM_PROCESSOR} "
             "-frename-registers"
             )
-    unset( target_processor )
-    unset( host_is_target )
-    return( )
-endif( )
 
-
-# XSCALE processors are based on ARM and also apparently benefit from
-# -mcpu and -mtune.
-
-if( "${target_processor}" MATCHES "XSCALE" )
+elseif( "${target_processor}" MATCHES "XSCALE" )
+    # XSCALE processors are based on ARM and also apparently benefit from
+    # -mcpu and -mtune.
     string( CONCAT optimization_flags "${optimization_flags} "
             "-mcpu=${CMAKE_SYYTEM_PROCESSOR} "
             "-mtune=${CMAKE_SYSTEM_PROCESSOR} "
             "-frename-registers"
             )
-    unset( target_processor )
-    unset( host_is_target )
-    return( )
+
 endif( )
 
+if( NOT "${optimization_flags}" STREQUAL "" )
+    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=${I386_target}" )
+endif( )
 
-# if we reach this point, we did not recognize the processor.  So we
-# cannot do any target processor-based optimizations.  Continue without
-# them and hope for the best.
 
 unset( target_processor )
 unset( host_is_target )

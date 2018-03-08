@@ -10,9 +10,12 @@
 
 #[[
 Some options are needed for a correct build, for example
--mstructure-size-boundary=8 for certain ARM flavors, and
--fno-strict-aliasing when it is required.  Other options are
-truly optimization related, such as -frename-registers on ARM.
+
+    -mstructure-size-boundary=8 for certain ARM flavors, and
+    -fno-strict-aliasing when it is required.
+
+Other options are truly optimization related, such as -frename-registers
+on ARM.
 
 Options that are required to build Hercules are *always* added
 to the C command line options, as are the debugger options
@@ -63,7 +66,7 @@ Clang does not support the option -minline-stringops-dynamically.
 # including macro definitions.  Set the calculated set of optimization
 # flags to the null string.
 
-set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_CONFIG_H -W -Wall -g3 -ggdb3" )
+set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_CONFIG_H -g3 -ggdb3" )
 
 
 # Flags needed to deal with issues in the toolchain.
@@ -87,15 +90,17 @@ endif( )
 # ----------------------------------------------------------------------
 # Above this point, everything that has been added to c flags is needed
 # for compilation and has nothing to do with optimization.
+# Below this point, everything affects the optimization flags.  We will
+# set CMAKE_C_FLAGS_RELEASE only based on -DOPTIMIZE string or the flags
+# determined by this script.
 # ----------------------------------------------------------------------
-
 
 # Builder-specified automatic optimization not YES nor NO.  So the
 # builder has provided an optimization string that we shall use.
 
 if( NOT ("${OPTIMIZATION}" STREQUAL "") )
     if( NOT ( "${OPTIMIZATION}" IN_LIST herc_YES_NO) )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPTIMIZATION}" )
+        set( "${CMAKE_C_FLAGS_RELEASE} ${OPTIMIZATION}" )
         return( )
     endif( )
 endif( )
@@ -109,45 +114,38 @@ if( DEBUG_BUILD
         OR ( ("${buildWith_OPTIMIZATION}" STREQUAL "NO")
                 AND ("${OPTIMIZATION}" STREQUAL "") )
         )
-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -O0" )
+    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fno-omit-frame-pointer -O0" )
     return( )
 endif( )
 
 
-# Not a debug build, no builder-specified automatic optimization, and
-# the default automatic optimization not YES or NO.  So the default
-# automatic optimization is a string that we shall use.  Note: this is
-# a really unlikely case, but if a Hercules maintainer decides that a
-# default optimization string should be provided, we will respect it.
+# Not a debug build, builder-specified automatic optimization is not
+# NO, and if builder-specified automatic optimization is not blank,
+# the builder-specified automatic optimization is not NO.
 
-# And such a default may well be a poor idea because the default string
-# would have to be compiler-agnostic.
+# Determine automatic optizimation options.
 
-if( NOT ("${buildWith_OPTIMIZATION}" STREQUAL "YES") )
-    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${buildWith_OPTIMIZATION}" )
-    return( )
-endif( )
-
+# ----------------------------------------------------------------------
+# Automatic optimization requested or defaulted
+# ----------------------------------------------------------------------
 
 # Automatic optimization specified as or defaulted to YES.  Now the fun
 # begins.  The first part is easy: -O2.  We do not do -O3; there is no
 # consensus that it represents a better choice.  And if -O3 is the
-# builder's wish, OPTIMIZATION="-O3" is the way to do it.
+# builder's wish, OPTIMIZATION="-O3" is the way to do it.  Note: the
+# spaces at the beginning and end of the input expression are essential.
 
-set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2" )
+string(REGEX REPLACE " -O3 " " "
+       CMAKE_C_FLAGS_RELEASE " ${CMAKE_C_FLAGS_RELEASE} "
+       )
+set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2" )
 
 
 # Now see if we can improve on things.  Improvements are typically
 # target-processor dependent, and that is the case now, but who knows
 # the future brings....
 
-
-# Processor-specific flags.  Force upper case to simplify testing
-
-string( TOUPPER "${CMAKE_SYSTEM_PROCESSOR}" target_processor )
-
-
-# Is this a cross-platform build?
+# Determine if this is this a cross-platform build.
 
 if( "${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "${CMAKE_SYSTEM_PROCESSOR}" )
     set( host_is_target 1 )
@@ -156,72 +154,98 @@ else( )
 endif( )
 
 
-# Start with the older ARM processor, which just reports "ARM" as the
-# CMAKE_SYSTEM_PROCESSOR.  There is not much that can be added for the
-# original ARM.
+# Make the target processor uppercase to simplify testing
+
+string( TOUPPER "${CMAKE_SYSTEM_PROCESSOR}" target_processor )
+
+
+# Intel 64-bit processor-specific compiler flags.
+
+# Some notes:
+# 1) if the builder is cross-compiling, it is the builder's
+#    responsibility to set a system processor that is valid for the
+#    clang version in use.
+# 2) Clang, at least through 7.0, does not accept -mstringops-dynamically
+#    as a command line option.  (Not tested yet on Apple.)
+
+if( "${target_processor}" IN_LIST herc_Intel_64 )
+    if( NOT host_is_target )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=x86-64" )
+    else( )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native" )
+    endif( )
+    unset( target_processor )
+    unset( host_is_target )
+    return( )
+endif( )
+
+
+# Intel 32-bit processor-specific compiler flags.
+
+# Some notes:
+# 1) if the builder is cross-compiling, it is the builder's
+#    responsibility to set a system processor that is valid for the
+#    clang version in use.
+# 2) Clang, at least through 7.0, does not accept -mstringops-dynamically
+#    as a command line option.  (Not tested yet on Apple.)
+# 3) Apparently, some systems report i786, but like GNU gcc, clang does
+#    not accept that.  Use Pentium4 instead.
+
+if( "${target_processor}" IN_LIST herc_Intel_32 )
+
+    if( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i786" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=pentium4" )
+        set( I386_target "-march=Pentium4" )
+    else( )
+        set( I386_target "-march=${CMAKE_SYSTEM_PROCESSOR}" )
+    endif( )
+    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${I386_target}" )
+    unset( I386_target )
+    unset( target_processor )
+    unset( host_is_target )
+    return( )
+endif( )
+
+
+# Optimization flags for ARM
+
+set( optimization_flags "")
 
 if( "${target_processor}" STREQUAL "ARM" )
+    # The older ARM processor is just reported as "ARM" in CMAKE_SYSTEM_PROCESSOR.
+    # There is not much that can be added for the original ARM.
     string( CONCAT optimization_flags "${optimization_flags} "
             "-frename-registers"
             )
 
-# newer ARM prcoessors, those with a number after "ARM", apparently
-# benefit from -mcpu and -mtune, while older ones do not. This is
-# apparently true for Xscale cpus too, but it is not clear how those
-# systems are identified.
-
-elseif( "${target_processor}" STREQUAL "ARM" )
-        string( CONCAT optimization_flags "${optimization_flags} "
-                "-mcpu=${CMAKE_SYSTEM_PROCESSOR} "
-                "-mtune=${CMAKE_SYSTEM_PROCESSOR} "
-                "-frename-registers"
-                )
-
-
-# XSCALE processors are based on ARM and also apparently benefit from
-# -mcpu and -mtune.
+elseif( "${target_processor}" MATCHES "ARM" )
+    # Newer ARM prcoessors, those with a number after "ARM", apparently
+    # benefit from -mcpu and -mtune, while older ones do not. This is
+    # apparently true for Xscale cpus too, but it is not clear how those
+    # systems are identified.
+    string( CONCAT optimization_flags "${optimization_flags} "
+            "-mcpu=${CMAKE_SYSTEM_PROCESSOR} "
+            "-mtune=${CMAKE_SYSTEM_PROCESSOR} "
+            "-frename-registers"
+            )
 
 elseif( "${target_processor}" MATCHES "XSCALE" )
+    # XSCALE processors are based on ARM and also apparently benefit from
+    # -mcpu and -mtune.
     string( CONCAT optimization_flags "${optimization_flags} "
             "-mcpu=${CMAKE_SYYTEM_PROCESSOR} "
             "-mtune=${CMAKE_SYSTEM_PROCESSOR} "
             "-frename-registers"
             )
 
-
-# Intel 32-bit processor-specific compiler flags.
-
-elseif( "${target_processor}" IN_LIST herc_Intel_32 )
-
-    if( host_is_target )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native" )
-    elseif( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "I786" )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=pentium4" )
-    else( )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=${CMAKE_SYSTEM_PROCESSOR}" )
-    endif( )
-
-
-# Intel 64-bit processor-specific compiler flags.
-
-# When 64-bit optimization support was first added to Hercules in 2004
-# in commit 94fcc68, *all* 64-bit processors were optimized as AMD K8
-# (opteron) chips using -march=K8. GCC release 4.2 and forward enabeled
-# -march=native.  And because Clang is 4.2.1, native is good enough for
-# us unless we are cross-compiling.
-
-elseif( "${target_processor}" IN_LIST herc_Intel_64 )
-
-    if( host_is_target )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native" )
-    else( )
-        set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=${CMAKE_SYSTEM_PROCESSOR}" )
-    endif( )
-
 endif( )
+
+if( NOT "${optimization_flags}" STREQUAL "" )
+    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=${I386_target}" )
+endif( )
+
 
 unset( target_processor )
 unset( host_is_target )
 
-
-
+return( )

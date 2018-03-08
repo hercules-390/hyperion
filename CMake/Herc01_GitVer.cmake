@@ -123,11 +123,9 @@ endfunction( )
 # as part of a regular expression.
 
 set( EXCLUDE_LIBS "tests/|html/|man/|scripts/|util/" )
-find_package( Git )          # Set GIT_FOUND, GIT_EXECUTABLE, and GIT_VERSION
 
 
-# Do we have a shot at filling in the variables?  Check for a .git directory,
-# and then check for an installed git command.
+# Do we have a shot at filling in the variables?  Check for a .git directory.
 
 if( EXISTS ${SDIR}/.git )
     if ( NOT GIT_FOUND )
