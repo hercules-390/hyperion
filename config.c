@@ -1024,14 +1024,12 @@ TID   tid;
 #if defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0)
     /* Initialise the CPU's thread clockid so that clock_gettime() can use it */
     /* provided the _POSIX_THREAD_CPUTIME is supported.                       */
-    pthread_getcpuclockid(sysblk.cputid[cpu], &sysblk.cpuclockid[cpu]);
-#define   HHC00109  "Thread CPU Time is available; _POSIX_THREAD_CPUTIME=%d"  	
+    pthread_getcpuclockid(sysblk.cputid[cpu], &sysblk.cpuclockid[cpu]);  	
     WRMSG(HHC00109, "I", _POSIX_THREAD_CPUTIME);
 #else
     /* When not supported, we zero the cpuclockid, which will trigger a       */
     /* different approach to obtain the thread CPU time in clock.c            */
-    sysblk.cpuclockid[cpu] = 0;
-#define   HHC00110  "Thread CPU Time is not available."  	
+    sysblk.cpuclockid[cpu] = 0; 	
 	WRMSG(HHC00110, "W");
 #endif /* defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0) */	
 

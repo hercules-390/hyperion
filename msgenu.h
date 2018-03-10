@@ -233,6 +233,8 @@ Examples:
 #define HHC00106 "Error in function create_thread() for %s %d of %d: %s"
 #define HHC00107 "Starting thread %s, active=%d, started=%d, max=%d"
 #define HHC00108 "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
+#define HHC00109 "Thread CPU Time is available; _POSIX_THREAD_CPUTIME=%d"  	
+#define HHC00110 "Thread CPU Time is not available."
 // reserve 102-129 thread related
 #define HHC00130 "PGMPRDOS LICENSED specified and a licenced program product operating system is running"
 #define HHC00131 "A licensed program product operating system detected, all processors have been stopped"
