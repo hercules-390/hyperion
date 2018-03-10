@@ -28,7 +28,9 @@
 #include "hstdinc.h"
 #include "sha1.h"
 
+#ifndef bcopy
 #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
+#endif
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 

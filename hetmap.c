@@ -29,7 +29,9 @@
 
 #define UTILITY_NAME    "hetmap"
 
+#ifndef bcopy
 #define bcopy(_src,_dest,_len) memcpy(_dest,_src,_len)
+#endif
 
 /*
 || Local Types
