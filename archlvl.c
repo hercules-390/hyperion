@@ -305,6 +305,9 @@ FACILITY(MSA_EXTENSION_4,  Z390,         NONE,      Z390,          ALS3)
 /* Note that this facility is available in ESA mode too (SIE) */
 FACILITY(INTERLOCKED_ACCESS_2, Z390,     NONE,      Z390,          ALS1 | ALS2 | ALS3)
 #endif
+#if defined(_FEATURE_MISC_INSTRUCTION_EXTENSIONS_FACILITY)
+FACILITY(MISC_INST_EXTN_1,Z390,          NONE,      Z390,          ALS3)
+#endif
 
 /* The Following entries are not part of STFL(E) but do indicate the availability of facilities */
 FACILITY(MOVE_INVERSE,     S370|ESA390|ZARCH, ZARCH, S370|ESA390|ZARCH, ALS0|ALS1|ALS2|ALS3)
