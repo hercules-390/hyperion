@@ -1905,6 +1905,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     case 0x51: /* Insert Low */                                 /*810*/
     case 0x55: /* Insert */
     case 0x5D: /* Insert High */                                /*810*/
+    case 0x59: /* Insert - no CC change */                      /*912*/
         resu = rota;
         break;
     case 0x56: /* Or */
