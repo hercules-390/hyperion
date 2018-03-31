@@ -4801,4 +4801,8 @@ DEF_INST(convert_dfp_long_to_zoned);                            /*912*/
 DEF_INST(perform_floating_point_operation);
 #endif /*defined(FEATURE_PFPO)*/
 
+#if defined(FEATURE_PROCESSOR_ASSIST)
+DEF_INST(perform_processor_assist);
+#endif	/* defined(FEATURE_PROCESSOR_ASSIST) */
+
 /* end of OPCODE.H */

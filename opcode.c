@@ -1193,6 +1193,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING
  UNDEF_INST(store_facility_list_extended)                       /*@Z9*/
 #endif /*!defined(FEATURE_STORE_FACILITY_LIST_EXTENDED)*/       /*@Z9*/
 
+#if !defined(FEATURE_PROCESSOR_ASSIST)
+ UNDEF_INST(perform_processor_assist)
+#endif
+
 
 /* The following execute_xxxx routines can be optimized by the
    compiler to an indexed jump, leaving the stack frame untouched
@@ -2944,7 +2948,7 @@ static zz_func opcode_b2xx[0x100][GEN_MAXARCH] = {
  /*B2E5*/ GENx___x___x900 (extract_peripheral_counter,RRE,"EPCTR"),     /*  CMCF */
  /*B2E6*/ GENx___x___x___ ,
  /*B2E7*/ GENx___x___x___ ,
- /*B2E8*/ GENx___x___x___ ,
+ /*B2E8*/ GENx___x___x900 (perform_processor_assist,RRF_M3,"PPA"),      /*912*/
  /*B2E9*/ GENx___x___x___ ,
  /*B2EA*/ GENx___x___x___ ,
  /*B2EB*/ GENx___x___x___ ,

@@ -298,6 +298,7 @@
 #undef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_3              /*810*/
 #undef FEATURE_MESSAGE_SECURITY_ASSIST_EXTENSION_4              /*810*/
 #undef FEATURE_MIDAW                                            /*@Z9*/
+#undef FEATURE_MISC_INSTRUCTION_EXTENSIONS_FACILITY		/*912*/
 #undef FEATURE_MOVE_PAGE_FACILITY_2
 #undef FEATURE_MOVE_WITH_OPTIONAL_SPECIFICATIONS                /*208*/
 #undef FEATURE_MPF_INFO
@@ -311,6 +312,7 @@
 #undef FEATURE_PER
 #undef FEATURE_PER2
 #undef FEATURE_PER3                                             /*@Z9*/
+#undef FEATURE_PROCESSOR_ASSIST					/*912*/
 #undef FEATURE_PFPO                                             /*407*/
 #undef FEATURE_POPULATION_COUNT_FACILITY                        /*810*/
 #undef FEATURE_PRIVATE_SPACE

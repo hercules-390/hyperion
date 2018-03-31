@@ -8455,6 +8455,28 @@ U64     effective_addr2;                /* Effective address         */
 } /* end DEF_INST(load_program_parameter) */
 #endif /* defined(FEATURE_LOAD_PROGRAM_PARAMETER_FACILITY) */   /* 810 */
 
+#if defined(FEATURE_PROCESSOR_ASSIST)                          /* 912 */
+/*-------------------------------------------------------------------*/
+/* B2E8 PPA - PERFORM PROCESSOR ASSIST                         [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(perform_processor_assist)
+{
+int     r1, r2;                         /* Register numbers          */
+int     m3;                             /* Mask bits                 */
+int     code;                           /* PPA code                  */
+    RRF_M(inst, regs, r1, r2, m3);
+    code = m3 & 0x0f;
+    switch(code)
+    {
+        case 1:	/* Transaction Abort Assist */
+            /* ARCH_DEP(transaction_abort_assist)(regs,r1); */
+            break;
+        default:
+            break;
+    }
+}
+#endif /* defined(FEATURE_PROCESSOR_ASSIST) */                 /* 912 */
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE2)
