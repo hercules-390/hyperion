@@ -1914,6 +1914,15 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     case 0x57: /* Exclusive Or */
         resu ^= rota;
         break;
+    default:
+        /* We should never get there - trigger machine check */
+	WRMSG(HHC90550, "E", opcode);
+#if !defined(NO_SIGABEND_HANDLER)
+        signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
+#else
+	abort()
+#endif
+
     } /* end switch(opcode) */
 
     /* And/Or/Xor set condition code according to result bits*/ /*810*/

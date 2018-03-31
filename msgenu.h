@@ -2232,7 +2232,8 @@ Examples:
 //efine HHC90515            (available)
 //efine HHC90516 - HHC90549 (available)
 
-// range 90550 - 90599 available
+// range 90550 - 90599 generalx.c - Processing Damage messages
+#define HHC90550 "Machine check : Instruction Processing Damage - incorrect implemenation of R[x]SBG instruction %2.2x"
 // range 90600 - 90699 available
 // range 90700 - 90799 available
 // range 90800 - 90899 available
