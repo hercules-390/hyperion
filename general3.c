@@ -1920,7 +1920,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 #if !defined(NO_SIGABEND_HANDLER)
         signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
 #else
-	abort()
+	abort();
 #endif
 
     } /* end switch(opcode) */
