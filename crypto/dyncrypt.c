@@ -2811,8 +2811,10 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   wrap = kmctr_wrap[fc];
   keylen = kmctr_keylengths[fc];
   parameter_blocklen = kmctr_pblens[fc];
-  // logmsg("Feature code %d wrap %d keylen %d pblen %d\n",
+/*
+  logmsg("Feature code %d wrap %d keylen %d pblen %d\n",
    tfc, wrap, keylen, parameter_blocklen);
+*/
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
