@@ -1850,7 +1850,9 @@ U64     mask, rota, resu;               /* 64-bit work areas         */
 int     n;                              /* Number of bits to shift   */
 int     t_bit = 0;                      /* Test-results indicator    */
 int     z_bit = 0;                      /* Zero-remaining indicator  */
+#if 0
 int     i;                              /* Loop counter              */
+#endif
 BYTE    i3, i4, i5;                     /* Immediate values          */
 BYTE    opcode;                         /* 2nd byte of opcode        */
 
