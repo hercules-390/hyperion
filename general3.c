@@ -1881,6 +1881,22 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
             | ((n == 0) ? 0 : (regs->GR_G(r2) >> (64 - n)));
 
     /* Construct mask for selected bits */
+    if(start<=end)
+    {
+        mask = 0xffffffffffffffffll << start;
+        mask >>= start;
+        mask >>= (63-end);
+        mask <<= (63-end);
+    }
+    else
+    {
+        mask = 0xffffffffffffffffll << (end+1);
+        mask >>= (end+1);
+        mask >>= (64-start);
+        mask <<= (64-start);
+        mask ^= 0xffffffffffffffffll;
+    }
+#if 0
     for (i=0, mask=0; i < 64; i++)
     {
         mask <<= 1;
@@ -1890,6 +1906,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
             if (i <= end || i >= start) mask |= 1;
         }
     } /* end for(i) */
+#endif
 
     /* Isolate selected bits of rotated second operand */
     rota &= mask;
