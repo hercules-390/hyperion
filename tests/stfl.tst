@@ -16,9 +16,9 @@ gpr
 r c8.4
 *Want "Basic STFL." F1F4FFFB
 r 200.10
-*Want "First two doublewords of truncated facilities list" F1F4FFFB F8F50800 00000000 00000000
+*Want "First two doublewords of truncated facilities list" F1F4FFFB F8F54800 00000000 00000000
 r 210.10
-*Want "First two doublewords of extended facilities list" F1F4FFFB F8F50800 201C0000 00000000
+*Want "First two doublewords of extended facilities list" F1F4FFFB F8F54800 201C0000 00000000
 r 220.10
 *Want "Double words two and three" 00000000 00000000 00000000 00000000
 r 230.10
