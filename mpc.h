@@ -739,6 +739,11 @@ typedef struct _SAP_SCI {
 struct MPC_IPA_SAS_HDR {
 /*000*/ FWORD   ano;            /* Assist number                     */
 /*004*/ HWORD   len;            /* Length                            */
+                                /* Note: The length value is the     */
+                                /* total length of the length field  */
+                                /* and the following fields. It does */
+                                /* not include the length of the     */
+                                /* preceeding assist number field.   */
 /*006*/ HWORD   cmd;            /* Command code                      */
 #define IPA_SAS_CMD_START      0x0001
 #define IPA_SAS_CMD_STOP       0x0002
