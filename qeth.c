@@ -1443,6 +1443,7 @@ U16 offph;
                 int rc = 0;
 #if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
+#endif /*defined(OPTION_W32_CTCI)*/
 
                     strcat( dev->dev_data, ": IPA_CMD_SETVMAC" );  /* Prepare the contentstring */
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -1450,6 +1451,7 @@ U16 offph;
                     /* Display the request MPC_TH etc., maybe. */
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
+#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
                     MSGBUF( tthwaddr, "%02x:%02x:%02x:%02x:%02x:%02x"
                         ,ipa_mac->macaddr[0]
                         ,ipa_mac->macaddr[1]
@@ -1705,43 +1707,42 @@ U16 offph;
                 /* end case IPA_CMD_QIPASSIST:  0xB2 */
                 break;
 
-            case IPA_CMD_SETASSPARMS:  /* 0xB3 */
+            case IPA_CMD_SETASSPARMS:  /* 0xB3 : Set Assist Parameters */
                 {
-                    MPC_IPA_SAS *sas;
-                    U32 ano;
-                    U16 cmd;
+                MPC_IPA_SAS *ipa_sas = (MPC_IPA_SAS*)(ipa+1);
+                U32 ano;
+                U16 cmd;
 
-                    sas = (MPC_IPA_SAS*)(ipa+1);
-                    FETCH_FW(ano,sas->hdr.ano);    /* Assist number */
-                    FETCH_HW(cmd,sas->hdr.cmd);    /* Command code */
+                    FETCH_FW(ano,ipa_sas->hdr.ano);    /* Assist number */
+                    FETCH_HW(cmd,ipa_sas->hdr.cmd);    /* Command code */
 
-                    strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );        /* Prepare the contentstring */
-                    strcat( dev->dev_data, protoc );                         /* Prepare the contentstring */
+                    strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, protoc );                   /* Prepare the contentstring */
                     switch(cmd) {
                     case IPA_SAS_CMD_START:      /* 0x0001 */
-                        strcat( dev->dev_data, ": IPA_SAS_CMD_START" );      /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": START" );            /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_STOP:       /* 0x0002 */
-                        strcat( dev->dev_data, ": IPA_SAS_CMD_STOP" );       /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": STOP" );             /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_CONFIGURE:  /* 0x0003 */
-                        strcat( dev->dev_data, ": IPA_SAS_CMD_CONFIGURE" );  /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": CONFIGURE" );        /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
-                        strcat( dev->dev_data, ": IPA_SAS_CMD_ENABLE" );     /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": ENABLE" );           /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
-                        strcat( dev->dev_data, ": IPA_SAS_CMD_0005" );       /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": CMD_0005" );         /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
-                        strcat( dev->dev_data, ": IPA_SAS_CMD_0006" );       /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": CMD_0006" );         /* Prepare the contentstring */
                         break;
                     default:
                         {
-                        char subcmd_not_supp[12];
-                            snprintf( subcmd_not_supp, sizeof(subcmd_not_supp), " (0x%04X)", cmd );
-                            strcat( dev->dev_data, ": SUBCMD NOT SUPPORTED" );  /* Prepare the contentstring */
-                            strcat( dev->dev_data, subcmd_not_supp );           /* Prepare the contentstring */
+                        char not_supp[12];
+                            snprintf( not_supp, sizeof(not_supp), " (0x%04X)", cmd );
+                            strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
+                            strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
                         }
                     }
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -1765,7 +1766,7 @@ U16 offph;
                             grp->ipae6 |= ano;
                         }
                         STORE_HW(ipa->rc,IPA_RC_OK);
-                        STORE_HW(sas->hdr.rc,IPA_RC_OK);
+                        STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     case IPA_SAS_CMD_STOP:       /* 0x0002 */
@@ -1777,7 +1778,7 @@ U16 offph;
                             grp->ipae0 &= (0xFFFFFFFF - ano);
                         }
                         STORE_HW(ipa->rc,IPA_RC_OK);
-                        STORE_HW(sas->hdr.rc,IPA_RC_OK);
+                        STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     case IPA_SAS_CMD_CONFIGURE:  /* 0x0003 */
@@ -1785,12 +1786,12 @@ U16 offph;
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
                         STORE_HW(ipa->rc,IPA_RC_OK);
-                        STORE_HW(sas->hdr.rc,IPA_RC_OK);
+                        STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
                         break;
 
                     default:
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
-                    /*  STORE_HW(sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
+                    /*  STORE_HW(ipa_sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
                     }
 
                 }
@@ -1899,21 +1900,49 @@ U16 offph;
                 /* end case IPA_CMD_DELIP:  0xB7 */
                 break;
 
-            case IPA_CMD_SETADPPARMS:  /* 0xB8 */
+            case IPA_CMD_SETADPPARMS:  /* 0xB8 : Set Adapter Parameters */
                 {
-                MPC_IPA_SAP *sap;
+                MPC_IPA_SAP *ipa_sap = (MPC_IPA_SAP*)(ipa+1);
                 U32 cmd;
 
                     strcat( dev->dev_data, ": IPA_CMD_SETADPPARMS" );    /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );                     /* Prepare the contentstring */
-                    sap = (MPC_IPA_SAP*)(ipa+1);
-                    FETCH_FW(cmd,sap->cmd);
+                    FETCH_FW(cmd,ipa_sap->cmd);
                     switch(cmd) {
                     case IPA_SAP_QUERY:      /* 0x00000001 */
                         strcat( dev->dev_data, ": IPA_SAP_QUERY" );      /* Prepare the contentstring */
                         break;
                     case IPA_SAP_SETMAC:     /* 0x00000002 */
                         strcat( dev->dev_data, ": IPA_SAP_SETMAC" );     /* Prepare the contentstring */
+                        {
+                        SAP_SMA *sma = (SAP_SMA*)(ipa_sap+1);
+                        U32 cmd;
+                            FETCH_FW(cmd,sma->cmd);
+                            switch(cmd) {
+                            case IPA_SAP_SMA_CMD_READ:  /* 0 */
+                                strcat( dev->dev_data, ": READ" );       /* Prepare the contentstring */
+                                break;
+//                          case IPA_SAP_SMA_CMD_REPLACE:  /* 1 */
+//                              strcat( dev->dev_data, ": REPLACE" );    /* Prepare the contentstring */
+//                              break;
+//                          case IPA_SAP_SMA_CMD_ADD:  /* 2 */
+//                              strcat( dev->dev_data, ": ADD" );        /* Prepare the contentstring */
+//                              break;
+//                          case IPA_SAP_SMA_CMD_DEL:  /* 4 */
+//                              strcat( dev->dev_data, ": DELETE" );     /* Prepare the contentstring */
+//                              break;
+//                          case IPA_SAP_SMA_CMD_RESET:  /* 8 */
+//                              strcat( dev->dev_data, ": RESET" );      /* Prepare the contentstring */
+//                              break;
+                            default:
+                                {
+                                char not_supp[16];
+                                    snprintf( not_supp, sizeof(not_supp), " (0x%08X)", cmd );
+                                    strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
+                                    strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
+                                }
+                            }
+                        }
                         break;
 //                  case IPA_SAP_SETGADR:    /* 0x00000004 */
 //                      strcat( dev->dev_data, ": IPA_SAP_SETGADR" );    /* Prepare the contentstring */
@@ -1953,10 +1982,10 @@ U16 offph;
                         break;
                     default:
                         {
-                        char subcmd_not_supp[12];
-                            snprintf( subcmd_not_supp, sizeof(subcmd_not_supp), " (0x%04X)", cmd );
-                            strcat( dev->dev_data, ": SUBCMD NOT SUPPORTED" );  /* Prepare the contentstring */
-                            strcat( dev->dev_data, subcmd_not_supp );           /* Prepare the contentstring */
+                        char not_supp[16];
+                            snprintf( not_supp, sizeof(not_supp), " (0x%08X)", cmd );
+                            strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
+                            strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
                         }
                     }
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -1968,31 +1997,31 @@ U16 offph;
 
                     case IPA_SAP_QUERY:  /*0x00000001 */
                         {
-                        SAP_QRY *qry = (SAP_QRY*)(sap+1);
+                        SAP_QRY *qry = (SAP_QRY*)(ipa_sap+1);
 
                             STORE_FW(qry->nlan,0x00000001);
                             qry->lan_type = QETH_LINK_TYPE_FAST_ETH;
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
-                            STORE_HW(sap->rc,IPA_RC_OK);
+                            STORE_HW(ipa_sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
                         break;
 
                     case IPA_SAP_SETMAC:  /* 0x00000002 */
                         {
-                        SAP_SMA *sma = (SAP_SMA*)(sap+1);
+                        SAP_SMA *sma = (SAP_SMA*)(ipa_sap+1);
                         U32 cmd;
 
                             FETCH_FW(cmd,sma->cmd);
                             switch(cmd) {
 
                             case IPA_SAP_SMA_CMD_READ:  /* 0 */
-                                STORE_FW(sap->suppcm,0x93020000);   /* !!!! */
-                                STORE_FW(sap->resv004,0x93020000);  /* !!!! */
+                                STORE_FW(ipa_sap->suppcm,0x93020000);   /* !!!! */
+                                STORE_FW(ipa_sap->resv004,0x93020000);  /* !!!! */
                                 STORE_FW(sma->asize,IFHWADDRLEN);
                                 STORE_FW(sma->nomacs,1);
                                 memcpy(sma->addr, grp->iMAC, IFHWADDRLEN);
-                                STORE_HW(sap->rc,IPA_RC_OK);
+                                STORE_HW(ipa_sap->rc,IPA_RC_OK);
                                 STORE_HW(ipa->rc,IPA_RC_OK);
                                 break;
 
@@ -2002,8 +2031,7 @@ U16 offph;
 //                          case IPA_SAP_SMA_CMD_RESET:  /* 8 */
 
                             default:
-                                DBGTRC(dev, "  IPA_SAP_SETMAC unknown subcommand 0x%08x",cmd);
-                                STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                                STORE_HW(ipa_sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                                 STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                             }
                         }
@@ -2011,34 +2039,34 @@ U16 offph;
 
                     case IPA_SAP_CARDINFO:  /* 0x00000400 */
                         {
-                        SAP_SCI *sci = (SAP_SCI*)(sap+1);
+                        SAP_SCI *sci = (SAP_SCI*)(ipa_sap+1);
                             sci->card_type = QETH_CARD_TYPE_OSD;
                             STORE_HW(sci->port_mode,QETH_PORT_MODE_FULLDUPLEX);
                             STORE_FW(sci->port_speed,QETH_PORT_SPEED_10M);
-                            STORE_HW(sap->rc,IPA_RC_OK);
+                            STORE_HW(ipa_sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
                         break;
 
                     case IPA_SAP_PROMISC:  /* 0x00000800 */
                         {
-                        SAP_SPM *spm = (SAP_SPM*)(sap+1);
+                        SAP_SPM *spm = (SAP_SPM*)(ipa_sap+1);
                         U32 promisc;
                             FETCH_FW(promisc,spm->promisc);
                             grp->promisc = promisc ? MAC_TYPE_PROMISC : 0;
                             DBGTRC(dev, "  IPA_SAP_PROMISC %s",grp->promisc ? "On" : "Off");
-                            STORE_HW(sap->rc,IPA_RC_OK);
+                            STORE_HW(ipa_sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
                         }
                         break;
 
                     case IPA_SAP_SETACCESS:  /* 0x00010000 */
-                        STORE_HW(sap->rc,IPA_RC_OK);
+                        STORE_HW(ipa_sap->rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
 
                     default:
-                        STORE_HW(sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
+                        STORE_HW(ipa_sap->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                         STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     }
                 }
@@ -2087,8 +2115,8 @@ U16 offph;
                 char cmd_not_supp[10];
 
                     snprintf( cmd_not_supp, sizeof(cmd_not_supp), " (0x%02X)", ipa->cmd );
-                    strcat( dev->dev_data, ": CMD NOT SUPPORTED" );  /* Prepare the contentstring */
-                    strcat( dev->dev_data, cmd_not_supp );           /* Prepare the contentstring */
+                    strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
+                    strcat( dev->dev_data, cmd_not_supp );       /* Prepare the contentstring */
                     rsp_bhr->content = strdup( dev->dev_data );
 
                     /* Display the request MPC_TH etc., maybe. */
