@@ -1336,6 +1336,9 @@ U16 offph;
             U16      proto;
             char     protoc[10];
 
+            int      ipasize = SIZE_IPA;
+            int      ipadatasize = -1;
+
             /* Allocate a buffer to which the request will be copied */
             /* and then modified, to become the response.            */
             FETCH_FW(rqsize,req_th->length);
@@ -1377,7 +1380,7 @@ U16 offph;
 
             switch(ipa->cmd) {
 
-            case IPA_CMD_STARTLAN:  /* 0x01 */
+            case IPA_CMD_STARTLAN:  /* 0x01 : Start LAN operations */
                 /* Note: the request MPC_IPA may be 16 or 20-bytes in length  */
                 /* with nothing following, or may be 20-byte in length with   */
                 /* an unpredictable number of bytes following. The response   */
@@ -1386,9 +1389,6 @@ U16 offph;
                 /* wish, I could remember what it was! Something to do with   */
                 /* z/VM TCPIP I think, but...                                 */
                 {
-                U32  uLoselen;
-                U32  uLength1;
-                U32  uLength3;
 
                     strcat( dev->dev_data, ": IPA_CMD_STARTLAN" );  /* Prepare the contentstring */
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -1396,21 +1396,13 @@ U16 offph;
                     /* Display the request MPC_TH etc., maybe. */
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
-                    if (lendata > SIZE_IPA_SHORT) {
-                        uLoselen = lendata - SIZE_IPA_SHORT;
-                        uLength3 = SIZE_IPA_SHORT;
-                        uLength1 = rqsize - uLoselen;
-                        rsp_bhr->datalen = uLength1;
-                        STORE_FW( rsp_th->length, uLength1 );
-                        STORE_HW( rsp_rrh->lenfida, (U16)uLength3 );
-                        STORE_F3( rsp_rrh->lenalda, uLength3 );
-                        STORE_F3( rsp_ph->lendata, uLength3 );
-                    }
-
                     STORE_HW(ipa->rc,IPA_RC_OK);
                     grp->ipae0 |= IPA_SETADAPTERPARMS;
                     grp->ipae4 |= IPA_SETADAPTERPARMS;
                     grp->ipae6 |= IPA_SETADAPTERPARMS;
+
+                    ipasize = SIZE_IPA_SHORT;
+                    ipadatasize = 0;
 
                     /* Enable the TUN or TAP interface */
                     VERIFY( qeth_enable_interface( dev, grp ) == 0);
@@ -1418,7 +1410,7 @@ U16 offph;
                 /* end case IPA_CMD_STARTLAN:  0x01 */
                 break;
 
-            case IPA_CMD_STOPLAN:  /* 0x02 */
+            case IPA_CMD_STOPLAN:  /* 0x02 : Stop LAN operations */
                 {
                     strcat( dev->dev_data, ": IPA_CMD_STOPLAN" );  /* Prepare the contentstring */
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -1437,7 +1429,7 @@ U16 offph;
                 /* end case IPA_CMD_STOPLAN:  0x02 */
                 break;
 
-            case IPA_CMD_SETVMAC:  /* 0x21 */
+            case IPA_CMD_SETVMAC:  /* 0x21 : Set Layer-2 MAC address */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int rc = 0;
@@ -1490,7 +1482,7 @@ U16 offph;
                 /* end case IPA_CMD_SETVMAC:  0x21 */
                 break;
 
-            case IPA_CMD_DELVMAC:  /* 0x22 */
+            case IPA_CMD_DELVMAC:  /* 0x22 : Delete Layer-2 MAC address */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int  rc;
@@ -1511,7 +1503,7 @@ U16 offph;
                 /* end case IPA_CMD_DELVMAC:  0x22 */
                 break;
 
-            case IPA_CMD_SETGMAC:  /* 0x23 */
+            case IPA_CMD_SETGMAC:  /* 0x23 : Set Layer-2 Group Multicast address */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int  rc;
@@ -1534,7 +1526,7 @@ U16 offph;
                 /* end case IPA_CMD_SETGMAC:  0x23 */
                 break;
 
-            case IPA_CMD_DELGMAC:  /* 0x24 */
+            case IPA_CMD_DELGMAC:  /* 0x24 : Delete Layer-2 Group Multicast address */
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int  rc;
@@ -1555,7 +1547,7 @@ U16 offph;
                 /* end case IPA_CMD_DELGMAC:  0x24 */
                 break;
 
-            case IPA_CMD_SETVLAN:  /* 0x25 */
+            case IPA_CMD_SETVLAN:  /* 0x25 : Set Layer-2 VLAN */
                 {
                     strcat( dev->dev_data, ": IPA_CMD_SETVLAN" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );               /* Prepare the contentstring */
@@ -1565,11 +1557,13 @@ U16 offph;
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
                     STORE_HW(ipa->rc,IPA_RC_OK);
+
+                    ipadatasize = 2;
                 }
                 /* end case IPA_CMD_SETVLAN:  0x25 */
                 break;
 
-            case IPA_CMD_DELVLAN:  /* 0x26 */
+            case IPA_CMD_DELVLAN:  /* 0x26 : Delete Layer-2 VLAN */
                 {
                     strcat( dev->dev_data, ": IPA_CMD_DELVLAN" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );               /* Prepare the contentstring */
@@ -1579,11 +1573,13 @@ U16 offph;
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
                     STORE_HW(ipa->rc,IPA_RC_OK);
+
+                    ipadatasize = 2;
                 }
                 /* end case IPA_CMD_DELVLAN:  0x26 */
                 break;
 
-            case IPA_CMD_SETIP:  /* 0xB1 */
+            case IPA_CMD_SETIP:  /* 0xB1 : Set Layer-3 IP unicast address */
                 {
                 MPC_IPA_SIP *ipa_sip = (MPC_IPA_SIP*)(ipa+1);
                 U16  retcode;
@@ -1650,6 +1646,8 @@ U16 offph;
                                 "E", "TUNTAP_SetDestAddr() failed" );
                             retcode = IPA_RC_FFFF;
                         }
+
+                        ipadatasize = (4 + 4 + 4);
                       }
                     }
 #if defined(ENABLE_IPV6)
@@ -1675,6 +1673,7 @@ U16 offph;
                         // The concept of peer IPv6 addresses doesn't seem to exist,
                         // presumably one is supposed to use routing.
 
+                        ipadatasize = (16 + 16 + 4);
                       }
                     }
 #endif /*defined(ENABLE_IPV6)*/
@@ -1688,7 +1687,7 @@ U16 offph;
                 /* end case IPA_CMD_SETIP:  0xB1 */
                 break;
 
-            case IPA_CMD_QIPASSIST:  /* 0xB2 */
+            case IPA_CMD_QIPASSIST:  /* 0xB2 : Query Layer-3 IP assist capability */
                 {
 
                     strcat( dev->dev_data, ": IPA_CMD_QIPASSIST" );  /* Prepare the contentstring */
@@ -1703,39 +1702,51 @@ U16 offph;
                     grp->ipae6 |= IPA_SETADAPTERPARMS;
 
                     STORE_HW(ipa->rc,IPA_RC_OK);
+
+                    ipadatasize = 0;
                 }
                 /* end case IPA_CMD_QIPASSIST:  0xB2 */
                 break;
 
-            case IPA_CMD_SETASSPARMS:  /* 0xB3 : Set Assist Parameters */
+            case IPA_CMD_SETASSPARMS:  /* 0xB3 : Set Layer-3 IP assist parameters */
                 {
                 MPC_IPA_SAS *ipa_sas = (MPC_IPA_SAS*)(ipa+1);
                 U32 ano;
                 U16 cmd;
+                U16 len;
+                char anoc[16];
 
                     FETCH_FW(ano,ipa_sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,ipa_sas->hdr.cmd);    /* Command code */
+                    FETCH_HW(len,ipa_sas->hdr.len);    /* Length */
+                    snprintf(anoc, sizeof(anoc), " 0x%08X", ano);
 
                     strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );                   /* Prepare the contentstring */
                     switch(cmd) {
                     case IPA_SAS_CMD_START:      /* 0x0001 */
                         strcat( dev->dev_data, ": START" );            /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_STOP:       /* 0x0002 */
                         strcat( dev->dev_data, ": STOP" );             /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_CONFIGURE:  /* 0x0003 */
                         strcat( dev->dev_data, ": CONFIGURE" );        /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
                         strcat( dev->dev_data, ": ENABLE" );           /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                         strcat( dev->dev_data, ": CMD_0005" );         /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
                         strcat( dev->dev_data, ": CMD_0006" );         /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     default:
                         {
@@ -1750,55 +1761,60 @@ U16 offph;
                     /* Display the request MPC_TH etc., maybe. */
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
-                    if (!(ano & grp->ipas)) {
-                        STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
-                        break;
+                    if (proto == IPA_PROTO_IPV4) {
+                        if (!(ano & grp->ipas4)) {
+                            STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
+                            break;
+                        }
+                    } else if (proto == IPA_PROTO_IPV6) {
+                        if (!(ano & grp->ipas6)) {
+                            STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
+                            break;
+                        }
+                    } else {
+                        if (!(ano & grp->ipas4)) {
+                            STORE_HW(ipa->rc,IPA_RC_NOTSUPP);
+                            break;
+                        }
                     }
 
                     switch(cmd) {
 
                     case IPA_SAS_CMD_START:      /* 0x0001 */
-                        if (proto == IPA_PROTO_IPV4) {
-                            grp->ipae4 |= ano;
-                        } else if (proto == IPA_PROTO_IPV6) {
-                            grp->ipae6 |= ano;
-                        } else {
-                            grp->ipae6 |= ano;
-                        }
-                        STORE_HW(ipa->rc,IPA_RC_OK);
+                        grp->ipae4 |= ano;
+                        grp->ipae6 |= ano;
+                        grp->ipae0 |= ano;
                         STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
+                        STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
 
                     case IPA_SAS_CMD_STOP:       /* 0x0002 */
-                        if (proto == IPA_PROTO_IPV4) {
-                            grp->ipae4 &= (0xFFFFFFFF - ano);
-                        } else if (proto == IPA_PROTO_IPV6) {
-                            grp->ipae6 &= (0xFFFFFFFF - ano);
-                        } else {
-                            grp->ipae0 &= (0xFFFFFFFF - ano);
-                        }
-                        STORE_HW(ipa->rc,IPA_RC_OK);
+                        grp->ipae4 &= (0xFFFFFFFF - ano);
+                        grp->ipae6 &= (0xFFFFFFFF - ano);
+                        grp->ipae0 &= (0xFFFFFFFF - ano);
                         STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
+                        STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
 
                     case IPA_SAS_CMD_CONFIGURE:  /* 0x0003 */
                     case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
-                        STORE_HW(ipa->rc,IPA_RC_OK);
                         STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
+                        STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
 
                     default:
-                        STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     /*  STORE_HW(ipa_sas->hdr.rc,IPA_RC_UNSUPPORTED_SUBCMD);  */
+                        STORE_HW(ipa->rc,IPA_RC_UNSUPPORTED_SUBCMD);
                     }
 
+                    ipadatasize = (len + 4);
                 }
                 /* end case IPA_CMD_SETASSPARMS:  0xB3 */
                 break;
 
-            case IPA_CMD_SETIPM:  /* 0xB4 */
+            case IPA_CMD_SETIPM:  /* 0xB4 : Set Layer-3 IP multicast address */
                 {
                     strcat( dev->dev_data, ": IPA_CMD_SETIPM" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );              /* Prepare the contentstring */
@@ -1808,11 +1824,13 @@ U16 offph;
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
                     STORE_HW(ipa->rc,IPA_RC_OK);
+
+                    ipadatasize = (8 + 16);
                 }
                 /* end case IPA_CMD_SETIPM:  0xB4 */
                 break;
 
-            case IPA_CMD_DELIPM:  /* 0xB5 */
+            case IPA_CMD_DELIPM:  /* 0xB5 : Delete Layer-3 IP multicast address */
                 {
                     strcat( dev->dev_data, ": IPA_CMD_DELIPM" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );              /* Prepare the contentstring */
@@ -1826,8 +1844,10 @@ U16 offph;
                 /* end case IPA_CMD_DELIPM:  0xB5 */
                 break;
 
-            case IPA_CMD_SETRTG:  /* 0xB6 */
+            case IPA_CMD_SETRTG:  /* 0xB6 : Set Layer-3 routing information */
                 {
+                BYTE *ipa_rtg = (BYTE*)(ipa+1);
+
                     strcat( dev->dev_data, ": IPA_CMD_SETRTG" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );              /* Prepare the contentstring */
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -1835,12 +1855,14 @@ U16 offph;
                     /* Display the request MPC_TH etc., maybe. */
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
+                    ipa_rtg[0] = 0;
                     STORE_HW(ipa->rc,IPA_RC_OK);
+                    ipadatasize = 1;
                 }
                 /* end case IPA_CMD_DELIPM:  0xB6 */
                 break;
 
-            case IPA_CMD_DELIP:  /* 0xB7 */
+            case IPA_CMD_DELIP:  /* 0xB7  Delete Layer-3 IP unicast address */
                 {
                 MPC_IPA_SIP *ipa_sip = (MPC_IPA_SIP*)(ipa+1);
                 U16  retcode;
@@ -1910,10 +1932,10 @@ U16 offph;
                     FETCH_FW(cmd,ipa_sap->cmd);
                     switch(cmd) {
                     case IPA_SAP_QUERY:      /* 0x00000001 */
-                        strcat( dev->dev_data, ": IPA_SAP_QUERY" );      /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": QUERY" );              /* Prepare the contentstring */
                         break;
                     case IPA_SAP_SETMAC:     /* 0x00000002 */
-                        strcat( dev->dev_data, ": IPA_SAP_SETMAC" );     /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": SETMAC" );             /* Prepare the contentstring */
                         {
                         SAP_SMA *sma = (SAP_SMA*)(ipa_sap+1);
                         U32 cmd;
@@ -1945,40 +1967,40 @@ U16 offph;
                         }
                         break;
 //                  case IPA_SAP_SETGADR:    /* 0x00000004 */
-//                      strcat( dev->dev_data, ": IPA_SAP_SETGADR" );    /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": SETGADR" );            /* Prepare the contentstring */
 //                      break;
 //                  case IPA_SAP_SETFADR:    /* 0x00000008 */
-//                      strcat( dev->dev_data, ": IPA_SAP_SETFADR" );    /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": SETFADR" );            /* Prepare the contentstring */
 //                      break;
 //                  case IPA_SAP_SETAMODE:   /* 0x00000010 */
-//                      strcat( dev->dev_data, ": IPA_SAP_SETAMODE" );   /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": SETAMODE" );           /* Prepare the contentstring */
 //                      break;
 //                  case IPA_SAP_SETCFG:     /* 0x00000020 */
-//                      strcat( dev->dev_data, ": IPA_SAP_SETCFG" );     /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": SETCFG" );             /* Prepare the contentstring */
 //                      break;
 //                  case IPA_SAP_SETCFGE:    /* 0x00000040 */
-//                      strcat( dev->dev_data, ": IPA_SAP_SETCFGE" );    /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": SETCFGE" );            /* Prepare the contentstring */
 //                      break;
 //                  case IPA_SAP_BRDCST:     /* 0x00000080 */
-//                      strcat( dev->dev_data, ": IPA_SAP_BRDCST" );     /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": BRDCST" );             /* Prepare the contentstring */
 //                      break;
 //                  case IPA_SAP_OSAMSG:     /* 0x00000100 */
-//                      strcat( dev->dev_data, ": IPA_SAP_OSAMSG" );     /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": OSAMSG" );             /* Prepare the contentstring */
 //                      break;
 //                  case IPA_SAP_SETSNMP:    /* 0x00000200 */
-//                      strcat( dev->dev_data, ": IPA_SAP_SETSNMP" );    /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": SETSNMP" );            /* Prepare the contentstring */
 //                      break;
                     case IPA_SAP_CARDINFO:   /* 0x00000400 */
-                        strcat( dev->dev_data, ": IPA_SAP_CARDINFO" );   /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": CARDINFO" );           /* Prepare the contentstring */
                         break;
                     case IPA_SAP_PROMISC:    /* 0x00000800 */
-                        strcat( dev->dev_data, ": IPA_SAP_PROMISC" );    /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": PROMISC" );            /* Prepare the contentstring */
                         break;
 //                  case IPA_SAP_SETDIAG:    /* 0x00002000 */
-//                      strcat( dev->dev_data, ": IPA_SAP_SETDIAG" );    /* Prepare the contentstring */
+//                      strcat( dev->dev_data, ": SETDIAG" );            /* Prepare the contentstring */
 //                      break;
                     case IPA_SAP_SETACCESS:  /* 0x00010000 */
-                        strcat( dev->dev_data, ": IPA_SAP_SETACCESS" );  /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": SETACCESS" );          /* Prepare the contentstring */
                         break;
                     default:
                         {
@@ -2002,8 +2024,11 @@ U16 offph;
                             STORE_FW(qry->nlan,0x00000001);
                             qry->lan_type = QETH_LINK_TYPE_FAST_ETH;
                             STORE_FW(qry->suppcm,IPA_SAP_SUPP);
+                            STORE_FW(ipa_sap->suppcm,IPA_SAP_SUPP);
+                            STORE_HW(ipa_sap->cmdlen,(sizeof(SAP_QRY)+sizeof(MPC_IPA_SAP)-8));
                             STORE_HW(ipa_sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
+                            ipadatasize = (sizeof(SAP_QRY)+sizeof(MPC_IPA_SAP));
                         }
                         break;
 
@@ -2016,13 +2041,15 @@ U16 offph;
                             switch(cmd) {
 
                             case IPA_SAP_SMA_CMD_READ:  /* 0 */
-                                STORE_FW(ipa_sap->suppcm,0x93020000);   /* !!!! */
-                                STORE_FW(ipa_sap->resv004,0x93020000);  /* !!!! */
                                 STORE_FW(sma->asize,IFHWADDRLEN);
                                 STORE_FW(sma->nomacs,1);
                                 memcpy(sma->addr, grp->iMAC, IFHWADDRLEN);
+                                STORE_FW(ipa_sap->suppcm,IPA_SAP_SUPP);
+                                STORE_FW(ipa_sap->resv004,IPA_SAP_SUPP);  /* !!!! */
+                                STORE_HW(ipa_sap->cmdlen,(sizeof(SAP_SMA)+sizeof(MPC_IPA_SAP)-8));
                                 STORE_HW(ipa_sap->rc,IPA_RC_OK);
                                 STORE_HW(ipa->rc,IPA_RC_OK);
+                                ipadatasize = (sizeof(SAP_SMA)+sizeof(MPC_IPA_SAP));
                                 break;
 
 //                          case IPA_SAP_SMA_CMD_REPLACE:  /* 1 */
@@ -2043,8 +2070,11 @@ U16 offph;
                             sci->card_type = QETH_CARD_TYPE_OSD;
                             STORE_HW(sci->port_mode,QETH_PORT_MODE_FULLDUPLEX);
                             STORE_FW(sci->port_speed,QETH_PORT_SPEED_10M);
+                            STORE_FW(ipa_sap->suppcm,IPA_SAP_SUPP);
+                            STORE_HW(ipa_sap->cmdlen,(sizeof(SAP_SCI)+sizeof(MPC_IPA_SAP)-8));
                             STORE_HW(ipa_sap->rc,IPA_RC_OK);
                             STORE_HW(ipa->rc,IPA_RC_OK);
+                            ipadatasize = (sizeof(SAP_SCI)+sizeof(MPC_IPA_SAP));
                         }
                         break;
 
@@ -2073,7 +2103,7 @@ U16 offph;
                 /* end case IPA_CMD_SETADPPARMS:  0xB8 */
                 break;
 
-            case IPA_CMD_SETDIAGASS:  /* 0xB9 */
+            case IPA_CMD_SETDIAGASS:  /* 0xB9 : Set Layer-3 diagnostic assists */
                 {
                     strcat( dev->dev_data, ": IPA_CMD_SETDIAGASS" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );                  /* Prepare the contentstring */
@@ -2087,7 +2117,7 @@ U16 offph;
                 /* end case IPA_CMD_SETDIAGASS:  0xB9 */
                 break;
 
-            case IPA_CMD_CREATEADDR:  /* 0xC3 */
+            case IPA_CMD_CREATEADDR:  /* 0xC3 : Create Layer-3 IPv6 address from Layer-2 MAC address */
                 {
                 BYTE *ip6 = (BYTE*)(ipa+1);
 
@@ -2106,6 +2136,8 @@ U16 offph;
                     ip6[0] |= 0x02; // FIXME: IPA_CMD_CREATEADDR: is this needed?
 
                     STORE_HW(ipa->rc,IPA_RC_OK);
+
+                    ipadatasize = 8;
                 }
                 /* end case IPA_CMD_CREATEADDR:  0xC3 */
                 break;
@@ -2127,21 +2159,41 @@ U16 offph;
             }
             /* end switch(ipa->cmd) */
 
+            {
+            U32  uLoselen;
+            U32  uLength1;
+            U32  uLength3;
+
+                if (ipasize != SIZE_IPA || ipadatasize != -1) {
+                    uLength3 = ipasize + ipadatasize;
+                    uLoselen = lendata - uLength3;
+                    uLength1 = rqsize - uLoselen;
+                    rsp_bhr->datalen = uLength1;
+                    STORE_FW( rsp_th->length, uLength1 );
+                    STORE_HW( rsp_rrh->lenfida, (U16)uLength3 );
+                    STORE_F3( rsp_rrh->lenalda, uLength3 );
+                    STORE_F3( rsp_ph->lendata, uLength3 );
+                }
+
+            }
+
 //          ipa->iid = IPA_IID_ADAPTER | IPA_IID_REPLY;
             ipa->iid = IPA_IID_HOST;
-            STORE_FW(ipa->ipas,grp->ipas);
             if (proto == IPA_PROTO_IPV4) {
-                grp->ipae4 &= grp->ipas;
+                STORE_FW(ipa->ipas,grp->ipas4);
+                grp->ipae4 &= grp->ipas4;
                 if (lendata >= SIZE_IPA) {
                     STORE_FW(ipa->ipae,grp->ipae4);
                 }
             } else if (proto == IPA_PROTO_IPV6) {
-                grp->ipae6 &= grp->ipas;
+                STORE_FW(ipa->ipas,grp->ipas6);
+                grp->ipae6 &= grp->ipas6;
                 if (lendata >= SIZE_IPA) {
                     STORE_FW(ipa->ipae,grp->ipae6);
                 }
             } else {
-                grp->ipae0 &= grp->ipas;
+                STORE_FW(ipa->ipas,grp->ipas4);
+                grp->ipae0 &= grp->ipas4;
                 if (lendata >= SIZE_IPA) {
                     STORE_FW(ipa->ipae,grp->ipae0);
                 }
@@ -2243,7 +2295,12 @@ U16 reqtype;
         DBGUPD( dev, 2, iea, ieasize, FROM_GUEST, "%s: Request", dev->dev_data );
 
         memcpy( grp->gtissue, iea->token, MPC_TOKEN_LENGTH );  /* Remember guest token issuer */
-        grp->ipas = IPA_SUPP;
+        grp->ipas4 = IPA_SUPP_IPv4;
+#if defined(ENABLE_IPV6)
+        grp->ipas6 = IPA_SUPP_IPv6;
+#else
+        grp->ipas6 = 0;
+#endif /* defined(ENABLE_IPV6) */
         grp->ipae0 = 0;
         grp->ipae4 = 0;
         grp->ipae6 = 0;
@@ -2830,7 +2887,7 @@ static QRC read_L2_packets( DEVBLK* dev, OSA_GRP *grp,
             // HHC00986 "%1d:%04X %s: Receive frame of size %d bytes (with %s packet) from device %s"
             WRMSG(HHC00986, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                  dev->buflen, cPktType, grp->ttifname );
-            net_data_trace( dev, (BYTE*)&o2hdr, sizeof(o2hdr), TO_GUEST, 'D', "L2 hdr", 0 );
+/*          net_data_trace( dev, (BYTE*)&o2hdr, sizeof(o2hdr), TO_GUEST, 'D', "L2 hdr", 0 );        */
             net_data_trace( dev, dev->buf, dev->buflen, TO_GUEST, 'D', "Frame ", 0 );
         }
 
@@ -2915,7 +2972,7 @@ static QRC read_L3_packets( DEVBLK* dev, OSA_GRP *grp,
             // HHC00913 "%1d:%04X %s: Receive%s packet of size %d bytes from device %s"
             WRMSG(HHC00913, "D", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                             cPktType, dev->buflen, grp->ttifname );
-/*          net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );    */
+/*          net_data_trace( dev, (BYTE*)&o3hdr, sizeof(o3hdr), TO_GUEST, 'D', "L3 hdr", 0 );        */
             net_data_trace( dev, dev->buf, dev->buflen, TO_GUEST, 'D', "Packet", 0 );
         }
 
@@ -3059,6 +3116,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
     U16  hwEthernetType;
     int iPktVer;
     char cPktType[8];
+    int dropthisthing;
 
     sb = 0;                             /* Start w/Storage Block 0   */
 
@@ -3141,7 +3199,6 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         pkt = dev->buf;
         pktlen = dev->buflen;
 
-#if defined(ENABLE_IPV6)
         /* I know the following looks pretty weird but it seems to be         */
         /* necessary when using IPv6 over layer 3. IPv6 uses ICMPv6 Neighbor  */
         /* Solicitation (NS) & Neighbor Advertisment (NA) to determine the    */
@@ -3155,19 +3212,31 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* packet from the guest is an Ethernet frame containing the IPv6     */
         /* packet. Perhaps that's how OSD's actually work? IPv6 packets to    */
         /* the guest don't need to be Ethernet frames.                        */
+        /*                                                                    */
+        /* Originally the whole of this section of code was surrounded by an  */
+        /* '#if defined(ENABLE_IPV6)' and '#endif'. However, implementing     */
+        /* zLinuz layer 3 support showed that zLinux emmitted IPv4 ARP        */
+        /* frames, which if sent to the tun interface, upset the tun, hence   */
+        /* the dropthishing checking.                                         */
+        /*                                                                    */
+        dropthisthing = FALSE;
         if (grp->l3)
         {
-            eth = (ETHFRM*)pkt;
+          eth = (ETHFRM*)pkt;
+          if (memcmp( &eth->bSrcMAC[0], &grp->iMAC, IFHWADDRLEN ) == 0)
+          {
             FETCH_HW( hwEthernetType, eth->hwEthernetType );
-            if (memcmp( &eth->bDestMAC[0], &grp->iaDriveMACAddr, IFHWADDRLEN ) == 0 &&
-                memcmp( &eth->bSrcMAC[0], &grp->iMAC, IFHWADDRLEN ) == 0 &&
-                hwEthernetType == ETH_TYPE_IPV6)
+            if (hwEthernetType == ETH_TYPE_IP || hwEthernetType == ETH_TYPE_IPV6)
             {
-                pkt += sizeof(ETHFRM);
-                pktlen -= sizeof(ETHFRM);
+              pkt += sizeof(ETHFRM);
+              pktlen -= sizeof(ETHFRM);
+            } else {
+              dropthisthing = TRUE;
             }
+          }
         }
-#endif /* defined(ENABLE_IPV6) */
+
+        if (dropthisthing == TRUE) continue;
 
         /* */
         if (grp->debugmask & DBGQETHPACKET)
@@ -3233,7 +3302,6 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
             }
         }
 #endif /* defined(ENABLE_IPV6) */
-
     }
     while (qrc >= 0 && !IS_LAST_SBALE_ENTRY( flag0 ) && ++sb < QMAXSTBK);
 
