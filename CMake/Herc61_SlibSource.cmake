@@ -6,6 +6,12 @@
       Distributed under the Boost Software License, Version 1.0.
       See accompanying file BOOST_LICENSE_1_0.txt or copy at
       http://www.boost.org/LICENSE_1_0.txt)
+
+At the end of this script, a number of adjustments are made to the
+source file list to accomodate the differences between a build on
+UNIX-like systems and Windows build.  Comments explain the differences.
+
+
 ]]
 
 #-----------------------------------------------------------------------
@@ -46,46 +52,83 @@ set( vmfplc2_sources    vmfplc2.c )
 
 #-----------------------------------------------------------------------
 #
-# Collect the source files required to build each shared Hercules library.
+# Collect the source files required to build each dynamically-loaded
+# Hercules module.
 #
 #-----------------------------------------------------------------------
 
-# For each shared library, create a variable name <libname>_sources.
+# For each module, create a variable name <modname>_sources.
 
 # The following shared libraries are set up:
-#  - hdt3088 - Channel-to-channel adapter device handler
-#  - hdt3420 - Tape device handler
-#  - hdtptp  - Point-to-Point CTC adapter device handler
-#  - hdtqeth - Ethernet adapter device handler
-#  - hercs   - Common Data Areas
-#  - hercu   - General Hercules utility routines
-#  - hercd   - Disk device common logical routines
-#  - herct   - Tape device common logical routines
-#  - herc    - Hercules main engine
-#  - s37x    - System/370 extensions
-
-# Remaining shared libraries require only one or two source files and
-# do not require adjustment for Windows, so those are defined in the
-# CMake script that calls this script, Herc60_CreateTargets.cmake.
-
-# Note that the device common logical routines (hercd, herct) operate
-# in the layer between Hercules device emulation (hdt* routines) and
-# host system file access.
-
-# At the end of this script, a number of adjustments are made to the
-# source file list to accomodate the differences between a build on
-# UNIX-like systems and Windows build.  Comments explain the differences.
-
-#-----------------------------------------------------------------------
-# Library hdtteq: Device type equivalency table and scan routine
-#-----------------------------------------------------------------------
-
-set( hdteq_sources    hdteq.c )
+# -  altcmpsc - The "alternate" Compression algorithm (now standard)
+# -  dyncrypt - z/Architecture crypto instructions
+# -  dyngui   - GUI Hercules Console support
+# -  dyninst  - Dynamic loadable instruction module support
+# -  hdt1052c - Device handler for integrated operator console
+# -  hdt1403  - Printer emulation device handler
+# -  hdt2703  - Communications Controller emulation device handler
+# -  hdt2880  - Block mux channel emulation device handler (experimental)
+#  - hdt3088  - Channel-to-channel adapter device handler
+#  - hdt3270  - Console device handler for device types 3270 or
+#                  1052/3215 assigned to tn3270 or telnet connections.
+#  - hdt3420  - Tape device handler
+#  - hdt3505  - Card reader emulation device handler
+#  - hdt3525  - Card punch emulation device handler
+#  - hdt3705  - Communications controller emulation device handler
+#  - hdtzfcp  - z Fiber Channel Protocol Interface translator
+#  - hdtptp   - Point-to-Point CTC adapter device handler
+#  - hdtqeth  - Ethernet adapter device handler
+#  - s37x     - Extensions to System/370, which include a number of
+#               ESA/370 or better instructions.
 
 
 #-----------------------------------------------------------------------
-# Library hdt1052c: Device handler for keyboard/printer operator console
-#                   emulation on the Hercules console.
+## Module altcmpsc: Alternate Compression algorithm (now standard)
+#-----------------------------------------------------------------------
+
+set( altcmpsc_sources   cmpsc.c )
+
+#-----------------------------------------------------------------------
+## Module dyncrypt: z/Architecture crypto instructions.  While the
+##                  source files are in a subdirectory, the loadable
+##                  module is built in the same directory as other
+#                   loadable modules.
+#-----------------------------------------------------------------------
+
+set( dyncrypt_sources
+        crypto/aes.h
+        crypto/des.h
+        crypto/sha1.h
+        crypto/sha256.h
+        crypto/aes.c
+        crypto/des.c
+        crypto/dyncrypt.c
+        crypto/sha1.c
+        crypto/sha256.c  )
+
+#-----------------------------------------------------------------------
+## Module dyngui: GUI Hercules Console support
+#-----------------------------------------------------------------------
+
+set( dyngui_sources     dyngui.c )
+
+#-----------------------------------------------------------------------
+## Module dyninst: Dynamic loadable instruction module support
+#-----------------------------------------------------------------------
+
+set( dyninst_sources    dyninst.c )
+
+
+#-----------------------------------------------------------------------
+# Module hdtteq: Device type equivalency table and scan routine
+#-----------------------------------------------------------------------
+
+set( hdteq_sources      hdteq.c )
+
+
+#-----------------------------------------------------------------------
+# Module hdt1052c: Device handler for keyboard/printer operator console
+#                  emulation on the Hercules console.
 #-----------------------------------------------------------------------
 
 set( hdt1052c_sources
@@ -95,7 +138,7 @@ set( hdt1052c_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdt1403: Printer emulation device handler
+# Module hdt1403: Printer emulation device handler
 #-----------------------------------------------------------------------
 
 set( hdt1403_sources
@@ -105,7 +148,7 @@ set( hdt1403_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdt2703: Communications Controller emulation device handler
+# Module hdt2703: Communications Controller emulation device handler
 #-----------------------------------------------------------------------
 
 set( hdt2703_sources
@@ -115,7 +158,7 @@ set( hdt2703_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdt2880 Block multiplexer channel emulation device handler
+# Module hdt2880 Block multiplexer channel emulation device handler
 #                 (Experimental, not presently used)
 #-----------------------------------------------------------------------
 
@@ -126,7 +169,7 @@ set( hdt2880_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdt3088: Channel-to-channel device handler
+# Module hdt3088: Channel-to-channel device handler
 #-----------------------------------------------------------------------
 
 set(hdt3088_sources
@@ -142,8 +185,8 @@ set(hdt3088_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdt3270: Operator console device handler for consoles assigned
-#                  to 3270 or 1052/3215 devices using tn3270 or telnet.
+# Module hdt3270: Console device handler for device types 3270 or
+#                 1052/3215 assigned to tn3270 or telnet connections.
 #-----------------------------------------------------------------------
 
 set( hdt3270_sources
@@ -156,7 +199,7 @@ set( hdt3270_sources
                 hexdumpe.h )
 
 #-----------------------------------------------------------------------
-# Library hdt3420: Tape emulation device handler
+# Module hdt3420: Tape emulation device handler
 #-----------------------------------------------------------------------
 
 set(hdt3420_sources
@@ -177,7 +220,7 @@ set(hdt3420_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdt3505: Card reader emulation device handler
+# Module hdt3505: Card reader emulation device handler
 #-----------------------------------------------------------------------
 
 set( hdt3505_sources
@@ -188,7 +231,7 @@ set( hdt3505_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdt3525: Card punch emulation device handler
+# Module hdt3525: Card punch emulation device handler
 #-----------------------------------------------------------------------
 
 set( hdt3525_sources
@@ -197,7 +240,7 @@ set( hdt3525_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdt3705: Communications controller emulation device handler
+# Module hdt3705: Communications controller emulation device handler
 #-----------------------------------------------------------------------
 
 set( hdt3705_sources
@@ -207,7 +250,7 @@ set( hdt3705_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdtzfcp: z Fiber Channel Protocol Interface translator
+# Module hdtzfcp: z Fiber Channel Protocol Interface translator
 #-----------------------------------------------------------------------
 
 set( hdtzfcp_sources
@@ -218,7 +261,7 @@ set( hdtzfcp_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdtptp: Channel-to-channel point-to-point device handler
+# Module hdtptp: Channel-to-channel point-to-point device handler
 #-----------------------------------------------------------------------
 
 set(hdtptp_sources
@@ -237,7 +280,7 @@ set(hdtptp_sources
 
 
 #-----------------------------------------------------------------------
-# Library hdtqeth: Ethernet adapter device handler
+# Module hdtqeth: Ethernet adapter device handler
 #-----------------------------------------------------------------------
 
 set(hdtqeth_sources
@@ -258,23 +301,29 @@ set(hdtqeth_sources
 
 
 #-----------------------------------------------------------------------
-# Library hercs: Static shared global data areas
+## Module s37x: Extensions to System/370, which include a number of
+##               ESA/370 or better instructions.
 #-----------------------------------------------------------------------
 
-set(hercs_sources  hsys.c  )
+set( s37x_sources s37x.c  s37xmod.c )
 
 
 #-----------------------------------------------------------------------
-# Library herct: Tape utility subroutines (shared)
+#
+# Collect the source files required to build each shared Hercules library.
+# Shared libraries are loaded by the host OS when the Hercules executable
+# is loaded.
+#
 #-----------------------------------------------------------------------
 
-set(herct_sources
-                ftlib.h
-                hetlib.h
-                sllib.h
-                ftlib.c
-                hetlib.c
-                sllib.c )
+# For each shared library, create a variable name <libname>_sources.
+#
+# The following shared libraries are set up:
+#  - herc    - Hercules main engine
+#  - hercs   - Common Data Areas
+#  - hercu   - General Hercules utility routines
+#  - hercd   - Disk device common logical routines
+#  - herct   - Tape device common logical routines
 
 
 #-----------------------------------------------------------------------
@@ -293,6 +342,25 @@ set(hercd_sources
                 dasdutil.c
                 fbadasd.c
                 shared.c )
+
+#-----------------------------------------------------------------------
+# Library hercs: Static shared global data areas
+#-----------------------------------------------------------------------
+
+set(hercs_sources  hsys.c  )
+
+#-----------------------------------------------------------------------
+# Library herct: Tape utility subroutines (shared)
+#-----------------------------------------------------------------------
+
+set(herct_sources
+                ftlib.h
+                hetlib.h
+                sllib.h
+                ftlib.c
+                hetlib.c
+                sllib.c )
+
 
 #-----------------------------------------------------------------------
 ## Library hercu: Pure Utility functions
@@ -316,7 +384,6 @@ set(hercu_sources
                 parser.c
                 pttrace.c
                 version.c )
-
 
 #-----------------------------------------------------------------------
 ## Library herc: The core Hercules engine
@@ -397,21 +464,6 @@ set(herc_sources
                 vstore.c
                 xstore.c
       )
-
-
-#-----------------------------------------------------------------------
-## Library s37x: Extensions to System/370, which include a number of
-##               ESA/370 or better instructions.
-#-----------------------------------------------------------------------
-
-set( s37x_sources s37x.c  s37xmod.c )
-
-
-#-----------------------------------------------------------------------
-## Library altcmpsc: Alternate Compression algorithm (now standard)
-#-----------------------------------------------------------------------
-
-set( altcmpsc_sources cmpsc.c )
 
 
 #-----------------------------------------------------------------------
@@ -535,8 +587,8 @@ set( headers_sources
                 w32util.h
                 zfcp.h
       )
-      
-#[[      
+
+#[[
 -----------------------------------------------------------------------
   Adjustments to source file name lists needed for a Windows build.
 -----------------------------------------------------------------------
@@ -551,7 +603,8 @@ herc, the main Hercules engine shared library.
 When built on Windows, mpc.c includes code that requires that it be
 included as part of the Hercules engine shared library herc.  Only
 two libraries use mpc.c, so it could be moved to each of those libraries
-provide the code change is made.  Specifically, at line 10 of mpc.c, remove:
+provided the following code change is made.  Specifically, at line 10
+of mpc.c, remove:
 
     #if !defined(_HENGINE_DLL_)
     #define _HENGINE_DLL_

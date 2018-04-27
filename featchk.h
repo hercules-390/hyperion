@@ -589,10 +589,125 @@
  #error Vector Facility not supported in ESAME mode
 #endif
 
+/* Floating Point Capabilities and Features                                     */
+/* Manual references:                                                           */
+/*   ESA/390 PoOP: ESA/390 Principles of Operation, SA22-7201-08 (Jun 2003)     */
+/*   z/Arch PoOP:  z/Architecture Principles of Operation, SA22-7832-11 (Sep 2017)     */
+
+/* Floating point features basic to IBM mainframes                              */
+
+/* FEATURE_HEXADECIMAL_FLOATING_POINT, "Floating Point Arithmetic," IBM         */
+/*   System/360 Principles of Operation, A22-6821-7 (Dec 1967), p. 41-50.5.     */
+
+/* Floating point features defined in ESA/390.  All of these features require   */
+/* at least 390-mode for inclusion; feat390.h takes care of this.  Some of      */
+/* these features are included in 370 mode if OPTION_370_EXTENSION is defined.  */
+
+/* FEATURE_BASIC_FP_EXTENSIONS, "Basic floating point extensions," ESA/390 PoOP */
+/*   p. 1-3 right column last bullet                                            */
+/* - Adds 12 floating point registers, floating point control register.         */
+/*   Note: ESA/390 PoOp p1-4 states FPCR added with this feature, but p 9-2     */
+/*     says FPCR is added with FEATURE_BINARY_FLOATING_POINT                    */
+/*   Included in 370 architecture if OPTION_370_EXTENSION is defined            */
+
+/* FEATURE_BINARY_FLOATING_POINT, "Binary floating-point (BFP)," ESA/390 PoOP   */
+/* p. 1-4 left column third bullet                                              */
+/* - Adds IEEE Binary Floating Point Instructions.                              */
+/*   Requires FEATURE_BASIC_FP_EXTENSIONS (16 FPR plus FPCR)                    */
+/*   Disabled by NO_IEEE_SUPPORT                                                */
+/*   Included in 370 architecture if OPTION_370_EXTENSION is defined            */
+
+/* FEATURE_FPS_EXTENSIONS, "Floating-point-support (FPS) extensions",           */
+/*   ESA/390 PoOP p. 1-4 left column first bullet                               */
+/* - Adds 8 instructions: HFP<->BFP conversions, Load Zero, Load (LXR)          */
+/*   Note: There is no mention in the instruction descriptions of specification */
+/*     exceptions if registers exclusive to FEATURE_BASIC_FP_EXTENSIONS are     */
+/*     used when that feature is not enabled, so...                             */
+/*   Requires FEATURE_BASIC_FP_EXTENSIONS (probably)                            */
+
+/* FEATURE_HFP_EXTENSIONS, "Hexadecimal-floating-point (HFP) extensions,"       */
+/* ESA/390 PoOP p. 1-4 left column second bullet                                */
+/*   Adds HFP instructions to make HFP and BPF instruction sets comparable.     */
+/*   Included in 370 architecture if OPTION_370_EXTENSION is defined            */
+
+/* FEATURE_SQUARE_ROOT, "Square Root Facility," ESA/390 PoOP p. 1-2 left column */
+/* bottom bullet.                                                               */
+/*   Adds the HFP Square Root instruction.                                      */
+/*   Requires FEATURE_HEXADECIMAL_FLOATING_POINT (obviously)                    */
+/*   Included in 370 architecture if OPTION_370_EXTENSION is defined            */
+
+/* Floating point features defined in z/Architecture.  All of these features    */
+/* require at least z/Arch-mode for inclusion; feat900.h takes care of this.    */
+/* Some of these features are included in 370 mode if OPTION_370_EXTENSION is   */
+/* defined.                                                                     */
+
+/* FEATURE_DECIMAL_FLOATING_POINT, "Decimal-Floating-Point Facility ," z/Arch   */
+/* PoOP p. 1-4 left column third bullet                                         */
+/* - Adds IEEE Decimal Floating Point Instructions.                             */
+/*   Requires FEATURE_BASIC_FP_EXTENSIONS (16 FPR plus FPCR)                    */
+/*   Disabled by NO_IEEE_SUPPORT, or it should be.                              */
+
+/* FEATURE_FPS_ENHANCEMENT.  This is a conflation of two distinct z/Arch        */
+/* features, the "Floating-Point-Support-Sign-Handling Facility" and the        */
+/* "FPR-GR-Transfer Facility," both described in the z/Arch PoOP p. 1-14 right  */
+/* column top.                                                                  */
+/*   Adds several radix-independent floating point instuctions that operate     */
+/*     on 64-bit floating point values.                                         */
+/*   Note: while these are coded in dfp.c, they operate on DFP, BFP, and HFP    */
+/*     values.                                                                  */
+
+/* FEATURE_FLOATING_POINT_EXTENSION_FACILITY, "Floating - Point Extension       */
+/* Facility," z/Arch PoOP p. 1-13 right column bottom.                          */
+/*   Adds numerous capabilities to floating point support, binary floating      */
+/*     point, and decimal floating point                                        */
+/*   Requires FEATURE_DECIMAL_FLOATING_POINT (while it impacts FPS, BFP, and    */
+/*     DFP, PoOP says it may be available on hardware models implementing DFP.  */
+/*   Disabled by NO_IEEE_SUPPORT, or it should be.                              */
+/*   Disabled by absence of FEATURE_DECIMAL_FLOATING_POINT, or it should be.    */
+
+/* FEATURE_HFP_MULTIPLY_ADD_SUBTRACT, "HFP Multiply-and-Add/Subtract Facility," */
+/*   z/Arch PoOP p. 1-15 left column bottom.                                    */
+/*   Adds HFP versions of Multiply and Add and Multiply and Subtract.           */
+/*   Requires FEATURE_HEXADECIMAL_FLOATING_POINT (obviously)                    */
+/*   Included in 370 architecture if OPTION_370_EXTENSION is defined            */
+
+/* FEATURE_HFP_UNNORMALIZED_EXTENSION, "HFP-Unnormalized-Extensions Facility,"  */
+/*   z/Arch PoOP p. 1-15 right column top.                                      */
+/*   Adds gradual loss of significance capability to two HFP instructions.      */
+/*   Requires FEATURE_HFP_MULTIPLY_ADD_SUBTRACT according to the z/Arch PoOP.   */
+/*   Requires FEATURE_HEXADECIMAL_FLOATING_POINT (obviously)                    */
+/*   Included in 370 architecture if OPTION_370_EXTENSION is defined            */
+
+/* FEATURE_IEEE_EXECPTION_SIMULATION, "IEEE-Exception-Simulation Facility,"     */
+/* z/Arch PoOP p. 1-16 left column top.                                         */
+/*   Adds IEEE exception simulation by including the LFAS and SFAS instructions.*/
+/*   Requires FEATURE_DECIMAL_FLOATING_POINT or FEATURE_BINARY_FLOATING_POINT.  */
+/*   Disabled by absence of both FEATURE_DECIMAL_FLOATING_POINT and             */
+/*     FEATURE_BINARY_FLOATING_POINT, or it should be.                          */
+/*   Disabled by NO_IEEE_SUPPORT, or it should be.                              */
+
+
 #if defined(FEATURE_BINARY_FLOATING_POINT) \
  && defined(NO_IEEE_SUPPORT)
- #undef FEATURE_BINARY_FLOATING_POINT
- #undef FEATURE_FPS_EXTENSIONS
+#undef FEATURE_BINARY_FLOATING_POINT
+#undef FEATURE_FPS_EXTENSIONS
+#endif
+
+#if defined(FEATURE_DECIMAL_FLOATING_POINT) \
+ && defined(NO_IEEE_SUPPORT)
+#undef FEATURE_DECIMAL_FLOATING_POINT
+#undef FEATURE_FLOATING_POINT_EXTENSION_FACILITY
+#endif
+
+#if defined(FEATURE_IEEE_EXECPTION_SIMULATION) \
+ && defined(NO_IEEE_SUPPORT)
+#undef FEATURE_IEEE_EXECPTION_SIMULATION
+#endif
+
+#if defined(FEATURE_IEEE_EXECPTION_SIMULATION) \
+ && !defined(FEATURE_BINARY_FLOATING_POINT)    \
+ && !defined(FEATURE_DECIMAL_FLOATING_POINT)
+#undef FEATURE_IEEE_EXECPTION_SIMULATION
 #endif
 
 #if defined(FEATURE_BINARY_FLOATING_POINT) \
@@ -633,9 +748,11 @@
 #endif
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY) \
- && !defined(FEATURE_BINARY_FLOATING_POINT)
- #error Floating point extension facility requires binary floating point
+ && !defined(FEATURE_DECIMAL_FLOATING_POINT)
+ #error Floating point extension facility requires decimal floating point
 #endif
+
+/* End of Floating Point Feature Checks   */
 
 #if defined(FEATURE_PER2) && !defined(FEATURE_PER)
  #error FEATURE_PER must be defined when using FEATURE_PER2

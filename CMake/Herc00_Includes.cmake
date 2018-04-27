@@ -108,11 +108,7 @@ Input Parameters
 - Semi-colon delimited list of the libraries (other targets) that must be
   used when linking this library.
 - A flag to indicate whether a shared library or a dynamically loaded
-  library is to be built.  If the parameter dynamiclib is set to "dynamic"
-  the prefix is set to null, which is the Hercules expectation for
-  dynamically-loaded libraries.  This has no impact on Windows, which does
-  not have "lib" as an implied prefix.  But on open source, which stores
-  shared library xxx as libxxx.so, this matters.
+  library ( MODULE ) is to be built.
 
 Output
 - A target defining the shared library and its build, link, and post-build
@@ -123,6 +119,12 @@ Output
   is added to copy the shared library to the project binary directory to
   enable execution from the build directory, aka the project binary
   directory.
+- If the fourth parameter 'type' is set to "MODULE", the prefix is set
+  to null, which is the Hercules expectation for dynamically-loaded
+  libraries.  This has no impact on Windows, which does not have "lib"
+  as an implied prefix.  But on UNIX-like systems and macOS, which
+  store a dynamically loaded module named 'xxx' as 'libxxx.so', this
+  matters.
 
 Notes
 - Target link libraries are transitive...if hercu requires hercs and hercu
@@ -130,32 +132,30 @@ Notes
   link library.  CMake will figure it out.
 ]]
 
-function( herc_Define_Shared_Lib libname sources libs dynamiclib)
-    add_library( ${libname} SHARED "${sources}" )
+function( herc_Define_Shared_Lib libname sources libs type)
+    set( types "SHARED" "MODULE" )
+    string( TOUPPER   ${type} type )
+    if( NOT ( "${type}" IN_LIST types ) )
+       message( FATAL_ERROR "Invalid library type \"${type}\" provided when creating target ${libname}" )
+    endif()
+    add_library( ${libname} ${type} "${sources}" )
     target_link_libraries( ${libname} ${libs} ${link_alllibs})
 
-    if( "${dynamiclib}" STREQUAL "dynamic" )
+    if( "${type}" STREQUAL "MODULE" )
         SET_TARGET_PROPERTIES( ${libname} PROPERTIES PREFIX "" )
+        set( inst_rel_dir  "${mods_rel_dir}" )
+    else( )
+        set( inst_rel_dir  "${libs_rel_dir}" )
     endif( )
 
 # Install the shared library, which is included in LIBRARY on non-DLL
 # platforms and in RUNTIME on DLL platforms.  (The Windows import
-# library is included in ARCHIVE.)
+# library is included in ARCHIVE and need not be installed.)
 
     install(    TARGETS ${libname}
-                LIBRARY DESTINATION ${library_rel_dir}
-                RUNTIME DESTINATION ${library_rel_dir}
+                LIBRARY DESTINATION ${inst_rel_dir}
+                RUNTIME DESTINATION ${inst_rel_dir}
                 )
-
-    if( WIN32 AND NOT
-                ( "${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${PROJECT_BINARY_DIR}") )
-        add_custom_command(
-              TARGET ${libname} POST_BUILD
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${libname}.dll
-                    ${PROJECT_BINARY_DIR}/$<CONFIG>
-              )
-    endif()
 
 endfunction( herc_Define_Shared_Lib )
 
@@ -786,7 +786,7 @@ function( herc_Install_Imported_Target target target_desc )
     get_target_property( __${target}_lib_release ${target} IMPORTED_LOCATION_RELEASE )
     if( __${target}_lib_release )
         install( FILES "${__${target}_lib_release}"
-                DESTINATION "${library_rel_dir}"
+                DESTINATION "${libs_rel_dir}"
                 CONFIGURATIONS Release
                 )
     endif( )
@@ -794,7 +794,7 @@ function( herc_Install_Imported_Target target target_desc )
     get_target_property( __${target}_lib_debug ${target} IMPORTED_LOCATION_DEBUG )
     if( __${target}_lib_debug )
         install( FILES "${__${target}_lib_debug}"
-                DESTINATION "${library_rel_dir}"
+                DESTINATION "${libs_rel_dir}"
                 CONFIGURATIONS Debug
                 )
     endif( )
@@ -802,7 +802,7 @@ function( herc_Install_Imported_Target target target_desc )
     get_target_property( __${target}_lib ${target} IMPORTED_LOCATION )
     if( __${target}_lib )
         install( FILES "${__${target}_lib}"
-                DESTINATION "${library_rel_dir}"
+                DESTINATION "${libs_rel_dir}"
                 )
     endif( )
 

@@ -41,6 +41,7 @@
 # system.
 # ----------------------------------------------------------------------
 
+set( herc_Error 0 CACHE INTERNAL "Error count" )                 # No errors detected yet
 
 cmake_minimum_required( VERSION 3.4 )  # 3.4 is required for the Windows export library support.
 #  cmake_policy(SET CMP0048 NEW)          # Set version variables from project directive
@@ -150,19 +151,30 @@ endif( )
 
 
 # It is deucedly difficult to determine which bitness of Windows is
-# being configured by CMake.  If using the NMake generator, the Windows
-# environment variable Platform is either x86 or x64.  If using any
-# Visual Studio generator, the bitness may be either a suffix to the
-# generator name ("Win64") or specified by the CMake --build option
-# -A [Arch], which may be either x86 or x64.
+# being configured by CMake.  If using the NMake, JOM, or Ninja
+# generators, the Windows environment variable PLATFORM is either x86
+# or x64.  If using any Visual Studio generator, the bitness may be
+# either a suffix to the generator name ("Win64") or specified by the
+# CMake --build option -A [Arch], which may be either x86 or x64.
 
 set( WINDOWS_64BIT FALSE )      # Assume 32-bit build for now
-if( ( "${CMAKE_GENERATOR}" MATCHES "^NMake Makefiles" )
-            AND ( $ENV{PLATFORM} MATCHES "[Xx]64" ) )
+
+# Case 1: Single configuration generator in a 64-bit Visual Studio
+#         command prompt.
+if( ( ("${CMAKE_GENERATOR}" MATCHES "^NMake Makefiles" )
+            OR ("${CMAKE_GENERATOR}" MATCHES "^NMake Makefiles JOM" )
+            OR ("${CMAKE_GENERATOR}" MATCHES "^Ninja" ) )
+        AND ( $ENV{PLATFORM} MATCHES "[Xx]64" ) )
     set( WINDOWS_64BIT TRUE )
+
+# Case 2: Visual Studio generator with 64-bit architecture specified
+#         using -A x64.
 elseif( ( "${CMAKE_GENERATOR}" MATCHES "^Visual Studio" )
             AND ( "${CMAKE_GENERATOR_PLATFORM}" MATCHES "[Xx]64" ) )
     set( WINDOWS_64BIT TRUE )
+
+# Case 3: Visual Studio generator with 64-bit architecture specified
+#         using Win64 suffix on generator name.
 elseif( ( "${CMAKE_GENERATOR}" MATCHES "^Visual Studio" )
             AND ( "${CMAKE_GENERATOR}" MATCHES "Win64$" ) )
     set( WINDOWS_64BIT TRUE )
@@ -213,21 +225,38 @@ endif( )
 
 # UNIX-like systems:
 #   /usr/local/bin/                   executables and dynamic libraries
-#   /usr/local/lib/                   shared libraries
+#   /usr/local/lib/                   shared libraries and loadable modules
 #   /usr/local/share/Hercules         http server root
 
 if( WIN32 )
-    set( exec_rel_dir      "." )        # executables destination
-    set( library_rel_dir   "." )        # shared libraries (DLL) destination
-    set( http_rel_dir      "share" )    # target for Hercules' web server
+    set( exec_rel_dir "." )         # install dir for executables
+    set( libs_rel_dir "." )         # install dir for shared libraries (DLL)
+    set( mods_rel_dir "." )         # install dir for loadable modules (DLL)
+    set( mods_rel_dir_ins "." )     # module search rel dir (inst. dir)
+    set( mods_rel_dir_bld "." )     # module search rel dir (build dir)
+    set( http_rel_dir "html" )      # install dir for web server files
+    set( http_rel_dir_ins "html" )  # web server default root rel to exe.
 else(  )
-    set( exec_rel_dir      "bin" )      # executables destination
-    set( library_rel_dir   "lib" )      # shared libraries destination
-    set( http_rel_dir      "share/${PROJECT_NAME}" )   # target for Hercules' console web server
+    set( exec_rel_dir "bin" )  # executables destination
+    set( libs_rel_dir "lib" )  # install dir for shared libraries (.so or .dylib)
+    set( mods_rel_dir "lib" )  # install dir for loadable modules (.so)
+    set( mods_rel_dir_ins "../lib" )    # module search rel dir (inst. dir)
+    set( mods_rel_dir_bld "." )         # module search rel dir (build dir)
+    set( http_rel_dir "share/${PROJECT_NAME}" )   # install dir for web server files
+    set( http_rel_dir_ins "../${http_rel_dir}" )  # web server default root rel to exe.
 endif( )
 
-set( exec_dir          "${CMAKE_INSTALL_PREFIX}/${exec_rel_dir}" )
-set( library_dir       "${CMAKE_INSTALL_PREFIX}/${library_rel_dir}" )
+if( "${CMAKE_CONFIGURATION_TYPES}" STREQUAL "" )
+# Single configuration generator creates the html directory as a
+# subdirectory of the build directory, which is also the directory that
+# contains the executables.
+    set( http_rel_dir_bld "html" )
+else( )
+# Multi-configuration generator creates the executable directory *AND*
+# the html directory as subdirectories of the build build directory.
+    set( http_rel_dir_bld "../html" )
+endif( )
+
 set( http_dir          "${CMAKE_INSTALL_PREFIX}/${http_rel_dir}" )
 
 
@@ -239,10 +268,15 @@ set( http_dir          "${CMAKE_INSTALL_PREFIX}/${http_rel_dir}" )
 # tests.  See https://cmake.org/cmake/help/v3.4/variable/CMAKE_LANG_COMPILER_ID.html
 # for a complete list of possible values for CMAKE_C_COMPILER_ID.
 
-set( herc_CompilerClang Clang )
-set( herc_CompilerGNU   GNU   )
-set( herc_CompilerMSVC  MSVC  )
-set( herc_Compilers ${herc_CompilerClang} ${herc_CompilerGNU} ${herc_CompilerMSVC})
+set( herc_CompilerAppleClang AppleClang )
+set( herc_CompilerClang      Clang      )
+set( herc_CompilerGNU        GNU        )
+set( herc_CompilerMSVC       MSVC       )
+set( herc_Compilers ${herc_CompilerAppleClang}
+                    ${herc_CompilerClang}
+                    ${herc_CompilerGNU}
+                    ${herc_CompilerMSVC}
+    )
 
 
 # Lists of supported Intel processor types, used for optimization and flag
@@ -335,7 +369,6 @@ include( InstallRequiredSystemLibraries )  # CPack: required to build CPack inst
 
 include( CMake/Herc00_Includes.cmake ) # Get Hercules-specific CMake functions and macros
 
-set( herc_Error 0 CACHE INTERNAL "Error count" )                 # No errors detected yet
 
 # ----------------------------------------------------------------------
 # Define all user options and edit them.  If user option HELP is defined,
@@ -357,8 +390,13 @@ endif( )
 # compiler.
 # ----------------------------------------------------------------------
 
-
 include( CMake/Herc20_TargetEnv.cmake )       # collect info about the target system
+
+# There are two userland tests specific to macOS.  Apart from that,
+# userland testing for macOS is the same as that for UNIX-like systems.
+# So while macOS might merit a separate userland script on principle, it
+# makes little sense to split the script for two tests when there is so
+# much overlap otherwise.  Maybe later if additional tests are needed.
 
 if( WIN32 )
     include( CMake/Herc22_UserlandWin.cmake )     # check for Windowns userland requirements.
@@ -381,8 +419,8 @@ endif( )
 # system.  Set compiler and build options based accordingly.
 # ----------------------------------------------------------------------
 
-
 include( CMake/Herc28_OptSelect.cmake )       # Make selected options effective
+
 
 # Five different routines are used to set options for the c compiler,
 # one each for clang, gcc, Apple gcc, Windows, and unknown.  Expect
@@ -394,7 +432,9 @@ include( CMake/Herc28_OptSelect.cmake )       # Make selected options effective
 # expects automatic optimization with an unrecognized compiler, we will
 # abort the build.
 
-if( "${CMAKE_C_COMPILER_ID}" STREQUAL "${herc_CompilerClang}" )
+if( ("${CMAKE_C_COMPILER_ID}" STREQUAL "${herc_CompilerClang}" )
+        OR ( "${CMAKE_C_COMPILER_ID}" MATCHES "^${herc_CompilerAppleClang}" )
+        )
     include( CMake/Herc31_COptsClang.cmake )
 
 elseif( "${CMAKE_C_COMPILER_ID}" STREQUAL "${herc_CompilerGNU}" )
@@ -413,7 +453,9 @@ else( )
 
 endif( )
 
-# This should really be done in the respective Herc31
+# This should really be done in the respective Herc31.  Note that
+# any specified ADD-CFLAGS have already been edited for valitidy
+# in Herc12_OptEdit.cmake.
 
 if( NOT ("${ADD-CFLAGS}" STREQUAL "") )
     set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADD-CFLAGS}" )
@@ -486,7 +528,11 @@ if( WIN32 )
 endif( )
 
 
-# Set the RPATH to be used when installing targets.
+# ----------------------------------------------------------------------
+# Set the RPATH to be used by UNIX-like and macOS systems when running
+# Hercules from the build directory and when installing Hercules.
+# Windows does not use RPATH.
+# ----------------------------------------------------------------------
 
 # Use (don't skip) the full RPATH for the build tree, and do not use the
 # install directory RPATH when building.  This enables execution from
@@ -496,28 +542,53 @@ endif( )
 # built outside the Hercules build tree.
 
 # CMake will update the RPATH in place in the executable or shared
-# library when installing.  Note that libtool always relinks everything
-# on install.
+# library when installing.
 
+# Note that CMake only includes path(s) for shared libraries in the
+# build RPATH.  It does not include paths for dynamically loaded
+# mobules.  If loadable module paths need to be in the build RPATH,
+# they need to be coded.  Hercules doees not require this because
+# loadable modules are built in the same directory as the executable,
+# but if that changes, add code here to deal with it.
+
+# use, i.e. don't skip the full RPATH for the build tree
 set( CMAKE_SKIP_BUILD_RPATH  FALSE )
+# when building, don't use the install RPATH
+# only later when installing
 set( CMAKE_BUILD_WITH_INSTALL_RPATH FALSE )
 
+# define the RPATH relative to the executable path
+# will make possible to move around/rename the "PREFIX" path
+if( APPLE )
+    # add the automatically determined parts of the RPATH
+    set( CMAKE_INSTALL_RPATH "@executable_path/../${libs_rel_dir}" )
+    if( NOT ( "${libs_rel_dir}" STREQUAL "${mods_rel_dir}" ) )
+        set( CMAKE_INSTALL_RPATH
+                "${CMAKE_INSTALL_RPATH}"
+                "@executable_path/../${mods_rel_dir}"
+            )
+    endif( )
 
-# If Hercules is to be installed in other than a standard location for
-# the target system, include the non-standard lib directory in the
-# installation RPATH.  The lib directory is relative to $ORIGIN, the
-# linking loader's synonym for the directory from which the executable
-# was fetched.
+else( APPLE )
+    # If Hercules is to be installed in other than a standard location for
+    # the target system, include the non-standard lib directory in the
+    # installation RPATH.  The lib directory is relative to $ORIGIN, the
+    # linking loader's synonym for the directory from which the executable
+    # was fetched.
 
-# Following taken from the CMake Wiki RPATH page at
-# https://cmake.org/Wiki/CMake_RPATH_handling.
-# See that page for copyright, attribution, and license.
-list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${library_dir}" isSystemDir)
-if("${isSystemDir}" STREQUAL "-1")
-    set( CMAKE_INSTALL_RPATH "\$ORIGIN/../${library_rel_dir}" )
-endif("${isSystemDir}" STREQUAL "-1")
-# End of code taken from Wiki
+    # Following inspired by the CMake Wiki RPATH page at
+    # https://cmake.org/Wiki/CMake_RPATH_handling.
+    # See that page for copyright, attribution, and license.
+    set( CMAKE_INSTALL_RPATH "\$ORIGIN/../${libs_rel_dir}" )
+    if( NOT ( "${libs_rel_dir}" STREQUAL "${mods_rel_dir}" ) )
+        set( CMAKE_INSTALL_RPATH
+                "${CMAKE_INSTALL_RPATH}"
+                "\$ORIGIN/../${mods_rel_dir}"
+            )
+    endif( )
+    # End of code inspired by Wiki
 
+endif( APPLE )
 
 # create config.h.
 
@@ -556,8 +627,9 @@ message( "${result_var}")
 
 message( "\n------------------------------------------------------------------------" )
 message( "Install prefix          ${CMAKE_INSTALL_PREFIX}" )
-message( "Executable directory    ${exec_dir}" )
-message( "Library directory       ${library_dir}" )
+message( "Executable directory    ${exec_rel_dir}" )
+message( "Library directory       ${libs_rel_dir}" )
+message( "Modules directory       ${mods_rel_dir}" )
 message( "Data Directory (http)   ${http_dir}" )
 message( "Source directory        ${PROJECT_SOURCE_DIR}" )
 message( "Build directory         ${PROJECT_BINARY_DIR}" )
@@ -572,8 +644,11 @@ message( "C options (Release):    ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}" )
 message( "C options (Debug):      ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}" )
 if( WIN32 )
     message( "Resource compiler opt:  ${CMAKE_RC_FLAGS}" )
-    message( "Linker opts (.exe):     ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_RELEASE}" )
-    message( "Linker opts (.dll):     ${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS_RELEASE}" )
+    message( "Linker opts (exec):     ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_RELEASE}" )
+    message( "Linker opts (shlb):     ${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS_RELEASE}" )
+    message( "Linker opts (modl):     ${CMAKE_MODULE_LINKER_FLAGS} ${CMAKE_MODULE_LINKER_FLAGS_RELEASE}" )
+else( )
+    message( "Install RPATH:          ${CMAKE_INSTALL_RPATH}" )
 endif( )
 message( "Large file support:     ${herc_LargeFile_Status}" )
 message( "Hercules link libs:     ${link_alllibs}" )

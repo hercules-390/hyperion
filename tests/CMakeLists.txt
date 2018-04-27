@@ -18,6 +18,7 @@ of tests for the offline utilities like dasdinit.
 ]]
 
 set(test_group_names
+    001-panel
     002-cpu-ctl
     004-storage
     011-tapeio
@@ -28,6 +29,10 @@ set(test_group_names
     )
 list( SORT test_group_names)
 
+
+set(test_names_001-panel
+    pnl-001-modpath.tstsp     # test that dyncrypt is loadable.
+    )
 
 set(test_names_002-cpu-ctl
     invpsw

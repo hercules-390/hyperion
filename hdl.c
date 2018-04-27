@@ -10,18 +10,43 @@
 #include "opcode.h"
 
 #if defined(OPTION_DYNAMIC_LOAD)
+/* Dynamic Loader module preload table.                                 */
+/*                                                                      */
+/* One entry per preloaded module.  Each entry includes the module      */
+/* name and loader flags.  Loader flags defined in hdl.h                */
+/*                                                                      */
+/* One can provide a full or relative path name instead of just a       */
+/* module name, and this is done when Hercules is built using libtool   */
+/* (GNU-autotools build) for compatibility with that configure/build.   */
+/*                                                                      */
+/* Full or relative path names are problematic, though, as follows:     */
+/* - UNIX-like and macOS systems: When a path name is provided, the     */
+/*   operating system loader skips the normal directory search process. */
+/*   RPATH/RUNPATH, LD_LIBRARY_PATH, and other directories are not      */
+/*   searched for the module.  Relative paths are usually interpretted  */
+/*   by the loader to be relative to the current working directory,     */
+/*   though this is implementation-specific.  N.B., a relative path     */
+/*   *IS NOT* used as a suffix to any directory named in RPATH etc.     */
+/*   or otherwise searched by the OS loader.                            */
+/* - Windows: When a path name is provided, the normal directory search */
+/*   process is skipped.  Windows normally uses a fixed search order    */
+/*   for loadable modules, including the current working directory,     */
+/*   some additional directories, the executable directory, and then    */
+/*   the directories in the PATH environment variable.  N.B., a         */
+/*   relative path *IS NOT* used as a suffix to directories Windows     */
+/*   would have searched if just a module name was provided.            */
+
 HDLPRE hdl_preload[] =
 {
     { "hdteq",              HDL_LOAD_NOMSG                     },
-#if defined(_MSVC_)
-    { "dyncrypt",           HDL_LOAD_NOMSG                     },
+#if defined(HDL_USE_LIBTOOL)
+/* Hercules built with GNU libtool support, so dyncrypt is built in the */
+/* crypto subdirectory.                                                 */
+    { "crypto/dyncrypt",    HDL_LOAD_NOMSG },
 #else
-    { "crypto/dyncrypt",    HDL_LOAD_NOMSG                     },
-#endif
-#if 0
-    { "dyn_test1",          HDL_LOAD_DEFAULT                   },
-    { "/foo/dyn_test2",     HDL_LOAD_NOMSG                     },
-    { "../bar/dyn_test3",   HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },
+/* Hercules built without libtool support, meaning CMake (any target    */
+/* system) or NMake (Windows target system)                             */
+    { "dyncrypt",           HDL_LOAD_NOMSG },
 #endif
     { NULL,                 0                                  },
 };
@@ -191,65 +216,61 @@ DLL_EXPORT char *hdl_setpath(char *path, int flag)
 
 /*
  * Check in this order:
- * 1) filename as passed
- * 2) filename with extension if needed
- * 3) modpath added if basename(filename)
- * 4) extension added to #3
+ * 1) filename with extension
+ * 2) modpath added to basename(filename) with extension
+ * If the module is found (likely?) or there is no modpath (unlikely), 
+ * the second search is skipped.
  */
 static void * hdl_dlopen(char *filename, int flag _HDL_UNUSED)
 {
-char   *fullname;
+char   *fullname, *filenamecopy;
 void   *ret;
 size_t  fulllen = 0;
 
-    if ( (ret = dlopen(filename,flag)) )       /* try filename as is first */
-        return ret;
+    /* First search: provided module name with configured suffix.       */
+    /* See commentary above the hdl_preload table about why including   */
+    /* a subdirectory in a preload table entry is problematic.          */
 
     fulllen = strlen(filename) + strlen(hdl_modpath) + 2 + HDL_SUFFIX_LENGTH;
     fullname = (char *)calloc(1,fulllen);
-
     if ( fullname == NULL )
         return NULL;
 
-#if defined(HDL_MODULE_SUFFIX)
-    strlcpy(fullname,filename,fulllen);
-    strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
-
-    if ( (ret = dlopen(fullname,flag)) )       /* try filename with suffix next */
-    {
-        free(fullname);
-        return ret;
-    }
-#endif
-
-    if( hdl_modpath && *hdl_modpath)
-    {
-        char * filenamecopy = strdup(filename);
-        strlcpy(fullname,hdl_modpath,fulllen);
-        strlcat(fullname,PATHSEPS,fulllen);
-        strlcat(fullname,basename(filenamecopy),fulllen);
-        free(filenamecopy);
-    }
-    else
-        strlcpy(fullname,filename,fulllen);
-
-    if ( (ret = dlopen(fullname,flag)) )
-    {
-        free(fullname);
-        return ret;
-    }
-
+    strlcpy(fullname, filename, fulllen);
 #if defined(HDL_MODULE_SUFFIX)
     strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
+#endif
 
-    if((ret = dlopen(fullname,flag)))
-    {
+    if ( (ret = dlopen(fullname,flag)) )  /* Library found?                     */
+    {                                     /* ..Yes, return handle               */
         free(fullname);
         return ret;
     }
+
+    if( !(hdl_modpath && *hdl_modpath) )  /* Not found yet.  Have hdl_modpath?  */
+    {                                     /* ..No, return not found             */
+        free(fullname);
+        return NULL;
+    }
+
+    /* Second search: hdl_modpath, basename of provided module name,    */
+    /* configured suffix.  See commentary above the hdl_preload table   */
+    /* about why incluing a subdirectory in a preload table entry is    */
+    /* problematic.                                                     */
+
+    filenamecopy = strdup(filename);
+    strlcpy(fullname,hdl_modpath,fulllen);
+    strlcat(fullname,PATHSEPS,fulllen);
+    strlcat(fullname,basename(filenamecopy),fulllen);
+    free(filenamecopy);
+#if defined(HDL_MODULE_SUFFIX)
+    strlcat(fullname, HDL_MODULE_SUFFIX, fulllen);
 #endif
 
-    return NULL;
+    ret = dlopen(fullname, flag);
+    free(fullname);
+    return ret;
+
 }
 
 
@@ -714,6 +735,99 @@ MODENT *modent;
 #endif
 
 
+/* Find the directory to be searched for loadable modules if an         */
+/* attempt to load a module by name fails.  The following directories   */
+/* are possibilities; the first one found is used.                      */
+/*                                                                      */
+/* An absolute directory is returned in malloc'd storage that should    */
+/* be free'd by the caller.  A NULL string pointer is never returned;   */
+/* If all else fails, a strdup of the executable directory is returned. */
+/*                                                                      */
+/* 1. If the environment variable HERCULES_LIB is defined and exists,   */
+/*    it is used.                                                       */
+/* 2. If the preprocessor macro MODULESDIR is defined and exists, it    */
+/*    is used.                                                          */
+/* 3. Lastly, the Hercules program executable directory is used as      */
+/*    follows:                                                          */
+/*    a. If the preprocessor macro MODRELDIRINS is defined, it is       */
+/*       appended to the executable directory.  If the result exists,   */
+/*       that directory is used.                                        */
+/*    b. If the preprocessor macro MODRELDIRBLD is defined, it is       */
+/*       appended to the executable directory.  If the result exists,   */
+/*       that directory is used.                                        */
+/*    c. The executable directory is used without alteration.           */
+/*                                                                      */
+/* See p. 616 of Hercules User Reference Guide for additional info.     */
+
+/* Also note that while realpath on UNIX-like systems returns error if  */
+/* the file does not exist, the Hercules Windows wrapper for realpath   */
+/* does not.  So we follow-up with an access to test for existence.     */
+
+char * hdl_get_modpath()
+{
+    char *def;                          /* environment var pointer      */
+    char canddir[MAX_PATH];             /* candidate module directory   */
+    char absdir[MAX_PATH];              /* Absolute canonical dir       */
+    struct stat path_stat;
+
+    if ( ( def = getenv("HERCULES_LIB") ) )  /* environment var exists? */
+                                       /* ..yes, try that dir first     */
+    {
+        hostpath(canddir, def, sizeof(canddir));   /* required only for cygwin support */
+        if (realpath(canddir, absdir))  /* create canonical abs dir     */
+            /* make sure path exists, is a directory, and is readable   */
+            if (!stat(absdir, &path_stat) && S_ISDIR(path_stat.st_mode) )
+                    return strdup(absdir);   /* ..yes, return           */
+
+        WRMSG(HHC01536, "W", "HERCULES_LIB", def);
+    }
+
+#if defined(MODULESDIR)                 /* var defined on c cmd line?   */
+                                        /* ..yes, that's the directory  */
+    hostpath(canddir, HDL_DEFAULT_PATH, sizeof(canddir));   /* required only for cygwin support */
+    if (realpath(canddir, absdir))      /* create canonical absolute dir */
+    {
+        if (!access(absdir, R_OK))       /* make sure directory readable */
+            return strdup(absdir);
+    }
+#endif  /* NOT defined(MODULESDIR).  check exec directory variants       */
+
+
+#if defined(MODRELDIRINS) 
+    /* module directory relative to executable install directory has    */
+    /* been provided.  See if it exists; if so, that is the winner      */
+    strlcpy(canddir, sysblk.hercules_pgmpath, sizeof(canddir));
+    strlcat(canddir, PATHSEPS, sizeof(canddir));
+    strlcat(canddir, MODRELDIRINS, sizeof(canddir));
+    if (realpath(canddir, absdir))      /* create canonical absolute dir */
+    {
+        if (!access(absdir, R_OK))       /* make sure directory readable */
+            return strdup(absdir);
+    }
+    /*  if path does not exist, fall through to check build directory   */
+#endif
+
+#if defined(MODRELDIRBLD) 
+    /* module directory relative to executable build directory has      */
+    /* been provided.  See if it exists; if so, that is the winner      */
+    strlcpy(canddir, sysblk.hercules_pgmpath, sizeof(canddir));
+    strlcat(canddir, PATHSEPS, sizeof(canddir));
+    strlcat(canddir, MODRELDIRBLD, sizeof(canddir));
+    if (realpath(canddir, absdir))      /* create canonical absolute dir */
+    {
+        if (!access(absdir, R_OK))       /* make sure directory readable */
+            return strdup(absdir);
+    }
+#endif
+
+    /* No luck so far.  Return the executable path.  It has aleady been */
+    /* validated and realpath'd.  So just strdup it so the caller can   */
+    /* use a return string pointer that should be free'd.               */
+
+    return strdup( sysblk.hercules_pgmpath);
+
+}
+
 /* hdl_main - initialize hercules dynamic loader
  */
 DLL_EXPORT void hdl_main (void)
@@ -724,34 +838,26 @@ HDLPRE *preload;
 
     hdl_sdip = FALSE;
 
-    if ( hdl_modpath == NULL )
-    {
-        char *def;
-        char pathname[MAX_PATH];
+    /* If -p was included on the command line, then the directory name      */
+    /* has been set and no further action is needed.                        */
+    /* Note that if hdl_modpath is null, Hercules will segfault.  So if we  */
+    /* do not get a path back from hdl_get_modpath, we will use the current */
+    /* working directory and issue a message.                               */
 
-        if (!(def = getenv("HERCULES_LIB")))
+    if (hdl_modpath == NULL)   /* if not NULL, was on cmd line        */
+    {
+        char *moddir;
+        if (!(moddir = hdl_get_modpath()))
         {
-            if ( sysblk.hercules_pgmpath == NULL || strlen( sysblk.hercules_pgmpath ) == 0 )
-            {
-                hostpath(pathname, HDL_DEFAULT_PATH, sizeof(pathname));
-                hdl_setpath(pathname, TRUE);
-            }
-            else
-            {
-#if !defined (MODULESDIR)
-                hdl_setpath(sysblk.hercules_pgmpath, TRUE);
-#else
-                hostpath(pathname, HDL_DEFAULT_PATH, sizeof(pathname));
-                hdl_setpath(pathname, TRUE);
-#endif
-            }
+            char modpath[MAX_PATH];   /* for POSIX.1-2001 realpath call */
+            realpath(".", modpath);
+            moddir = strdup( modpath );
+            WRMSG(HHC01537, "E");
         }
-        else
-        {
-            hostpath(pathname, def, sizeof(pathname));
-            hdl_setpath(pathname, TRUE);
-        }
+        hdl_setpath(moddir, TRUE);
+        free(moddir);
     }
+        
 
     dlinit();
 
@@ -770,8 +876,10 @@ HDLPRE *preload;
 /* DLLs, some other platforms do not allow dlopen(self)     */
 
 #if 1
-
-    if(!(hdl_cdll->dll = hdl_dlopen(NULL, RTLD_NOW )))
+/* Call dlopen directly to get the self handle.  Function hdl_dlopen    */
+/* is not used because this is a special case that does not require     */
+/* multiple searches to find a library handle.                          */
+    if(!(hdl_cdll->dll = dlopen(NULL, RTLD_NOW )))
     {
         fprintf(stderr, MSG(HHC01516, "E", "hercules", dlerror()));
         exit(1);

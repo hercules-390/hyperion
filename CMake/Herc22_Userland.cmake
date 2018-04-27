@@ -55,6 +55,31 @@ herc_Check_Include_Files( pwd.h             FAIL )
 herc_Check_Include_Files( unistd.h          FAIL )
 herc_Check_Include_Files( math.h            FAIL )
 
+
+# Apple macOS is and is not UNIX-like.  More or less a POSIX userland,
+# but a different ABI, a different executable/library format, and some
+# APIs not available on POSIX.  Definitely not GNU/Linux.  Hercules
+# needs only a few tests, and we do them here because the rest of the
+# UNIX-like tests are appropriate for Apple macOS.
+
+if( APPLE )
+    # Header mach-o/dyld.h defines the function call to determine whether
+    # _NS_
+    # to get the executable path name.  Hercules can run without the
+    # system call.
+
+    # CMake does not seem to like hyphens in #cmakedefine statements.
+    # So we need to define a more suitable macro for config.h.  Hence
+    # the if/set following the test.  Besides, if the header is absent,
+    # the API function it exposes will be absent too.
+
+    herc_Check_Include_Files( mach-o/dyld.h     OK   )
+    if( HAVE_MACH-O_DYLD_H )
+        set( HAVE_MACH_O_DYLD_H 1 )
+        herc_Check_Function_Exists( _NSGetExecutablePath OK )
+    endif( )
+endif( )
+
 # definitions in assert.h are used only when compiled under Microsoft,
 # in only one module, hatomic.h, and it is assumed to exist under
 # Microsoft.  So there is no need (for the moment) to test for it here.

@@ -30,6 +30,10 @@
 #include "hostinfo.h"
 #include "history.h"
 
+#if(HAVE_MACH_O_DYLD_H)
+#  include <mach-o/dyld.h>
+#endif
+
 static char shortopts[] =
 
 #if defined( EXTERNALGUI )
@@ -1212,6 +1216,161 @@ int     rc;
     return 0; /* return back to bootstrap.c */
 } /* end function impl */
 
+/*----------------------------------------------------------------------*/
+/*                                                                      */
+/*  getexepath(const char * cmdline) - get executable path              */
+/*                                                                      */
+/*  Return a malloc'd string pointer containing the name of the         */
+/*  directory containing the Hercules executable that is being run.     */
+/*  Slashes have been conformed to PATHSEPC.                            */
+/*                                                                      */
+/*  Three versions exist.  For Windows and macOS, the target system-    */
+/*  specific API is used to retrieve the name.  For UNIX-like systems,  */
+/*  argv[0] is interpreted against the current directory if relative,   */
+/*  used as is if absolute, and interpreted against the PATH variable   */
+/*  if just a basename exists.                                          */
+/*                                                                      */
+/*----------------------------------------------------------------------*/
+#if defined(_WIN32)
+
+char * getexepath(const char* cmdline)
+{
+    char candidatepath[MAX_PATH];   /* Cannonical candidate absolute path  */
+                                    /* ..of executable.                            */
+    char *resultpath;       /* Actual returned path in malloc'd space sized */
+                            /* for the returned string, or NULL if unable   */
+                            /* to determine the executable path.            */
+    int pathlen;            /* Length of path returned by GetModeFileName   */
+
+    resultpath = NULL;      /*  presume failure to get path for the nonce   */
+
+    pathlen = GetModuleFileName(NULL, candidatepath, MAX_PATH);
+    if (pathlen)           /* did we get a path back?                       */
+    {
+#   if PATHSEPC == '/'              /* convert Windows path to UNIX-like    */
+        char * i = candidatepath;   /* slashes for for consistency with the */
+        while (*i)                  /* rest of Hercules.  The Windows API   */
+        {                           /* does not care.                       */
+            if (*i == '\\')
+                *i = PATHSEPC;
+            i++;
+        }
+#   endif  /* PATHSEPC == '/'          convert Windows path to UNIX-like    */
+        resultpath = strdup(candidatepath);  /* ..yes, copy to result-sized space */
+    }
+
+    return resultpath;
+
+}
+
+
+#elif defined(HAVE__NSGETEXECUTABLEPATH)
+
+char * getexepath(const char* cmdline)
+{
+    char candidatepath[MAX_PATH];   /* Cannonical candidate absolute path  */
+                                    /* ..of executable.                            */
+    char *resultpath;       /* Actual returned path in malloc'd space sized */
+                            /* for the returned string, or NULL if unable   */
+                            /* to determine the executable path.            */
+    uint32_t pathlen = MAX_PATH;  /* buffer size to _NSGetExecutablePath    */
+    int rc;                 /* Length of path returned                      */
+
+    resultpath = NULL;      /*  presume failure to get path for the nonce   */
+
+    rc = _NSGetExecutablePath(candidatepath, &pathlen);
+    if (!rc)              /* rc = 0 means we got a path                   */
+        resultpath = realpath(candidatepath, NULL);
+
+    return resultpath;
+
+}
+
+#else    /*  !defined( _MSVC_ ) && !defined( HAVE__NSGETEXECUTABLEPATH )   */
+/************************************************************************/
+/* UNIX-like system.  These lack an API to retrieve the executable      */
+/* path name.  So this function does what a shell would do: interpret   */
+/* the command line relative to either the current working directory    */
+/* or the PATH environment variable.  This is not perfect, but it will  */
+/* have to do.                                                          */
+/* N.B., the returned char string is malloc'd by this routine and must  */
+/* be free'd by the caller.                                             */
+/************************************************************************/
+
+char * getexepath(const char* cmdline)
+{
+    char candidatepath[MAX_PATH];   /* Cannonical candidate absolute path  */
+                                    /* ..of executable.                            */
+    char *resultpath;       /* Actual returned path in malloc'd space sized */
+                            /* for the returned string, or NULL if unable   */
+                            /* to determine the executable path.            */
+
+    if (strchr(cmdline, '/'))    /* is command an asbolute path                  */
+                                 /* or path relative to working directory?       */
+    {                               /* ..yes, cannonicalize and test for executable */
+        realpath(cmdline, candidatepath);  /* convert to abs, test for existence  */
+
+        if (access(candidatepath, X_OK))  /* nz means file not an executable     */
+            return NULL;                     /* Not a valid path to executable      */
+    }
+
+    else
+    {
+        char *pathstr;          /* pointer to start of PATH string              */
+        char *pathstrend;       /* pointer to NUL at end of PATH string         */
+        char *pathdir;          /* Pointer to one directory within PATH         */
+        char testpath[MAX_PATH];  /* One directory from PATH plus executable name */
+        char *testdirend;       /* Last char+1 of directory name in testpath    */
+
+                                /* Note: getenv returns a pointer that is within the environment area.  */
+                                /* Do not change the string pointed to by the result of getenv().       */
+        pathstr = getenv("PATH");
+        pathstrend = strlen(pathstr) +pathstr;
+        pathdir = pathstr;      /* first PATH segment to test                   */
+
+        while (*pathdir)       /* process until end of PATH string             */
+        {
+            /* after memccpy, testdirend points at the start of the next substring  */
+            /* in the PATH variable, or is NULL if the last substring was copied.   */
+            /* The copy is count-controlled; the terminating zero is not copied.    */
+            /* The separating ':' is copied.                                        */
+            testdirend = memccpy(testpath, pathdir, ':', strlen(pathdir));
+
+            if (!testdirend)              /* no ':', last segment copied          */
+                testdirend = pathstrend;    /* point to NUL termination             */
+            pathdir = &pathdir[testdirend - testpath];    /* Start of next or '\0' */
+
+
+            if (testdirend[-1] == ':')    /* Did separator end memccpy?           */
+                testdirend--;               /* ..yes, back up to the separator      */
+            testdirend[0] = '/';
+            strcpy(testdirend + 1, cmdline);   /* append exe name to directory    */
+
+
+            if (!(realpath(testpath, candidatepath))) /* Path exists?  */
+                continue;                   /* ..No, NULL returned, try next dir    */
+
+                                            /* File exists.  See if it is an executable.  We do not care what kind. */
+                                            /* Systems using GNU-libtool use a shell script as a wrapper for the    */
+                                            /* executable.                                                          */
+            if (!(access(candidatepath, X_OK)))   /* Executable file?           */
+                break;                      /* ..yes, our work is done here.        */
+
+            *candidatepath = '\0';          /* ..no, null-out candidate, continue   */
+        }
+
+    }
+
+    if (!*candidatepath)                   /* Executable path not found?           */
+        return NULL;                        /* ..no, return NULL pointer            */
+
+    resultpath = strdup(candidatepath);   /* Resize storage for returned string   */
+    return resultpath;                      /* return pointer to malloc'd path      */
+
+}
+#endif      /* !defined( _MSVC_ ) && !defined( HAVE__NSGETEXECUTABLEPATH ) */
+
+
 /*********************************************************************/
 /* Process  arguments  up front, but build the command string before */
 /* getopt mangles argv[]                                             */
@@ -1221,26 +1380,50 @@ process_args(int argc, char *argv[])
 {
 int     arg_error = 0;                  /* 1=Invalid arguments       */
 int     c = 0;                        /* Next option flag            */
+char * real_path;                   /* absolute program executable path */
+char * real_path_dup;               /* .. copy for use with dirname     */
 
-    /* Set program name */
-    if ( argc > 0 && strlen(argv[0]) )
+    /* Set executable program name and executable directory name.       */
+    /* The directory name is used for the following:                    */
+    /* 1. A location to search for dynamically loaded modules.  See     */
+    /*    routine hdl_dlopen in hdl.c for details.                      */
+    /* 2. A location to search for the Hercules logo file herclogo.txt  */
+    /*    if a logo path was not specified on the command line.  See    */
+    /*    routine init_logo in console.c for details.                   */
+    /* 3. A location to search for the Hercules logo file when the      */
+    /*    herclogo command is processed.  See routine herclogo_cmd in   */
+    /*    hsccmd.c for details.                                         */
+    /* All uses function without failure, albeit perhaps without the    */
+    /* intended results, if the executables directory cannot be         */
+    /* determined.                                                      */
+
+    real_path = NULL;           /* assume unable to get executable path */
+
+    /* ZZFIXME: Windows and macOS do not require argv[0] to get the     */
+    /* executable path string.  The test below for existence of argv[0] */
+    /* should be reworked to accomodate this.                           */
+    if (argc > 0 && strlen(argv[0]))
+        real_path = getexepath(argv[0]);
+
+    /* real_path points to a string naming the executable path if one   */
+    /* can be determined from argv[0] or any API the target system may  */
+    /* offer (Windows, macOS), and is NULL if no path name could be     */
+    /* determined.                                                      */
+    /*                                                                  */
+    /* Note that basename and dirname on some systems corrupt the       */
+    /* input path name, so a copy is made.   Man pages warn about this. */
+    if ( real_path )
     {
-        char path[MAX_PATH];
-#if defined( _MSVC_ )
-        GetModuleFileName( NULL, path, MAX_PATH );
-#else
-        strncpy(path,argv[0],sizeof(path)-1);
-#endif
-        sysblk.hercules_pgmname = strdup(basename(path));
-#if !defined( _MSVC_ )
-        strncpy(path,argv[0],sizeof(path)-1);
-#endif
-        sysblk.hercules_pgmpath = strdup(dirname(path));
+        real_path_dup = strdup(real_path);
+        sysblk.hercules_pgmname = strdup(basename(real_path));
+        sysblk.hercules_pgmpath = strdup(dirname(real_path_dup));
+        free(real_path_dup);
+        free(real_path);
     }
-    else
+    else                    /* Unable to determine executable path.     */
     {
-            sysblk.hercules_pgmname = strdup("hercules");
-            sysblk.hercules_pgmpath = strdup("");
+        sysblk.hercules_pgmname = strdup("hercules");
+        sysblk.hercules_pgmpath = strdup(".");   /* make consistent with dirname behavior */
     }
 
     if ( argc > 0 )

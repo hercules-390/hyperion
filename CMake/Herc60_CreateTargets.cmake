@@ -104,11 +104,15 @@ set_source_files_properties(
 
 set( CMAKE_LINK_DEPENDS_NO_SHARED 1 )
 
-# Map source files to the shared (non-dynamic) libraries herc, hercs, hercu,
-# hercd, and herct.  A variable <libname>_sources is created for each library.
-# These shared libraries are comprised of lots of files.  Addition of a file
-# to one of these libraries should just mean changing CMakeHercSlibSource.cmake,
-# with no changes needed elsewhere.
+# Map source files to targets.  A variable <libname>_sources is created
+# for each shared library, dynamically loaded module, or executable.
+# The shared libraries are comprised of lots of files.  The dynamically
+# modules and executables have relatively few, but it makes sense to
+# keep all mapping of sources to targets in one script.
+
+# Addition of a file to one of the libraries, modules, or executables
+# should just mean changing Herc61_SlibSource.cmake, with no changes
+# needed elsewhere.
 
 include( CMake/Herc61_SlibSource.cmake )
 
@@ -143,37 +147,29 @@ if( TARGET zlib )
     set( pkg_targets ${pkg_targets} zlib )
 endif( )
 
-# Build the decNumber shared library first.
+# ----------------------------------------------------------------------
+#
+# Add the decNumber subdirectories.
+#
+# ----------------------------------------------------------------------
 
 add_subdirectory( decNumber )
-
-# Crypto must be built after Hercules as it requires the hercs library
-# (really the static shared storage area for Hercules).  The easiest way
-# to ensure hercs is built before crypto is to add a dependency on hercs
-# to crypto.  Which is done in that directory's CMakeLists.txt
-
-add_subdirectory( crypto )
-
-# Create a dummy target for the general Hercules headers so that
-# things look good when someone opens the configured Hercules
-# in Visual Studio.
 
 
 # ----------------------------------------------------------------------
 #
-# Create the core Hercules shared library target:
+# Create the core Hercules shared library targets:
 #  - hercs - Hercules system data areas
 #  - hercu - Hercules core utilities
 #  - hercd - Hercules DASD utilities
 #  - herct - Hercules tape utilities
 #  - herc  - Hercules core engine
 #
+# Shared libraries are loaded when Hercules begins execution.
+#
 # ----------------------------------------------------------------------
 
-# Shared libraries to be included in the build.  These libraries are
-# loaded at execution start by the loader
-
-herc_Define_Shared_Lib( hercs "${hercs_sources}"       "${pkg_targets}"     shared )
+herc_Define_Shared_Lib( hercs "${hercs_sources}" "${pkg_targets}"  shared )
 herc_Define_Shared_Lib( hercu "${hercu_sources}" "hercs;${herc_Threads_Target}" shared )
 herc_Define_Shared_Lib( hercd "${hercd_sources}" "hercu"   shared )
 herc_Define_Shared_Lib( herct "${herct_sources}" "hercu"   shared )
@@ -186,10 +182,9 @@ herc_Define_Shared_Lib( herc  "${herc_sources}"  "${herc_libs};SoftFloat;decNumb
 target_include_directories( herc PRIVATE "${PROJECT_SOURCE_DIR}/decNumber" )
 
 
-
-# When building on UNIX-like systems, the expectation is that any REXX
-# package is installed in a system directory.  On Windows, the public
-# header directories and link libraries must be explicitly added.
+# When building on UNIX-like and macOS systems, the expectation is that
+# any REXX package is installed in a system directory.  On Windows, the
+# public header directories and link libraries must be explicitly added.
 
 if( WIN32 )
     if( RREXX_DIR )
@@ -228,41 +223,58 @@ endif( )
 
 # ----------------------------------------------------------------------
 #
-# Create targets for the dynamically loaded device interface shared
-# libraries.
+# Create targets for the dynamically loaded device interface modules.
+# Dynamically loaded modules are loaded by Hercules when a device is
+# attached.  They are not unloaded except as directed by the rmmod
+# command.
 #
 # ----------------------------------------------------------------------
 
+herc_Define_Shared_Lib( hdteq    "${hdteq_sources}"    hercu MODULE )
+herc_Define_Shared_Lib( hdt1052c "${hdt1052c_sources}" hercu MODULE )
+herc_Define_Shared_Lib( hdt1403  "${hdt1403_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdt2703  "${hdt2703_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdt2880  "${hdt2880_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdt3088  "${hdt3088_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdt3270  "${hdt3270_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdt3420  "${hdt3420_sources}"  herct MODULE )
+herc_Define_Shared_Lib( hdt3505  "${hdt3505_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdt3525  "${hdt3525_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdt3705  "${hdt3705_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdtptp   "${hdtptp_sources}"   hercu MODULE )
+herc_Define_Shared_Lib( hdtqeth  "${hdtqeth_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( hdtzfcp  "${hdtzfcp_sources}"  hercu MODULE )
 
-# Dynamically loaded libraries to be included in the build.  Note that these
-# libraries are loaded when/as/if required by Hercules, not the open-source
-# host linking loader or the Windows DLL export library.  For device
-# libraries, the shared library/DLL is loaded when a handled device is
-# defined.  If a library requires more than two source files, a
-# <libname>_sources variable is created in Herc41_SlibSource.cmake.
+# ----------------------------------------------------------------------
+#
+# Create targets for other dynamically loaded modules.
+#
+# ----------------------------------------------------------------------
 
-herc_Define_Shared_Lib( hdteq    "${hdteq_sources}"    hercu dynamic )
-herc_Define_Shared_Lib( hdt1052c "${hdt1052c_sources}" hercu dynamic )
-herc_Define_Shared_Lib( hdt1403  "${hdt1403_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdt2703  "${hdt2703_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdt2880  "${hdt2880_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdt3088  "${hdt3088_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdt3270  "${hdt3270_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdt3420  "${hdt3420_sources}"  herct dynamic )
-herc_Define_Shared_Lib( hdt3505  "${hdt3505_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdt3525  "${hdt3525_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdt3705  "${hdt3705_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdtptp   "${hdtptp_sources}"   hercu dynamic )
-herc_Define_Shared_Lib( hdtqeth  "${hdtqeth_sources}"  hercu dynamic )
-herc_Define_Shared_Lib( hdtzfcp  "${hdtzfcp_sources}"  hercu dynamic )
+# Crypto must be built after Hercules as it requires the hercs library
+# (really the static shared storage area for Hercules).  The dependency
+# on hercu will take care of this, as hercu is dependent on hercs.
 
-herc_Define_Shared_Lib( altcmpsc "${altcmpsc_sources}" hercu dynamic )
-herc_Define_Shared_Lib( s37x     "${s37x_sources}"     hercu dynamic )
+herc_Define_Shared_Lib( altcmpsc "${altcmpsc_sources}" hercu MODULE )
+herc_Define_Shared_Lib( dyncrypt "${dyncrypt_sources}" hercu MODULE )
+herc_Define_Shared_Lib( dyngui   "${dyngui_sources}"   hercu MODULE )
+herc_Define_Shared_Lib( dyninst  "${dyninst_sources}"  hercu MODULE )
+herc_Define_Shared_Lib( s37x     "${s37x_sources}"     hercu MODULE )
 
 
-# It is not clear to this author why target_link_libraries() is 
+## The dyncrypt module needs to be built with its own headers in
+## addition to those required for the rest of Hercules.
+
+#target_include_directories( dyncrypt BEFORE PRIVATE
+#        ${PROJECT_BINARY_DIR}
+#        ${PROJECT_SOURCE_DIR}/crypto
+#        ${PROJECT_SOURCE_DIR}
+#      )
+
+
+# It is not clear to this author why target_link_libraries() is
 # required for Windows and Apple target systems and not required when
-# building for UNIX-like targets systems.  Something to investigate.  
+# building for UNIX-like target systems.  Something to investigate.
 
 if( WIN32 OR APPLE )
     target_link_libraries( hdt1052c     herc )
@@ -280,21 +292,20 @@ if( WIN32 OR APPLE )
     target_link_libraries( hdtqeth      herc )
     target_link_libraries( hdtzfcp      herc )
     target_link_libraries( altcmpsc     herc )
+    target_link_libraries( dyncrypt     herc )
+    target_link_libraries( dyngui       herc )
+    target_link_libraries( dyninst      herc )
     target_link_libraries( s37x         herc )
 endif( )
 
 
-
 # ----------------------------------------------------------------------
 #
-# Create targets for the utility executables.
+# Create targets for the utility executables.  These are straightforward.
+# The shared library includes are transitive in CMake; if hercd needs
+# hercu, there is no need to mention hercu here.
 #
 # ----------------------------------------------------------------------
-
-
-# Utility executables.  These are straightforward.  The shared library includes
-# are transitive in CMake; if hercd needs hercu, there is no need to mention
-# hercu here.
 
 herc_Define_Executable( cckdcdsk  "${cckdcdsk_sources}"  hercd )
 herc_Define_Executable( cckdcomp  "${cckdcomp_sources}"  hercd )

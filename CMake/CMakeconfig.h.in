@@ -16,13 +16,15 @@ CMake run timestamp   @BUILD_TIMESTAMP@
 Install prefix        @CMAKE_INSTALL_PREFIX@
 Source directory      @PROJECT_SOURCE_DIR@
 Build directory       @PROJECT_BINARY_DIR@
-Executable directory  @exec_dir@
-Library directory     @library_dir@
+Executable directory  @exec_rel_dir@
+Shared library dir    @libs_rel_dir@
+Loadable module dir   @mods_rel_dir_ins@
+..from build dir      @mods_rel_dir_bld@
 Data Directory (http) @http_dir@
 Build command line:   @CMAKE_MAKE_PROGRAM@
 C Compiler version:   @CMAKE_C_COMPILER_ID@ @CMAKE_C_COMPILER_VERSION@
 C compiler options:   @CMAKE_C_FLAGS@
-Hercules link libs:   @link_alllibs@
+Link libraries:       @link_alllibs@
 ------------------------------------------------------------------------
 
 */
@@ -34,13 +36,32 @@ Hercules link libs:   @link_alllibs@
 */
 
 /*
-   The following two were passed as -D items from makefile.am to the c
-   compiler to deal with oddities in autotools.  With CMake, we can just
-   define these here as there are no autotools oddities to deal with.
+   MODRELDIRBLD is the default location to be searched for loadable
+   modules if search fails when using the target system's default search
+   process (RPATH for UNIX-like, fixed search order for Windows) when
+   Hercules run from the build tree.  MODRELDIRINS is the default when
+   Hercules is run from an install tree.
 */
 
-#define  MODULESDIR         "@library_dir@"
+#define MODRELDIRBLD        "@mods_rel_dir_bld@"
+#define MODRELDIRINS        "@mods_rel_dir_ins@"
+
+/*
+   HTTP_ROOT_INS is the default root directory relative to the Hercules
+   executable of HTML content served by the Hercules embedded web server
+   when Hercules is run from the install directory.  HTTP_ROOT_INS is
+   used when Hercules is run from the build directory.  If neither
+   directory exists, the executable directory is used as the default.
+*/
+
 #define  PKGDATADIR         "@http_dir@"
+
+
+/* DO NOT DEFINE MODULESDIR!  hdl.c can find loadable modules using   */
+/* the host system's library/module search process.                   */
+
+/* #undef MODULESDIR                                                  */
+
 
 /*
    Project information...
@@ -178,7 +199,7 @@ Hercules link libs:   @link_alllibs@
 */
 
 #define  HDL_BUILD_SHARED 1
-#define  LTDL_SHLIB_EXT "@CMAKE_SHARED_LIBRARY_SUFFIX@"
+#define  LTDL_SHLIB_EXT "@CMAKE_SHARED_MODULE_SUFFIX@"
 #define  OPTION_DYNAMIC_LOAD 1
 
 
@@ -549,6 +570,22 @@ Hercules link libs:   @link_alllibs@
 #cmakedefine  HAVE_GCC_SET_UNUSED_WARNING     @HAVE_GCC_SET_UNUSED_WARNING@
 #cmakedefine  HAVE_VERY_STRICT_ALIASING       @HAVE_VERY_STRICT_ALIASING@
 
+/*
+   *********************************************************************
+        Macros for an Apple/macOS build
+   *********************************************************************
+*/
+
+#cmakedefine  HAVE_MACH-O_DYLD_H              @HAVE_MACH-O_DYLD_H@
+#cmakedefine  HAVE_MACH_O_DYLD_H              @HAVE_MACH_O_DYLD_H@
+
+#cmakedefine  HAVE__NSGETEXECUTABLEPATH       @HAVE__NSGETEXECUTABLEPATH@
+
+/*
+   *********************************************************************
+        Windows-specific macros
+   *********************************************************************
+*/
 
 /*
    If this is a Windows build, undefine macros that are #define'd in

@@ -66,8 +66,8 @@ endif( )
 # needed in the install command.
 
 install(    TARGETS ${target_name}
-            LIBRARY DESTINATION ${library_rel_dir}
-            RUNTIME DESTINATION ${library_rel_dir}
+            LIBRARY DESTINATION ${libs_rel_dir}
+            RUNTIME DESTINATION ${libs_rel_dir}
             )
 
 
@@ -88,14 +88,32 @@ link_directories( ${PROJECT_BINARY_DIR}/decNumber )
 
 
 # if building on Windows, add a post-build command to copy the generated
-# DLL to the project build directory.  This does not seem to be needed.
+# DLL to the project build directory from the decNumber build directory.
+# If CMake is using a multi-configuration generator, the copy must be
+# from and to the configuration type subdirectory.  This is not needed on
+# UNIX-like and macOS target systems because the build RPATH created by
+# CMake takes care of this.
+
 
 if( WIN32 )
-    add_custom_command(
-            TARGET ${target_name} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                $<TARGET_FILE:${target_name}>
-                $<TARGET_FILE_DIR:hercs>
+    if( "${CMAKE_CONFIGURATION_TYPES}" STREQUAL "" )
+    # Single configuration generator
+        add_custom_command(
+                TARGET ${target_name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${CMAKE_CURRENT_BINARY_DIR}/${target_name}.dll
+                        ${PROJECT_BINARY_DIR}/${target_name}.dll
             )
-endif()
+    else( )
+    # Multi-configuration generator
+        add_custom_command(
+                TARGET ${target_name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${target_name}.dll
+                        ${PROJECT_BINARY_DIR}/$<CONFIG>/${target_name}.dll
+            )
+    endif( )
+endif( )
+
+
 

@@ -31,29 +31,29 @@ EXPORTS
     decNumberToString
     decNumberToEngString
     decNumberAbs
-    decNumberAdd                                                                                         
-    decNumberCompare                                                                                         
-    decNumberCompareTotal                                                                                         
-    decNumberDivide                                                                                         
-    decNumberDivideInteger                                                                                         
+    decNumberAdd
+    decNumberCompare
+    decNumberCompareTotal
+    decNumberDivide
+    decNumberDivideInteger
     decNumberExp
     decNumberLn
     decNumberLog10
-    decNumberMax                                                                                         
-    decNumberMin                                                                                         
+    decNumberMax
+    decNumberMin
     decNumberMinus
-    decNumberMultiply                                                                                         
+    decNumberMultiply
     decNumberNormalize
     decNumberPlus
-    decNumberPower                                                                                         
-    decNumberQuantize                                                                                         
-    decNumberRemainder                                                                                         
-    decNumberRemainderNear                                                                                         
-    decNumberRescale                                                                                         
-    decNumberSameQuantum                                                                           
+    decNumberPower
+    decNumberQuantize
+    decNumberRemainder
+    decNumberRemainderNear
+    decNumberRescale
+    decNumberSameQuantum
     decNumberSquareRoot
-    decNumberSubtract                                                                                         
-    decNumberToIntegralValue                                                                      
+    decNumberSubtract
+    decNumberToIntegralValue
     decNumberCopy
     decNumberTrim
     decNumberVersion
