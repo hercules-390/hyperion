@@ -103,6 +103,23 @@
 /* TCP/IP. SNA requires one device.                                  */
 /*                                                                   */
 
+/*                                                                   */
+/* Note: QETH.C uses many TUNTAP functions to control and manipulate */
+/* the settings of the TUN or TAP interface.                         */
+/*                                                                   */
+/* Many of the TUNTAP functions used by QETH.C on *nix, i.e.         */
+/* TUNTAP_SetFlags, TUNTAP_SetMACAddr, TUNTAP_SetIPAddr,             */
+/* TUNTAP_SetIPAddr6, TUNTAP_SetDestAddr, TUNTAP_SetNetMask and      */
+/* TUNTAP_SetMTU, return a return code that is actually the return   */
+/* code from function IFC_IOCtl. The return code from IFC_IOCtl      */
+/* will normally be zero, indicating that the interface manipulation */
+/* request was successfully sent to hercifc. So, in general on *nix, */
+/* the TUNTAP function return codes do not indicate whether the      */
+/* interface has been manipulated successfully or not, they simply   */
+/* indicate that the manipulation request should be issued at some   */
+/* point in the near future. Beware.                                 */
+/*                                                                   */
+
 #include "hstdinc.h"
 
 DISABLE_GCC_WARNING( "-Wunused-function" )
@@ -999,7 +1016,7 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
 
     flags = ( 0
             | IFF_UP
-            | IFF_MULTICAST
+            | IFF_ALLMULTI
             | IFF_BROADCAST
 #if defined(TUNTAP_IFF_RUNNING_NEEDED)
             | IFF_RUNNING
@@ -1013,7 +1030,7 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
     rc = TUNTAP_SetFlags( grp->ttifname, flags );
     if (rc != 0)
     {
-        qeth_errnum_msg( dev, grp, rc,
+        qeth_errnum_msg( dev, grp, errno,
             "E", "qeth_enable_interface() failed" );
         return rc;
     }
@@ -1043,7 +1060,7 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
         int flags;
 
         flags = ( 0
-                | IFF_MULTICAST
+                | IFF_ALLMULTI
                 | IFF_BROADCAST
 #if defined(TUNTAP_IFF_RUNNING_NEEDED)
                 | IFF_RUNNING
@@ -1055,7 +1072,7 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
         rc = TUNTAP_SetFlags( grp->ttifname, flags );
         if (rc != 0)
         {
-            qeth_errnum_msg( dev, grp, rc,
+            qeth_errnum_msg( dev, grp, errno,
                 "E", "qeth_disable_interface() failed" );
             return rc;
         }
@@ -1097,7 +1114,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         grp->ttifname
 
     )) != 0)
-        return qeth_errnum_msg( dev, grp, rc,
+        return qeth_errnum_msg( dev, grp, errno,
             "E", "TUNTAP_CreateInterface() failed" );
 
     /* Update DEVBLK file descriptors */
@@ -1116,19 +1133,22 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
         qeth_errnum_msg( dev, grp, rc,
             "W", "socket_set_blocking_mode() failed" );
 
-    /* Make sure the interface has a valid MAC address.      */
+#if defined( OPTION_TUNTAP_SETMACADDR )
+    /* If a MAC address has been specified, make use if it.  */
     /* TUN's of course don't have MAC addresses, only TAP's. */
     if (grp->tthwaddr) {
-#if defined( OPTION_TUNTAP_SETMACADDR )
         if (!grp->l3) {
             if ((rc = TUNTAP_SetMACAddr(grp->ttifname,grp->tthwaddr)) != 0)
-                return qeth_errnum_msg( dev, grp, rc,
+                return qeth_errnum_msg( dev, grp, errno,
                     "E", "TUNTAP_SetMACAddr() failed" );
         }
-#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
-    } else {
-        InitMACAddr( dev, grp );
     }
+#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
+
+    /* Make sure the interface has a valid MAC address.      */
+    /* TUN's of course don't have MAC addresses, only TAP's, */
+    /* but we need to keep up a pretence.                    */
+    InitMACAddr( dev, grp );
 
     /* If possible, assign an IPv4 address to the interface */
     if(
@@ -1138,11 +1158,11 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
                   grp->ttipaddr)
 #if defined( OPTION_W32_CTCI )
         if ((rc = TUNTAP_SetDestAddr(grp->ttifname,grp->ttipaddr)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
+            return qeth_errnum_msg( dev, grp, errno,
                 "E", "TUNTAP_SetDestAddr() failed" );
 #else /*defined( OPTION_W32_CTCI )*/
         if ((rc = TUNTAP_SetIPAddr(grp->ttifname,grp->ttipaddr)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
+            return qeth_errnum_msg( dev, grp, errno,
                 "E", "TUNTAP_SetIPAddr() failed" );
 #endif /*defined( OPTION_W32_CTCI )*/
 
@@ -1154,7 +1174,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 #endif /*defined( OPTION_W32_CTCI )*/
                   grp->ttnetmask)
         if ((rc = TUNTAP_SetNetMask(grp->ttifname,grp->ttnetmask)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
+            return qeth_errnum_msg( dev, grp, errno,
                 "E", "TUNTAP_SetNetMask() failed" );
 #endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
 
@@ -1166,14 +1186,14 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
 #endif /*defined( OPTION_W32_CTCI )*/
                   grp->ttipaddr6)
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
-            return qeth_errnum_msg( dev, grp, rc,
+            return qeth_errnum_msg( dev, grp, errno,
                 "E", "TUNTAP_SetIPAddr6() failed" );
 #endif /*defined(ENABLE_IPV6)*/
 
     /* Set the interface's MTU size */
     if (grp->ttmtu) {
         if ((rc = TUNTAP_SetMTU(grp->ttifname,grp->ttmtu)) != 0) {
-            return qeth_errnum_msg( dev, grp, rc,
+            return qeth_errnum_msg( dev, grp, errno,
                 "E", "TUNTAP_SetMTU() failed" );
         }
         grp->uMTU = (U16) atoi( grp->ttmtu );
@@ -1433,8 +1453,9 @@ U16 offph;
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int rc = 0;
-#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
+#if defined(OPTION_W32_CTCI)
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
+                BYTE was_enabled;
 #endif /*defined(OPTION_W32_CTCI)*/
 
                     strcat( dev->dev_data, ": IPA_CMD_SETVMAC" );  /* Prepare the contentstring */
@@ -1443,41 +1464,62 @@ U16 offph;
                     /* Display the request MPC_TH etc., maybe. */
                     DBGUPD( dev, 1, req_th, 0, FROM_GUEST, "%s: Request", dev->dev_data );
 
-#if defined(OPTION_W32_CTCI) // WE SHOULD NOT CHANGE THE MAC OF THE TUN
-                    MSGBUF( tthwaddr, "%02x:%02x:%02x:%02x:%02x:%02x"
-                        ,ipa_mac->macaddr[0]
-                        ,ipa_mac->macaddr[1]
-                        ,ipa_mac->macaddr[2]
-                        ,ipa_mac->macaddr[3]
-                        ,ipa_mac->macaddr[4]
-                        ,ipa_mac->macaddr[5]
-                    );
-
-                    if ((rc = TUNTAP_SetMACAddr( grp->ttifname, tthwaddr )) != 0)
-                    {
-                        qeth_errnum_msg( dev, grp, rc,
-                            "E", "IPA_CMD_SETVMAC failed" );
-                        STORE_HW(ipa->rc,IPA_RC_FFFF);
+                    /* Register the MAC address */
+                    rc = register_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_UNICST);
+                    if (rc == -1) {          /* MAC table full */
+                        STORE_HW(ipa->rc, IPA_RC_L2_ADDR_TABLE_FULL);
+                    } else if (rc == 1) {    /* MAC address in table */
+                        STORE_HW(ipa->rc, IPA_RC_L2_DUP_MAC);
+                    } else {                 /* MAC address added to table */
+                        STORE_HW(ipa->rc, IPA_RC_SUCCESS);
                     }
-                    else
-#endif /*defined(OPTION_W32_CTCI)*/
-                    {
+
 #if defined(OPTION_W32_CTCI)
-                        if (grp->tthwaddr)
-                            free( grp->tthwaddr );
+#if defined( OPTION_TUNTAP_SETMACADDR )
+                    /* We only set the interface MAC address if the MAC    */
+                    /* address supplied by the guest is different to the   */
+                    /* interface MAC address that is currently being used. */
+                    if (memcmp( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN ) != 0)
+                    {
 
-                        grp->tthwaddr = strdup( tthwaddr );
-                        memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
-#endif /*defined(OPTION_W32_CTCI)*/
-                        rc = register_mac(grp, dev, ipa_mac->macaddr, MAC_TYPE_UNICST);
-                        if (rc == -1) {          /* MAC table full */
-                            STORE_HW(ipa->rc, IPA_RC_L2_ADDR_TABLE_FULL);
-                        } else if (rc == 1) {    /* MAC address in table */
-                            STORE_HW(ipa->rc, IPA_RC_L2_DUP_MAC);
-                        } else {                 /* MAC address added to table */
-                            STORE_HW(ipa->rc, IPA_RC_SUCCESS);
+                        /* Save guest MAC address */
+                        MSGBUF( tthwaddr, "%02x:%02x:%02x:%02x:%02x:%02x"
+                            ,ipa_mac->macaddr[0]
+                            ,ipa_mac->macaddr[1]
+                            ,ipa_mac->macaddr[2]
+                            ,ipa_mac->macaddr[3]
+                            ,ipa_mac->macaddr[4]
+                            ,ipa_mac->macaddr[5]
+                        );
+
+                        was_enabled = grp->enabled ? TRUE : FALSE;
+
+                        if (was_enabled)
+                            VERIFY( qeth_disable_interface( dev, grp ) == 0);
+
+                        rc = TUNTAP_SetMACAddr( grp->ttifname, tthwaddr );
+
+                        if (rc == 0)
+                        {
+                            free( grp->tthwaddr );
+                            grp->tthwaddr = strdup( tthwaddr );
+                            memcpy( grp->iMAC, ipa_mac->macaddr, IFHWADDRLEN );
                         }
+
+                        if (was_enabled)
+                            VERIFY( qeth_enable_interface( dev, grp ) == 0);
+
+                        if (rc != 0)
+                        {
+                            qeth_errnum_msg( dev, grp, errno,
+                                "E", "IPA_CMD_SETVMAC failed" );
+                            STORE_HW(ipa->rc,IPA_RC_FFFF);
+                        }
+
                     }
+#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
+#endif /*defined(OPTION_W32_CTCI)*/
+
                 }
                 /* end case IPA_CMD_SETVMAC:  0x21 */
                 break;
@@ -1585,6 +1627,11 @@ U16 offph;
                 U16  retcode;
                 int  rc;
                 U32  flags;
+                char ipaddr[16] = {0};
+                char ipmask[16] = {0};
+#if defined(OPTION_W32_CTCI)
+                BYTE was_enabled;
+#endif // defined(OPTION_W32_CTCI)
 
                     strcat( dev->dev_data, ": IPA_CMD_SETIP" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );             /* Prepare the contentstring */
@@ -1597,8 +1644,6 @@ U16 offph;
 
                     if (proto == IPA_PROTO_IPV4)
                     {
-                      char ipaddr[16] = {0};
-                      char ipmask[16] = {0};
 
                       FETCH_FW(flags,ipa_sip->data.ip4.flags);
                       if (flags == IPA_SIP_DEFAULT)
@@ -1614,37 +1659,61 @@ U16 offph;
                             retcode = IPA_RC_SUCCESS;
                         }
 
-                        /* Save guest IPv4 address and netmask. */
-                        MSGBUF(ipaddr,"%d.%d.%d.%d",ipa_sip->data.ip4.addr[0],
-                                                    ipa_sip->data.ip4.addr[1],
-                                                    ipa_sip->data.ip4.addr[2],
-                                                    ipa_sip->data.ip4.addr[3]);
-                        /* Note: ipa_sip->data.ip4.mask often contains */
-                        /* 0xFFFFFF00, irrespective of the subnet mask */
-                        /* the guest is actually using, particularly   */
-                        /* when the guest is Linux.                    */
-                        MSGBUF(ipmask,"%d.%d.%d.%d",ipa_sip->data.ip4.mask[0],
-                                                    ipa_sip->data.ip4.mask[1],
-                                                    ipa_sip->data.ip4.mask[2],
-                                                    ipa_sip->data.ip4.mask[3]);
+                        /* We only set the interface IPv4 address if the IPv4   */
+                        /* address supplied by the guest is different to the    */
+                        /* interface IPv4 address that is currently being used. */
+                        if (memcmp( grp->confipaddr4, ipa_sip->data.ip4.addr, 4 ) != 0)
+                        {
+
+                          /* Save guest IPv4 address and netmask. */
+                          MSGBUF(ipaddr,"%d.%d.%d.%d",ipa_sip->data.ip4.addr[0],
+                                                      ipa_sip->data.ip4.addr[1],
+                                                      ipa_sip->data.ip4.addr[2],
+                                                      ipa_sip->data.ip4.addr[3]);
+                          /* Note: ipa_sip->data.ip4.mask often contains */
+                          /* 0xFFFFFF00, irrespective of the subnet mask */
+                          /* the guest is actually using, particularly   */
+                          /* when the guest is Linux.                    */
+                          MSGBUF(ipmask,"%d.%d.%d.%d",ipa_sip->data.ip4.mask[0],
+                                                      ipa_sip->data.ip4.mask[1],
+                                                      ipa_sip->data.ip4.mask[2],
+                                                      ipa_sip->data.ip4.mask[3]);
 
 #if defined(OPTION_W32_CTCI)
-                        if (grp->ttipaddr)
-                            free( grp->ttipaddr );
-                        grp->ttipaddr = strdup( ipaddr );
+                          /* If the interface is already enabled/up we need to temporarily */
+                          /* bring it down (disable it) so we can change the IP address    */
+                          /* and then afterwards bring it back up again (enable it).       */
+                          was_enabled = grp->enabled ? TRUE : FALSE;
 
-                        if (grp->ttnetmask)
-                            free( grp->ttnetmask );
-                        grp->ttnetmask = strdup( ipmask );
-
+                          if (was_enabled)
+                              VERIFY( qeth_disable_interface( dev, grp ) == 0);
 #endif // defined(OPTION_W32_CTCI)
-                        rc = TUNTAP_SetDestAddr(grp->ttifname,ipaddr);
 
-                        if (rc != 0)
-                        {
-                            qeth_errnum_msg( dev, grp, rc,
-                                "E", "TUNTAP_SetDestAddr() failed" );
-                            retcode = IPA_RC_FFFF;
+                          rc = TUNTAP_SetDestAddr( grp->ttifname, ipaddr );
+
+#if defined(OPTION_W32_CTCI)
+                          if (rc == 0)
+                          {
+                              free( grp->ttipaddr );
+                              grp->ttipaddr = strdup( ipaddr );
+                              memcpy( grp->confipaddr4, ipa_sip->data.ip4.addr, 4 );
+
+                              free( grp->ttnetmask );
+                              grp->ttnetmask = strdup( ipmask );
+                              memcpy( grp->confpfxmask4, ipa_sip->data.ip4.mask, 4 );
+                          }
+
+                          if (was_enabled)
+                              VERIFY( qeth_enable_interface( dev, grp ) == 0);
+#endif // defined(OPTION_W32_CTCI)
+
+                          if (rc != 0)
+                          {
+                              qeth_errnum_msg( dev, grp, errno,
+                                  "E", "TUNTAP_SetDestAddr() failed" );
+                              retcode = IPA_RC_FFFF;
+                          }
+
                         }
 
                         ipadatasize = (4 + 4 + 4);
@@ -2333,7 +2402,7 @@ U16 reqtype;
         dev->qdio.idxstate = MPC_IDX_STATE_INACTIVE;
 
         // Free the response buffer.
-        if (rsp_bhr->content) free( rsp_bhr->content );
+        free( rsp_bhr->content );
         free( rsp_bhr );
         rsp_bhr = NULL;
 
@@ -3078,7 +3147,7 @@ static QRC read_l3r_buffers( DEVBLK* dev, OSA_GRP *grp,
             qrc = 0;
 
         /* Free layer 3 response buffer. Read is complete. */
-        if (bhr->content) free( bhr->content );
+        free( bhr->content );
         free( bhr );
     }
     while (qrc >= 0 && grp->rdpack && grp->l3r.firstbhr && ++sb < QMAXSTBK);
@@ -3744,8 +3813,7 @@ U32 mask4;
     {
         if(!strcasecmp("iface",argv[i]) && (i+1) < argc)
         {
-            if(grp->tuntap)
-                free(grp->tuntap);
+            free(grp->tuntap);
             grp->tuntap = strdup(argv[++i]);
             continue;
         }
@@ -3758,8 +3826,7 @@ U32 mask4;
 #endif /*!defined(OPTION_W32_CTCI)*/
         else if(!strcasecmp("hwaddr",argv[i]) && (i+1) < argc)
         {
-            if(grp->tthwaddr)
-                free(grp->tthwaddr);
+            free(grp->tthwaddr);
             grp->tthwaddr = strdup(argv[++i]);
             continue;
         }
@@ -3770,19 +3837,16 @@ U32 mask4;
             if (slash) {                       /* If there is a slash      */
                 slash[0] = 0;                  /* Replace slash with null  */
                 prfx = slash + 1;              /* Point to prefix size     */
-                if(grp->ttpfxlen)
-                    free(grp->ttpfxlen);
+                free(grp->ttpfxlen);
                 grp->ttpfxlen = strdup(prfx);
             }
-            if(grp->ttipaddr)
-                free(grp->ttipaddr);
+            free(grp->ttipaddr);
             grp->ttipaddr = strdup(argv[++i]);
             continue;
         }
         else if(!strcasecmp("netmask",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttnetmask)
-                free(grp->ttnetmask);
+            free(grp->ttnetmask);
             grp->ttnetmask = strdup(argv[++i]);
             continue;
         }
@@ -3790,10 +3854,8 @@ U32 mask4;
         else if(!strcasecmp("ipaddr6",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
-            if(grp->ttipaddr6)
-                free(grp->ttipaddr6);
-            if(grp->ttpfxlen6)
-                free(grp->ttpfxlen6);
+            free(grp->ttipaddr6);
+            free(grp->ttpfxlen6);
             slash = strchr( argv[i+1], '/' );  /* Point to slash character */
             if (slash) {                       /* If there is a slash      */
                 prfx = slash + 1;              /* Point to prefix size     */
@@ -3809,15 +3871,13 @@ U32 mask4;
 #endif /*defined(ENABLE_IPV6)*/
         else if(!strcasecmp("mtu",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttmtu)
-                free(grp->ttmtu);
+            free(grp->ttmtu);
             grp->ttmtu = strdup(argv[++i]);
             continue;
         }
         else if(!strcasecmp("chpid",argv[i]) && (i+1) < argc)
         {
-            if(grp->ttchpid)
-                free(grp->ttchpid);
+            free(grp->ttchpid);
             grp->ttchpid = strdup(argv[++i]);
             continue;
         }
@@ -3900,16 +3960,10 @@ U32 mask4;
                                      "ipaddr", grp->ttipaddr );
                 free(grp->ttipaddr);
                 grp->ttipaddr = NULL;
-                if(grp->ttpfxlen)
-                {
-                    free(grp->ttpfxlen);
-                    grp->ttpfxlen = NULL;
-                }
-                if(grp->ttnetmask)
-                {
-                    free(grp->ttnetmask);
-                    grp->ttnetmask = NULL;
-                }
+                free(grp->ttpfxlen);
+                grp->ttpfxlen = NULL;
+                free(grp->ttnetmask);
+                grp->ttnetmask = NULL;
             }
         }
 
@@ -3931,10 +3985,8 @@ U32 mask4;
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "netmask", grp->ttnetmask );
                 free(grp->ttnetmask);
-                if(grp->ttipaddr)
-                    free(grp->ttipaddr);
-                if(grp->ttpfxlen)
-                    free(grp->ttpfxlen);
+                free(grp->ttipaddr);
+                free(grp->ttpfxlen);
                 grp->ttnetmask = NULL;
                 grp->ttipaddr = NULL;
                 grp->ttpfxlen = NULL;
@@ -3951,8 +4003,7 @@ U32 mask4;
                         "prefix length", "netmask" );
                 }
                 /* Use consistent prefix length */
-                if (grp->ttpfxlen)
-                    free( grp->ttpfxlen );
+                free( grp->ttpfxlen );
                 grp->ttpfxlen = new_ttpfxlen;
             }
         }
@@ -3966,10 +4017,8 @@ U32 mask4;
                 WRMSG(HHC00916, "E", SSID_TO_LCSS(dev->ssid), dev->devnum, dev->typname,
                                      "ipaddr", grp->ttipaddr );
                 free(grp->ttpfxlen);
-                if(grp->ttipaddr)
-                    free(grp->ttipaddr);
-                if(grp->ttnetmask)
-                    free(grp->ttnetmask);
+                free(grp->ttipaddr);
+                free(grp->ttnetmask);
                 grp->ttpfxlen = NULL;
                 grp->ttipaddr = NULL;
                 grp->ttnetmask = NULL;
@@ -3986,8 +4035,7 @@ U32 mask4;
                         "netmask", "prefix length" );
                 }
                 /* Use consistent netmask */
-                if (grp->ttnetmask)
-                    free( grp->ttnetmask );
+                free( grp->ttnetmask );
                 grp->ttnetmask = new_ttnetmask;
             }
         }
@@ -4013,11 +4061,8 @@ U32 mask4;
                                      "ipaddr6", grp->ttipaddr6 );
                 free(grp->ttipaddr6);
                 grp->ttipaddr6 = NULL;
-                if(grp->ttpfxlen6)
-                {
-                    free(grp->ttpfxlen6);
-                    grp->ttpfxlen6 = NULL;
-                }
+                free(grp->ttpfxlen6);
+                grp->ttpfxlen6 = NULL;
             }
         }
         if (grp->ttpfxlen6)
@@ -4035,11 +4080,8 @@ U32 mask4;
                                      "ipaddr6", grp->ttpfxlen6 );
                 free(grp->ttpfxlen6);
                 grp->ttpfxlen6 = NULL;
-                if(grp->ttipaddr6)
-                {
-                    free(grp->ttipaddr6);
-                    grp->ttipaddr6 = NULL;
-                }
+                free(grp->ttipaddr6);
+                grp->ttipaddr6 = NULL;
             }
         }
 #endif /*defined(ENABLE_IPV6)*/
@@ -4175,24 +4217,15 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
         PTT_QETH_TRACE( "af clos pipe", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos othr", 0,0,0 );
-        if(grp->tuntap)
-            free(grp->tuntap);
-        if(grp->tthwaddr)
-            free(grp->tthwaddr);
-        if(grp->ttipaddr)
-            free(grp->ttipaddr);
-        if(grp->ttpfxlen)
-            free(grp->ttpfxlen);
-        if(grp->ttnetmask)
-            free(grp->ttnetmask);
-        if(grp->ttipaddr6)
-            free(grp->ttipaddr6);
-        if(grp->ttpfxlen6)
-            free(grp->ttpfxlen6);
-        if(grp->ttmtu)
-            free(grp->ttmtu);
-        if(grp->ttchpid)
-            free(grp->ttchpid);
+        free(grp->tuntap);
+        free(grp->tthwaddr);
+        free(grp->ttipaddr);
+        free(grp->ttpfxlen);
+        free(grp->ttnetmask);
+        free(grp->ttipaddr6);
+        free(grp->ttpfxlen6);
+        free(grp->ttmtu);
+        free(grp->ttchpid);
         PTT_QETH_TRACE( "af clos othr", 0,0,0 );
 
         PTT_QETH_TRACE( "b4 clos fbuf", 0,0,0 );
@@ -4513,7 +4546,7 @@ U32 num;                                /* Number of bytes to move   */
                 memcpy( iobuf, iodata, datalen );
 
                 /* Free IDX response buffer. Read is complete. */
-                if (bhr->content) free( bhr->content );
+                free( bhr->content );
                 free( bhr );
                 break; /*while*/
             }
@@ -6060,7 +6093,7 @@ static void  remove_and_free_any_buffers_on_chain( OSA_BAN* ban )
     {
         bhr = ban->firstbhr;               // Pointer to first OSA_BHR
         ban->firstbhr = bhr->next;         // Make the next the first OSA_BHR
-        if (bhr->content) free( bhr->content );  // Free the buffer content string
+        free( bhr->content );              // Free the buffer content string
         free( bhr );                       // Free the message buffer
     }
 
@@ -6095,7 +6128,7 @@ static void  signal_idx_event( OSA_GRP* grp )
 static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
 {
     static const BYTE zeromac[IFHWADDRLEN] = {0};
-    char* tthwaddr;
+    char* tthwaddr = NULL;
     BYTE iMAC[ IFHWADDRLEN ];
     char szMAC[3*IFHWADDRLEN] = {0};
     int rc = 0;
@@ -6119,15 +6152,15 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         {
             UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
             DBGTRC(dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n");
-            if (tthwaddr)
-                free( tthwaddr );
             build_herc_iface_mac( iMAC, NULL );
             MSGBUF( szMAC, "%02x:%02x:%02x:%02x:%02x:%02x",
                 iMAC[0], iMAC[1], iMAC[2],
                 iMAC[3], iMAC[4], iMAC[5] );
+            free( tthwaddr );
             tthwaddr = strdup( szMAC );
         }
 
+        free(grp->tthwaddr);
         grp->tthwaddr = strdup( tthwaddr );
         memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
 
@@ -6150,10 +6183,10 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         {
             memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
         } else {
-            if (grp->tthwaddr) free(grp->tthwaddr);
             build_herc_iface_mac( iMAC, NULL );
             MSGBUF( szMAC, "%02x:%02x:%02x:%02x:%02x:%02x",
                     iMAC[0], iMAC[1], iMAC[2], iMAC[3], iMAC[4], iMAC[5] );
+            free(grp->tthwaddr);
             grp->tthwaddr = strdup( szMAC );
             memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
         }
@@ -6207,8 +6240,7 @@ static void InitMTU( DEVBLK* dev, OSA_GRP* grp )
     {
         UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
         DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
-        if (ttmtu)
-            free( ttmtu );
+        free( ttmtu );
         ttmtu = strdup( QETH_DEF_MTU );
         uMTU = (U16) atoi( ttmtu );
     }
