@@ -5,7 +5,6 @@
    Absence of flexible array support is not fatal to the Hercules build.
 
    This test is used for gcc and clang, and may be used for any compiler.
-   This test requires execution of a program because at least one compiler
 
    If the following program compiles and links successfully, then
    C99 flexible arrays are availble.  Execution is not required.
