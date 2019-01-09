@@ -171,6 +171,22 @@ endif( )
 
 string( TOUPPER "${CMAKE_SYSTEM_PROCESSOR}" target_processor )
 
+# For Intel processors, two checks apply to both 32-bit and 64-bit
+# processors: -minline-stringops-dynamically and -march=native.
+# We will test both here.  If -minline-stringops-dynamically is
+# accepted, we will add it to the option string.  -march=native
+# availability will be addressed based on processor bitness.
+
+if( "${target_processor}" IN_LIST herc_Intel )
+    CHECK_C_COMPILER_FLAG("-march=native" HAVE__MARCH_NATIVE)
+    CHECK_C_COMPILER_FLAG("-minline-stringops-dynamically" HAVE__MINLINE-STRINGOPS-DYNAMICALLY)
+
+    if( HAVE__MINLINE-STRINGOPS-DYNAMICALLY )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -minline-stringops-dynamically" )
+    endif( )
+
+endif( )
+
 
 # Intel 64-bit processor-specific compiler flags.
 
@@ -181,22 +197,21 @@ string( TOUPPER "${CMAKE_SYSTEM_PROCESSOR}" target_processor )
 # 2) GNU compilers 4.2.0 and better accept -march=native.  Prior to
 #    4.2.0, Hercules used -march=K8 for all 64-bit processors, even on
 #    Apple builds (which use a script separate from this one).
+# 3) One target/compiler combination, NetBSD 7.0.1 and gcc 4.8.4,
+#    reject -march=native.  Use -march=x86-64 instead.
 
 if( "${target_processor}" IN_LIST herc_Intel_64 )
-
     if( NOT host_is_target )
-        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=x86_64" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=x86-64" )
+
+    elseif( CMAKE_C_COMPILER_VERSION VERSION_LESS "4.2.0" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=K8" )
+    elseif( HAVE__MARCH_NATIVE )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native" )
     else( )
-        if( CMAKE_C_COMPILER_VERSION VERSION_LESS "4.2.0" )
-            set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=K8" )
-        else( )
-            set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native" )
-        endif( )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=x86-64" )
     endif( )
 
-    if( CMAKE_C_COMPILER_VERSION VERSION_GREATER "4.2.9" )
-        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -minline-stringops-dynamically" )
-    endif( )
     unset( target_processor )
     unset( host_is_target )
     return( )
@@ -216,32 +231,25 @@ endif( )
 #    valid GNU release number.  And compilers reporting 2.9.6 do not
 #    understand i686.
 # 4) GNU compilers 4.2.0 and better accept -march=native.
-# 5) GNU compilers 4.3.0 and better accept -minline-stringops-dynamically.
-#    This does not appear in GNU options summary documentation until
-#    4.4.0, but it is there; see above.
+# 6) One target/compiler combination, NetBSD 7.0.1 and gcc 4.8.4,
+#    reject -march=native.  Use ${CMAKE_SYSTEM_PROCESSOR} instead.
 
 if( "${target_processor}" IN_LIST herc_Intel_32 )
 
     if( "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i786" )
-        set( I386_target "-march=pentium4" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=pentium4" )
     elseif( ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i686")
             AND (CMAKE_C_COMPILER_VERSION VERSION_EQUAL "2.9.6")
             )
-        set( I386_target "-march=I586" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=i586" )
     elseif( host_is_target
-            AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER "4.1.9")
+            AND ( HAVE__MARCH_NATIVE )
             )
-        set( I386_target "-march=native" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native" )
     else( )
-        set( I386_target "-march=${CMAKE_SYSTEM_PROCESSOR}" )
+        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=${CMAKE_SYSTEM_PROCESSOR}" )
     endif( )
 
-    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${I386_target}" )
-    unset( I386_target )
-
-    if( CMAKE_C_COMPILER_VERSION VERSION_GREATER "4.2.9" )
-        set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -minline-stringops-dynamically" )
-    endif( )
     unset( target_processor )
     unset( host_is_target )
     return( )
@@ -279,10 +287,6 @@ elseif( "${target_processor}" MATCHES "XSCALE" )
             "-frename-registers"
             )
 
-endif( )
-
-if( NOT "${optimization_flags}" STREQUAL "" )
-    set( CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=${I386_target}" )
 endif( )
 
 
