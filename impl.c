@@ -1246,18 +1246,7 @@ char * getexepath(const char* cmdline)
 
     pathlen = GetModuleFileName(NULL, candidatepath, MAX_PATH);
     if (pathlen)           /* did we get a path back?                       */
-    {
-#   if PATHSEPC == '/'              /* convert Windows path to UNIX-like    */
-        char * i = candidatepath;   /* slashes for for consistency with the */
-        while (*i)                  /* rest of Hercules.  The Windows API   */
-        {                           /* does not care.                       */
-            if (*i == '\\')
-                *i = PATHSEPC;
-            i++;
-        }
-#   endif  /* PATHSEPC == '/'          convert Windows path to UNIX-like    */
         resultpath = strdup(candidatepath);  /* ..yes, copy to result-sized space */
-    }
 
     return resultpath;
 
