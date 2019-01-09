@@ -102,7 +102,7 @@ set(test_names_099-other
     )
 
 # Determine the pointer size.  On UNIX-like systems, config.h is in the
-# same directory as the Hercules executable, and runtest.rexx will parse
+# same directory as the Hercules executable, and herctest will parse
 # it to determine the pointer size.  When using Windows Visual Studio,
 # the Hercules executable is built in a subdirectory.  In either case,
 # we can just determine the pointer size from CMAKE_SIZEOF_VOID_P and
@@ -135,15 +135,15 @@ foreach( test_group IN LISTS test_group_names )
     # runtest timer is slowed (-t 10) to avoid false positives when
     # testing on a busy system.
     add_test( NAME ${test_group}
-            COMMAND rexx ${PROJECT_BINARY_DIR}/tests/runtest.rexx
-                    -d ${PROJECT_BINARY_DIR}/tests
-                    -h $<TARGET_FILE_DIR:hercules>
+            COMMAND $<TARGET_FILE:herctest>
+                    -d "${PROJECT_BINARY_DIR}/tests"
+                    -h "$<TARGET_FILE_DIR:hercules>"
                     -t 10
                     ${test_name_list}
                     -v ${__ptr_size}
-                    -p ${PROJECT_BINARY_DIR}
-                    -w Testing/Temporary/${test_group}
-            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+                    -p "${PROJECT_BINARY_DIR}"
+                    -w "${test_group}"
+            WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/Testing/Temporary
             )
 
 endforeach( )

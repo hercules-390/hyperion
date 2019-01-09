@@ -321,6 +321,7 @@ herc_Define_Executable( dasdls    "${dasdls_sources}"    hercd )
 herc_Define_Executable( dasdpdsu  "${dasdpdsu_sources}"  hercd )
 herc_Define_Executable( dasdseq   "${dasdseq_sources}"   hercd )
 herc_Define_Executable( dmap2hrc  "${dmap2hrc_sources}"  hercd )
+herc_Define_Executable( herctest  "${herctest_sources}"  ""    )
 herc_Define_Executable( hetget    "${hetget_sources}"    herct )
 herc_Define_Executable( hetinit   "${hetinit_sources}"   herct )
 herc_Define_Executable( hetmap    "${hetmap_sources}"    herct )
@@ -329,6 +330,16 @@ herc_Define_Executable( tapecopy  "${tapecopy_sources}"  herct )
 herc_Define_Executable( tapemap   "${tapemap_sources}"   herct )
 herc_Define_Executable( tapesplt  "${tapesplt_sources}"  herct )
 herc_Define_Executable( vmfplc2   "${vmfplc2_sources}"   herct )
+
+
+# Remove all include directories from the compilation of herctest.
+# Herctest.c does not require any Hercules headers, and the
+# presence of getopt.h in the Hercules source directory interferes
+# with that extant in the host's system libraries.   Herctest.c
+# has its own getopt.c/.h, used when compiling on Windows systems.
+
+set_target_properties( herctest PROPERTIES INCLUDE_DIRECTORIES "" )
+
 
 if( WIN32 )
     herc_Define_Executable( conspawn "${conspawn_sources}" hercs )

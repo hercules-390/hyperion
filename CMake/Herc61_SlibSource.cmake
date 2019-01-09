@@ -49,6 +49,9 @@ set( tapemap_sources    tapemap.c )
 set( tapesplt_sources   tapesplt.c )
 set( vmfplc2_sources    vmfplc2.c )
 
+# Test driver
+set( herctest_sources   herctest.c )
+
 
 #-----------------------------------------------------------------------
 #
