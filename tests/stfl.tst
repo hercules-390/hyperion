@@ -8,7 +8,7 @@
 * This test cause program checks on ESA hardware.
 sysclear
 archmode z
-loadcore $(testpath)/stfl.core
+loadcore "$(testpath)/stfl.core"
 *Program 6
 runtest
 gpr

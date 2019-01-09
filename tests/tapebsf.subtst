@@ -9,7 +9,7 @@ stopall                 # stop all cpus
 archmode S/370          # reported problem archmode
 sysclear                # sysCLEAR! (not sysRESET!)
 detach $(tapecuu)       # in case it already exists
-attach $(tapecuu) 3420 $(tapefile)
+attach $(tapecuu) 3420 "$(tapefile)"
 t+$(tapecuu)            # trace CCWs
 
 
