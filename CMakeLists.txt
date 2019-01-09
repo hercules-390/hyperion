@@ -349,6 +349,7 @@ endif( )
 #  CMake functions create the enviroment used by this build.
 
 include( TestBigEndian )            # Enable endian test
+include( CheckCCompilerFlag )       # Enable tests for valid c compiler flags
 include( CheckTypeSize )            # Enable tests for types and their sizes
 include( CheckIncludeFiles )        # Enable tests for include headers
 include( CheckLibraryExists )       # Enable tests for specific libraries
