@@ -17,6 +17,7 @@
 #       Don't forget to update the 'targetver.h' header too!
 #       Don't forget to update the 'makefile.bat' file also!
 
+vers_vs2017=15
 vers_vs2015=14
 vers_vs2013=12
 vers_vs2012=11
@@ -30,7 +31,10 @@ vers_vs2005=8
 #       Don't forget to update the 'targetver.h' header too!
 #       Don't forget to update the 'makefile.bat' file also!
 
-!IFDEF VS140COMNTOOLS
+!IFDEF VS150COMNTOOLS
+!MESSAGE Makefile presuming VS2017 Community Edition (VS15 = _MSC_VER 1910)
+vsversion=$(vers_vs2015)
+!ELSEIFDEF VS140COMNTOOLS
 !MESSAGE Makefile presuming VS2015 Community Edition (VS14 = _MSC_VER 1900)
 vsversion=$(vers_vs2015)
 !ELSEIFDEF VS120COMNTOOLS

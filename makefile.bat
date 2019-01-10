@@ -312,6 +312,19 @@
 ::
 ::-----------------------------------------------------------------------------
 
+:vs150
+
+  if /i "%targ_arch%" == "all" goto :multi_build
+
+  call :set_host_arch
+  
+  if %rc% NEQ 0 (set "rc=1"
+                 %exit%)			 
+				 
+  call "%VSTOOLSDIR%..\..\VC\Auxiliary\Build\vcvarsall.bat"  %host_arch%%targ_arch%	
+  
+  goto :nmake
+
 :vs140
 :vs120
 :vs110
@@ -388,6 +401,7 @@
 ::
 :: -------------------------------------------------------------------
 
+  set "vs2017=150"
   set "vs2015=140"
   set "vs2013=120"
   set "vs2012=110"
@@ -395,6 +409,18 @@
   set "vs2008=90"
   set "vs2005=80"
 
+:try_vs150
+
+  if "%VS150COMNTOOLS%" == "" goto :try_vs140
+  if exist "%VS150COMNTOOLS%..\..\VC\Auxiliary\Build\vcvarsall.bat"  (
+     set "VSTOOLSDIR=%VS150COMNTOOLS%"
+     set "vsname=2017"
+     set "vsver=%vs2017%"
+     goto :got_vstudio
+  )
+
+  set "VS150COMNTOOLS="  
+  
 :try_vs140
 
   if "%VS140COMNTOOLS%" == "" goto :try_vs120
@@ -595,6 +621,7 @@
   :: VS2008/VS2010/VS2012/VS2013/VS2015 multi-config multi-platform parallel build?
 
   if    not "%CFG%"        == ""            %return%
+  if /i     "%build_env%"  == "vs150"       goto :multi_cfg
   if /i     "%build_env%"  == "vs140"       goto :multi_cfg
   if /i     "%build_env%"  == "vs120"       goto :multi_cfg
   if /i     "%build_env%"  == "vs110"       goto :multi_cfg
@@ -631,6 +658,7 @@
   :: VS2008/VS2010/VS2012/VS2013/VS2015 multi-config multi-platform parallel build?
 
   if    not "%targ_arch%"  == ""            goto :set_CPU_etc
+  if /i     "%build_env%"  == "vs150"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs140"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs120"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs110"       goto :multi_targ_arch
@@ -700,6 +728,9 @@
   if /i not "%host_arch%" == "%targ_arch%" goto :cross
 
   set "host_arch="
+  
+  if exist "%VSTOOLSDIR%..\..\VC\Auxiliary\Build\vcvars32.bat" %return%
+  
   if exist "%VSTOOLSDIR%..\..\VC\bin\vcvars32.bat" %return%
   goto :missing
 
