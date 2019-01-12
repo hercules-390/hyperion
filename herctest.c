@@ -1776,7 +1776,7 @@ int build_test_script_rc_file()
     /* Hercules will execute.  If tests are to be repeated, write the   */
     /* script command once for each repetition specified by -r.         */
 
-    for ( i = 0; i < test_scripts.index; i++ )
+    for ( i = 0; i <= test_scripts.index; i++ )
     {
         /* stat the file to get the modification time.  The file is     */
         /* known to exist, so error checking should not be required.    */
