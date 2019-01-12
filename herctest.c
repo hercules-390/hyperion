@@ -760,12 +760,12 @@ int main( int argc, char ** argv )
     /* herctest return code.                                            */
     else if ( ( ec = run_child_process( "Redtest.rexx",
             redtest_log, 0, &child_rc ) ) )
-    {
-        if ( ec )
-            rc = 249;
-        else
-            rc = child_rc;
-    }
+        rc = 249;
+
+    /* No errors detected in herctest processing.  Use redtest.rexx     */
+    /* return code as the herctest return code.                         */
+    else
+        rc = child_rc;
 
 #if defined(DUMP_GLOBALS)
     dump_globals();
