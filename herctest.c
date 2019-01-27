@@ -238,7 +238,7 @@ Notes -
     Define the following to enable inclusion of the dump_globals()
     function.  It may be called from anywhere for diagnostic purposes.
 */
-#define DUMP_GLOBALS
+//  #define DUMP_GLOBALS
 
 
 /* ********************************************************************

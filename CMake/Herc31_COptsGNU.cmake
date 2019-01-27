@@ -13,7 +13,8 @@ Set C compiler options - used for any gcc except for gcc versions
 4.2.1 or less on Apple platforms.
 
 Some options are needed for a correct build, for example
--mstructure-size-boundary=8 for certain ARM flavors.  Other options are
+-mstructure-size-boundary=8 for certain ARM flavors, and
+-fno-strict-aliasing when it is required.  Other options are
 truly optimization related, such as -frename-registers on ARM.
 
 Options that are required to build Hercules are *always* added
@@ -26,9 +27,9 @@ by this CMake script), and to negate any of the *always* created
 options, because when options conflict, the last one wins.
 
 It is not clear what happens in GCC when one specifies -O3 *after*
-turning off something enabled by -O3.  But that is the builder's
-problem.  Ours here is to make sure the optimize flag selection process
-is clear.
+turning off something enabled by -O3, for example -fno-strict-aliasing.
+But that is the builder's problem.  Ours here is to make sure the
+optimize flag selection process is clear.
 
 OPTIMIZE=YES means this script will interpret the target system's
 and compiler's capabilities and nature and craft a reasonable and
@@ -79,6 +80,13 @@ in CMake scripts for Hercules.  See:
 # flags to the null string.
 
 set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_CONFIG_H -g3 -ggdb3" )
+
+
+# Flags needed to deal with issues in the toolchain.
+
+if( HAVE_VERY_STRICT_ALIASING )
+    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-strict-aliasing" )
+endif( HAVE_VERY_STRICT_ALIASING )
 
 
 # If structures are padded and the target is ARM-like, then we must

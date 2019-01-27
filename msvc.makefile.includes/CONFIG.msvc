@@ -33,7 +33,7 @@ vers_vs2005=8
 
 !IFDEF VS150COMNTOOLS
 !MESSAGE Makefile presuming VS2017 Community Edition (VS15 = _MSC_VER 1910)
-vsversion=$(vers_vs2017)
+vsversion=$(vers_vs2015)
 !ELSEIFDEF VS140COMNTOOLS
 !MESSAGE Makefile presuming VS2015 Community Edition (VS14 = _MSC_VER 1900)
 vsversion=$(vers_vs2015)

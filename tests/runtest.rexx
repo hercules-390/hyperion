@@ -1,7 +1,7 @@
  /* runtest.rexx - run a series of test cases in Hercules and analyze results  */
 
 /*
-  Copyright 2017-2018 by Stephen Orso.
+  Copyright 2017 by Stephen Orso.
 
   Distributed under the Boost Software License, Version 1.0.
   See accompanying file BOOST_LICENSE_1_0.txt or copy at
@@ -64,7 +64,7 @@ External References & Dependencies
   * This script will use either the 'cat' command (open source and UNIX-like
     systems) or type (Windows) to append each selected test script file
     into a single allTests.testin file.
-  * The strings returned by the REXX command parse source provide enough
+  * The strings returned by the REXX command parse source provides enough
     information to let this script identify the correct path separator and
     the correct command, 'cat' or 'type', to append scripts to the
     consolidated file.
@@ -80,6 +80,10 @@ Exits
 
 
 Notes
+ * When Open Object Rexx is invoked from within CMake Ctest (on Windows?),
+   ooRexx does not remove the double quotes from the arguments (Regina
+   Rexx does).  So if argument processing sees leading and trailing
+   quotes, they are removed before any editing or processing is done.
  * See the help text in this routine for options and for differences
    in options from the earlier runtest shell script and runtest.cmd
    Windows script.
@@ -88,41 +92,6 @@ Notes
    script uses the same command line options for Windows and open source
    systems.  Where conflicts existed, the open source options are
    generally used, but refer to the help documentation for specifics.
- * Open Object Rexx on Windows provides the command line as typed or
-   provided by the calling routine as a single string.  This means any
-   quoted strings in the command line are passed as is with their
-   quotes.  For example:
-
-        rexx "this is a string" -d "a string"
-
-   passes a single character string starting with the leading double-
-   quote and ending with the double quote after the "g" in "string."
-
-        argv[1] = "this is a string" -d "a string"\0
-
-   Regina Rexx and Open Object Rexx on non-Windows platforms do not do
-   this.  The command line as parsed by the shell is assembled back into
-   a single string.  Because the shell has removed quotes as part of
-   parsing the command line into argc/argv[], the REXX script receives
-   the following:
-
-        argv[1] = this is a string -d a string\0
-
-   Quite a material loss of information.
-
-   Single quotes are similarly stripped.
-
-   The only way to write a portable invocation of a REXX script using
-   Open Object Rexx or Regina Rexx with parameters that contain
-   embedded spaces is to wrap those parameters in two sets of quotes,
-   thus:
-
-        rexx "'this is a string'" -d "'a string'"
-
-   And because Open Object Rexx on Windows does not strip quotes, the
-   REXX script must deal with parameter strings that may be wrapped
-   with double quotes, single quotes, or both.
-
 */
 
 /*
@@ -153,17 +122,11 @@ Notes
        in some distros, a separately installable package (cf. FreeBSD).
     3) Regina Rexx requires specific commands to load Rexxutils, and
        Regina Rexx allows the Rexxutils package to be loaded only when a
-       script is invoked with the regina command.  So if this script
-       determines that it has been invoked under Regina Rexx using the
-       rexx command, it uses address command to re-invoke itself using
-       the regina command.
-    4) When invoking an external command (hercules) using a full path
-       name that includes spaces and must be enclosed in quotes on
-       Windows using Regina Rexx, the address command syntax used by
-       ooRexx is rejected by Windows.  The syntax specific to Regina
-       Rexx must be used.  The ooRexx syntax can be used without
-       difficulty on UNIX-like systems for both Regina Rexx and ooRexx.
-    99) For reasons not understood, this script fails to run on Regina
+       script is invoked with the regina command.
+    4) So if this script determines that it has been invoked under
+       Regina Rexx using the rexx command, it uses address command
+       to re-invoke itself using the regina command.
+    5) For reasons not understood, this script fails to run on Regina
        Rexx 3.3.  Issue discovered during testing with Debian 5.4.
 */
 
@@ -171,7 +134,6 @@ Notes
 
 parse arg opts              /* copy command line arguments to opts  */
 parse source host invocation script_path  /* get invocation information */
-parse version . 'REXX-' Rexx_pkg '_' Rexx_vrm '_' .
 
 /* the following rxfuncadd always returns rc=0 on ooRexx.  On Regina    */
 /* Rexx, rc=60 means the script was invoked using the rexx command,     */
@@ -182,34 +144,15 @@ parse version . 'REXX-' Rexx_pkg '_' Rexx_vrm '_' .
 /* the normal state of affairs.                                         */
 
 rc = rxfuncadd( 'sysloadfuncs', 'rexxutil', 'sysloadfuncs' )
-
 if rc \== 0 then do
-    if rc \== 60 then do     /* Unrecoverable error.  Abort */
+    if rc == 60 then do
+        address command 'regina' script_path opts
+        return RC
+        end
+    else do
         say 'Unable to load required REXX utility function SysLoadFuncs(), rc=' rc
         say RxFuncErrMsg()
         return rc
-        end
-
-    else do                 /* Unable to use rxfuncadd().  Reload Regina */
-        /* Regina Rexx and Open Object Rexx (non-Windows) strip one set  */
-        /* of single or double quotes from argument lists, whichever is  */
-        /* outer.  This means that fragment -d "/user/home/n e w"        */
-        /* becomes -d /user/home/n e w, with the result that the         */
-        /* directory morphs into "/usr/home/n", which is is not correct. */
-        /* So find single-quoted strings and encapsulate them in double  */
-        /* and single quotes ("'string'" so the the relauched Regina can */
-        /* see path names with spaces.                                   */
-        new_opts = ''
-        save_opts = opts
-        do until save_opts == ''
-            parse var save_opts opts_frag " '" quoted_string "' " save_opts
-            new_opts = new_opts opts_frag
-            if quoted_string \== '' then do
-                new_opts = new_opts '"' || "'" || quoted_string || "'" || '"'
-                end
-            end
-        'regina' '"' || script_path || '"' new_opts
-        return RC
         end
     end
 
@@ -314,8 +257,8 @@ if error_count > 0 then do      /* any errors?  yes..abort.  */
 /* If not Windows, run uname -s with output redirected to a file.       */
 /* Then read the ouput from the first line of the file.   There are     */
 /* other ways to do this (rxqueue, WITH OUTPUT stem.), but those are    */
-/* neither portable nor bulletproof.  This approach is simple,          */
-/* portable, and hard to break.                                         */
+/* not portable or not bulletproof.  This approach is simple, portable, */
+/* and hard to break.                                                   */
 
 if upper(left(host,3)) \== 'WIN' then do
     uname_s_fname = options.w_ || '.uname-s'  /* cobble up a filename   */
@@ -335,64 +278,27 @@ call build_test_script_file
 /* After what must seem an eternity of getting things put together,     */
 /* we can now run Hercules against the test scripts                     */
 
-/* Note that all path and directory names are enclosed in quotes in     */
-/* case the paths/directories include spaces in their file names.       */
-
-/* Note that one option, -p, is a directory name and ends in a path     */
-/* separator.  On UNIX-like systems and macOS, which use '/' as the     */
-/* path separator, this is fine.  On Windows, which uses '\' as both    */
-/* the path separator *and* an escape character, this is problematic.   */
-/* The -p option ends with 'somedir\"', and the Windows command         */
-/* processor deletes the '\' and treats the '"' as a 'normal'           */
-/* character, not the end of a quoted string.  Remaining options get    */
-/* swallowed up in the -p option value.  See the MSDN Developer's page  */
-/* at https://msdn.microsoft.com/en-us/library/17w5ykft%28v=vs.85%29.aspx */
-/* for more information and for confirmation.                           */
-
-/* We defer removing the '\' until here because edits of -v options     */
-/* need a path separator.                                               */
-
-if platform = "Windows" then
-    options.p_ = left( options.p_, length( options.p_ ) - 1 )
-
-hercules_runtest_cmd =              /* Hercules executable              */ ,
-        '"' || options.h_ || 'hercules' || exe_suffix || '"'               ,
-                                    /* Directory of loadable modules    */ ,
-        '-p' '"' || options.p_ || '"'                                      ,
+hercules_runtest_cmd =                                                     ,
+        options.h_ || 'hercules'    /* Hercules executable              */ ,
+        '-p' options.p_             /* Directory of loadable modules    */ ,
         options.l_                  /* Loadable module list             */ ,
         options.t_                  /* timeout adjustment factor        */ ,
-                                    /* Hercules config for tests        */ ,
-        '-f' '"' || options.d_ || 'tests.conf'|| '"'                       ,
-                                    /* .rc file of test commands        */ ,
-        '-r' '"' || input_script || '"'
+        '-f' options.d_ || 'tests.conf'    /* Hercules config for tests */ ,
+        '-r' input_script           /* .rc file of test commands        */
+
 
 /* If Hercules should exit after testing (no -x option) then redirect   */
 /* stderr and stdout.  The input test script already has the exit       */
 /* if needed.                                                           */
 
+if \options.x_ then
+    hercules_runtest_cmd = hercules_runtest_cmd '-d >' output_log '2>&1'
+else
+    hercules_runtest_cmd = hercules_runtest_cmd '>' output_log
 
-say 'Running Hercules to generate test results.'
-say hercules_runtest_cmd
 
-if platform == 'Windows' & Rexx_pkg == 'Regina' then do
-    if \options.x_ then do
-        hercules_runtest_cmd = hercules_runtest_cmd '-d'
-        address command hercules_runtest_cmd with                      ,
-                    output replace stream output_log                   ,
-                    error replace stream output_log
-        end
-    else
-        address command hercules_runtest_cmd with                      ,
-                    output replace stream output_log
-    end
-else do
-    if \options.x_ then
-        hercules_runtest_cmd '-d >' output_log '2>&1'
-    else
-        hercules_runtest_cmd '>' output_log
-    end
-
-say 'Hercules run complete, RC=' RC
+say 'Running Hercules to generate test results...'
+hercules_runtest_cmd
 
 
 /* if Hercules ended successfully, run the data reduction.              */
@@ -406,8 +312,7 @@ if RC = 0 then do
     save_trace = trace()
     if save_trace = 'N' then
         trace O
-
-    'rexx' '"' || options.d_ || path_sep || 'redtest.rexx' || '"',
+    'rexx' options.d_ || path_sep || 'redtest.rexx' ,
             output_log ,
             options.v_ ,
             '>' || redtest_log '2>&1'
@@ -463,25 +368,18 @@ build_test_script_file:
     rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
 
 
-/* Copy each test script into the input_script file to the Hercules     */
+/* copy each test script into the input_script file to the Hercules     */
 /* execution script the number of times specified or defaulted to by    */
 /* the repeat count option -r.                                          */
 
-
     do i = 1 to test_script_list.0
-
-        /* Notet that ooRexx leaves a leading blank on the pathname         */
-        /* extracted by the parse command while Regina Rexx does not.       */
         parse var test_script_list.i script_date script_time script_size script_attr script_fullpath
-        script_fullpath = strip( script_fullpath, 'L' )
         script_name = filespec('N', script_fullpath)
         script_path = filespec('D', script_fullpath) || filespec('P', script_fullpath)
-
         /* REXX does not care about path separators matching the host OS.   */
         /* But the OS command we will issue does.  So ensure only correct   */
-        /* path separators.  And while we are at it, encapsulate in quotes  */
-        /* in case there are spaces in the path name.                       */
-        script_fullpath = '"' || translate( script_fullpath, path_sep, wrong_path_sep) || '"'
+        /* path separators                                                  */
+        script_fullpath = translate( script_fullpath, path_sep, wrong_path_sep)
 
         rc = lineout( input_script, '' )
         rc = lineout( input_script, '' )
@@ -492,9 +390,8 @@ build_test_script_file:
         rc = lineout( input_script, '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *' )
         rc = lineout( input_script, '' )
         do j = 1 to options.r_
-            rc = lineout(input_script)        /* force file buffer flush    */
-            /* type_or_cat script_fullpath '>>' input_script  */
-            rc = lineout( input_script, 'script ' || script_fullpath )
+            rc = lineout(input_script)
+            type_or_cat script_fullpath '>>' input_script
             if j < options.r_ then do
                 rc = lineout( input_script, '' )
                 rc = lineout( input_script, '' )
@@ -526,6 +423,18 @@ build_test_script_file:
     call stream input_script, 'C', 'close'
 
     return 0
+
+
+
+call validate_environment
+if error_count > 0 then do
+    say "Testing not performed due to above errors."
+    return 1
+    end
+
+call build_herc_command
+
+return 0
 
 
 
@@ -628,7 +537,7 @@ parse_command_line:
                     rc = SysFileTree( options.h_ || exe_name || exe_suffix, sftresult, 'F' )
                     if sftresult.0 == 0 then do
                         say "-h Hercules executable '" || exe_name || exe_suffix ,
-                                || "' not found in '" || options.h_ || "'"
+                                || "' not found in '" || options.h_ "'"
                         options.h_ = ''
                         error_count = error_count + 1
                         end         /* sftresult.0 == 0   */
@@ -840,17 +749,11 @@ validate_path:
 parse_quoted_string:
 
     delim = left(opts, 1)
-    if (delim \== '"' & delim \== "'") then
-        parse var opts option_value opts
-    else do
-        if delim == '"' &  substr(opts, 2, 1) == "'"  then do
-            delim_r = "'" || delim
-            delim = delim || "'"
-            end
-        else
-            delim_r = delim
-        parse var opts . (delim) option_value (delim_r) opts
+    if (delim == '"' | delim == "'") then do
+        parse var opts . (delim) option_value (delim) opts
         end
+    else
+        parse var opts option_value opts
 
     return  option_value
 

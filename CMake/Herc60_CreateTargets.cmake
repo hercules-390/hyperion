@@ -177,12 +177,8 @@ herc_Define_Shared_Lib( herct "${herct_sources}" "hercu"   shared )
 add_dependencies( hercu commitinfo_phonytarget )  # Needed to trigger commitinfo.h build
 
 set( herc_libs hercu hercd herct ${name_libdecNumber} )
-if ( WIN32 )
-    herc_Define_Shared_Lib( herc  "${herc_sources}"  "${herc_libs};SoftFloat;decNumber"  shared )
-else( )
-    herc_Define_Shared_Lib( herc  "${herc_sources}"  "${herc_libs};h390s3fh;decNumber"  shared )
-endif( WIN32 )
 
+herc_Define_Shared_Lib( herc  "${herc_sources}"  "${herc_libs};SoftFloat;decNumber"  shared )
 target_include_directories( herc PRIVATE "${PROJECT_SOURCE_DIR}/decNumber" )
 
 
@@ -413,7 +409,7 @@ endif( )
 
 externalproject_add( html
         SOURCE_DIR        ${PROJECT_BINARY_DIR}/html
-        GIT_REPOSITORY    "${git_protocol}//github.com/hercules-390/html"
+        GIT_REPOSITORY    "git://github.com/hercules-390/html"
         GIT_TAG           "gh-pages"
         CONFIGURE_COMMAND ""        # No Configure
         BUILD_COMMAND ""            # No build

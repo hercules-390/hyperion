@@ -37,7 +37,7 @@ include( CMake/Herc02_ExtPackageBuild.cmake )
 # ----------------------------------------------------------------------
 
 if( NOT HAVE_S3FH_TARGET )
-    herc_ExtPackageBuild( SoftFloat-3a S3FH SoftFloat ${git_protocol}//github.com/hercules-390/SoftFloat-3a master )
+    herc_ExtPackageBuild( SoftFloat-3a S3FH SoftFloat git://github.com/hercules-390/SoftFloat-3a master )
     set( herc_building_SoftFloat-3a TRUE )
     add_dependencies( SoftFloat S3FH )
 
@@ -53,7 +53,7 @@ endif( )
 if( NOT "${BZIP2}" STREQUAL "NO" )
 
     if( NOT ( BZIP2_FOUND OR HAVE_BZIP2_TARGET ) )
-        herc_ExtPackageBuild( BZip2 BZIP2 bz2 ${git_protocol}//github.com/hercules-390/h390BZip master )
+        herc_ExtPackageBuild( BZip2 BZIP2 bz2 git://github.com/hercules-390/h390BZip master )
         set( herc_building_BZip2 TRUE )
         set( HAVE_BZIP2_TARGET "${EXTPKG_ROOT}/BZip2/build/bzip2_target" )
 
@@ -86,7 +86,7 @@ endif( NOT "${BZIP2}" STREQUAL "NO" )
 if( WIN32 AND ( NOT "${PCRE}" STREQUAL "NO" ) )
 
     if( NOT HAVE_PCRE_TARGET )
-        herc_ExtPackageBuild( PCRE PCRE pcre ${git_protocol}//github.com/hercules-390/h390PCRE master )
+        herc_ExtPackageBuild( PCRE PCRE pcre git://github.com/hercules-390/h390PCRE master )
         set( herc_building_PCRE TRUE )
         set( HAVE_PCRE_TARGET "${EXTPKG_ROOT}/PCRE/build/pcre_target" )
     endif( )
@@ -112,7 +112,7 @@ endif( WIN32 AND ( NOT "${PCRE}" STREQUAL "NO" )  )
 if( NOT "${ZLIB}" STREQUAL "NO" )
 
     if( NOT ( ZLIB_FOUND OR HAVE_ZLIB_TARGET ) )
-        herc_ExtPackageBuild( Zlib ZLIB zlib ${git_protocol}//github.com/hercules-390/h390Zlib master )
+        herc_ExtPackageBuild( Zlib ZLIB zlib git://github.com/hercules-390/h390Zlib master )
         set( herc_building_Zlib TRUE )
         set( HAVE_ZLIB_TARGET "${EXTPKG_ROOT}/Zlib/build/zlib_target" )
 

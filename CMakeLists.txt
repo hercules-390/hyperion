@@ -1,6 +1,6 @@
 # CMakeLists.txt - top-level driver for CMake Hercules Build
 
-#[[   Copyright 2017-2019 by Stephen Orso.
+#[[   Copyright 2017 by Stephen Orso.
 
       Distributed under the Boost Software License, Version 1.0.
       See accompanying file BOOST_LICENSE_1_0.txt or copy at
@@ -61,7 +61,7 @@ endif( )
 
 find_package( Git )          # Set GIT_FOUND, GIT_EXECUTABLE, and GIT_VERSION_STRING
 if( "${GIT_VERSION_STRING}" VERSION_LESS "1.8.5.1" )
-    message( FATAL_ERROR "Git client must be at least version 1.8.5.1, found ${GIT_VERSION_STRING}" )
+    herc_Save_Error( "Git client must be at least version 1.8.5.1, found ${GIT_VERSION_STRING}" )
 endif( )
 
 
@@ -316,21 +316,6 @@ set( name_libcap       "cap" )    # POSIX 1003.1e capabilities interface library
 set( name_libsocket    "socket" ) # Socket library for Solaris, HP-UX, maybe others
 
 
-# Git protocol to be used by default when cloning external packages and
-# the HTML documentation project.  The git: protocol is the fastest but
-# includes no validation of the source of a clone.  It uses a high port
-# number and is often blocked on company networks.  The https: protocol
-# represents a good compromise.
-
-if ( "${GIT_CLONE}" STREQUAL "" )
-    set( git_protocol "https:" )
-elseif(  "${GIT_CLONE}" STREQUAL "https:" )
-    set( git_protocol "https:" )
-elseif( "${GIT_CLONE}" STREQUAL "git:" )
-    set( git_protocol "git:" )
-else( )
-    message( FATAL_ERROR "Invalid -DGIT_CLONE= value \"${GIT_CLONE}\".  Must be \"https:\" or \"git:\"" )
-endif( )
 # ----------------------------------------------------------------------
 # Set up CMake to correctly probe the target system.
 # ----------------------------------------------------------------------

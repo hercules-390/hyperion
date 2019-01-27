@@ -285,11 +285,9 @@ DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* name,
     if (rc)
         goto fatal;
 
-#if defined(_POSIX_THREAD_PROCESS_SHARED)
     rc = hthread_rwlockattr_setpshared( &attr1, HTHREAD_RWLOCK_DEFAULT );
     if (rc)
         goto fatal;
-#endif
 
     rc = hthread_mutexattr_settype( &attr2, HTHREAD_MUTEX_DEFAULT );
     if (rc)

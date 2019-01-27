@@ -22,7 +22,6 @@ Function/Operation
   . BZip2
   . PCRE
   . Zlib
-  . h390s3fh
 - If Hercules was built as a 32-bit application on a 64-bit system and
   one or both REXX interpreters, Open Object Rexx and Regina Rexx, are
   included in Hercules, then their respective shared libraries are also
@@ -66,31 +65,6 @@ if( NOT WIN32 )
     message( FATAL_ERROR "Herc65_ExtPackageWinCopy.cmake should not be invoked for non-Windows builds" )
 endif( )
 
-
-# ----------------------------------------------------------------------
-#
-# Copy the h390s3fh shared library from its directory to the Hercules
-# build directory.
-#
-# ----------------------------------------------------------------------
-
-
-if( HAVE_S3FH_TARGET )
-    get_target_property( __libpath1 h390s3fh IMPORTED_LOCATION_RELEASE )
-    get_target_property( __libpath2 h390s3fh IMPORTED_LOCATION_DEBUG )
-    get_target_property( __libpath3 h390s3fh IMPORTED_LOCATION )
-    add_custom_command( TARGET hercules
-            PRE_LINK
-            VERBATIM
-            COMMAND ${CMAKE_COMMAND} ARGS
-                -DNAME=h390s3fh
-                -DIN1=${__libpath1}
-                -DIN2=${__libpath2}
-                -DIN3=${__libpath3}
-                -DOUT=$<TARGET_FILE_DIR:hercules>
-                -P ${PROJECT_SOURCE_DIR}/cmake/Herc03_CopySharedLib.cmake
-            )
-endif( )
 
 # ----------------------------------------------------------------------
 #
