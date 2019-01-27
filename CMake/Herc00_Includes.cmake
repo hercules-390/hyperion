@@ -24,8 +24,8 @@ Functions:
 - herc_Check_C11_Atomics    - Collect lock free status of C11 atomic intrinics
 - herc_Check_Packed_Struct  - Determine if packed structs are supported
 - herc_Check_Compile_Capability - Test sundry compiler capabilities
-- herc_Check_Strict_Aliasing - Test for problems created by strict aliasing
 - herc_Check_User_Option_YesNo - Validate a user option as YES/NO/TARGET
+- herc_Check_User_Option_YesNoSysHerc - Validate a user option as YES/NO/SYSTEM/HERCULES
 - herc_Install_Imported_Target - Install files provided by imported target
 - herc_Create_System_Import_Target - Create import target for system shared library.
 
@@ -582,54 +582,6 @@ file( REMOVE ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/HercTempProg.c 
 endfunction ( herc_Check_Compile_Capability )
 
 
-
-#[[ ###########   function herc_Check_Strict_Aliasing   ###########
-
-Function/Operation
-- Determine whether the c compiler uses strict aliasing.  This test
-  is taken from the configure.ac formerly used for Hercules.
-
-Input Parameters
-- None
-
-Output
-- The result_var parameter is set if the compiler does strict aliasing.
-- If the test program fails to compile or run, an error message is saved
-  along with the compile or execution output.  Saving the message will
-  terminate the build.
-
-Notes
-- The c program CMakeHercTestStrictAliasing.c is executed by this function.
-
-]]
-
-function( herc_Check_Strict_Aliasing result_var )
-
-try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR
-        ${PROJECT_BINARY_DIR}
-        SOURCES ${PROJECT_SOURCE_DIR}/CMake/CMakeHercTestStrictAliasing.c
-        COMPILE_DEFINITIONS -O3 -fstrict-aliasing
-        COMPILE_OUTPUT_VARIABLE SA_CompileOutput
-        RUN_OUTPUT_VARIABLE SA_RunOutput
-        )
-
-if( COMPILE_RESULT_VAR )
-    if( ${RUN_RESULT_VAR} STREQUAL "NOT-FOUND" )
-        set( PS_RunOutput "Execution of strict aliasing test program failed.  Execution output follows\n" ${SA_RunOutput} )
-        herc_Save_Error( "${SA_RunOutput}" )
-    elseif( NOT ${RUN_RESULT_VAR} )
-        set( ${return_var} 1 PARENT_SCOPE )      # compiler strict aliasing should not be a problem
-    else( )
-        set( ${return_var} 0 PARENT_SCOPE )      # compiler strict aliasing is a problem
-    endif( )
-else( )
-    set( PS_CompileOutput "Compile of strict aliasing test program failed.  Output follows:\n" ${SA_CompileOutput} )
-    herc_Save_Error( "${SA_CompileOutput}" )
-endif( COMPILE_RESULT_VAR )
-
-endfunction ( herc_Check_Strict_Aliasing )
-
-
 #[[ ###########   function herc_Check_User_Option_YesNo   ###########
 
 Function/Operation
@@ -685,7 +637,7 @@ endif( )
 endfunction( herc_Check_User_Option_YesNo )
 
 
-#[[ ###########   function herc_Check_User_Option_YesNoSys   ###########
+#[[ ###########   function herc_Check_User_Option_YesNoSysHerc   ###########
 
 Function/Operation
 - Validate a Yes/No/SYSTEM/HERCULES user option.  Valid values are YES,

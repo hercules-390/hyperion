@@ -184,8 +184,6 @@ endif( )
 # HAVE_GCC_DIAG_PRAGMA is defined.  So on MSVC, there is no need to test,
 # nor no need to set.  Likewise for HAVE_GCC_SET_UNUSED_WARNING.
 
-# MSVC does not check for strict aliasing, so there is no need to test
-# for it, and no option to disable it either.  
 
 return( )
 

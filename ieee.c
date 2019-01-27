@@ -1,4 +1,3 @@
-
 /* IEEE.C       (c) Copyright Roger Bowler and others, 2003-2012     */
 /*              (c) Copyright Willem Konynenberg, 2001-2003          */
 /*              (c) Copyright "Fish" (David B. Trout), 2011          */
@@ -35,14 +34,14 @@
  *  TBDR and TBEDR) completely updated by "Fish" (David B. Trout)
  *  Aug 2011 to use SoftFloat Floating-Point package by John R. Hauser
  *  (http://www.jhauser.us/arithmetic/SoftFloat.html).
- * June 2016: All instructions (except convert to/from HFP/BFP and 
- *  Load Positive/Negative/Complement) completely updated by Stephen 
- *  R. Orso to use the updated Softfloat 3a library by John R. Hauser 
+ * June 2016: All instructions (except convert to/from HFP/BFP and
+ *  Load Positive/Negative/Complement) completely updated by Stephen
+ *  R. Orso to use the updated Softfloat 3a library by John R. Hauser
  *  (link above).  Added interpretation of M3 and M4 operands for
- *  those instructions that support same, conditioned on 
- *  FEATURE_FLOATING_POINT_EXTENSION_FACILITY.  All changes are based 
- *  on the -10 edition of the z/Architecture Principles of Operation, 
- *  SA22-7832.  
+ *  those instructions that support same, conditioned on
+ *  FEATURE_FLOATING_POINT_EXTENSION_FACILITY.  All changes are based
+ *  on the -10 edition of the z/Architecture Principles of Operation,
+ *  SA22-7832.
  */
 
 
@@ -127,80 +126,103 @@
 #if defined(FEATURE_BINARY_FLOATING_POINT) && !defined(NO_IEEE_SUPPORT)
 
 
-#if !defined(_IEEE_NONARCHDEP_)
-/* Architecture independent code goes within this ifdef */
+/* ************************************************************************* */
 
-/*****************************************************************************/
-/*                       ---  B E G I N  ---                                 */
-/*                                                                           */
-/*           'SoftFloat' IEEE Binary Floating Point package                  */
+/* Architecture independent code goes within this ifdef                      */
+
+/* ************************************************************************* */
+#if !defined(_IEEE_NONARCHDEP_)
+
 #define SOFTFLOAT_FAST_INT64
 #include "softfloat.h"
 
-/* Default QNaN per SA22-7832-10 page 9-3: plus sign, quiet, and payload of zero */
-static const float64_t   float64_default_qnan = { 0x7FF8000000000000ULL  };
-static const float32_t   float32_default_qnan = { 0x7FC00000 };
 
-/* Map of IBM M3 rounding mode values to those used by Softfloat                                        */
-static const BYTE map_m3_to_sf_rm[8] = { 0,                         /* M3 0: Use FPC BFP Rounding Mode  */
-                                    softfloat_round_near_maxMag,    /* M3 1: RNTA                       */
-                                    0,                              /* M3 2: invalid; detected in edits */ 
-                                    softfloat_round_stickybit,      /* M3 3: RFS,                       */
-                                    softfloat_round_near_even,      /* M3 4: RNTE                       */
-                                    softfloat_round_minMag,         /* M3 5: RZ                         */
-                                    softfloat_round_max,            /* M3 6: RP                         */
-                                    softfloat_round_min,            /* M3 7: RM                         */
-                                  };
+/* Opcode byte 1 value for RXE BFP instructions.                            */
+
+#define OPCODE_BFP_RXE  0xED 
 
 
-/* Map of IBM fpc BFP rounding mode values to those used by Softfloat                                   */
-/* This table depends on FPS Support instructions to set the BFP rounding mode to only valid values     */
-static const BYTE map_fpc_brm_to_sf_rm[8] = { 
-                                    softfloat_round_near_even,      /* FPC BRM 0: RNTE                  */
-                                    softfloat_round_minMag,         /* FPC BRM 5: RZ                    */
-                                    softfloat_round_max,            /* FPC BRM 6: RP                    */
-                                    softfloat_round_min,            /* FPC BRM 6: RM                    */
-                                    0,                              /* FPC BRM 4: invalid               */
-                                    0,                              /* FPC BRM 5: invalid               */
-                                    0,                              /* FPC BRM 6: invalid               */
-                                    softfloat_round_stickybit,      /* FPC BRM 7: RFS                   */
+/* Default QNaN per SA22-7832-10 page 9-3: plus sign, quiet, and payload of */
+/* zero.  These constants are used only by Divide to Integer; SoftFloat-3   */
+/* For Hercules generates correct NaNs for all other instructions.          */
+#define FLOAT64_DEFAULT_QNAN  0x7FF8000000000000ULL
+#define FLOAT32_DEFAULT_QNAN  0x7FC00000
+
+
+/* Map of IBM instruction modifier rounding mode values to those used by Softfloat.  Selected BFP   */
+/* instructions include a rounding mode in the M3 or M4 instruction fields.                         */
+static const BYTE map_modifier_to_sf_rm[16] = {
+        0,                              /* Modifier 0: Use FPC BFP Rounding Mode                    */
+        softfloat_round_near_maxMag,    /* Modifier 1: RNTA, round to nearest, ties away from zero  */
+        0,                              /* Modifier 2: invalid; detected in edits                   */
+        softfloat_round_stickybit,      /* Modifier 3: RFS, round for shorter precision             */
+        softfloat_round_near_even,      /* Modifier 4: RNTE, round to nearest, ties to even value   */
+        softfloat_round_minMag,         /* Modifier 5: RZ, round toward zero                        */
+        softfloat_round_max,            /* Modifier 6: RP, round to positive infinity               */
+        softfloat_round_min,            /* Modifier 7: RM, round to negative infinity               */
+                                        /* Modifiers 8 - 15 are invalid                             */
+                0, 0, 0, 0, 0, 0, 0, 0
+};
+
+/* Map of IBM FPC Binary Floanting Point rounding mode (BRM) values to those used by Softfloat      */
+/* This table depends on FPS Support instructions to set the BFP rounding mode to only valid values */
+static const BYTE map_fpc_brm_to_sf_rm[8] = {
+        softfloat_round_near_even,      /* FPC BRM 0: RNTE, round to nearest, ties to even value    */
+        softfloat_round_minMag,         /* FPC BRM 5: RZ, round toward zero                         */
+        softfloat_round_max,            /* FPC BRM 6: RP, round to positive infinity                */
+        softfloat_round_min,            /* FPC BRM 6: RM, round to negative infinity                */
+        0,                              /* FPC BRM 4: invalid               */
+        0,                              /* FPC BRM 5: invalid               */
+        0,                              /* FPC BRM 6: invalid               */
+        softfloat_round_stickybit,      /* FPC BRM 7: RFS, round for shorter precision              */
                                        };
 
 
-/* Table of valid M3 values and macro to generate program check if invalid BFP rounding method */
-/* Map of valid IBM M3 rounding mode values when the Floating Point Extension Facility is installed    */
-const BYTE map_valid_m3_values_fpef[8] = {  1,     /* M3 0: Use FPC BFP Rounding Mode  */
-                                            1,     /* M3 1: RNTA                       */
-                                            0,     /* M3 2: invalid                    */
-                                            1,     /* M3 3: RFS, substitute ties away  */
-                                            1,     /* M3 4: RNTE                       */
-                                            1,     /* M3 5: RZ                         */
-                                            1,     /* M3 6: RP                         */
-                                            1,     /* M3 7: RM                         */
+/* Rounding modifiers validation array, used when the Floating Point Extension Facility _IS_        */
+/* enabled..  If an entry is '1', the modifier is valid.  If zero, the modifier is invalid and a    */
+/* program check (specification) should be taken.                                                   */
+const BYTE map_valid_modifier_values_fpef[16] = {
+        1,     /* Modifier 0: Use FPC BFP Rounding Mode     */
+        1,     /* Modifier 1: RNTA                          */
+        0,     /* Modifier 2: invalid                       */
+        1,     /* Modifier 3: RFS                           */
+        1,     /* Modifier 4: RNTE                          */
+        1,     /* Modifier 5: RZ                            */
+        1,     /* Modifier 6: RP                            */
+        1,     /* Modifier 7: RM                            */
+               /* Modifiers 8 - 15 are invalid              */
+        0, 0, 0, 0, 0, 0, 0, 0
+};
+
+
+/* Rounding modifiers validation array, used when the Floating Point Extension Facility is NOT      */
+/* enabled..  If an entry is '1', the modifier is valid.  If zero, the modifier is invalid and a    */
+/* program check (specification) should be taken.                                                   */
+const BYTE map_valid_modifier_values_nofpef[16] = {
+        1,     /* Modifier 0: Use FPC BFP Rounding Mode     */
+        1,     /* Modifier 1: RNTA                          */
+        0,     /* Modifier 2: invalid                       */
+        1,     /* Modifier 3: invalid (is RFS with FPEF)    */
+        1,     /* Modifier 4: RNTE                          */
+        1,     /* Modifier 5: RZ                            */
+        1,     /* Modifier 6: RP                            */
+        1,     /* Modifier 7: RM                            */
+               /* Modifiers 8 - 15 are invalid              */
+        0, 0, 0, 0, 0, 0, 0, 0
                                                 };
-/* Map of valid IBM M3 rounding mode values when the Floating Point Extension Facility is NOT installed    */
-const BYTE map_valid_m3_values_nofpef[8] = {1,     /* M3 0: Use FPC BFP Rounding Mode  */
-                                            1,     /* M3 1: RNTA                       */
-                                            0,     /* M3 2: invalid                    */
-                                            0,     /* M3 3: RFS, invalid without FPEF  */
-                                            1,     /* M3 4: RNTE                       */
-                                            1,     /* M3 5: RZ                         */
-                                            1,     /* M3 6: RP                         */
-                                            1,     /* M3 7: RM                         */
-                                                };
 
 
-#define BFPRM_CHECK(_x,_regs)                                                  \
-        {if (_x > 7 || !{1, 1, 0, 1, 1, 1, 1, 1}[(_x & 0x7)])                       \
-            {regs->program_interrupt(_regs, PGM_SPECIFICATION_EXCEPTION);}}
-
+/* Macro that returns true (0x04) when the IEEE Inexact Exception Control bit in the    */
+/* M4 field of an instruction is one.  Other bits are ignored.                          */
 #define SUPPRESS_INEXACT(_m4)  (_m4 & 0x04)
+
 
 /* Scaling factors when used when trappable overflow or underflow exceptions occur      */
 /* Factors taken from Figure 19-8 (part 2) on page 19-9 of SA22-7832-10.                */
 /* Scaling factors reduce the exponent to fit in the target precision on overflow and   */
 /* increase them on underflow.                                                          */
 
+/* Scaling factors used for arithmetic instructions                                     */
 #define SCALE_FACTOR_ARITH_OFLOW_SHORT  -192
 #define SCALE_FACTOR_ARITH_OFLOW_LONG   -1536
 #define SCALE_FACTOR_ARITH_OFLOW_EXTD   -24576
@@ -209,6 +231,7 @@ const BYTE map_valid_m3_values_nofpef[8] = {1,     /* M3 0: Use FPC BFP Rounding
 #define SCALE_FACTOR_ARITH_UFLOW_LONG   1536
 #define SCALE_FACTOR_ARITH_UFLOW_EXTD   24576
 
+/* Scaling factors used for the Load Rounded instructions                               */
 #define SCALE_FACTOR_LOADR_OFLOW_LONG   -512
 #define SCALE_FACTOR_LOADR_OFLOW_EXTD   -8192
 
@@ -216,83 +239,75 @@ const BYTE map_valid_m3_values_nofpef[8] = {1,     /* M3 0: Use FPC BFP Rounding
 #define SCALE_FACTOR_LOADR_UFLOW_EXTD   8192
 
 
-  /* Identify NaNs  */
+/* Identify NaNs.  These are identified by an exponent of all 1's and a non-zero remainder of the significand.      */
+/* The non-zero significand distinguishes SNaN from infinity.                                                       */
 
-#define FLOAT128_ISNAN( _op )   ( ((_op.v[1] & 0x7FFF000000000000ULL) == 0x7FFF000000000000ULL) &&     \
+#define FLOAT128_IS_NAN( _op )   ( ((_op.v[1] & 0x7FFF000000000000ULL) == 0x7FFF000000000000ULL) &&     \
                                    (_op.v[1] & 0x0000FFFFFFFFFFFFULL || _op.v[0] ) )
 
-#define FLOAT64_ISNAN( _op )    ( ((_op.v    & 0x7FF0000000000000ULL) == 0x7FF0000000000000ULL) &&     \
+#define FLOAT64_IS_NAN( _op )    ( ((_op.v    & 0x7FF0000000000000ULL) == 0x7FF0000000000000ULL) &&     \
                                    (_op.v    & 0x000FFFFFFFFFFFFFULL) )
 
-#define FLOAT32_ISNAN( _op )    ( ((_op.v & 0x7F800000 ) == 0x7F800000) &&                             \
+#define FLOAT32_IS_NAN( _op )    ( ((_op.v & 0x7F800000 ) == 0x7F800000) &&                             \
                                    (_op.v & 0x007FFFFF) )
 
-  /* Make SNaNs into QNaNs  */
+
+/* Identify SNaNs.  These are identified by an exponent of all 1's, a leading significand bit of zero, and a        */
+/* non-zero remainder of the significand.  The non-zero balance of significand distinguishes SNaN from infinity.    */
+
+#define FLOAT128_IS_SNAN( _op )   ( ((_op.v[1] & 0x7FFF800000000000ULL) == 0x7FFF000000000000ULL) &&    \
+                                   (_op.v[1] & 0x00007FFFFFFFFFFFULL || _op.v[0] ) )
+
+#define FLOAT64_IS_SNAN( _op )    ( ((_op.v    & 0x7FF8000000000000ULL) == 0x7FF0000000000000ULL) &&    \
+                                   (_op.v    & 0x0007FFFFFFFFFFFFULL) )
+
+#define FLOAT32_IS_SNAN( _op )    ( ((_op.v & 0x7FC00000 ) == 0x7F800000) &&                            \
+                                   (_op.v & 0x003FFFFF) )
+
+
+/* Make SNaNs into QNaNs  Setting the leading significand bit to one "quiets" the NaN.                              */
 
 #define FLOAT128_MAKE_QNAN( _op )  _op.v[1] |= 0x0000800000000000ULL
 #define FLOAT64_MAKE_QNAN( _op )   _op.v    |= 0x0008000000000000ULL
 #define FLOAT32_MAKE_QNAN( _op )   _op.v    |= 0x00400000
 
-  /* Determine condition code based on value of result operand    */
 
-#define FLOAT128_CC( _op1 ) /* Determine cc from float132 value */                         \
-                            FLOAT128_ISNAN( _op1 ) ? 3 :                                       \
-                            !( (_op1.v[1] & 0x7FFFFFFFFFFFFFFFULL) | _op1.v[0]) ? 0 :  \
+/* Determine condition code based on value of the parameter                                             */
+/* Returns: cc=0 for zero, cc=1 for negative, cc=2 for positive, and cc=3 for any NaN.                  */
+
+#define FLOAT128_CC( _op1 ) /* Determine cc from float132 value */                                      \
+            FLOAT128_IS_NAN( _op1 ) ? 3 :                                                               \
+                    !( (_op1.v[1] & 0x7FFFFFFFFFFFFFFFULL) | _op1.v[0]) ? 0 :                           \
                             _op1.v[1] & 0x8000000000000000ULL ? 1 : 2
 
-#define FLOAT64_CC( _op1 )  /* Determine cc from float64 value */                          \
-                            FLOAT64_ISNAN( _op1 ) ? 3 :                                        \
-                            !(_op1.v & 0x7FFFFFFFFFFFFFFFULL) ? 0 :                    \
+#define FLOAT64_CC( _op1 )  /* Determine cc from float64 value */                                       \
+            FLOAT64_IS_NAN( _op1 ) ? 3 :                                                                \
+                    !(_op1.v & 0x7FFFFFFFFFFFFFFFULL) ? 0 :                                             \
                             _op1.v & 0x8000000000000000ULL ? 1 : 2
 
-#define FLOAT32_CC( _op1 )  /* Determine cc from float32 value */                          \
-                            FLOAT32_ISNAN( _op1 )  ? 3 :                                   \
-                            !(_op1.v & 0x7FFFFFFF) ? 0 :                                   \
+#define FLOAT32_CC( _op1 )  /* Determine cc from float32 value */                                       \
+            FLOAT32_IS_NAN( _op1 )  ? 3 :                                                               \
+                    !(_op1.v & 0x7FFFFFFF) ? 0 :                                                        \
                             _op1.v & 0x80000000    ? 1 : 2
+
+
+/*
+    ieee_trap: Generate an IEEE Data Exception interrupt after populating the FPC
+    and low core with the data exception code.
+    Parameters:
+    - *regs - Pointer to the regs structure for the current CPU
+    - dxc - one-byte IEEE Data Execption Code
+    There is no return.
+*/
 
 static void ieee_trap( REGS *regs, BYTE dxc)
 {
     regs->dxc = dxc;                   /*  Save DXC in PSA         */
     regs->fpc &= ~FPC_DXC;             /*  Clear any previous DXC  */
-    regs->fpc |= ((U32)dxc << 8);      
+    regs->fpc |= ((U32)dxc << 8);      /*  Save DXC in FPC         */
     regs->program_interrupt(regs, PGM_DATA_EXCEPTION);
 }
 
-static void ieee_cond_trap( REGS *regs, U32 ieee_traps ) 
-{
-    /* ieee_cond_trap is called before instruction completion for Xi    */
-    /* and Xz traps, resulting in instruction suppression.              */
-    /* For other instructions, it is called after instruction results   */
-    /* have been stored.                                                */
-
-    /* PROGRAMMING NOTE: for the underflow/overflow and inexact         */
-    /* data exceptions, SoftFloat does not distinguish between          */
-    /* inexact and truncated or inexact and incremented, so neither     */
-    /* can we. Thus for now we will always return "truncated."          */
-    /* We can tell the difference between exact and inexact.            */
-
-    /* We will add inexact and incremented when we get Softfloat up to  */
-    /* speed on returning and incremented indication.                   */
-
-    /* Note: switch/case does not work here because multiple            */
-    /* exceptions may be passed by the caller.                          */
-
-    if (ieee_traps & FPC_MASK_IMI)
-        ieee_trap(regs, DXC_IEEE_INVALID_OP);
-    else if (ieee_traps & FPC_MASK_IMZ)
-        ieee_trap(regs, DXC_IEEE_DIV_ZERO);
-    else if (ieee_traps & FPC_MASK_IMO)
-        ieee_trap(regs, !(softfloat_exceptionFlags & softfloat_flag_inexact) ?  DXC_IEEE_OF_EXACT : 
-                        softfloat_exceptionFlags & softfloat_flag_incremented ? DXC_IEEE_OF_INEX_INCR :
-                                                                                DXC_IEEE_OF_INEX_TRUNC);
-    else if (ieee_traps & FPC_MASK_IMU)
-        ieee_trap(regs, !(softfloat_exceptionFlags & softfloat_flag_inexact) ?  DXC_IEEE_UF_EXACT :
-                        softfloat_exceptionFlags & softfloat_flag_incremented ? DXC_IEEE_UF_INEX_INCR :
-                                                                                DXC_IEEE_UF_INEX_TRUNC);
-    else if (ieee_traps & FPC_MASK_IMX)
-        ieee_trap(regs, softfloat_exceptionFlags & softfloat_flag_incremented ? DXC_IEEE_INEXACT_INCR : 
-                                                                                DXC_IEEE_INEXACT_TRUNC);
-}
 
 /*------------------------------------------------------------------------------*/
 /* z/Architecture Floating-Point classes (for "Test Data Class" instruction)    */
@@ -322,8 +337,8 @@ static INLINE U32 float128_class( float128_t op )
 {
     int neg =
        (  op.v[1] & 0x8000000000000000ULL ) ? 1 : 0;
-    if (f128_isSignalingNaN( op ))                          return float_class_pos_signaling_nan >> neg;
-    if (FLOAT128_ISNAN( op ))                               return float_class_pos_quiet_nan     >> neg;
+    if (FLOAT128_IS_SNAN( op ))                             return float_class_pos_signaling_nan >> neg;
+    if (FLOAT128_IS_NAN( op ))                              return float_class_pos_quiet_nan     >> neg;
     if (!(op.v[1] & 0x7FFFFFFFFFFFFFFFULL ) && !op.v[0])    return float_class_pos_zero          >> neg;
     if ( (op.v[1] & 0x7FFFFFFFFFFFFFFFULL )
                  == 0x7FFF000000000000ULL   && !op.v[0])    return float_class_pos_infinity      >> neg;
@@ -335,8 +350,8 @@ static INLINE U32 float64_class( float64_t op )
 {
     int neg =
        (  op.v & 0x8000000000000000ULL ) ? 1 : 0;
-    if (f64_isSignalingNaN( op ))                           return float_class_pos_signaling_nan >> neg;
-    if (FLOAT64_ISNAN( op ))                                return float_class_pos_quiet_nan     >> neg;
+    if (FLOAT64_IS_SNAN( op ))                              return float_class_pos_signaling_nan >> neg;
+    if (FLOAT64_IS_NAN( op ))                               return float_class_pos_quiet_nan     >> neg;
     if (!(op.v & 0x7FFFFFFFFFFFFFFFULL ))                   return float_class_pos_zero          >> neg;
     if ( (op.v & 0x7FFFFFFFFFFFFFFFULL )
               == 0x7FF0000000000000ULL )                    return float_class_pos_infinity      >> neg;
@@ -348,13 +363,12 @@ static INLINE U32 float32_class( float32_t op )
 {
     int neg =
        (  op.v & 0x80000000) ? 1 : 0;
-    if (f32_isSignalingNaN( op ))     return float_class_pos_signaling_nan >> neg;
-    if (FLOAT32_ISNAN( op ))          return float_class_pos_quiet_nan     >> neg;
-    if (!(op.v & 0x7FFFFFFF))         return float_class_pos_zero          >> neg;
-    if ( (op.v & 0x7FFFFFFF)
-              == 0x7F800000)          return float_class_pos_infinity      >> neg;
-    if (  op.v & 0x7F800000)          return float_class_pos_normal        >> neg;
-                                      return float_class_pos_subnormal     >> neg;
+    if (FLOAT32_IS_SNAN( op ))                              return float_class_pos_signaling_nan >> neg;
+    if (FLOAT32_IS_NAN( op ))                               return float_class_pos_quiet_nan     >> neg;
+    if (!(op.v & 0x7FFFFFFF))                               return float_class_pos_zero          >> neg;
+    if ( (op.v & 0x7FFFFFFF) == 0x7F800000)                 return float_class_pos_infinity      >> neg;
+    if (  op.v & 0x7F800000)                                return float_class_pos_normal        >> neg;
+                                                            return float_class_pos_subnormal     >> neg;
 }
 
 /* ***************************************************************************************************** */
@@ -364,72 +378,72 @@ static INLINE U32 float32_class( float32_t op )
 /*                                                                                                       */
 /* ***************************************************************************************************** */
 
-                                    /* Set FPCR IEEE flags from the softfloat_exceptionFlags                */
-                                    /* Flags are set only if the corresponding mask is set to non-trap.     */
-#define SET_FPC_FLAGS_FROM_SF(regs) regs->fpc |=                                                            \
-                        (softfloat_exceptionFlags << 19) &  /* Align softfloat flags with flags in FPCR */  \
-                        ~(regs->fpc >> 8) & 0x00F80000;     /* ..and suppress those that could trap     */
+/* The following macros, functions, and arrays define the interface between ieee.c and the global variables that    */
+/* are part of the SoftFloat-3 user interface.  See the header file softfloat.h for a description of the variables  */
+/* and the values.  These macros etc. keep the SoftFloat-3 global variables out of the main ieee.c code and allow   */
+/* ieee.c to adapt to changes in that interface without requiring wholesale changes to ieee.c                       */
 
-                                    /* Save detected exceptions that are trap-enabled                   */
-#define IEEE_EXCEPTION_TEST_TRAPS(_regs, _ieee_trap_conds, _exceptions)                                     \
-      _ieee_trap_conds = (_regs->fpc & FPC_MASK) & (softfloat_exceptionFlags << 27) & (_exceptions)
+/*
+   Set FPC IEEE flags from the softfloa exception flags.  Flags are set only if the
+   corresponding mask is set to non-trap.
+   Parameters:
+   - _regs - pointer to the regs structure for the dispatched CPU
+   - _sf_flags - SoftFloat execption flags, either a copy or the real thing
+   Result:
+   - An updated FPC in the regs structure.  Only the IEEE flag bits (byte 1 bits
+     zero through four) are updated.
+*/
+
+/*
+   Set IEEE exception flags from the softfloat exception flags.
+   Parameters:
+   - _exceptions -  32-bit variable that will hold the SoftFloat exception flags.
+                    The flags are moved such that bits 0-5 of _exceptions match
+                    the bit assignments for the FPC interruption mask.  This allows
+                    for direct comparison between returned SoftFloat flags and
+                    the FPC mask, and an 8-bit right shift creates the basis for
+                    FPC flags.
+   - _incremented - If SoftFloat returned incremented, then this field is set to
+                    0x40 so that it can be or'ed into the DXC code to indicate
+                    incremented.
+   - _fpc  -        FPC register, needed to ensure tiny turns into underflow
+                    when underflow is trappable per SA22-7832-10 page 9-20.
+   External References:
+    - softfloat_exceptionFlags, a part of the SoftFloat-3 user interface, is
+      referenced directly.
+   Result:
+   - Variables that are substituted for _exceptions and _incremented are updated
+     as described above based on flags returned by SoftFloat.
+*/
+
+#define SET_IEEE_EXCEPTIONS( _exceptions, _incremented, _fpc )                          \
+        _exceptions = softfloat_exceptionFlags;                                         \
+        _incremented = (_exceptions  & softfloat_flag_incremented) >> 3;                \
+        if ( (_exceptions & softfloat_flag_tiny)                                        \
+                    && (_fpc & FPC_MASK_IMU) )                                          \
+            _exceptions |=  softfloat_flag_underflow;                                   \
+        _exceptions = (_exceptions << 27) & FPC_MASK
+
+
+/* Clear the exception flags from the SoftFloat-3 user interface                                                    */
+#define CLEAR_SF_EXCEPTIONS softfloat_exceptionFlags = 0;
+
+
+/* Set the rounding mode in the SoftFloat-3 user interface                                                          */
+#define SET_SF_RM(_sf_rm) softfloat_roundingMode = _sf_rm
+
+
+/* Translate FPC rounding mode into the corresponding Softfloat rounding mode.                                      */
+#define GET_SF_RM_FROM_FPC   map_fpc_brm_to_sf_rm[ (regs->fpc & FPC_BRM_3BIT) ]
+
+/* Translate rounding mode from an instruction modifier (the m3 or sometimes m4 field), into the matching           */
+/* Softfloat rounding mode.                                                                                         */
+/* If the M3 mode is zero, use FPC mode                               */
+#define GET_SF_RM_FROM_MODIFIER(_modifier)  _modifier ? map_modifier_to_sf_rm[_modifier] : GET_SF_RM_FROM_FPC
 
 /* ****           End of Softfloat architecture-dependent code                               **** */
 
-                                    /* Translate FPC rounding mode into matching Softfloat rounding mode  */
-#define SET_SF_RM_FROM_FPC softfloat_roundingMode = map_fpc_brm_to_sf_rm[ (regs->fpc & FPC_BRM_3BIT) ]
 
-                                    /* Translate M3 rounding mode into matching Softfloat rounding mode, use FPC mode if M3 zero  */
-#define SET_SF_RM_FROM_M3(_m3) softfloat_roundingMode = _m3 ? map_m3_to_sf_rm[_m3]         \
-                                                            : map_fpc_brm_to_sf_rm[(regs->fpc & FPC_BRM_3BIT)]
-
-
-                                    /* fastpath test for Xi trap; many instructions only return Xi   */
-#define IEEE_EXCEPTION_TRAP_XI(_regs)                                                                \
-        if ( (softfloat_exceptionFlags & softfloat_flag_invalid) && (_regs->fpc & FPC_MASK_IMI) )    \
-            ieee_trap(_regs, DXC_IEEE_INVALID_OP)                                                    \
-
-
-                                    /* fastpath test for Xz trap; only Divide returns Xz  */
-#define IEEE_EXCEPTION_TRAP_XZ(_regs)                                                                \
-        if ( (softfloat_exceptionFlags & softfloat_flag_infinite) && (_regs->fpc & FPC_MASK_IMZ) )   \
-            ieee_trap(_regs, DXC_IEEE_DIV_ZERO )
-
-
-                                    /* trap if any provided exception has been previously detected   */
-#define IEEE_EXCEPTION_TRAP(_regs, _ieee_trap_conds, _exceptions)                 \
-        if ( _ieee_trap_conds & (_exceptions) )                                   \
-            ieee_cond_trap(_regs, _ieee_trap_conds)
-
-
-/* Test FPC against Softfloat execptions; return field whose bits identify those exceptions that */
-/* a) were reported by Softfloat and b) are enabled for trapping by FPC byte zero                */
-/* Only overflow, underflow, and inexact are tested; invalid and divide by zero are handled      */
-/* separately.                                                                                   */
-
-static INLINE U32 ieee_exception_test_oux(REGS *regs)
-{
-    U32 ieee_trap_conds = 0;
-
-    if (regs->fpc & FPC_MASK)           /* some flags and some traps enabled.  Figure it out  */
-    {
-        if ((softfloat_exceptionFlags & softfloat_flag_tiny) && regs->fpc & FPC_MASK_IMU) 
-            softfloat_exceptionFlags |= softfloat_flag_underflow;   /* if tiny and underflow trappable, raise underflow  */
-                                                                    /* per SA22-7832-10 page 9-20  */
-        IEEE_EXCEPTION_TEST_TRAPS(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);
-        SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))
-            regs->fpc &= ~FPC_FLAG_SFX;     /* turn off inexact flag if overflow or underflow will trap */
-    }
-    else
-        SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
-    return ieee_trap_conds;
-}
-
-/*                          ---  E N D  ---                                  */
-/*                                                                           */
-/*           'SoftFloat' IEEE Binary Floating Point package                  */
-/*****************************************************************************/
 
 struct lbfp {
     int sign;
@@ -444,24 +458,27 @@ struct sbfp {
     float v;
 };
 
-#endif  /* !defined(_IEEE_NONARCHDEP_) */
 
-/*****************************************************************************/
-/*                       ---  B E G I N  ---                                 */
-/*                                                                           */
-/*           'SoftFloat' IEEE Binary Floating Point package                  */
+#endif  /* !defined(_IEEE_NONARCHDEP_) */
+/* ************************************************************************* */
+
+/* Architecture independent code goes before this endif                      */
+
+/* ************************************************************************* */
+
+
 
 /* Macro to validate rounding mode specified on M3 or M4 field of selected instructions        */
-/* Note that this table is architecture dependent                                              */
+/* Note that this macro is architecture dependent                                              */
 #undef BFPRM_CHECK
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-#define BFPRM_CHECK(_x,_regs)                                                  \
-        {if (_x > 7 || !map_valid_m3_values_fpef[(_x & 0x7)])                       \
+#define BFPRM_CHECK(_x,_regs)                                                           \
+        {if (!map_valid_modifier_values_fpef[(0x7)])                                    \
             {regs->program_interrupt(_regs, PGM_SPECIFICATION_EXCEPTION);}}
 
 #else
-#define BFPRM_CHECK(_x,_regs)                                                  \
-        {if (_x > 7 || !map_valid_m3_values_nofpef[(_x & 0x7)])                       \
+#define BFPRM_CHECK(_x,_regs)                                                           \
+        {if ( !map_valid_modifier_values_nofpef[(0x7)])                                 \
             {regs->program_interrupt(_regs, PGM_SPECIFICATION_EXCEPTION);}}
 
 #endif  /* if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)  */
@@ -503,12 +520,6 @@ static INLINE void ARCH_DEP(put_float32)( float32_t *op, U32 *fpr )
     *fpr = op->v;
 }
 
-#undef VFETCH_FLOAT64_OP
-#undef VFETCH_FLOAT32_OP
-
-#define VFETCH_FLOAT64_OP( op, effective_addr, arn, regs )  op.v = ARCH_DEP(vfetch8)( effective_addr, arn, regs )
-#define VFETCH_FLOAT32_OP( op, effective_addr, arn, regs )  op.v = ARCH_DEP(vfetch4)( effective_addr, arn, regs )
-
 #undef GET_FLOAT128_OP
 #undef GET_FLOAT64_OP
 #undef GET_FLOAT32_OP
@@ -516,116 +527,6 @@ static INLINE void ARCH_DEP(put_float32)( float32_t *op, U32 *fpr )
 #define GET_FLOAT128_OP( op, r, regs )  ARCH_DEP(get_float128)( &op, regs->fpr + FPR2I(r) )
 #define GET_FLOAT64_OP( op, r, regs )   ARCH_DEP(get_float64)(  &op, regs->fpr + FPR2I(r) )
 #define GET_FLOAT32_OP( op, r, regs )   ARCH_DEP(get_float32)(  &op, regs->fpr + FPR2I(r) )
-
-#undef GET_FLOAT128_OPS
-#undef GET_FLOAT64_OPS
-#undef GET_FLOAT32_OPS
-
-#define GET_FLOAT128_OPS( op1, r1, op2, r2, regs )  \
-    do {                                            \
-        GET_FLOAT128_OP( op1, r1, regs );           \
-        GET_FLOAT128_OP( op2, r2, regs );           \
-    } while (0)
-
-#define GET_FLOAT64_OPS( op1, r1, op2, r2, regs )   \
-    do {                                            \
-        GET_FLOAT64_OP( op1, r1, regs );            \
-        GET_FLOAT64_OP( op2, r2, regs );            \
-    } while (0)
-
-#define GET_FLOAT32_OPS( op1, r1, op2, r2, regs )   \
-    do {                                            \
-        GET_FLOAT32_OP( op1, r1, regs );            \
-        GET_FLOAT32_OP( op2, r2, regs );            \
-    } while (0)
-
-static INLINE BYTE ARCH_DEP(float128_cc_quiet)( float128_t op1, float128_t op2 )
-{
-    return FLOAT128_ISNAN(    op1      ) ||
-           FLOAT128_ISNAN(         op2 ) ? 3 :
-           f128_eq(       op1, op2 ) ? 0 :
-           f128_lt_quiet( op1, op2 ) ? 1 : 2;
-}
-
-static INLINE BYTE ARCH_DEP(float128_compare)( float128_t op1, float128_t op2 )
-{
-    if (f128_isSignalingNaN( op1 ) ||
-        f128_isSignalingNaN( op2 ))
-        softfloat_raiseFlags( softfloat_flag_invalid );
-    return ARCH_DEP(float128_cc_quiet)( op1, op2 );
-}
-
-static INLINE BYTE ARCH_DEP(float128_signaling_compare)( float128_t op1, float128_t op2 )
-{
-    if (FLOAT128_ISNAN( op1 ) ||
-        FLOAT128_ISNAN( op2 ))
-        softfloat_raiseFlags(softfloat_flag_invalid);
-    return ARCH_DEP(float128_cc_quiet)( op1, op2 );
-}
-
-static INLINE BYTE ARCH_DEP(float64_cc_quiet)( float64_t op1, float64_t op2 )
-{
-    return FLOAT64_ISNAN(   op1      ) ||
-           FLOAT64_ISNAN(        op2 ) ? 3 :
-           f64_eq(       op1, op2 ) ? 0 :
-           f64_lt_quiet( op1, op2 ) ? 1 : 2;
-}
-
-static INLINE BYTE ARCH_DEP(float64_compare)( float64_t op1, float64_t op2 )
-{
-    if (f64_isSignalingNaN( op1 ) ||
-        f64_isSignalingNaN( op2 ))
-        softfloat_raiseFlags(softfloat_flag_invalid);
-    return ARCH_DEP(float64_cc_quiet)( op1, op2 );
-}
-
-static INLINE BYTE ARCH_DEP(float64_signaling_compare)( float64_t op1, float64_t op2 )
-{
-    if (FLOAT64_ISNAN( op1 ) ||
-        FLOAT64_ISNAN( op2 ))
-        softfloat_raiseFlags(softfloat_flag_invalid);
-    return ARCH_DEP(float64_cc_quiet)( op1, op2 );
-}
-
-static INLINE BYTE ARCH_DEP(float32_cc_quiet)( float32_t op1, float32_t op2 )
-{
-    return FLOAT32_ISNAN(    op1      ) ||
-           FLOAT32_ISNAN(        op2 ) ? 3 :
-           f32_eq(       op1, op2 ) ? 0 :
-           f32_lt_quiet( op1, op2 ) ? 1 : 2;
-}
-
-static INLINE BYTE ARCH_DEP(float32_compare)( float32_t op1, float32_t op2 )
-{
-    if (f32_isSignalingNaN( op1 ) ||
-        f32_isSignalingNaN( op2 ))
-        softfloat_raiseFlags(softfloat_flag_invalid);
-    return ARCH_DEP(float32_cc_quiet)( op1, op2 );
-}
-
-static INLINE BYTE ARCH_DEP(float32_signaling_compare)( float32_t op1, float32_t op2 )
-{
-    if (FLOAT32_ISNAN( op1 ) ||
-        FLOAT32_ISNAN( op2 ))
-        softfloat_raiseFlags(softfloat_flag_invalid);
-    return ARCH_DEP(float32_cc_quiet)( op1, op2 );
-}
-
-#undef FLOAT128_COMPARE
-#undef FLOAT64_COMPARE
-#undef FLOAT32_COMPARE
-
-#define FLOAT128_COMPARE( op1, op2 )  ARCH_DEP(float128_compare)( op1, op2 )
-#define FLOAT64_COMPARE( op1, op2 )   ARCH_DEP(float64_compare)(  op1, op2 )
-#define FLOAT32_COMPARE( op1, op2 )   ARCH_DEP(float32_compare)(  op1, op2 )
-
-#undef FLOAT128_COMPARE_AND_SIGNAL
-#undef FLOAT64_COMPARE_AND_SIGNAL
-#undef FLOAT32_COMPARE_AND_SIGNAL
-
-#define FLOAT128_COMPARE_AND_SIGNAL( op1, op2 )  ARCH_DEP(float128_signaling_compare)( op1, op2 )
-#define FLOAT64_COMPARE_AND_SIGNAL( op1, op2 )   ARCH_DEP(float64_signaling_compare)(  op1, op2 )
-#define FLOAT32_COMPARE_AND_SIGNAL( op1, op2 )   ARCH_DEP(float32_signaling_compare)(  op1, op2 )
 
 #undef PUT_FLOAT128_NOCC
 #undef PUT_FLOAT64_NOCC
@@ -1069,169 +970,310 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
 #endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
 /*-------------------------------------------------------------------*/
+/* Common 128-bit Two-Operand Arithmetic Routine                     */
+/*                                                                   */
+/* All processing for 128-bit arithmetic is the same except for      */
+/* the specific operation to be performed.  This common processing   */
+/* routine is used for 128-bit Add, Subtract, Multiply, and Divide.  */
+/*                                                                   */
+/* Parameters -                                                      */
+/* - Pointer to the SoftFloat arithmetic function to be used         */
+/* - pointer to the instruction in memory                            */
+/* - Pointer to the regs structure                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP(arith128_common)(
+            float128_t sf_arith_fn( float128_t, float128_t),
+            BYTE inst[],
+            REGS *regs )
+{
+    int r1, r2;
+    float128_t op1, op2, ans;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
+    RRE(inst, regs, r1, r2);                                /* Decode operand registers from instruction            */
+    BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valid FP register pair for extended format    */
+    GET_FLOAT128_OP(op1, r1, regs);                         /* Get operand 1 value                                  */
+    GET_FLOAT128_OP(op2, r2, regs);                         /* Get operand 2 value                                  */
+
+    CLEAR_SF_EXCEPTIONS;                                    /* Clear all Softfloat IEEE flags                       */
+    SET_SF_RM( GET_SF_RM_FROM_FPC );                        /* Set rounding mode from FPC                           */
+    ans = sf_arith_fn(op1, op2);                            /* Perform the provided arithmetic function             */
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    if (ieee_exceptions & FPC_MASK_IMZ & regs->fpc)         /* Trappable divide by zero (Xz)?                       */
+        ieee_trap(regs, DXC_IEEE_DIV_ZERO);                 /* ..yes, suppress result, interrupt, no return         */
+
+    PUT_FLOAT128_CC(ans, r1, regs);                         /* Store result from Add, set condition code            */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMO & regs->fpc)         /* Trappable overflow?                                  */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_OF_EXACT;
+        ans = f128_scaledResult(SCALE_FACTOR_ARITH_OFLOW_EXTD);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT128_NOCC(ans, r1, regs);                   /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_UF_EXACT;
+        ans = f128_scaledResult(SCALE_FACTOR_ARITH_UFLOW_EXTD);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT128_NOCC(ans, r1, regs);                   /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)   /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;       /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
+
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Common 64-bit Two-Operand Arithmetic Routine                      */
+/*                                                                   */
+/* All processing for 64-bit arithmetic is the same except for       */
+/* the specific operation to be performed.  This common processing   */
+/* routine is used for 64-bit Add, Subtract, Multiply, and Divide.   */
+/*                                                                   */
+/* Parameters -                                                      */
+/* - Pointer to the SoftFloat arithmetic function to be used         */
+/* - pointer to the instruction in memory                            */
+/* - Pointer to the regs structure                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(arith64_common)(
+    float64_t sf_arith_fn(float64_t, float64_t),
+    BYTE inst[],
+    REGS *regs)
+{
+    int r1, r2, b2;
+    VADR effective_addr2;
+    float64_t op1, op2, ans;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT64_OP(op2, r2, regs);
+    }
+
+    GET_FLOAT64_OP(op1, r1, regs);
+
+    CLEAR_SF_EXCEPTIONS;                                    /* Clear all Softfloat IEEE flags                       */
+    SET_SF_RM( GET_SF_RM_FROM_FPC );                        /* Set rounding mode from FPC                           */
+    ans = sf_arith_fn(op1, op2);                            /* Perform the provided arithmetic function             */
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    if (ieee_exceptions & FPC_MASK_IMZ & regs->fpc)         /* Trappable divide by zero (Xz)?                       */
+        ieee_trap(regs, DXC_IEEE_DIV_ZERO);                 /* ..yes, suppress result, interrupt, no return         */
+
+    PUT_FLOAT64_CC(ans, r1, regs);                          /* Store result from Divide, set condition code         */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMO & regs->fpc)         /* Trappable overflow?                                  */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_OF_EXACT;
+        ans = f64_scaledResult(SCALE_FACTOR_ARITH_OFLOW_LONG);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT64_NOCC(ans, r1, regs);                    /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_UF_EXACT;
+        ans = f64_scaledResult(SCALE_FACTOR_ARITH_UFLOW_LONG);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT64_NOCC(ans, r1, regs);                    /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)    /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
+
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Common 32-bit Two-Operand Arithmetic Routine                      */
+/*                                                                   */
+/* All processing for 32-bit arithmetic is the same except for       */
+/* the specific operation to be performed.  This common processing   */
+/* routine is used for 32-bit Add, Subtract, Multiply, and Divide.   */
+/*                                                                   */
+/* Parameters -                                                      */
+/* - Pointer to the SoftFloat arithmetic function to be used         */
+/* - pointer to the instruction in memory                            */
+/* - Pointer to the regs structure                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP(arith32_common)(
+    float32_t sf_arith_fn(float32_t, float32_t),
+    BYTE inst[],
+    REGS *regs)
+{
+    int r1, r2, b2;
+    VADR effective_addr2;
+    float32_t op1, op2, ans;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT32_OP(op2, r2, regs);
+    }
+
+    GET_FLOAT32_OP(op1, r1, regs);
+
+    CLEAR_SF_EXCEPTIONS;                                    /* Clear all Softfloat IEEE flags                       */
+    SET_SF_RM( GET_SF_RM_FROM_FPC );                        /* Set rounding mode from FPC                           */
+    ans = sf_arith_fn(op1, op2);
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    if (ieee_exceptions & FPC_MASK_IMZ & regs->fpc)         /* Trappable divide by zero (Xz)?                       */
+        ieee_trap(regs, DXC_IEEE_DIV_ZERO);                 /* ..yes, suppress result, interrupt, no return         */
+
+    PUT_FLOAT32_CC(ans, r1, regs);                          /* Store result from Divide, set condition code         */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMO & regs->fpc)         /* Trappable overflow?                                  */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_OF_EXACT;
+        ans = f32_scaledResult(SCALE_FACTOR_ARITH_OFLOW_SHORT);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT32_NOCC(ans, r1, regs);                    /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)   /* Trappable underflow?                                 */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_UF_EXACT;
+        ans = f32_scaledResult(SCALE_FACTOR_ARITH_UFLOW_SHORT);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT32_NOCC(ans, r1, regs);                    /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)   /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
+
+}
+
+
+/*-------------------------------------------------------------------*/
 /* B34A AXBR  - ADD (extended BFP)                             [RRE] */
 /*-------------------------------------------------------------------*/
 
 DEF_INST(add_bfp_ext_reg)
 {
-    int r1, r2;
-    float128_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
-
-    RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
-    BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
-    BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valide FP register pair                       */
-    GET_FLOAT128_OPS( op1, r1, op2, r2, regs );             /* Get operand values                                   */
-
-    softfloat_exceptionFlags = 0;                           /* Clear all Softfloat IEEE flags                       */
-    SET_SF_RM_FROM_FPC;                                     /* Set rounding mode from FPC                           */
-    ans = f128_add( op1, op2 );                             /* Add two float128_t values                            */
-
-    if (softfloat_exceptionFlags)                           /* Any IEEE Exceptions?                                 */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* if Xi trappable, suppresses result, no return        */
-        ieee_trap_conds = ieee_exception_test_oux(regs);    /* test for overflow, underflow, inexact, set FPC flags */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f128_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_EXTD
-                : SCALE_FACTOR_ARITH_UFLOW_EXTD);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT128_CC( ans, r1, regs );                       /* Store result from Add */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO     /* Take trap for any trappable exception */
-                                             | FPC_MASK_IMU 
-                                             | FPC_MASK_IMX);
+        ARCH_DEP(arith128_common)(&f128_add, inst, regs);
+        return;
 }
 
-/*-------------------------------------------------------------------*/
-/* B31A ADBR  - ADD (long BFP)                                 [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(add_bfp_long_reg)
-{
-    int r1, r2;
-    float64_t op1, op2, ans;
-    int ieee_trap_conds = 0;                /* start out with no traps detected   */
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-    ans = f64_add( op1, op2 );
-
-    /* following optimized around "normal" case: no ieee exceptions or no traps enabled  */
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);   /* Xi is only trap that suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact  */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT64_CC(ans, r1, regs);       /* Store result from Add */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-}
 
 /*-------------------------------------------------------------------*/
 /* ED1A ADB   - ADD (long BFP)                                 [RXE] */
+/* B31A ADBR  - ADD (long BFP)                                 [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_bfp_long)
 {
-    int r1, b2;
-    VADR effective_addr2;
-    float64_t op1, op2, ans;
-    int ieee_trap_conds = 0;                /* start out with no traps detected   */
-
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OP( op1, r1, regs );
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-    ans = f64_add( op1, op2 );
-
-    /* following optimized around "normal" case: no ieee exceptions or no traps enabled  */
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);   /* Xi is only trap that suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact  */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT64_CC(ans, r1, regs);       /* Store result from Add */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-
+    ARCH_DEP(arith64_common)(&f64_add, inst, regs);
+    return;
 }
 
-/*-------------------------------------------------------------------*/
-/* B30A AEBR  - ADD (short BFP)                                [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(add_bfp_short_reg)
-{
-    int r1, r2;
-    float32_t op1, op2, ans;
-    int ieee_trap_conds = 0;                /* start out with no traps detected   */
-    
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-
-    ans = f32_add( op1, op2 );
-
-    /* following optimized around "normal" case: no ieee exceptions or no traps enabled  */
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);   /* Xi is only trap that suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact  */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT32_CC(ans, r1, regs);       /* Store result from Add */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-
-}
 
 /*-------------------------------------------------------------------*/
 /* ED0A AEB   - ADD (short BFP)                                [RXE] */
+/* B30A AEBR  - ADD (short BFP)                                [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_bfp_short)
 {
-    int r1, b2;
-    VADR effective_addr2;
-    float32_t op1, op2, ans;
-    int ieee_trap_conds = 0;                /* start out with no traps detected   */
-
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OP( op1, r1, regs );
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-    ans = f32_add( op1, op2 );
-
-    /* following optimized around "normal" case: no ieee exceptions or no traps enabled  */
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);   /* Xi is only trap that suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact  */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT32_CC(ans, r1, regs);       /* Store result from Add */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
+    ARCH_DEP(arith32_common)(&f32_add, inst, regs);
+    return;
 }
+
+
+/* Xi is only possible exception detected for Compare   */
 
 /*-------------------------------------------------------------------*/
 /* B349 CXBR  - COMPARE (extended BFP)                         [RRE] */
@@ -1240,109 +1282,118 @@ DEF_INST(compare_bfp_ext_reg)
 {
     int r1, r2;
     float128_t op1, op2;
-    BYTE newcc;
+    BYTE newcc = 3;                                         /* Assume a NaN input for now                           */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
-    GET_FLOAT128_OPS( op1, r1, op2, r2, regs );
+    GET_FLOAT128_OP(op1, r1, regs);                         /* Get operand 1 value                                  */
+    GET_FLOAT128_OP(op2, r2, regs);                         /* Get operand 2 value                                  */
 
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT128_COMPARE(op1, op2);
+    /* if either operand is an SNAN and IEEE invalid operation  is      */
+    /* trappable, generate a program interrupt.   Otherwise, set the    */
+    /* Xi (invalid operation) flag in the FPC.                          */
+    if ( FLOAT128_IS_SNAN(op1) || FLOAT128_IS_SNAN(op2) )
+    {
+        if (regs->fpc & FPC_MASK_IMI )
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);
+        regs->fpc |= FPC_FLAG_SFI;
+    }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);   /* Xi is only trap that suppresses result, no return  */
+    /* if neither operand is a NAN, set cc based on relation.           */
+    /* Otherwise, accept the default cc=3                               */
+    if ( ! (FLOAT128_IS_NAN(op1) || FLOAT128_IS_NAN(op2)) )
+        newcc = f128_eq(op1, op2) ? 0 : f128_lt_quiet(op1, op2) ? 1 : 2;
 
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
     regs->psw.cc = newcc;
-    /* Xi is only possible exception detected for Compare   */
-}
-
-/*-------------------------------------------------------------------*/
-/* B319 CDBR  - COMPARE (long BFP)                             [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_bfp_long_reg)
-{
-    int r1, r2;
-    float64_t op1, op2;
-    BYTE newcc;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT64_COMPARE(op1, op2);
-
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
-    regs->psw.cc = newcc;
-
 }
 
 /*-------------------------------------------------------------------*/
 /* ED19 CDB   - COMPARE (long BFP)                             [RXE] */
+/* B319 CDBR  - COMPARE (long BFP)                             [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_bfp_long)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float64_t op1, op2;
-    BYTE newcc;
+    BYTE newcc = 3;                                         /* Assume a NaN input for now                           */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OP( op1, r1, regs );
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT64_COMPARE(op1, op2);
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT64_OP(op2, r2, regs);
+    }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
-    regs->psw.cc = newcc;
-}
+    GET_FLOAT64_OP(op1, r1, regs);
 
-/*-------------------------------------------------------------------*/
-/* B309 CEBR  - COMPARE (short BFP)                            [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_bfp_short_reg)
-{
-    int r1, r2;
-    float32_t op1, op2;
-    BYTE newcc;
+    /* if either operand is an SNAN and IEEE invalid operation  is      */
+    /* trappable, generate a program interrupt.   Otherwise, set the    */
+    /* Xi (invalid operation) flag in the FPC.                          */
+    if (FLOAT64_IS_SNAN(op1) || FLOAT64_IS_SNAN(op2))
+    {
+        if (regs->fpc & FPC_MASK_IMI)
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);
+        regs->fpc |= FPC_FLAG_SFI;
+    }
 
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
+    /* if neither operand is a NAN, set cc based on relation.           */
+    /* Otherwise, accept the default cc=3                               */
+    if (!(FLOAT64_IS_NAN(op1) || FLOAT64_IS_NAN(op2)))
+        newcc = f64_eq(op1, op2) ? 0 : f64_lt_quiet(op1, op2) ? 1 : 2;
 
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT32_COMPARE(op1, op2);
-
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
     regs->psw.cc = newcc;
 }
 
 /*-------------------------------------------------------------------*/
 /* ED09 CEB   - COMPARE (short BFP)                            [RXE] */
+/* B309 CEBR  - COMPARE (short BFP)                            [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_bfp_short)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float32_t op1, op2;
-    BYTE newcc;
+    BYTE newcc = 3;                                         /* Assume a NaN input for now                           */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OP( op1, r1, regs );
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT32_COMPARE(op1, op2);
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT32_OP(op2, r2, regs);
+    }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
+    GET_FLOAT32_OP(op1, r1, regs);
+
+    /* if either operand is an SNAN and IEEE invalid operation  is      */
+    /* trappable, generate a program interrupt.   Otherwise, set the    */
+    /* Xi (invalid operation) flag in the FPC.                          */
+    if (FLOAT32_IS_SNAN(op1) || FLOAT32_IS_SNAN(op2))
+    {
+        if (regs->fpc & FPC_MASK_IMI)
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);
+        regs->fpc |= FPC_FLAG_SFI;
+    }
+
+    /* if neither operand is a NAN, set cc based on relation.           */
+    /* Otherwise, accept the default cc=3                               */
+    if (!(FLOAT32_IS_NAN(op1) || FLOAT32_IS_NAN(op2)))
+        newcc = f32_eq(op1, op2) ? 0 : f32_lt_quiet(op1, op2) ? 1 : 2;
+
     regs->psw.cc = newcc;
 }
 
@@ -1353,106 +1404,112 @@ DEF_INST(compare_and_signal_bfp_ext_reg)
 {
     int r1, r2;
     float128_t op1, op2;
-    BYTE newcc;
+    BYTE newcc = 3;                                         /* Assume a NaN input for now                           */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
-    GET_FLOAT128_OPS( op1, r1, op2, r2, regs );
+    GET_FLOAT128_OP(op1, r1, regs);                         /* Get operand 1 value                                  */
+    GET_FLOAT128_OP(op2, r2, regs);                         /* Get operand 2 value                                  */
 
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT128_COMPARE_AND_SIGNAL(op1, op2);
+    /* if either operand is a NAN and IEEE invalid operation  is        */
+    /* trappable, generate a program interrupt.   Otherwise, set the    */
+    /* Xi (invalid operation) flag in the FPC and accept the default    */
+    /* cc of 3 (unordered)                                              */
+    if (FLOAT128_IS_NAN(op1) || FLOAT128_IS_NAN(op2))
+    {
+        if (regs->fpc & FPC_MASK_IMI)
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);
+        regs->fpc |= FPC_FLAG_SFI;
+    }
+    else    /* Neither operand is a NAN, set cc based on relation.      */
+        newcc = f128_eq(op1, op2) ? 0 : f128_lt_quiet(op1, op2) ? 1 : 2;
 
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
-    regs->psw.cc = newcc;
-}
-
-/*-------------------------------------------------------------------*/
-/* B318 KDBR  - COMPARE AND SIGNAL (long BFP)                  [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_and_signal_bfp_long_reg)
-{
-    int r1, r2;
-    float64_t op1, op2;
-    BYTE newcc;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT64_COMPARE_AND_SIGNAL(op1, op2);
-
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
     regs->psw.cc = newcc;
 }
 
 /*-------------------------------------------------------------------*/
 /* ED18 KDB   - COMPARE AND SIGNAL (long BFP)                  [RXE] */
+/* B318 KDBR  - COMPARE AND SIGNAL (long BFP)                  [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_and_signal_bfp_long)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float64_t op1, op2;
-    BYTE newcc;
+    BYTE newcc = 3;                                         /* Assume a NaN input for now                           */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OP( op1, r1, regs );
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT64_COMPARE_AND_SIGNAL(op1, op2);
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT64_OP(op2, r2, regs);
+    }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
-    regs->psw.cc = newcc;
-}
+    GET_FLOAT64_OP(op1, r1, regs);
 
-/*-------------------------------------------------------------------*/
-/* B308 KEBR  - COMPARE AND SIGNAL (short BFP)                 [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(compare_and_signal_bfp_short_reg)
-{
-    int r1, r2;
-    float32_t op1, op2;
-    BYTE newcc;
+    /* if either operand is a NAN and IEEE invalid operation  is        */
+    /* trappable, generate a program interrupt.   Otherwise, set the    */
+    /* Xi (invalid operation) flag in the FPC and accept the default    */
+    /* cc of 3 (unordered)                                              */
+    if (FLOAT64_IS_NAN(op1) || FLOAT64_IS_NAN(op2))
+    {
+        if (regs->fpc & FPC_MASK_IMI)
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);
+        regs->fpc |= FPC_FLAG_SFI;
+    }
+    else    /* Neither operand is a NAN, set cc based on relation.      */
+        newcc = f64_eq(op1, op2) ? 0 : f64_lt_quiet(op1, op2) ? 1 : 2;
 
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT32_COMPARE_AND_SIGNAL(op1, op2);
-
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
     regs->psw.cc = newcc;
 }
 
 /*-------------------------------------------------------------------*/
 /* ED08 KEB   - COMPARE AND SIGNAL (short BFP)                 [RXE] */
+/* B308 KEBR  - COMPARE AND SIGNAL (short BFP)                 [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_and_signal_bfp_short)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float32_t op1, op2;
-    BYTE newcc;
+    BYTE newcc = 3;                                         /* Assume a NaN input for now                           */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OP( op1, r1, regs );
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    newcc = FLOAT32_COMPARE_AND_SIGNAL(op1, op2);
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT32_OP(op2, r2, regs);
+    }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi is only trap; suppress result, no return  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
+    GET_FLOAT32_OP(op1, r1, regs);
+
+    /* if either operand is a NAN and IEEE invalid operation  is        */
+    /* trappable, generate a program interrupt.   Otherwise, set the    */
+    /* Xi (invalid operation) flag in the FPC and accept the default    */
+    /* cc of 3 (unordered)                                              */
+    if (FLOAT32_IS_NAN(op1) || FLOAT32_IS_NAN(op2))
+    {
+        if (regs->fpc & FPC_MASK_IMI)
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);
+        regs->fpc |= FPC_FLAG_SFI;
+    }
+    else    /* Neither operand is a NAN, set cc based on relation.      */
+        newcc = f32_eq(op1, op2) ? 0 : f32_lt_quiet(op1, op2) ? 1 : 2;
+
     regs->psw.cc = newcc;
 
 }
@@ -1487,27 +1544,29 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
     S32 op2;
     float128_t op1;
 
-    RRF_MM(inst, regs, r1, r2, m3, m4);
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    BFPINST_CHECK(regs);
+    RRF_MM(inst, regs, r1, r2, m3, m4);
     BFPREGPAIR_CHECK(r1, regs);
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction          */
-    UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
+    UNREFERENCED(m4);                                       /* M4 field supported but does nothing; no inexact      */
 #else
-    if (m3 | m4)                      /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
+    if (m3 | m4)                                            /* ensure M3 and M4 are zero for pre-FPEF instructions  */
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 #endif
 
     op2 = regs->GR_L(r2);
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-    softfloat_exceptionFlags = 0;
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
+    CLEAR_SF_EXCEPTIONS;
     op1 = i32_to_f128(op2);
-                                      /* No flags set by CONVERT FROM FIXED (32 to extended BFP); */
 
     PUT_FLOAT128_NOCC( op1, r1, regs );
 
+    /* No FPC flags set by CONVERT FROM FIXED (32 to extended BFP); */
+
+    return;
 }
 
 /*----------------------------------------------------------------------*/
@@ -1523,22 +1582,25 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
     S32 op2;
     float64_t op1;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction          */
-    UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
+    UNREFERENCED(m4);                                       /* M4 field supported but does nothing; no inexact      */
 #else
-    if (m3 | m4)                      /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
-        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);  
+    if (m3 | m4)                                            /* ensure M3 and M4 are zero for pre-FPEF instructions  */
+        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 #endif
 
-    SET_SF_RM_FROM_M3(m3);              /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
     op2 = regs->GR_L(r2);
-    softfloat_exceptionFlags = 0;
+    CLEAR_SF_EXCEPTIONS;
     op1 = i32_to_f64( op2 );
-                                        /* No flags set by CONVERT FROM FIXED (32 to long BFP); */
+    
+    /* No FPC flags set by CONVERT FROM FIXED (32 to long BFP); */
+    
     PUT_FLOAT64_NOCC( op1, r1, regs );
 
 }
@@ -1558,30 +1620,36 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
     BYTE m3, m4;
     S32 op2;
     float32_t op1;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction          */
-    UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
 #else
-    if (m3 | m4)                      /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
+    if (m3 | m4)                                            /* ensure M3 and M4 are zero for pre-FPEF instructions  */
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 #endif
 
-    SET_SF_RM_FROM_M3(m3);                          /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
     op2 = regs->GR_L(r2);
-    softfloat_exceptionFlags = 0;
+    CLEAR_SF_EXCEPTIONS;
     op1 = i32_to_f32( op2 );
-    PUT_FLOAT32_NOCC( op1, r1, regs );              /* operation always stores result, inexact only possible exception  */
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
 
-    if ( softfloat_exceptionFlags && !SUPPRESS_INEXACT(m4) )        /* inexact occurred and not masked by m4?  */
-    {                                                               /* ..yes, set FPC flags and test for a trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact, save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
-    };
+    PUT_FLOAT32_NOCC( op1, r1, regs );
+
+                                                            /* Did inexact occur and is non suppressed?             */
+    if ( !SUPPRESS_INEXACT(m4) && ieee_exceptions & FPC_MASK_IMX )
+    {                                                       /* ..No, set flags or trap according to FPC             */
+        if (regs->fpc & FPC_MASK_IMX)                       /* Is inexact trappable?                                */
+            ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented); /* ..yes, set incremented, trap             */
+        else
+            regs->fpc |= FPC_FLAG_SFX;                      /* Set FPC flags for inexact                            */
+    }
 
 }
 
@@ -1599,25 +1667,29 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
     S64 op2;
     float128_t op1;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction          */
-    UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact    */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
+    UNREFERENCED(m4);                                       /* M4 field supported but does nothing; no inexact      */
 #else
-    if (m3 | m4)                        /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
+    if (m3 | m4)                                            /* ensure M3 and M4 are zero for pre-FPEF instructions  */
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 #endif
 
-    SET_SF_RM_FROM_M3(m3);              /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-    op2 = regs->GR_G(r2);               /* HERE'S THE ERROR    !!!!!!!  should be the whole register*/
-    softfloat_exceptionFlags = 0;
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
+    op2 = regs->GR_G(r2);
+    CLEAR_SF_EXCEPTIONS;
     op1 = i64_to_f128(op2);
-                                        /* No flags set by CONVERT FROM FIXED (64 to extended BFP); */
+    
+    /* No FPC flags set by CONVERT FROM FIXED (64 to extended BFP); */
+    
     PUT_FLOAT128_NOCC(op1, r1, regs);
 
+    return;
 }
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -1637,29 +1709,36 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
     BYTE m3, m4;
     S64 op2;
     float64_t op1;
-    U32 ieee_trap_conds = 0;
-    
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
 #else
-    if (m3 | m4)                      /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
+    if (m3 | m4)                                            /* ensure M3 and M4 are zero for pre-FPEF instructions  */
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 #endif
 
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
     op2 = regs->GR_G(r2);
-    softfloat_exceptionFlags = 0;
+    CLEAR_SF_EXCEPTIONS;
     op1 = i64_to_f64( op2 );
-    PUT_FLOAT64_NOCC( op1, r1, regs );              /* operation always stores result  */
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
 
-    if (softfloat_exceptionFlags && !SUPPRESS_INEXACT(m4))          /* inexact occurred and not masked by m4?  */
-    {                                                               /* ..yes, set FPC flags and test for a trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact; save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
-    };
+    PUT_FLOAT64_NOCC( op1, r1, regs );                      /* operation always stores result                       */
+
+                                                            /* Did inexact occur and is non suppressed?             */
+    if (!SUPPRESS_INEXACT(m4) && ieee_exceptions & FPC_MASK_IMX)
+    {                                                       /* ..No, set flags or trap according to FPC             */
+        if (regs->fpc & FPC_MASK_IMX)                       /* Is inexact trappable?                                */
+            ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented); /* ..yes, set incremented, trap             */
+        else
+            regs->fpc |= FPC_FLAG_SFX;                      /* Set FPC flags for inexact                            */
+    }
 
 }
 #endif /*defined(FEATURE_ESAME)*/
@@ -1680,29 +1759,36 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
     BYTE m3, m4;
     S64 op2;
     float32_t op1;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
 #else
-    if (m3 | m4)                      /* ensure M3 and M4 are zero for pre-FPEF interpretation of instructions  */
+    if (m3 | m4)                                            /* ensure M3 and M4 are zero for pre-FPEF instructions  */
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 #endif
 
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
     op2 = regs->GR_G(r2);
-    softfloat_exceptionFlags = 0;
+    CLEAR_SF_EXCEPTIONS;
     op1 = i64_to_f32( op2 );
-    PUT_FLOAT32_NOCC( op1, r1, regs );       /* operation always stores result  */
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
 
-    if (softfloat_exceptionFlags && !(SUPPRESS_INEXACT(m4)))        /* inexact occurred and not masked by m4?  */
-    {                                                               /* ..yes, set FPC flags and test for a trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact; save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
-    };
+    PUT_FLOAT32_NOCC(op1, r1, regs);
+
+                                                            /* Did inexact occur and is non suppressed?             */
+    if (!SUPPRESS_INEXACT(m4) && ieee_exceptions & FPC_MASK_IMX)
+    {                                                       /* ..No, set flags or trap according to FPC             */
+        if (regs->fpc & FPC_MASK_IMX)                       /* Is inexact trappable?                                */
+            ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented); /* ..yes, set incremented, trap             */
+        else
+            regs->fpc |= FPC_FLAG_SFX;                      /* Set FPC flags for inexact                            */
+    }
 
 }
 #endif /*defined(FEATURE_ESAME)*/
@@ -1743,11 +1829,15 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
 DEF_INST(convert_bfp_ext_to_fix32_reg)
 {
     int r1, r2;
-    BYTE m3, m4, newcc;
-    S32 op1;
+    BYTE m3, m4;
+    S32 ans;
     float128_t op2;
-    U32 ieee_trap_conds = 0;
-    U32 op2_dataclass;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+    BYTE newcc = 3;                                         /* start with cc=3                                      */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -1756,51 +1846,68 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     m4 = 0;
 #endif
 
-    BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3,regs);
     GET_FLOAT128_OP(op2, r2, regs);
-    op2_dataclass = float128_class(op2);
 
-    softfloat_exceptionFlags = 0;
-    if (op2_dataclass & (float_class_neg_signaling_nan | float_class_pos_signaling_nan 
-        | float_class_neg_quiet_nan | float_class_pos_quiet_nan))
-    {                    /* NaN input always returns maximum negative integer, cc3, and IEEE invalid exception */
-        op1 = -0x7FFFFFFF - 1;
-        newcc = 3;
-        softfloat_raiseFlags(softfloat_flag_invalid);   
+    /* Fast path for a zero input.  It's easy to test for zero and no exceptions are possible.                      */
+    if ( !(op2.v[1] & 0x7FFFFFFFFFFFFFFFULL || op2.v[0])  ) /* Is second operand zero?                              */
+    {                                                       /* ..Yes, return zero and cc=0                          */
+        regs->GR_L(r1) = 0;
+        regs->psw.cc = 0;
+        return;
     }
-    else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
-    {
-        newcc = 0;
-        op1 = 0;
+
+    /* SoftFloat-3 does not handle NaN inputs to f128_i32 consistent with the IBM PoOp.  So we will just do         */
+    /* a fast-path for NaNs, skipping the SoftFloat call and setting exceptions as indicated for a NaN.             */
+    /* QNaNs and SNaNs are treated the same and the sign of the NaN does not affect the result.                     */
+    if ( FLOAT128_IS_NAN( op2 ) )
+    {                                                       /* A NaN.  Fast path (and correct) processing           */
+        ans = 0x80000000;                                   /* result from NaN is always negative maxint            */
+        ieee_exceptions = FPC_MASK_IMI | (!SUPPRESS_INEXACT(m4) ? FPC_MASK_IMX : 0);
     }
     else
-    {
-        newcc = (op2.v[1] & 0x8000000000000000ULL) ? 1 : 2;
-        if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
-            op1 = 0;
-        else
-        {
-            SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-            op1 = f128_to_i32(op2, softfloat_roundingMode, !(SUPPRESS_INEXACT(m4)));
-        }
+    {                                                       /* Not a NaN.  SoftFloat can be used                    */
+        newcc = (op2.v[1] & 0x8000000000000000ULL) ? 1 : 2; /* set condition code based on input sign.              */
+                                                            /* ..input of zero handled via fast-path above          */
+        CLEAR_SF_EXCEPTIONS;
+        ans = f128_to_i32(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)              /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                      /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                       /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;         /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    regs->GR_L(r1) = ans;                                   /* results returned even if inexact trapped             */
+    regs->psw.cc = newcc;  /* set condition code based on input sign.          */
+                                                            /* ..input of zero handled via fast-path above          */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Non-trappable invalid?                               */
+    {                                                       /* Yes, set cc=3 and test for a negative non-NaN input  */
+        if (regs->psw.cc == 1)                              /* Negative source on non-trap invalid op?              */
+            regs->GR_L(r1) = 0x80000000;                    /* ..yes, change return to negative maxint              */
+        if ( !SUPPRESS_INEXACT(m4))                         /* Was inexact suppressed?                              */
+            ieee_exceptions |= FPC_MASK_IMX;                /* ..No, invalid op result is flagged as inexact        */
+        regs->psw.cc = 3;                                   /* Set cc=3                                             */
     }
 
-    regs->GR_L(r1) = op1;                       /* results returned even if exception trapped*/
-    regs->psw.cc = newcc;
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact ?                                  */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save = (ieee_exceptions >> 16) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-                      /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 
@@ -1810,11 +1917,13 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
 DEF_INST(convert_bfp_long_to_fix32_reg)
 {
     int r1, r2;
-    BYTE m3, m4, newcc;
-    S32 op1;
+    BYTE m3, m4;
+    S32 ans;
     float64_t op2;
-    U32 ieee_trap_conds = 0;
-    U32 op2_dataclass;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+    BYTE newcc = 3;                                         /* start with cc=3                                      */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -1823,50 +1932,70 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
     m4 = 0;
 #endif
 
-    BFPINST_CHECK(regs);
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
+    BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT64_OP(op2, r2, regs);
-    op2_dataclass = float64_class(op2);
 
-    softfloat_exceptionFlags = 0;
-    if (op2_dataclass & (float_class_neg_signaling_nan | float_class_pos_signaling_nan
-        | float_class_neg_quiet_nan | float_class_pos_quiet_nan))
-    {                    /* NaN input always returns maximum negative integer, cc3, and IEEE invalid exception */
-        op1 = -0x7FFFFFFF - 1;
-        newcc = 3;
-        softfloat_raiseFlags(softfloat_flag_invalid);
+    /* Fast path for a zero input.  It's easy to test for zero and no exceptions are possible.                      */
+    if ( !( op2.v & 0x7FFFFFFFFFFFFFFFULL ) )               /* Is second operand zero?                              */
+    {                                                       /* ..Yes, return zero and cc=0                          */
+        regs->GR_L(r1) = 0;
+        regs->psw.cc = 0;
+        return;
     }
-    else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
-    {
-        newcc = 0;
-        op1 = 0;
+
+    /* SoftFloat-3 does not handle NaN inputs to f64_i32 consistent with the IBM PoOp.  So we will just do a fast   */
+    /* path for NaNs, skipping the SoftFloat call and setting exceptions as indicated for a NaN.  QNaNs and SNaNs   */
+    /* are treated the same and the sign of the NaN does not affect the result.                                     */
+    if (FLOAT64_IS_NAN(op2))
+    {                                                       /* A NaN.  Fast path (and correct) processing           */
+        ans = 0x80000000;                                   /* result from NaN is always negative maxint            */
+        ieee_exceptions = FPC_MASK_IMI | (!SUPPRESS_INEXACT(m4) ? FPC_MASK_IMX : 0);
     }
     else
-    {
-        newcc = (op2.v & 0x8000000000000000ULL) ? 1 : 2;
-        if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
-            op1 = 0;
-        else
-        {
-            SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-            op1 = f64_to_i32(op2, softfloat_roundingMode, !(SUPPRESS_INEXACT(m4)));
-        }
+    {                                                       /* Not a NaN.  SoftFloat can be used                */
+        newcc = (op2.v & 0x8000000000000000ULL) ? 1 : 2; /* set condition code based on input sign.          */
+                                                            /* ..input of zero handled via fast-path above      */
+        CLEAR_SF_EXCEPTIONS;
+        ans = f64_to_i32(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)              /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                      /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                       /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;         /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    regs->GR_L(r1) = ans;                                   /* results returned even if inexact trapped             */
+    regs->psw.cc = newcc;  /* set condition code based on input sign.          */
+                                                            /* ..input of zero handled via fast-path above          */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Non-trappable invalid?                               */
+    {                                                       /* Yes, set cc=3 and test for a negative non-NaN input  */
+        if (regs->psw.cc == 1)                              /* Negative source on non-trap invalid op?              */
+            regs->GR_L(r1) = 0x80000000;                    /* ..yes, change return to negative maxint              */
+        if (!SUPPRESS_INEXACT(m4))                          /* Was inexact suppressed?                              */
+            ieee_exceptions |= FPC_MASK_IMX;                /* ..No, invalid op result is flagged as inexact        */
+        regs->psw.cc = 3;                                   /* Set cc=3                                             */
     }
 
-    regs->GR_L(r1) = op1;
-    regs->psw.cc = newcc;
+    /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact ?                                  */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save = (ieee_exceptions >> 16) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-    /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 
@@ -1876,11 +2005,13 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
 DEF_INST(convert_bfp_short_to_fix32_reg)
 {
     int r1, r2;
-    BYTE m3, m4, newcc;
-    S32 op1;
+    BYTE m3, m4;
+    S32 ans;
     float32_t op2;
-    U32 ieee_trap_conds = 0;
-    U32 op2_dataclass;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+    BYTE newcc = 3;                                         /* start with cc=3                                      */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -1889,50 +2020,70 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
     m4 = 0;
 #endif
 
-    BFPINST_CHECK(regs);
-    BFPRM_CHECK(m3,regs);
-    GET_FLOAT32_OP( op2, r2, regs );
-    op2_dataclass = float32_class(op2);
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    if (op2_dataclass & (float_class_neg_signaling_nan | float_class_pos_signaling_nan
-        | float_class_neg_quiet_nan | float_class_pos_quiet_nan))
-    {                    /* NaN input always returns maximum negative integer, cc3, and IEEE invalid exception */
-        op1 = -0x7FFFFFFF - 1;
-        newcc = 3;
-        softfloat_raiseFlags(softfloat_flag_invalid);
+    BFPREGPAIR_CHECK(r2, regs);
+    BFPRM_CHECK(m3, regs);
+    GET_FLOAT32_OP(op2, r2, regs);
+
+    /* Fast path for a zero input.  It's easy to test for zero and no exceptions are possible.                      */
+    if (!(op2.v & 0x7FFFFFFF))                              /* Is second operand zero?                              */
+    {                                                       /* ..Yes, return zero and cc=0                          */
+        regs->GR_L(r1) = 0;
+        regs->psw.cc = 0;
+        return;
     }
-    else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
-    {
-        newcc = 0;
-        op1 = 0;
+
+    /* SoftFloat-3 does not handle NaN inputs to f32_i32 consistent with the IBM PoOp.  So we will just do          */
+    /* a fast-path for NaNs, skipping the SoftFloat call and setting exceptions as indicated for a NaN.             */
+    /* QNaNs and SNaNs are treated the same and the sign of the NaN does not affect the result.                     */
+    if (FLOAT32_IS_NAN(op2))
+    {                                                       /* A NaN.  Fast path (and correct) processing           */
+        ans = 0x80000000;                                   /* result from NaN is always negative maxint            */
+        ieee_exceptions = FPC_MASK_IMI | (!SUPPRESS_INEXACT(m4) ? FPC_MASK_IMX : 0);
     }
     else
-    {
-        newcc = (op2.v & 0x80000000) ? 1 : 2;
-        if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
-            op1 = 0;
-        else
-        {
-            SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-            op1 = f32_to_i32(op2, softfloat_roundingMode, !(SUPPRESS_INEXACT(m4)));
-        }
+    {                                                       /* Not a NaN.  SoftFloat can be used                    */
+        newcc = (op2.v & 0x80000000) ? 1 : 2;               /* set condition code based on input sign.              */
+                                                            /* ..input of zero handled via fast-path above          */
+        CLEAR_SF_EXCEPTIONS;
+        ans = f32_to_i32(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)              /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                      /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                       /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;         /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    regs->GR_L(r1) = ans;                                   /* results returned even if inexact trapped             */
+    regs->psw.cc = newcc;  /* set condition code based on input sign.          */
+                                                            /* ..input of zero handled via fast-path above          */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Non-trappable invalid?                               */
+    {                                                       /* Yes, set cc=3 and test for a negative non-NaN input  */
+        if (regs->psw.cc == 1)                              /* Negative source on non-trap invalid op?              */
+            regs->GR_L(r1) = 0x80000000;                    /* ..yes, change return to negative maxint              */
+        if (!SUPPRESS_INEXACT(m4))                          /* Was inexact suppressed?                              */
+            ieee_exceptions |= FPC_MASK_IMX;                /* ..No, invalid op result is flagged as inexact        */
+        regs->psw.cc = 3;                                   /* Set cc=3                                             */
     }
 
-    regs->GR_L(r1) = op1;
-    regs->psw.cc = newcc;
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact ?                                  */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save = (ieee_exceptions >> 16) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-    /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 
@@ -1943,11 +2094,15 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
 DEF_INST(convert_bfp_ext_to_fix64_reg)
 {
     int r1, r2;
-    BYTE m3, m4, newcc;
-    S64 op1;
+    BYTE m3, m4;
+    S64 ans;
     float128_t op2;
-    U32 ieee_trap_conds = 0;
-    U32 op2_dataclass;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+    BYTE newcc = 3;                                         /* start with cc=3                                      */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -1956,51 +2111,68 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     m4 = 0;
 #endif
 
-    BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
-    BFPRM_CHECK(m3,regs);
-    GET_FLOAT128_OP( op2, r2, regs );
-    op2_dataclass = float128_class(op2);
+    BFPRM_CHECK(m3, regs);
+    GET_FLOAT128_OP(op2, r2, regs);
 
-    softfloat_exceptionFlags = 0;
-    if (op2_dataclass & (float_class_neg_signaling_nan | float_class_pos_signaling_nan
-        | float_class_neg_quiet_nan | float_class_pos_quiet_nan))
-    {                    /* NaN input always returns maximum negative integer, cc3, and IEEE invalid exception */
-        op1 = -(0x7FFFFFFFFFFFFFFFULL) - 1;
-        newcc = 3;
-        softfloat_raiseFlags(softfloat_flag_invalid);
+    /* Fast path for a zero input.  It's easy to test for zero and no exceptions are possible.                      */
+    if (!(op2.v[1] & 0x7FFFFFFFFFFFFFFFULL || op2.v[0]))    /* Is second operand zero?                              */
+    {                                                       /* ..Yes, return zero and cc=0                          */
+        regs->GR_G(r1) = 0;
+        regs->psw.cc = 0;
+        return;
     }
-    else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
-    {
-        newcc = 0;
-        op1 = 0;
+
+    /* SoftFloat-3 does not handle NaN inputs to f128_i64 consistent with the IBM PoOp.  So we will just do         */
+    /* a fast-path for NaNs, skipping the SoftFloat call and setting exceptions as indicated for a NaN.             */
+    /* QNaNs and SNaNs are treated the same and the sign of the NaN does not affect the result.                     */
+    if (FLOAT128_IS_NAN(op2))
+    {                                                       /* A NaN.  Fast path (and correct) processing           */
+        ans = 0x8000000000000000ULL;                        /* result from NaN is always negative maxint            */
+        ieee_exceptions = FPC_MASK_IMI | (!SUPPRESS_INEXACT(m4) ? FPC_MASK_IMX : 0);
     }
     else
-    {
-        newcc = (op2.v[1] & 0x8000000000000000ULL) ? 1 : 2;
-        if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
-            op1 = 0;
-        else
-        {
-            SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-            op1 = f128_to_i64(op2, softfloat_roundingMode, !(SUPPRESS_INEXACT(m4)));
-        }
+    {                                                       /* Not a NaN.  SoftFloat can be used                    */
+        newcc = (op2.v[1] & 0x8000000000000000ULL) ? 1 : 2; /* set condition code based on input sign.              */
+                                                            /* ..input of zero handled via fast-path above          */
+        CLEAR_SF_EXCEPTIONS;
+        ans = f128_to_i64(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)              /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                      /* ..yes, set cc=3                              */
-        if(!SUPPRESS_INEXACT(m4))                                       /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;         /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    regs->GR_G(r1) = ans;                                   /* results returned even if inexact trapped             */
+    regs->psw.cc = newcc;  /* set condition code based on input sign.          */
+                                                            /* ..input of zero handled via fast-path above          */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Non-trappable invalid?                               */
+    {                                                       /* Yes, set cc=3 and test for a negative non-NaN input  */
+        if (regs->psw.cc == 1)                              /* Negative source on non-trap invalid op?              */
+            regs->GR_G(r1) = 0x8000000000000000ULL;         /* ..yes, change return to negative maxint              */
+        if (!SUPPRESS_INEXACT(m4))                          /* Was inexact suppressed?                              */
+            ieee_exceptions |= FPC_MASK_IMX;                /* ..No, invalid op result is flagged as inexact        */
+        regs->psw.cc = 3;                                   /* Set cc=3                                             */
     }
 
-    regs->GR_G(r1) = op1;
-    regs->psw.cc = newcc;
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact ?                                  */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save = (ieee_exceptions >> 16) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-    /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 #endif /*defined(FEATURE_ESAME)*/
@@ -2012,11 +2184,13 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
 DEF_INST(convert_bfp_long_to_fix64_reg)
 {
     int r1, r2;
-    BYTE m3, m4, newcc;
-    S64 op1;
+    BYTE m3, m4;
+    S64 ans;
     float64_t op2;
-    U32 ieee_trap_conds = 0;
-    U32 op2_dataclass;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+    BYTE newcc = 3;                                         /* start with cc=3                                      */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2025,50 +2199,70 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     m4 = 0;
 #endif
 
-    BFPINST_CHECK(regs);
-    BFPRM_CHECK(m3,regs);
-    GET_FLOAT64_OP(op2, r2, regs);
-    op2_dataclass = float64_class(op2);
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    if (op2_dataclass & (float_class_neg_signaling_nan | float_class_pos_signaling_nan
-        | float_class_neg_quiet_nan | float_class_pos_quiet_nan))
-    {                    /* NaN input always returns maximum negative integer, cc3, and IEEE invalid exception */
-        op1 = -(0x7FFFFFFFFFFFFFFFULL) - 1;
-        newcc = 3;
-        softfloat_raiseFlags(softfloat_flag_invalid);
+    BFPREGPAIR_CHECK(r2, regs);
+    BFPRM_CHECK(m3, regs);
+    GET_FLOAT64_OP(op2, r2, regs);
+
+    /* Fast path for a zero input.  It's easy to test for zero and no exceptions are possible.                      */
+    if (!(op2.v & 0x7FFFFFFFFFFFFFFFULL ))                  /* Is second operand zero?                              */
+    {                                                       /* ..Yes, return zero and cc=0                          */
+        regs->GR_G(r1) = 0;
+        regs->psw.cc = 0;
+        return;
     }
-    else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
-    {
-        newcc = 0;
-        op1 = 0;
+
+    /* SoftFloat-3 does not handle NaN inputs to f64_i64 consistent with the IBM PoOp.  So we will just do          */
+    /* a fast-path for NaNs, skipping the SoftFloat call and setting exceptions as indicated for a NaN.             */
+    /* QNaNs and SNaNs are treated the same and the sign of the NaN does not affect the result.                     */
+    if (FLOAT64_IS_NAN(op2))
+    {                                                       /* A NaN.  Fast path (and correct) processing           */
+        ans = 0x8000000000000000ULL;                        /* result from NaN is always negative maxint            */
+        ieee_exceptions = FPC_MASK_IMI | (!SUPPRESS_INEXACT(m4) ? FPC_MASK_IMX : 0);
     }
     else
-    {
-        newcc = (op2.v & 0x8000000000000000ULL) ? 1 : 2;
-        if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
-            op1 = 0;
-        else
-        {
-            SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-            op1 = f64_to_i64(op2, softfloat_roundingMode, !(SUPPRESS_INEXACT(m4)));
-        }
+    {                                                       /* Not a NaN.  SoftFloat can be used                    */
+        newcc = (op2.v & 0x8000000000000000ULL) ? 1 : 2;    /* set condition code based on input sign.              */
+                                                            /* ..input of zero handled via fast-path above          */
+        CLEAR_SF_EXCEPTIONS;
+        ans = f64_to_i64(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)          /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                  /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                  /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;     /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    regs->GR_G(r1) = ans;                                   /* results returned even if inexact trapped             */
+    regs->psw.cc = newcc;                                   /* set condition code based on input sign.              */
+                                                            /* ..input of zero handled via fast-path above          */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Non-trappable invalid?                               */
+    {                                                       /* Yes, set cc=3 and test for a negative non-NaN input  */
+        if (regs->psw.cc == 1)                              /* Negative source on non-trap invalid op?              */
+            regs->GR_G(r1) = 0x8000000000000000ULL;         /* ..yes, change return to negative maxint              */
+        if (!SUPPRESS_INEXACT(m4))                          /* Was inexact suppressed?                              */
+            ieee_exceptions |= FPC_MASK_IMX;                /* ..No, invalid op result is flagged as inexact        */
+        regs->psw.cc = 3;                                   /* Set cc=3                                             */
     }
 
-    regs->GR_G(r1) = op1;
-    regs->psw.cc = newcc;
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact ?                                  */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save = (ieee_exceptions >> 16) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-    /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 #endif /*defined(FEATURE_ESAME)*/
@@ -2080,11 +2274,13 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
 DEF_INST(convert_bfp_short_to_fix64_reg)
 {
     int r1, r2;
-    BYTE m3, m4, newcc;
-    S64 op1;
+    BYTE m3, m4;
+    S64 ans;
     float32_t op2;
-    U32 ieee_trap_conds = 0;
-    U32 op2_dataclass;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+    BYTE newcc = 3;                                         /* start with cc=3                                      */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2093,50 +2289,70 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     m4 = 0;
 #endif
 
-    BFPINST_CHECK(regs);
-    BFPRM_CHECK(m3,regs);
-    GET_FLOAT32_OP( op2, r2, regs );
-    op2_dataclass = float32_class(op2);
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    if (op2_dataclass & (float_class_neg_signaling_nan | float_class_pos_signaling_nan
-        | float_class_neg_quiet_nan | float_class_pos_quiet_nan))
-    {                    /* NaN input always returns maximum negative integer, cc3, and IEEE invalid exception */
-        op1 = -(0x7FFFFFFFFFFFFFFFULL) - 1;
-        newcc = 3;
-        softfloat_raiseFlags(softfloat_flag_invalid);
+    BFPREGPAIR_CHECK(r2, regs);
+    BFPRM_CHECK(m3, regs);
+    GET_FLOAT32_OP(op2, r2, regs);
+
+    /* Fast path for a zero input.  It's easy to test for zero and no exceptions are possible.                      */
+    if (!(op2.v & 0x7FFFFFFFULL))                           /* Is second operand zero?                              */
+    {                                                       /* ..Yes, return zero and cc=0                          */
+        regs->GR_G(r1) = 0;
+        regs->psw.cc = 0;
+        return;
     }
-    else if (op2_dataclass & (float_class_neg_zero | float_class_pos_zero))
-    {
-        newcc = 0;
-        op1 = 0;
+
+    /* SoftFloat-3 does not handle NaN inputs to f32_i32 consistent with the IBM PoOp.  So we will just do          */
+    /* a fast-path for NaNs, skipping the SoftFloat call and setting exceptions as indicated for a NaN.             */
+    /* QNaNs and SNaNs are treated the same and the sign of the NaN does not affect the result.                     */
+    if (FLOAT32_IS_NAN(op2))
+    {                                                       /* A NaN.  Fast path (and correct) processing           */
+        ans = 0x8000000000000000ULL;                        /* result from NaN is always negative maxint            */
+        ieee_exceptions = FPC_MASK_IMI | (!SUPPRESS_INEXACT(m4) ? FPC_MASK_IMX : 0);
     }
     else
-    {
-        newcc = (op2.v & 0x80000000) ? 1 : 2;
-        if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
-            op1 = 0;
-        else
-        {
-            SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-            op1 = f32_to_i64(op2, softfloat_roundingMode, !(SUPPRESS_INEXACT(m4)));
-        }
+    {                                                       /* Not a NaN.  SoftFloat can be used                    */
+        newcc = (op2.v & 0x80000000ULL) ? 1 : 2;            /* set condition code based on input sign.              */
+                                                            /* ..input of zero handled via fast-path above          */
+        CLEAR_SF_EXCEPTIONS;
+        ans = f32_to_i64(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)          /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                  /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                  /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;     /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    regs->GR_G(r1) = ans;                                   /* results returned even if inexact trapped             */
+    regs->psw.cc = newcc;                                   /* set condition code based on input sign.              */
+                                                            /* ..input of zero handled via fast-path above          */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Non-trappable invalid?                               */
+    {                                                       /* Yes, set cc=3 and test for a negative non-NaN input  */
+        if (regs->psw.cc == 1)                              /* Negative source on non-trap invalid op?              */
+            regs->GR_G(r1) = 0x8000000000000000ULL;         /* ..yes, change return to negative maxint              */
+        if (!SUPPRESS_INEXACT(m4))                          /* Was inexact suppressed?                              */
+            ieee_exceptions |= FPC_MASK_IMX;                /* ..No, invalid op result is flagged as inexact        */
+        regs->psw.cc = 3;                                   /* Set cc=3                                             */
     }
 
-    regs->GR_G(r1) = op1;
-    regs->psw.cc = newcc;
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact ?                                  */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save = (ieee_exceptions >> 16) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-    /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 #endif /*defined(FEATURE_ESAME)*/
@@ -2171,14 +2387,17 @@ DEF_INST(convert_u32_to_bfp_ext_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    BFPINST_CHECK(regs);
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     BFPREGPAIR_CHECK(r1, regs);
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
-    UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact            */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
+    UNREFERENCED(m4);                                       /* Inexact not possible on 32-bit logical to 128-bit.   */
+                                                            /* The M4 field contains the IEEE-inexact-exception     */
+                                                            /* control (XxC).  So we support it but don't need it.  */
 
     op2 = regs->GR_L(r2);
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0       */
-    softfloat_exceptionFlags = 0;
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
+    CLEAR_SF_EXCEPTIONS;
     op1 = ui32_to_f128(op2);
 
     /* No flags set by CONVERT FROM LOGICAL (32 to extended BFP); */
@@ -2199,14 +2418,17 @@ DEF_INST(convert_u32_to_bfp_long_reg)
     U32 op2;
     float64_t op1;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
-    UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact            */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
+    UNREFERENCED(m4);                                       /* Inexact not possible on 32-bit logical to 64-bit.    */
+                                                            /* The M4 field contains the IEEE-inexact-exception     */
+                                                            /* control (XxC).  So we support it but don't need it.  */
 
     op2 = regs->GR_L(r2);
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0       */
-    softfloat_exceptionFlags = 0;
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
+    CLEAR_SF_EXCEPTIONS;
     op1 = ui32_to_f64(op2);
 
     /* No flags set by CONVERT FROM LOGICAL (32 to long BFP); */
@@ -2227,24 +2449,38 @@ DEF_INST(convert_u32_to_bfp_short_reg)
     int r1, r2;
     BYTE m3, m4;
     U32 op2;
-    float32_t op1;
-    U32 ieee_trap_conds = 0;
+    float32_t ans;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
-
-    SET_SF_RM_FROM_M3(m3);                          /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
     op2 = regs->GR_L(r2);
-    softfloat_exceptionFlags = 0;
-    op1 = ui32_to_f32(op2);
-    PUT_FLOAT32_NOCC(op1, r1, regs);              /* operation always stores result, inexact only possible exception  */
 
-    if (softfloat_exceptionFlags && !SUPPRESS_INEXACT(m4))        /* inexact occurred and not masked by m4?  */
-    {                                                               /* ..yes, set FPC flags and test for a trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact, save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
-    };
+    if (op2)                                                /* op2 greater than zero?                               */
+    {                                                       /* ..yes, use SoftFloat to convert and round            */
+        CLEAR_SF_EXCEPTIONS;
+        SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );           /* Set Softfloat rounding mode                          */
+        ans = ui32_to_f32(op2);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+    }
+    else
+        ans.v = 0x00000000;                                 /* op2 zero, the answer is zero                         */
+
+    PUT_FLOAT32_NOCC(ans, r1, regs);                        /* operation always stores result without a cc          */
+
+    if (ieee_exceptions & FPC_MASK_IMX && !SUPPRESS_INEXACT(m4) )   /* Inexact occurred and not supressed           */
+    {                                                       /* ..Yes, decide whether to trap or set flags           */
+        if (regs->fpc & FPC_MASK_IMX)                       /* Is non-supressed inexact trappable?                  */
+            ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);    /* ..Yes, create dxc and interrupt       */
+        else
+            regs->fpc |= FPC_FLAG_SFX;                      /* ..No set fpc flags for inexact exception             */
+    }
+
+    return;
 
 }
 
@@ -2260,16 +2496,20 @@ DEF_INST(convert_u64_to_bfp_ext_reg)
     U64 op2;
     float128_t op1;
 
-    RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR_CHECK(r1, regs);
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
-    UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact            */
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0       */
-    op2 = regs->GR_G(r2);             /* HERE'S THE ERROR    !!!!!!!  should be the whole register  */
-    softfloat_exceptionFlags = 0;
+    RRF_MM(inst, regs, r1, r2, m3, m4);
+    BFPREGPAIR_CHECK(r1, regs);
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
+    UNREFERENCED(m4);                                       /* Inexact not possible on 32-bit logical to 64-bit.    */
+                                                            /* The M4 field contains the IEEE-inexact-exception     */
+                                                            /* control (XxC).  So we support it but don't need it.  */
+
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );               /* Set Softfloat rounding mode                          */
+    op2 = regs->GR_G(r2);
+    CLEAR_SF_EXCEPTIONS;
     op1 = ui64_to_f128(op2);
+
     /* No flags set by CONVERT FROM LOGICAL (64 to extended BFP); */
     PUT_FLOAT128_NOCC(op1, r1, regs);
 
@@ -2289,24 +2529,38 @@ DEF_INST(convert_u64_to_bfp_long_reg)
     int r1, r2;
     BYTE m3, m4;
     U64 op2;
-    float64_t op1;
-    U32 ieee_trap_conds = 0;
+    float64_t ans;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
-
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction         */
     op2 = regs->GR_G(r2);
-    softfloat_exceptionFlags = 0;
-    op1 = ui64_to_f64(op2);
-    PUT_FLOAT64_NOCC(op1, r1, regs);              /* operation always stores result  */
 
-    if (softfloat_exceptionFlags && !SUPPRESS_INEXACT(m4))          /* inexact occurred and not masked by m4?  */
-    {                                                               /* ..yes, set FPC flags and test for a trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact; save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
-    };
+    if (op2)                                                /* op2 greater than zero?                       */
+    {                                                       /* ..yes, use SoftFloat to convert and round    */
+        CLEAR_SF_EXCEPTIONS;
+        SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );           /* Set Softfloat rounding mode                  */
+        ans = ui64_to_f64(op2);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions               */
+    }
+    else
+        ans.v = 0x0000000000000000ULL;                      /* op2 zero, the answer is zero                 */
+
+    PUT_FLOAT64_NOCC(ans, r1, regs);                        /* operation always stores result without a cc  */
+
+    if (ieee_exceptions & FPC_MASK_IMX && !SUPPRESS_INEXACT(m4) )   /* Inexact occurred and not supressed   */
+    {                                                       /* ..Yes, decide whether to trap or set flags   */
+        if (regs->fpc & FPC_MASK_IMX)                       /* Is non-supressed inexact trappable?          */
+            ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);  /* ..Yes, create dxc and interrupt */
+        else
+            regs->fpc |= FPC_FLAG_SFX;                      /* ..No set fpc flags for inexact exception     */
+    }
+
+    return;
 
 }
 
@@ -2324,24 +2578,38 @@ DEF_INST(convert_u64_to_bfp_short_reg)
     int r1, r2;
     BYTE m3, m4;
     U64 op2;
-    float32_t op1;
-    U32 ieee_trap_conds = 0;
+    float32_t ans;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+    BYTE dxc_save = 0;                                      /* start with no data exception code                    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
-    BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
-
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
+    BFPRM_CHECK(m3, regs);                                  /* validate BFP Rounding mode in instruction            */
     op2 = regs->GR_G(r2);
-    softfloat_exceptionFlags = 0;
-    op1 = ui64_to_f32(op2);
-    PUT_FLOAT32_NOCC(op1, r1, regs);       /* operation always stores result  */
 
-    if (softfloat_exceptionFlags && !(SUPPRESS_INEXACT(m4)))        /* inexact occurred and not masked by m4?  */
-    {                                                               /* ..yes, set FPC flags and test for a trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact; save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
-    };
+    if (op2)                                                /* op2 greater than zero?                       */
+    {                                                       /* ..yes, use SoftFloat to convert and round    */
+        CLEAR_SF_EXCEPTIONS;
+        SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );           /* Set Softfloat rounding mode                  */
+        ans = ui64_to_f32(op2);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions               */
+    }
+    else
+        ans.v = 0x00000000;                                 /* op2 zero, the answer is zero                 */
+
+    PUT_FLOAT32_NOCC(ans, r1, regs);                        /* operation always stores result without a cc  */
+
+    if (ieee_exceptions & FPC_MASK_IMX && !SUPPRESS_INEXACT(m4))  /* Inexact occurred and not supressed     */
+    {                                                       /* ..Yes, decide whether to trap or set flags   */
+        if (regs->fpc & FPC_MASK_IMX)                       /* Is non-supressed inexact trappable?          */
+            ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);  /* ..Yes, create dxc and interrupt */
+        else
+            regs->fpc |= FPC_FLAG_SFX;                      /* ..No set fpc flags for inexact exception     */
+    }
+
+    return;
 
 }
 
@@ -2380,43 +2648,54 @@ DEF_INST(convert_bfp_ext_to_u32_reg)
     BYTE m3, m4, newcc;
     U32 op1;
     float128_t op2;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT128_OP(op2, r2, regs);
 
-    softfloat_exceptionFlags = 0;
-    if (FLOAT128_ISNAN(op2))                    /* NaN input always returns zero and IEEE invalid exception */
-    {
+    if (FLOAT128_IS_NAN(op2))                               /* Is input a NaN?                                      */
+    {                                                       /* ..yes, set zero result and invalid exception         */
+        ieee_exceptions = FPC_MASK_IMI;
         op1 = 0;
-        softfloat_raiseFlags(softfloat_flag_invalid);
     }
     else
-    {
-        SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-        op1 = f128_to_ui32(op2, softfloat_roundingMode, !(SUPPRESS_INEXACT(m4)));
+    {                                                       /* Input not a NaN, convert to logical (unsigned int)   */
+        CLEAR_SF_EXCEPTIONS;
+        op1 = f128_to_ui32(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)              /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                      /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                       /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;         /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Invalid exception occurred?                          */
+    {                                                       /* ..Yes, trap or set cc=3 and create zero result       */
+        if ( regs->fpc & FPC_MASK_IMI)                      /* Trappable invalid operation (Xi)?                    */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, suppress result, interrupt, no return         */
+        else
+        {                                                   /* ..No, set cc=3, zero result, and perhaps inexact     */
+            newcc = 3;
+            if (!SUPPRESS_INEXACT(m4))                      /* Inexact not suppressed?                              */
+                ieee_exceptions |= FPC_MASK_IMX;            /* ..yes, add Inexact exception to FCPR flags           */
+        }
     }
     else
-        newcc = FLOAT128_CC(op2);               /* set condition code based on source operand*/
+        newcc = FLOAT128_CC(op2);                           /* No invalid exception, set cc based on inpuct value   */
 
-    regs->GR_L(r1) = op1;                       /* results returned even if exception trapped*/
+    if (SUPPRESS_INEXACT(m4))                               /* Is inexact suppressed?                               */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* ..yes, turn off indication of inexact                */
+
+    regs->GR_L(r1) = op1;                                   /* results returned even if exception trapped           */
     regs->psw.cc = newcc;
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-                                                                        /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Inexact occurred, not supressed, and trappable?      */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);    /* ..Yes, interrupt, no return               */
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Set FPC flags                                        */
+
+    return;
 
 }
 
@@ -2430,43 +2709,53 @@ DEF_INST(convert_bfp_long_to_u32_reg)
     BYTE m3, m4, newcc;
     U32 op1;
     float64_t op2;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-
-    BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT64_OP(op2, r2, regs);
 
-    softfloat_exceptionFlags = 0;
-    if (FLOAT64_ISNAN(op2))                    /* NaN input always returns zero and IEEE invalid exception */
-    {
-        op1 = 0x00000000;
-        softfloat_raiseFlags(softfloat_flag_invalid);
+    if (FLOAT64_IS_NAN(op2))                                /* Is input a NaN?                                      */
+    {                                                       /* ..yes, set zero result and invalid exception         */
+        ieee_exceptions = FPC_MASK_IMI;
+        op1 = 0;
     }
     else
-    {
-        SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-        op1 = f64_to_ui32(op2, softfloat_roundingMode, !SUPPRESS_INEXACT(m4));
+    {                                                       /* Input not a NaN, convert to logical (unsigned int)   */
+        CLEAR_SF_EXCEPTIONS;
+        op1 = f64_to_ui32(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                                       /* Test for trappable IEEE Invalid              */
-
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)              /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                      /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                      /* Inexact not suppressed?                     */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;         /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Invalid exception occurred?                          */
+    {                                                       /* ..Yes, trap or set cc=3 and create zero result       */
+        if (regs->fpc & FPC_MASK_IMI)                       /* Trappable invalid operation (Xi)?                    */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, suppress result, interrupt, no return         */
+        else
+        {                                                   /* ..No, set cc=3, zero result, and perhaps inexact     */
+            newcc = 3;
+            if (!SUPPRESS_INEXACT(m4))                      /* Inexact not suppressed?                              */
+                ieee_exceptions |= FPC_MASK_IMX;            /* ..yes, add Inexact exception to FPC flags            */
+        }
     }
     else
-        newcc = FLOAT64_CC(op2);                                        /* Set condition code from source operand       */
+        newcc = FLOAT64_CC(op2);                            /* No invalid exception, set cc based on inpuct value   */
 
-    regs->GR_L(r1) = op1;
+    if (SUPPRESS_INEXACT(m4))                               /* Is inexact suppressed?                               */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* ..yes, turn off indication of inexact                */
+
+    regs->GR_L(r1) = op1;                                   /* results returned even if exception trapped           */
     regs->psw.cc = newcc;
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-                                                                        /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Inexact occurred, not supressed, and trappable?      */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);    /* ..Yes, interrupt, no return               */
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Set FPC flags                                        */
+
+    return;
 
 }
 
@@ -2480,42 +2769,53 @@ DEF_INST(convert_bfp_short_to_u32_reg)
     BYTE m3, m4, newcc;
     U32 op1;
     float32_t op2;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT32_OP(op2, r2, regs);
 
-    softfloat_exceptionFlags = 0;
-    if (FLOAT32_ISNAN(op2))                    /* NaN input always returns zero and IEEE invalid exception */
-    {
+    if (FLOAT32_IS_NAN(op2))                                /* Is input a NaN?                                      */
+    {                                                       /* ..yes, set zero result and invalid exception         */
+        ieee_exceptions = FPC_MASK_IMI;
         op1 = 0;
-        softfloat_raiseFlags(softfloat_flag_invalid);
     }
     else
-    {
-        SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-        op1 = f32_to_ui32(op2, softfloat_roundingMode, !SUPPRESS_INEXACT(m4));
+    {                                                       /* Input not a NaN, convert to logical (unsigned int)   */
+        CLEAR_SF_EXCEPTIONS;
+        op1 = f32_to_ui32(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)              /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                      /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                       /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;         /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Invalid exception occurred?                          */
+    {                                                       /* ..Yes, trap or set cc=3 and create zero result       */
+        if (regs->fpc & FPC_MASK_IMI)                       /* Trappable invalid operation (Xi)?                    */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, suppress result, interrupt, no return         */
+        else
+        {                                                   /* ..No, set cc=3, zero result, and perhaps inexact     */
+            newcc = 3;
+            if (!SUPPRESS_INEXACT(m4))                      /* Inexact not suppressed?                              */
+                ieee_exceptions |= FPC_MASK_IMX;            /* ..yes, add Inexact exception to FCPR flags           */
+        }
     }
     else
-        newcc = FLOAT32_CC(op2);                                        /* Set condition code from source operand  */
+        newcc = FLOAT32_CC(op2);                            /* No invalid exception, set cc based on inpuct value   */
 
-    regs->GR_L(r1) = op1;
+    if (SUPPRESS_INEXACT(m4))                               /* Is inexact suppressed?                               */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* ..yes, turn off indication of inexact                */
+
+    regs->GR_L(r1) = op1;                                   /* results returned even if exception trapped           */
     regs->psw.cc = newcc;
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-                                                                        /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Inexact occurred, not supressed, and trappable?      */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);    /* ..Yes, interrupt, no return               */
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Set FPC flags                                        */
+
+    return;
 
 }
 
@@ -2529,43 +2829,54 @@ DEF_INST(convert_bfp_ext_to_u64_reg)
     BYTE m3, m4, newcc;
     U64 op1;
     float128_t op2;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT128_OP(op2, r2, regs);
 
-    softfloat_exceptionFlags = 0;
-    if (FLOAT128_ISNAN(op2))                    /* NaN input always returns zero, cc3, and IEEE invalid exception */
-    {
+    if (FLOAT128_IS_NAN(op2))                               /* Is input a NaN?                                      */
+    {                                                       /* ..yes, set zero result and invalid exception         */
+        ieee_exceptions = FPC_MASK_IMI;
         op1 = 0;
-        softfloat_raiseFlags(softfloat_flag_invalid);
     }
     else
-    {
-        SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-        op1 = f128_to_ui64(op2, softfloat_roundingMode, !SUPPRESS_INEXACT(m4));
+    {                                                       /* Input not a NaN, convert to logical (unsigned int)   */
+        CLEAR_SF_EXCEPTIONS;
+        op1 = f128_to_ui64(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)              /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                      /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                       /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;         /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Invalid exception occurred?                          */
+    {                                                       /* ..Yes, trap or set cc=3 and create zero result       */
+        if (regs->fpc & FPC_MASK_IMI)                       /* Trappable invalid operation (Xi)?                    */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, suppress result, interrupt, no return         */
+        else
+        {                                                   /* ..No, set cc=3, zero result, and perhaps inexact     */
+            newcc = 3;
+            if (!SUPPRESS_INEXACT(m4))                      /* Inexact not suppressed?                              */
+                ieee_exceptions |= FPC_MASK_IMX;            /* ..yes, add Inexact exception to FCPR flags           */
+        }
     }
     else
-        newcc = FLOAT128_CC(op2);                                       /* Set condition code from source operand  */
+        newcc = FLOAT128_CC(op2);                           /* No invalid exception, set cc based on inpuct value   */
 
+    if (SUPPRESS_INEXACT(m4))                               /* Is inexact suppressed?                               */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* ..yes, turn off indication of inexact                */
 
-    regs->GR_G(r1) = op1;
+    regs->GR_G(r1) = op1;                                   /* results returned even if exception trapped           */
     regs->psw.cc = newcc;
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-                                                                        /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Inexact occurred, not supressed, and trappable?      */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);    /* ..Yes, interrupt, no return               */
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Set FPC flags                                        */
+
+    return;
 
 }
 
@@ -2579,41 +2890,53 @@ DEF_INST(convert_bfp_long_to_u64_reg)
     BYTE m3, m4, newcc;
     U64 op1;
     float64_t op2;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT64_OP(op2, r2, regs);
 
-    softfloat_exceptionFlags = 0;
-    if (FLOAT64_ISNAN(op2))                    /* NaN input always returns zero, cc3, and IEEE invalid exception */
-    {
+    if (FLOAT64_IS_NAN(op2))                                /* Is input a NaN?                                      */
+    {                                                       /* ..yes, set zero result and invalid exception         */
+        ieee_exceptions = FPC_MASK_IMI;
         op1 = 0;
-        softfloat_raiseFlags(softfloat_flag_invalid);
     }
     else
-    {
-        SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-        op1 = f64_to_ui64(op2, softfloat_roundingMode, !SUPPRESS_INEXACT(m4));
+    {                                                       /* Input not a NaN, convert to logical (unsigned int)   */
+        CLEAR_SF_EXCEPTIONS;
+        op1 = f64_to_ui64(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)          /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                  /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                  /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;     /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Invalid exception occurred?                          */
+    {                                                       /* ..Yes, trap or set cc=3 and create zero result       */
+        if (regs->fpc & FPC_MASK_IMI)                       /* Trappable invalid operation (Xi)?                    */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, suppress result, interrupt, no return         */
+        else
+        {                                                   /* ..No, set cc=3, zero result, and perhaps inexact     */
+            newcc = 3;
+            if (!SUPPRESS_INEXACT(m4))                      /* Inexact not suppressed?                              */
+                ieee_exceptions |= FPC_MASK_IMX;            /* ..yes, add Inexact exception to FCPR flags           */
+        }
     }
     else
-        newcc = FLOAT64_CC(op2);                                    /* Set condition code from source operand  */
+        newcc = FLOAT64_CC(op2);                            /* No invalid exception, set cc based on inpuct value   */
 
-    regs->GR_G(r1) = op1;
+    if (SUPPRESS_INEXACT(m4))                               /* Is inexact suppressed?                               */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* ..yes, turn off indication of inexact                */
+
+    regs->GR_G(r1) = op1;                                   /* results returned even if exception trapped           */
     regs->psw.cc = newcc;
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-                                                                        /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Inexact occurred, not supressed, and trappable?      */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);    /* ..Yes, interrupt, no return               */
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Set FPC flags                                        */
+
+    return;
 
 }
 
@@ -2627,41 +2950,53 @@ DEF_INST(convert_bfp_short_to_u64_reg)
     BYTE m3, m4, newcc;
     U64 op1;
     float32_t op2;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start with no traps detected                         */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT32_OP(op2, r2, regs);
 
-    softfloat_exceptionFlags = 0;
-    if (FLOAT32_ISNAN(op2))                    /* NaN input always returns zero, cc3, and IEEE invalid exception */
-    {
+    if (FLOAT32_IS_NAN(op2))                                /* Is input a NaN?                                      */
+    {                                                       /* ..yes, set zero result and invalid exception         */
+        ieee_exceptions = FPC_MASK_IMI;
         op1 = 0;
-        softfloat_raiseFlags(softfloat_flag_invalid);
     }
     else
-    {
-        SET_SF_RM_FROM_M3(m3);                  /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-        op1 = f32_to_ui64(op2, softfloat_roundingMode, !SUPPRESS_INEXACT(m4));
+    {                                                       /* Input not a NaN, convert to logical (unsigned int)   */
+        CLEAR_SF_EXCEPTIONS;
+        op1 = f32_to_ui64(op2, GET_SF_RM_FROM_MODIFIER(m3), !(SUPPRESS_INEXACT(m4)));
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)          /* Non-trappable Invalid exception?             */
-    {
-        newcc = 3;                                                  /* ..yes, set cc=3                              */
-        if (!SUPPRESS_INEXACT(m4))                                  /* Inexact not suppressed?                      */
-            softfloat_exceptionFlags |= softfloat_flag_inexact;     /* ..yes, add Inexact exception to FCPR flags   */
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Invalid exception occurred?                          */
+    {                                                       /* ..Yes, trap or set cc=3 and create zero result       */
+        if (regs->fpc & FPC_MASK_IMI)                       /* Trappable invalid operation (Xi)?                    */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, suppress result, interrupt, no return         */
+        else
+        {                                                   /* ..No, set cc=3, zero result, and perhaps inexact     */
+            newcc = 3;
+            if (!SUPPRESS_INEXACT(m4))                      /* Inexact not suppressed?                              */
+                ieee_exceptions |= FPC_MASK_IMX;            /* ..yes, add Inexact exception to FCPR flags           */
+        }
     }
     else
-        newcc = FLOAT32_CC(op2);                                    /* Set condition code from source operand  */
+        newcc = FLOAT32_CC(op2);                            /* No invalid exception, set cc based on inpuct value   */
 
-    regs->GR_G(r1) = op1;
+    if (SUPPRESS_INEXACT(m4))                               /* Is inexact suppressed?                               */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* ..yes, turn off indication of inexact                */
+
+    regs->GR_G(r1) = op1;                                   /* results returned even if exception trapped           */
     regs->psw.cc = newcc;
 
-    ieee_trap_conds = ieee_exception_test_oux(regs);                    /* test for Xo, Xu, Xx; save flags                      */
-                                                                        /* Test for Xx with trap enabled; Pgm Chk Data Exception and suppress result if any true   */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Inexact occurred, not supressed, and trappable?      */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);    /* ..Yes, interrupt, no return               */
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Set FPC flags                                        */
+
+    return;
 
 }
 
@@ -2673,167 +3008,30 @@ DEF_INST(convert_bfp_short_to_u64_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_bfp_ext_reg)
 {
-    int r1, r2;
-    float128_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
-    GET_FLOAT128_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;                   /* clear all Softfloat exceptions  */
-    SET_SF_RM_FROM_FPC;                             /* set rounding mode from FPC      */
-    ans = f128_div( op1, op2 );
-
-    if (softfloat_exceptionFlags)           /* any IEEE exceptions from Softfloat?  */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi trap suppresses result, no return  */
-        IEEE_EXCEPTION_TRAP_XZ(regs);       /* Xz trap suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f128_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_EXTD
-                : SCALE_FACTOR_ARITH_UFLOW_EXTD);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT128_NOCC(ans, r1, regs);       /* Store result from Divide; condition code not set */
-
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-
+    ARCH_DEP(arith128_common)(&f128_div, inst, regs);
+    return;
 }
 
-/*-------------------------------------------------------------------*/
-/* B31D DDBR  - DIVIDE (long BFP)                              [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(divide_bfp_long_reg)
-{
-    int r1, r2;
-    float64_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;                   /* clear all Softfloat exceptions  */
-    SET_SF_RM_FROM_FPC;                             /* set rounding mode from FPC      */
-    ans = f64_div( op1, op2 );
-
-    if (softfloat_exceptionFlags)           /* any IEEE exceptions from Softfloat?  */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi trap suppresses result, no return  */
-        IEEE_EXCEPTION_TRAP_XZ(regs);       /* Xz trap suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT64_NOCC(ans, r1, regs);        /* Store result from Divide; condition code not set */
-
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-
-}
 
 /*-------------------------------------------------------------------*/
 /* ED1D DDB   - DIVIDE (long BFP)                              [RXE] */
+/* B31D DDBR  - DIVIDE (long BFP)                              [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_bfp_long)
 {
-    int r1, b2;
-    VADR effective_addr2;
-    float64_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;
-
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OP( op1, r1, regs );
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
-
-    softfloat_exceptionFlags = 0;                   /* clear all Softfloat exceptions  */
-    SET_SF_RM_FROM_FPC;                             /* set rounding mode from FPC      */
-    ans = f64_div(op1, op2);
-
-    if (softfloat_exceptionFlags)           /* any IEEE exceptions from Softfloat?  */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi trap suppresses result, no return  */
-        IEEE_EXCEPTION_TRAP_XZ(regs);       /* Xz trap suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT64_NOCC(ans, r1, regs);        /* Store result from Divide; condition code not set */
-
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
+    ARCH_DEP(arith64_common)(&f64_div, inst, regs);
+    return;
 }
 
-
-/*-------------------------------------------------------------------*/
-/* B30D DEBR  - DIVIDE (short BFP)                             [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(divide_bfp_short_reg)
-{
-    int r1, r2;
-    float32_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;           /* clear all Softfloat exceptions       */
-    SET_SF_RM_FROM_FPC;                     /* set rounding mode from FPC           */
-    ans = f32_div( op1, op2 );
-
-    if (softfloat_exceptionFlags)           /* any IEEE exceptions from Softfloat?  */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi trap suppresses result, no return  */
-        IEEE_EXCEPTION_TRAP_XZ(regs);       /* Xz trap suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT32_NOCC(ans, r1, regs);        /* Store result from Divide; condition code not set */
-
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-}
 
 /*-------------------------------------------------------------------*/
 /* ED0D DEB   - DIVIDE (short BFP)                             [RXE] */
+/* B30D DEBR  - DIVIDE (short BFP)                             [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_bfp_short)
 {
-    int r1, b2;
-    VADR effective_addr2;
-    float32_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;
-
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OP( op1, r1, regs );
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
-
-    softfloat_exceptionFlags = 0;           /* clear all Softfloat exceptions       */
-    SET_SF_RM_FROM_FPC;                     /* set rounding mode from FPC           */
-    ans = f32_div(op1, op2);
-
-    if (softfloat_exceptionFlags)           /* any IEEE exceptions from Softfloat?  */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* Xi trap suppresses result, no return  */
-        IEEE_EXCEPTION_TRAP_XZ(regs);       /* Xz trap suppresses result, no return  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT32_NOCC(ans, r1, regs);        /* Store result from Divide; condition code not set */
-
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
+    ARCH_DEP(arith32_common)(&f32_div, inst, regs);
+    return;
 }
 
 
@@ -2845,19 +3043,20 @@ DEF_INST(load_and_test_bfp_ext_reg)
     int r1, r2;
     float128_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OP( op, r2, regs );
 
-    if (FLOAT128_ISNAN(op))                             /* Testing needed only if NaN is input      */
+    if (FLOAT128_IS_NAN(op))                                /* Testing needed only if NaN is input                  */
     {
-        if (f128_isSignalingNaN(op))                    /* Signalling NaN?                          */
-        {
-            if (regs->fpc & FPC_MASK_IMI)               /* ..yes, is trapping enabled?              */
-                ieee_trap(regs, DXC_IEEE_INVALID_OP);   /* ..yes, raise DXC, no return              */
+        if (FLOAT128_IS_SNAN(op))                           /* Signalling NaN?                                      */
+        {                                                   /* ..yes, see if we must trap or make a QNaN            */
+            if (regs->fpc & FPC_MASK_IMI)                   /* Is IEEE Invalid exception trappable?                 */
+                ieee_trap(regs, DXC_IEEE_INVALID_OP);       /* ..yes, set DXC, interrupt, no return                 */
             else
-            {                                           /* ..no, change SNaN to QNaN and set flag   */
+            {                                               /* ..not SNaN, change SNaN to QNaN and set flag         */
                 regs->fpc |= FPC_FLAG_SFI;
                 FLOAT128_MAKE_QNAN(op);
             }
@@ -2875,18 +3074,19 @@ DEF_INST(load_and_test_bfp_long_reg)
     int r1, r2;
     float64_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op, r2, regs );
 
-    if (FLOAT64_ISNAN(op))                              /* Testing needed only if NaN is input      */
+    if (FLOAT64_IS_NAN(op))                                 /* Testing needed only if NaN is input                  */
     {
-        if (f64_isSignalingNaN(op))                     /* Signalling NaN?                          */
-        {
-            if (regs->fpc & FPC_MASK_IMI)               /* ..yes, is trapping enabled?              */
-                ieee_trap(regs, DXC_IEEE_INVALID_OP);   /* ..yes, raise DXC, no return              */
+        if (FLOAT64_IS_SNAN(op))                            /* Signalling NaN?                                      */
+        {                                                   /* ..yes, see if we must trap or make a QNaN            */
+            if (regs->fpc & FPC_MASK_IMI)                   /* Is IEEE Invalid exception trappable?                 */
+                ieee_trap(regs, DXC_IEEE_INVALID_OP);       /* ..yes, set DXC, interrupt, no return                 */
             else
-            {                                           /* ..no, change SNaN to QNaN and set flag   */
+            {                                               /* ..not SNaN, change SNaN to QNaN and set flag         */
                 regs->fpc |= FPC_FLAG_SFI;
                 FLOAT64_MAKE_QNAN(op);
             }
@@ -2904,18 +3104,19 @@ DEF_INST(load_and_test_bfp_short_reg)
     int r1, r2;
     float32_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op, r2, regs );
 
-    if (FLOAT32_ISNAN(op))                              /* Testing needed only if NaN is input      */
+    if (FLOAT32_IS_NAN(op))                                 /* Testing needed only if NaN is input                  */
     {
-        if (f32_isSignalingNaN(op))                     /* Signalling NaN?                          */
-        {
-            if (regs->fpc & FPC_MASK_IMI)               /* ..yes, is trapping enabled?              */
-                ieee_trap(regs, DXC_IEEE_INVALID_OP);   /* ..yes, raise DXC, no return              */
+        if (FLOAT32_IS_SNAN(op))                            /* Signalling NaN?                                      */
+        {                                                   /* ..yes, see if we must trap or make a QNaN            */
+            if (regs->fpc & FPC_MASK_IMI)                   /* Is IEEE Invalid exception trappable?                 */
+                ieee_trap(regs, DXC_IEEE_INVALID_OP);       /* ..yes, set DXC, interrupt, no return                 */
             else
-            {                                           /* ..no, change SNaN to QNaN and set invalid flag   */
+            {                                               /* ..not SNaN, change SNaN to QNaN and set flag         */
                 regs->fpc |= FPC_FLAG_SFI;
                 FLOAT32_MAKE_QNAN(op);
             }
@@ -2932,8 +3133,11 @@ DEF_INST(load_fp_int_bfp_short_reg)
 {
     int r1, r2;
     BYTE m3, m4;
-    float32_t op;
-    U32 ieee_trap_conds = 0;
+    float32_t op, ans;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2942,23 +3146,34 @@ DEF_INST(load_fp_int_bfp_short_reg)
     m4 = 0;
 #endif
 
-    BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
     GET_FLOAT32_OP( op, r2, regs );
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-    op = f32_roundToInt(op, softfloat_roundingMode, !SUPPRESS_INEXACT(m4) );
+    CLEAR_SF_EXCEPTIONS;
+    ans = f32_roundToInt(op, GET_SF_RM_FROM_MODIFIER(m3), !SUPPRESS_INEXACT(m4) );
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                       /* Softfloat returns Xi and QNaN   if operand is an SNaN  */
-    PUT_FLOAT32_NOCC( op, r1, regs );
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
 
-    if (softfloat_exceptionFlags)                   /* Inexact or non-trapped invalid exceptions?  */
-    {                                               /* ..yes, set FPC flags and test for Xx trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);           /* test for overflow, underflow, inexact, save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
+    PUT_FLOAT32_CC(ans, r1, regs);                          /* Store result from Divide, set condition code         */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact  ?                                 */
+    {                                                       /* ..yes, add inexact and incremented to dxc.  There    */
+                                                            /* ...are no fpc flags to be set with any trappable     */
+                                                            /* ...exceptionn.  No return                            */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | (ieee_incremented & DXC_IEEE_INEXACT_INCR));
     }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
+
 }
 
 /*-------------------------------------------------------------------*/
@@ -2968,8 +3183,11 @@ DEF_INST(load_fp_int_bfp_long_reg)
 {
     int r1, r2;
     BYTE m3, m4;
-    float64_t op;
-    U32 ieee_trap_conds = 0;
+    float64_t op, ans;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -2978,22 +3196,33 @@ DEF_INST(load_fp_int_bfp_long_reg)
     m4 = 0;
 #endif
 
-    BFPINST_CHECK(regs);
-    BFPRM_CHECK(m3,regs);
-    GET_FLOAT64_OP( op, r2, regs );
+    BFPRM_CHECK(m3, regs);
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-    op = f64_roundToInt(op, softfloat_roundingMode, !SUPPRESS_INEXACT(m4) );
+    GET_FLOAT64_OP(op, r2, regs);
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                       /* Softfloat returns Xi and QNaN   if operand is an SNaN  */
-    PUT_FLOAT64_NOCC(op, r1, regs);
+    CLEAR_SF_EXCEPTIONS;
+    ans = f64_roundToInt(op, GET_SF_RM_FROM_MODIFIER(m3), !SUPPRESS_INEXACT(m4));
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
 
-    if (softfloat_exceptionFlags)                   /* Inexact or non-trapped invalid exceptions?  */
-    {                                               /* ..yes, set FPC flags and test for Xx trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact, save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    PUT_FLOAT64_CC(ans, r1, regs);                          /* Store result from Divide, set condition code         */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact  ?                                 */
+    {                                                       /* ..yes, add inexact and incremented to dxc.  There    */
+                                                            /* ...are no fpc flags to be set with any trappable     */
+                                                            /* ...exceptionn.  No return                            */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | (ieee_incremented & DXC_IEEE_INEXACT_INCR));
     }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 
@@ -3002,10 +3231,13 @@ DEF_INST(load_fp_int_bfp_long_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_fp_int_bfp_ext_reg)
 {
-    int r1, r2; 
+    int r1, r2;
     BYTE m3, m4;
-    float128_t op;
-    U32 ieee_trap_conds = 0;
+    float128_t op, ans;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     RRF_MM(inst, regs, r1, r2, m3, m4);
@@ -3013,24 +3245,33 @@ DEF_INST(load_fp_int_bfp_ext_reg)
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
 #endif
-    
-    BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
-    BFPRM_CHECK(m3,regs);
-    GET_FLOAT128_OP( op, r2, regs );
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_M3(m3);            /* Set Softfloat rounding mode from M3 or FPC if M3 = 0  */
-    op = f128_roundToInt(op, softfloat_roundingMode, !SUPPRESS_INEXACT(m4) );
+    GET_FLOAT128_OP(op, r2, regs);
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                       /* Softfloat returns Xi and QNaN   if operand is an SNaN  */
-    PUT_FLOAT128_NOCC(op, r1, regs);
+    CLEAR_SF_EXCEPTIONS;
+    ans = f128_roundToInt(op, GET_SF_RM_FROM_MODIFIER(m3), !SUPPRESS_INEXACT(m4));
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
 
-    if (softfloat_exceptionFlags)                   /* Inexact or non-trapped invalid exceptions?  */
-    {                                               /* ..yes, set FPC flags and test for Xx trap   */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact, save flags  */
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* taxe Xx trap if inexact detected  */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    PUT_FLOAT128_CC(ans, r1, regs);                         /* Store result from Divide, set condition code         */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+    if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)         /* Trappable inexact  ?                                 */
+    {                                                       /* ..yes, add inexact and incremented to dxc.  There    */
+                                                            /* ...are no fpc flags to be set with any trappable     */
+                                                            /* ...exceptionn.  No return                            */
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | (ieee_incremented & DXC_IEEE_INEXACT_INCR));
     }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
+
 }
 
 
@@ -3048,51 +3289,35 @@ DEF_INST(load_fp_int_bfp_ext_reg)
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/* B304 LDEBR - LOAD LENGTHENED (short to long BFP)            [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_lengthened_bfp_short_to_long_reg)
-{
-    int r1, r2;
-    float32_t op2;
-    float64_t op1;
-    
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OP( op2, r2, regs );
-
-    if (f32_isSignalingNaN(op2))
-    {
-        softfloat_exceptionFlags = softfloat_flag_invalid;  /* indicate IEEE Invalid exception      */
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* no return if exception is trappable  */
-        FLOAT32_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN           */
-        SET_FPC_FLAGS_FROM_SF(regs);                        /* not trapped; set FPC flag            */
-    }
-    
-    op1 = f32_to_f64(op2);
-    PUT_FLOAT64_NOCC( op1, r1, regs );
-
-}
-
-/*-------------------------------------------------------------------*/
 /* ED04 LDEB  - LOAD LENGTHENED (short to long BFP)            [RXE] */
+/* B304 LDEBR - LOAD LENGTHENED (short to long BFP)            [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_lengthened_bfp_short_to_long)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float32_t op2;
     float64_t op1;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    if (f32_isSignalingNaN(op2))
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT32_OP(op2, r2, regs);
+    }
+
+    if (FLOAT32_IS_SNAN(op2))
     {
-        softfloat_exceptionFlags = softfloat_flag_invalid;  /* indicate IEEE Invalid exception      */
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* no return if exception is trappable  */
-        FLOAT32_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN           */
-        SET_FPC_FLAGS_FROM_SF(regs);                        /* not trapped; set FPC flag            */
+        if (regs->fpc & FPC_MASK_IMI)                       /* Is invalid trappable?                                */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, trap, no return                               */
+        FLOAT32_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN                           */
+        regs->fpc |= FPC_FLAG_SFI;                          /* not trapped; set FPC flag                            */
     }
 
     op1 = f32_to_f64( op2 );
@@ -3100,105 +3325,75 @@ DEF_INST(load_lengthened_bfp_short_to_long)
 }
 
 /*-------------------------------------------------------------------*/
-/* B305 LXDBR - LOAD LENGTHENED (long to extended BFP)         [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_lengthened_bfp_long_to_ext_reg)
-{
-    int r1, r2;
-    float64_t op2;
-    float128_t op1;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR_CHECK(r1, regs);
-    GET_FLOAT64_OP( op2, r2, regs );
-
-    if (f64_isSignalingNaN(op2))
-    {
-        softfloat_exceptionFlags = softfloat_flag_invalid;  /* indicate IEEE Invalid exception      */
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* no return if exception is trappable  */
-        FLOAT64_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN           */
-        SET_FPC_FLAGS_FROM_SF(regs);                        /* not trapped; set FPC flag            */
-    }
-
-    op1 = f64_to_f128( op2 );
-    PUT_FLOAT128_NOCC( op1, r1, regs );
-}
-
-/*-------------------------------------------------------------------*/
 /* ED05 LXDB  - LOAD LENGTHENED (long to extended BFP)         [RXE] */
+/* B305 LXDBR - LOAD LENGTHENED (long to extended BFP)         [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_lengthened_bfp_long_to_ext)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float64_t op2;
     float128_t op1;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR_CHECK(r1, regs);
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    if (f64_isSignalingNaN(op2))
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT64_OP(op2, r2, regs);
+    }
+
+    BFPREGPAIR_CHECK(r1, regs);
+
+    if (FLOAT64_IS_SNAN(op2))
     {
-        softfloat_exceptionFlags = softfloat_flag_invalid;  /* indicate IEEE Invalid exception      */
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* no return if exception is trappable  */
-        FLOAT64_MAKE_QNAN(op2);                              /* make the SNaN input a QNaN           */
-        SET_FPC_FLAGS_FROM_SF(regs);                        /* not trapped; set FPC flag            */
+        if (regs->fpc & FPC_MASK_IMI)                       /* Is invalid trappable?                                */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, trap, no return                               */
+        FLOAT64_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN                           */
+        regs->fpc |= FPC_FLAG_SFI;                          /* not trapped; set FPC flag                            */
     }
 
     op1 = f64_to_f128( op2 );
-    PUT_FLOAT128_NOCC( op1, r1, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* B306 LXEBR - LOAD LENGTHENED (short to extended BFP)        [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(load_lengthened_bfp_short_to_ext_reg)
-{
-    int r1, r2;
-    float32_t op2;
-    float128_t op1;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR_CHECK(r1, regs);
-    GET_FLOAT32_OP( op2, r2, regs );
-
-    if (f32_isSignalingNaN(op2))
-    {
-        softfloat_exceptionFlags = softfloat_flag_invalid;  /* indicate IEEE Invalid exception      */
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* no return if exception is trappable  */
-        FLOAT32_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN           */
-        SET_FPC_FLAGS_FROM_SF(regs);                        /* not trapped; set FPC flag            */
-    }
-
-    op1 = f32_to_f128( op2 );
     PUT_FLOAT128_NOCC( op1, r1, regs );
 }
 
 /*-------------------------------------------------------------------*/
 /* ED06 LXEB  - LOAD LENGTHENED (short to extended BFP)        [RXE] */
+/* B306 LXEBR - LOAD LENGTHENED (short to extended BFP)        [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_lengthened_bfp_short_to_ext)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float32_t op2;
     float128_t op1;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR_CHECK(r1, regs);
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    if (f32_isSignalingNaN(op2))
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT32_OP(op2, r2, regs);
+    }
+
+    BFPREGPAIR_CHECK(r1, regs);
+
+    if (FLOAT32_IS_SNAN(op2))
     {
-        softfloat_exceptionFlags = softfloat_flag_invalid;  /* indicate IEEE Invalid exception      */
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* no return if exception is trappable  */
-        FLOAT32_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN           */
-        SET_FPC_FLAGS_FROM_SF(regs);                        /* not trapped; set FPC flag            */
+        if (regs->fpc & FPC_MASK_IMI)                       /* Is invalid trappable?                                */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..yes, trap, no return                               */
+        FLOAT32_MAKE_QNAN(op2);                             /* make the SNaN input a QNaN                           */
+        regs->fpc |= FPC_FLAG_SFI;                          /* not trapped; set FPC flag                            */
     }
 
     op1 = f32_to_f128( op2 );
@@ -3213,8 +3408,9 @@ DEF_INST(load_negative_bfp_ext_reg)
     int r1, r2;
     float128_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
     GET_FLOAT128_OP( op, r2, regs );
@@ -3230,8 +3426,9 @@ DEF_INST(load_negative_bfp_long_reg)
     int r1, r2;
     float64_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
     op.v |= 0x8000000000000000ULL;
@@ -3246,8 +3443,9 @@ DEF_INST(load_negative_bfp_short_reg)
     int r1, r2;
     float32_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
     op.v |= 0x80000000;
@@ -3262,8 +3460,9 @@ DEF_INST(load_complement_bfp_ext_reg)
     int r1, r2;
     float128_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
     GET_FLOAT128_OP( op, r2, regs );
@@ -3279,8 +3478,9 @@ DEF_INST(load_complement_bfp_long_reg)
     int r1, r2;
     float64_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
     op.v ^= 0x8000000000000000ULL;
@@ -3294,9 +3494,10 @@ DEF_INST(load_complement_bfp_short_reg)
 {
     int r1, r2;
     float32_t op;
-    
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
     op.v ^= 0x80000000;
@@ -3311,8 +3512,10 @@ DEF_INST(load_positive_bfp_ext_reg)
     int r1, r2;
     float128_t op;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
+
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
     GET_FLOAT128_OP( op, r2, regs );
@@ -3327,9 +3530,10 @@ DEF_INST(load_positive_bfp_long_reg)
 {
     int r1, r2;
     float64_t op;
-    
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
     op.v  &= ~0x8000000000000000ULL;
@@ -3343,9 +3547,10 @@ DEF_INST(load_positive_bfp_short_reg)
 {
     int r1, r2;
     float32_t op;
-    
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
     op.v &= ~0x80000000;
@@ -3381,45 +3586,75 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
 {
     int r1, r2;
     BYTE m3, m4;
-    float64_t op2;
-    float32_t op1;
-    U32 ieee_trap_conds = 0;
+    float64_t op2, op1_64;
+    float32_t op1_32;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-    BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op2, r2, regs );
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    SET_SF_RM_FROM_M3(m3);
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );
 #else
     if (m3 || m4)
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
-    SET_SF_RM_FROM_FPC;
+    SET_SF_RM( GET_SF_RM_FROM_FPC );
 #endif
 
-    softfloat_exceptionFlags = 0;
-    op1 = f64_to_f32( op2 );
+    CLEAR_SF_EXCEPTIONS;
+    op1_32 = f64_to_f32( op2 );
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     if (SUPPRESS_INEXACT(m4))
-        softfloat_exceptionFlags &= ~softfloat_flag_inexact;    /* suppress inexact if required  */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* suppress inexact if required                         */
 #endif
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                   /* Trappable Invalid exception?  No return if true              */
+    PUT_FLOAT32_CC(op1_32, r1, regs);                       /* Store result from Divide, set condition code         */
 
-    PUT_FLOAT32_NOCC(op1, r1, regs);                /* Store non-trap result in target precision                    */
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
 
-    if (softfloat_exceptionFlags)                   /* Any exceptions other than trappable Invalid?                 */
-    {                                               /* ..yes, set FPC flags, handle over/underflow, take any traps  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact, save flags    */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))        /* Trappable overflow or underflow?                     */
-        {                                                           /* Note: exactly zero or one of the two will be present */
-            op2 = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_LOADR_OFLOW_LONG
-                : SCALE_FACTOR_LOADR_UFLOW_LONG);
-            PUT_FLOAT64_NOCC(op2, r1, regs);        /* Store scaled result in source precision                              */
-        }
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected */
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMO & regs->fpc)         /* Trappable overflow?                                  */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_OF_EXACT;
+        op1_64 = f64_scaledResult(SCALE_FACTOR_LOADR_OFLOW_LONG);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT64_NOCC(op1_64, r1, regs);                 /* Store scaled result from Add, cc unchanged           */
     }
+
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_UF_EXACT;
+        op1_64 = f64_scaledResult(SCALE_FACTOR_LOADR_UFLOW_LONG);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT64_NOCC(op1_64, r1, regs);                 /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)    /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 
@@ -3431,47 +3666,76 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
 {
     int r1, r2;
     BYTE m3, m4;
-    float128_t op2;
+    float128_t op2, op1_128;
     float64_t op1;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-
-    BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
-    GET_FLOAT128_OP( op2, r2, regs );
+    GET_FLOAT128_OP(op2, r2, regs);
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    SET_SF_RM_FROM_M3(m3);
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );
 #else
     if (m3 || m4)
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
-    SET_SF_RM_FROM_FPC;
+    SET_SF_RM( GET_SF_RM_FROM_FPC );
 #endif
 
-    softfloat_exceptionFlags = 0;
-    op1 = f128_to_f64( op2 );
+    CLEAR_SF_EXCEPTIONS;
+    op1 = f128_to_f64(op2);
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     if (SUPPRESS_INEXACT(m4))
-        softfloat_exceptionFlags &= ~softfloat_flag_inexact;    /* suppress inexact if required  */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* suppress inexact if required  */
 #endif
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                   /* Trappable Invalid exception?  No return if true              */
+    PUT_FLOAT64_CC(op1, r1, regs);                          /* Store result from Divide, set condition code         */
 
-    PUT_FLOAT64_NOCC(op1, r1, regs);                /* Store non-trap result in target precision                    */
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
 
-    if (softfloat_exceptionFlags)                   /* Any exceptions other than trappable Invalid?                 */
-    {                                               /* ..yes, set FPC flags, handle over/underflow, take any traps  */
-    ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact, save flags    */
-    if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-    {                                                           /* Note: exactly one of the two will be present         */
-        op2 = f128_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_LOADR_OFLOW_EXTD
-            : SCALE_FACTOR_LOADR_UFLOW_EXTD);
-        PUT_FLOAT128_NOCC(op2, r1, regs);       /* Store scaled result in source precision                              */
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMO & regs->fpc)         /* Trappable overflow?                                  */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_OF_EXACT;
+        op1_128 = f128_scaledResult(SCALE_FACTOR_LOADR_OFLOW_EXTD);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT128_NOCC(op1_128, r1, regs);               /* Store scaled result from Add, cc unchanged           */
     }
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected */
+
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_UF_EXACT;
+        op1_128 = f128_scaledResult(SCALE_FACTOR_LOADR_UFLOW_EXTD);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT128_NOCC(op1_128, r1, regs);               /* Store scaled result from Add, cc unchanged           */
     }
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)    /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 
@@ -3483,47 +3747,75 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
 {
     int r1, r2;
     BYTE m3, m4;
-    float128_t op2;
+    float128_t op2, op1_128;
     float32_t op1;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
-
-    BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OP(op2, r2, regs);
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
-    SET_SF_RM_FROM_M3(m3);
+    SET_SF_RM( GET_SF_RM_FROM_MODIFIER(m3) );
 #else
     if (m3 || m4)
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
-    SET_SF_RM_FROM_FPC;
+    SET_SF_RM( GET_SF_RM_FROM_FPC );
 #endif
 
-    softfloat_exceptionFlags = 0;
+    CLEAR_SF_EXCEPTIONS;
     op1 = f128_to_f32(op2);
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
 
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
     if (SUPPRESS_INEXACT(m4))
-        softfloat_exceptionFlags &= ~softfloat_flag_inexact;    /* suppress inexact if required  */
+        ieee_exceptions &= ~FPC_MASK_IMX;                   /* suppress inexact if required  */
 #endif
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                   /* Trappable Invalid exception?  No return if true              */
+    PUT_FLOAT32_CC(op1, r1, regs);                          /* Store result from Divide, set condition code         */
 
-    PUT_FLOAT32_NOCC(op1, r1, regs);                /* Store non-trap result in target precision                    */
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
 
-    if (softfloat_exceptionFlags)                   /* Any exceptions other than trappable Invalid?                 */
-    {                                               /* ..yes, set FPC flags, handle over/underflow, take any traps  */
-        ieee_trap_conds = ieee_exception_test_oux(regs);            /* test for overflow, underflow, inexact, save flags    */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-        {                                                           /* Note: exactly one of the two will be present         */
-            op2 = f128_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_LOADR_OFLOW_EXTD
-                : SCALE_FACTOR_LOADR_UFLOW_EXTD);
-            PUT_FLOAT128_NOCC(op2, r1, regs);       /* Store scaled result in source precision                              */
-        }
-        IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected */
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMO & regs->fpc)         /* Trappable overflow?                                  */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_OF_EXACT;
+        op1_128 = f128_scaledResult(SCALE_FACTOR_LOADR_OFLOW_EXTD);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT128_NOCC(op1_128, r1, regs);               /* Store scaled result from Add, cc unchanged           */
     }
+
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_UF_EXACT;
+        op1_128 = f128_scaledResult(SCALE_FACTOR_LOADR_UFLOW_EXTD);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT128_NOCC(op1_128, r1, regs);               /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)    /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
 
 }
 
@@ -3532,84 +3824,13 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_bfp_ext_reg)
 {
-    int r1, r2;
-    float128_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
-    GET_FLOAT128_OPS(op1, r1, op2, r2, regs);
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                    /* Set rounding mode from FPC                  */
-    ans = f128_mul(op1, op2);
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);      /* test for trappable Xi, no return if true    */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f128_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_EXTD
-                : SCALE_FACTOR_ARITH_UFLOW_EXTD);                   /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT128_NOCC( ans, r1, regs );
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-
-}
-
-/*--------------------------------------------------------------------------*/
-/* B307 MXDBR - MULTIPLY (long to extended BFP)                [RRE]        */
-/*                                                                          */
-/* Because the operation result is in a longer format than the operands,    */
-/* IEEE exceptions Overflow, Underflow, and Inexact cannot occur.  An SNaN  */
-/* will still generate Invalid.                                             */
-/*--------------------------------------------------------------------------*/
-DEF_INST(multiply_bfp_long_to_ext_reg)
-{
-    int r1, r2;
-    float64_t op1, op2;
-    float128_t iop1, iop2, ans;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR_CHECK(r1, regs);
-    GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
-
-    /* f64_to_f128 will, if presented with a SNaN, convert it to quiet and raise softfloat_flags_invalid.       */
-    /* Unfortunately, if one of the operands is an SNaN and the other a QNaN, f128_mul() will be unable to do   */
-    /* NaN propagation correctly because it will see only two QNaNs.  So if we encounter an SNaN while          */
-    /* upconverting the input operands, that becomes the answer.  If both operands are QNaNs, then f128_mul()   */
-    /* will be able to do NaN propagation correctly.                                                            */
-
-    softfloat_exceptionFlags = 0;
-    softfloat_roundingMode = softfloat_round_near_even;     /* No inexacts.  Set default rounding mode.         */
-
-    iop1 = f64_to_f128(op1);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)
-        ans = iop1;             /* op1 is an SNaN.  We are done  */
-    else
-    {
-        iop2 = f64_to_f128(op2);
-        if (softfloat_exceptionFlags & softfloat_flag_invalid)
-            ans = iop2;
-        else
-            ans = f128_mul(iop1, iop2);
-    }
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);      /* test for trappable Xi, no return if true    */
-        SET_FPC_FLAGS_FROM_SF(regs);
-    }
-
-    PUT_FLOAT128_NOCC( ans, r1, regs );
-
+    ARCH_DEP(arith128_common)(&f128_mul, inst, regs);
+    return;
 }
 
 /*--------------------------------------------------------------------------*/
 /* ED07 MXDB  - MULTIPLY (long to extended BFP)                [RXE]        */
+/* B307 MXDBR - MULTIPLY (long to extended BFP)                [RRE]        */
 /*                                                                          */
 /* Because the operation result is in a longer format than the operands,    */
 /* IEEE exceptions Overflow, Underflow, and Inexact cannot occur.  An SNaN  */
@@ -3617,159 +3838,87 @@ DEF_INST(multiply_bfp_long_to_ext_reg)
 /*--------------------------------------------------------------------------*/
 DEF_INST(multiply_bfp_long_to_ext)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float64_t op1, op2;
     float128_t iop1, iop2, ans;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    BFPREGPAIR_CHECK(r1, regs);
-    GET_FLOAT64_OP( op1, r1, regs );
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    /* f64_to_f128 will, if presented with a SNaN, convert it to quiet and raise softfloat_flags_invalid.       */
-    /* Unfortunately, if one of the operands is an SNaN and the other a QNaN, f128_mul() will be unable to do   */
-    /* NaN propagation correctly because it will see only two QNaNs.  So if we encounter an SNaN while          */
-    /* upconverting the input operands, that becomes the answer.  If both operands are QNaNs, then f128_mul()   */
-    /* will be able to do NaN propagation correctly.                                                            */
-
-    softfloat_exceptionFlags = 0;
-    softfloat_roundingMode = softfloat_round_near_even;     /* No inexacts.  Set default rounding mode.         */
-
-    iop1 = f64_to_f128(op1);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)
-        ans = iop1;             /* op1 is an SNaN.  We are done  */
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+    }
     else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT64_OP(op2, r2, regs);
+    }
+
+    GET_FLOAT64_OP(op1, r1, regs);                          /* Operand 1 is always in r1                            */
+
+    /* f64_to_f128 will, if presented with a SNaN, convert it to quiet and raise softfloat_flags_invalid.           */
+    /* Unfortunately, if one of the operands is an SNaN and the other a QNaN, f128_mul() will be unable to do NaN   */
+    /* propagation correctly because it will see only two QNaNs.  So if we encounter an SNaN while upconverting     */
+    /* the input operands, that becomes the answer.  If both operands are QNaNs, then f128_mul() will do NaN        */
+    /*  propagation correctly.                                                                                      */
+
+    /* A better approach would be to add multiply to increased precision within SoftFloat, with the f128_mul as     */
+    /* the starting point.  We can do that another time.                                                            */
+
+    if (FLOAT64_IS_SNAN(op1))                               /* Is operand one an SNaN?                              */
+    {                                                       /* ..yes, result is the corresponding QNaN              */
+        ans.v[1] = (op1.v & 0x8000000000000000ull) | 0x7fff800000000000ull | ((op1.v >> 4) & 0x0000ffffffffffffull);
+        ans.v[0] = op1.v << 60;
+        ieee_exceptions = FPC_MASK_IMI;
+    }
+
+    else if (FLOAT64_IS_SNAN(op2))                          /* Is operand 2 an SNaN?                                */
+    {                                                       /* ..yes, result is the corresponding QNaN              */
+        ans.v[1] = (op2.v & 0x8000000000000000ull) | 0x7fff800000000000ull | ( (op2.v >> 4) & 0x0000ffffffffffffull );
+        ans.v[0] = op2.v << 60;
+        ieee_exceptions = FPC_MASK_IMI;
+    }
+
+    else                                                    /* No SNaNs.  Extend longs to extended, multiply        */
     {
+        CLEAR_SF_EXCEPTIONS;
+        SET_SF_RM( softfloat_round_near_even );             /* No inexacts.  Set default rounding mode.             */
+        iop1 = f64_to_f128(op1);
         iop2 = f64_to_f128(op2);
-        if (softfloat_exceptionFlags & softfloat_flag_invalid)
-            ans = iop2;
+        ans = f128_mul(iop1, iop2);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+    }
+
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Invalid operation (SNaN, something else)?            */
+    {
+        if (regs->fpc & FPC_MASK_IMI)                       /* Is invalid trappable?                                */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..Yes, program check, no return                      */
         else
-            ans = f128_mul(iop1, iop2);
+            regs->fpc |= FPC_FLAG_SFI;                      /* ..No, indicate invalid in FPC                        */
     }
 
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);      /* test for trappable Xi, no return if true    */
-        SET_FPC_FLAGS_FROM_SF(regs);
-    }
     PUT_FLOAT128_NOCC( ans, r1, regs );
-}
-
-/*-------------------------------------------------------------------*/
-/* B31C MDBR  - MULTIPLY (long BFP)                            [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(multiply_bfp_long_reg)
-{
-    int r1, r2;
-    float64_t op1, op2, ans;
-    U32 ieee_trap_conds =0;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
-    
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                  */
-    ans = f64_mul( op1, op2 );
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true    */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT64_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
 
 }
 
 /*-------------------------------------------------------------------*/
 /* ED1C MDB   - MULTIPLY (long BFP)                            [RXE] */
+/* B31C MDBR  - MULTIPLY (long BFP)                            [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_bfp_long)
 {
-    int r1, b2;
-    VADR effective_addr2;
-    float64_t op1, op2, ans;
-    U32 ieee_trap_conds =0;
-
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OP( op1, r1, regs );
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f64_mul(op1, op2);
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT64_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
+    ARCH_DEP(arith64_common)(&f64_mul, inst, regs);
+    return;
 }
 
-/*--------------------------------------------------------------------------*/
-/* B30C MDEBR - MULTIPLY (short to long BFP)                   [RRE]        */
-/*                                                                          */
-/* Because the operation result is in a longer format than the operands,    */
-/* IEEE exceptions Overflow, Underflow, and Inexact cannot occur.  An SNaN  */
-/* will still generate Invalid.                                             */
-/*                                                                          */
-/*--------------------------------------------------------------------------*/
-DEF_INST(multiply_bfp_short_to_long_reg)
-{
-    int r1, r2;
-    float32_t op1, op2;
-    float64_t iop1, iop2, ans;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
-
-    /* f32_to_f64 will, if presented with a SNaN, convert it to quiet and raise softfloat_flags_invalid.        */
-    /* Unfortunately, if one of the operands is an SNaN and the other a QNaN, f64_mul() will be unable to do    */
-    /* NaN propagation correctly because it will see only two QNaNs.  So if we encounter an SNaN while          */
-    /* upconverting the input operands, that becomes the answer.  If both operands are QNaNs, then f64_mul()    */
-    /* will be able to do NaN propagation correctly.                                                            */
-
-    softfloat_exceptionFlags = 0;
-    softfloat_roundingMode = softfloat_round_near_even;     /* No inexacts.  Set default rounding mode.         */
-
-    iop1 = f32_to_f64( op1 );
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)
-        ans = iop1;             /* op1 is an SNaN.  We are done  */
-    else
-    {
-        iop2 = f32_to_f64(op2);
-        if (softfloat_exceptionFlags & softfloat_flag_invalid)
-            ans = iop2;
-        else
-            ans = f64_mul(iop1, iop2);
-    }
-    
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);      /* test for trappable Xi, no return if true    */
-        SET_FPC_FLAGS_FROM_SF(regs);
-    }
-    PUT_FLOAT64_NOCC(ans, r1, regs);
-
-}
 
 /*--------------------------------------------------------------------------*/
 /* ED0C MDEB  - MULTIPLY (short to long BFP)                   [RXE]        */
+/* B30C MDEBR - MULTIPLY (short to long BFP)                   [RRE]        */
 /*                                                                          */
 /* Because the operation result is in a longer format than the operands,    */
 /* IEEE exceptions Overflow, Underflow, and Inexact cannot occur.  An SNaN  */
@@ -3778,41 +3927,65 @@ DEF_INST(multiply_bfp_short_to_long_reg)
 /*--------------------------------------------------------------------------*/
 DEF_INST(multiply_bfp_short_to_long)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float32_t op1, op2;
     float64_t iop1, iop2, ans;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OP( op1, r1, regs );
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    /* f32_to_f64 will, if presented with a SNaN, convert it to quiet and raise softfloat_flags_invalid.        */
-    /* Unfortunately, if one of the operands is an SNaN and the other a QNaN, f64_mul() will be unable to do    */
-    /* NaN propagation correctly because it will see only two QNaNs.  So if we encounter an SNaN while          */
-    /* upconverting the input operands, that becomes the answer.  If both operands are QNaNs, then f64_mul()    */
-    /* will be able to do NaN propagation correctly.                                                            */
-
-    softfloat_exceptionFlags = 0;
-    softfloat_roundingMode = softfloat_round_near_even;     /* No inexacts.  Set default rounding mode.         */
-
-    iop1 = f32_to_f64(op1);
-    if (softfloat_exceptionFlags & softfloat_flag_invalid)
-        ans = iop1;             /* op1 is an SNaN.  We are done  */
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+    }
     else
-    {
-        iop2 = f32_to_f64(op2);
-        if (softfloat_exceptionFlags & softfloat_flag_invalid)
-            ans = iop2;
-        else
-            ans = f64_mul(iop1, iop2);
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT32_OP(op2, r2, regs);
     }
 
-    if (softfloat_exceptionFlags)
+    GET_FLOAT32_OP(op1, r1, regs);                          /* Operand 1 is always in r1                            */
+
+    /* f64_to_f128 will, if presented with a SNaN, convert it to quiet and raise softfloat_flags_invalid.           */
+    /* Unfortunately, if one of the operands is an SNaN and the other a QNaN, f128_mul() will be unable to do NaN   */
+    /* propagation correctly because it will see only two QNaNs.  So if we encounter an SNaN while upconverting     */
+    /* the input operands, that becomes the answer.  If both operands are QNaNs, then f128_mul() will do NaN        */
+    /*  propagation correctly.                                                                                      */
+
+    /* A better approach would be to add multiply to increased precision within SoftFloat, with the f128_mul as     */
+    /* the starting point.  We can do that another time.                                                            */
+
+    if (FLOAT32_IS_SNAN(op1))                               /* Is operand one an SNaN?                              */
+    {                                                       /* ..yes, result is the corresponding QNaN              */
+        ans.v = (U64)(( op1.v & 0x80000000) | 0x7ff80000) << 32 | ((((U64)op1.v) << 29) & 0x000fffffffffffffull);
+        ieee_exceptions = FPC_MASK_IMI;
+    }
+
+    else if (FLOAT32_IS_SNAN(op2))                          /* Is operand two an SNaN?                              */
+    {                                                       /* ..yes, result is the corresponding QNaN              */
+        ans.v = (U64)((op2.v & 0x80000000) | 0x7ff80000) << 32 | ((((U64)op2.v) << 29) & 0x000fffffffffffffull);
+        ieee_exceptions = FPC_MASK_IMI;
+    }
+
+    else
+    {                                                       /* No SNaNs.  Result is product of operands             */
+        CLEAR_SF_EXCEPTIONS;
+        SET_SF_RM(softfloat_round_near_even);               /* No inexacts.  Set default rounding mode.             */
+        iop1 = f32_to_f64(op1);
+        iop2 = f32_to_f64(op2);
+        ans = f64_mul(iop1, iop2);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+    }
+
+    if (ieee_exceptions & FPC_MASK_IMI)                     /* Invalid operation (SNaN, something else)?            */
     {
-        IEEE_EXCEPTION_TRAP_XI(regs);      /* test for trappable Xi, no return if true    */
-        SET_FPC_FLAGS_FROM_SF(regs);
+        if (regs->fpc & FPC_MASK_IMI)                       /* Is invalid trappable?                                */
+            ieee_trap(regs, DXC_IEEE_INVALID_OP);           /* ..Yes, program check, no return                      */
+        else
+            regs->fpc |= FPC_FLAG_SFI;                      /* ..No, indicate invalid in FPC                        */
     }
 
     PUT_FLOAT64_NOCC( ans, r1, regs );
@@ -3820,338 +3993,189 @@ DEF_INST(multiply_bfp_short_to_long)
 }
 
 /*-------------------------------------------------------------------*/
-/* B317 MEEBR - MULTIPLY (short BFP)                           [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(multiply_bfp_short_reg)
-{
-    int r1, r2;
-    float32_t op1, op2, ans;
-    U32 ieee_trap_conds =0;
-
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f32_mul( op1, op2 );
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                    : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT32_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-}
-
-/*-------------------------------------------------------------------*/
 /* ED17 MEEB  - MULTIPLY (short BFP)                           [RXE] */
+/* B317 MEEBR - MULTIPLY (short BFP)                           [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_bfp_short)
 {
-    int r1, b2;
-    VADR effective_addr2;
-    float32_t op1, op2, ans;
-    U32 ieee_trap_conds =0;
-
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OP( op1, r1, regs );
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                    */
-    ans = f32_mul( op1, op2 );
-
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT32_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
+    ARCH_DEP(arith32_common)(&f32_mul, inst, regs);
+    return;
 }
 
-/*-------------------------------------------------------------------*/
-/* B31E MADBR - MULTIPLY AND ADD (long BFP)                    [RRF] */
-/*-------------------------------------------------------------------*/
-DEF_INST(multiply_add_bfp_long_reg)
-{
-    int r1, r2, r3;
-    float64_t op1, op2, op3, ans;
-    U32 ieee_trap_conds =0; 
-
-    RRF_R(inst, regs, r1, r2, r3);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
-    GET_FLOAT64_OP( op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f64_mulAdd(op2, op3, op1);
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT64_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-}
 
 /*-------------------------------------------------------------------*/
 /* ED1E MADB  - MULTIPLY AND ADD (long BFP)                    [RXF] */
+/* B31E MADBR - MULTIPLY AND ADD (long BFP)                    [RRD] */
+/* ED1F MSDB  - MULTIPLY AND SUBTRACT (long BFP)               [RXF] */
+/* B31F MSDBR - MULTIPLY AND SUBTRACT (long BFP)               [RRD] */
 /*-------------------------------------------------------------------*/
-DEF_INST(multiply_add_bfp_long)
+DEF_INST(multiply_addsub_bfp_long)
 {
-    int r1, r3, b2;
+    int r1, r2, r3, b2;
     VADR effective_addr2;
     float64_t op1, op2, op3, ans;
-    U32 ieee_trap_conds =0;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+    BYTE mul_sub = 0;                                       /* True (1) if multiply and subtract                    */
 
-    RXF(inst, regs, r1, r3, b2, effective_addr2);
-    BFPINST_CHECK(regs);
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode r1, r3 and operand 2 for RXE           */
+        RXF(inst, regs, r1, r3, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+        mul_sub = inst[5] == 0x1F;                          /* Test for multiply and subtract                       */
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands 1, 2,  & 3  */
+        RRF_R(inst, regs, r1, r2, r3);
+        GET_FLOAT64_OP(op2, r2, regs);
+        mul_sub = inst[1] == 0x1F;                          /* Test for multiply and subtract                       */
+    }
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
+    GET_FLOAT64_OP(op1, r1, regs);                          /* Operand 1 is always in r1                            */
+    GET_FLOAT64_OP(op3, r3, regs);                          /* ..and operand 3 is always in r3                      */
+
+    /* If Multiply And Subtract and operand 1 is not a NaN, the sign bit is inverted                                */
+    if ( mul_sub && (!(op1.v & 0x000FFFFFFFFFFFFF) || ((op1.v & 0x7FF0000000000000) ^ 0x7FF0000000000000)) )
+        op1.v ^= 0x8000000000000000ULL;                     /* invert sign to enable use of f64_MulAdd              */
+
+    CLEAR_SF_EXCEPTIONS;
+    SET_SF_RM( GET_SF_RM_FROM_FPC );                        /* Set rounding mode from FPC                           */
     ans = f64_mulAdd(op2, op3, op1);
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
 
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    PUT_FLOAT64_NOCC(ans, r1, regs);                        /* Store result from Add, set condition code            */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMO & regs->fpc)         /* Trappable overflow?                                  */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_OF_EXACT;
+        ans = f64_scaledResult(SCALE_FACTOR_ARITH_OFLOW_LONG);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT64_NOCC(ans, r1, regs);                    /* Store scaled result from Add, cc unchanged           */
     }
 
-    PUT_FLOAT64_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-}
-
-/*-------------------------------------------------------------------*/
-/* B30E MAEBR - MULTIPLY AND ADD (short BFP)                   [RRF] */
-/*-------------------------------------------------------------------*/
-DEF_INST(multiply_add_bfp_short_reg)
-{
-    int r1, r2, r3;
-    float32_t op1, op2, op3, ans;
-    U32 ieee_trap_conds =0;
-    
-    RRF_R(inst, regs, r1, r2, r3);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
-    GET_FLOAT32_OP( op2, r2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f32_mulAdd(op2, op3, op1);
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_UF_EXACT;
+        ans = f64_scaledResult(SCALE_FACTOR_ARITH_UFLOW_LONG);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT64_NOCC(ans, r1, regs);                    /* Store scaled result from Add, cc unchanged           */
     }
 
-    PUT_FLOAT32_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)    /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
+
 }
 
 /*-------------------------------------------------------------------*/
 /* ED0E MAEB  - MULTIPLY AND ADD (short BFP)                   [RXF] */
-/*-------------------------------------------------------------------*/
-DEF_INST(multiply_add_bfp_short)
-{
-    int r1, r3, b2;
-    VADR effective_addr2;
-    float32_t op1, op2, op3, ans;
-    U32 ieee_trap_conds =0;
-
-    RXF(inst, regs, r1, r3, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f32_mulAdd(op2, op3, op1);
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT32_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-
-}
-
-/*-------------------------------------------------------------------*/
-/* B31F MSDBR - MULTIPLY AND SUBTRACT (long BFP)               [RRF] */
-/*-------------------------------------------------------------------*/
-DEF_INST(multiply_subtract_bfp_long_reg)
-{
-    int r1, r2, r3;
-    float64_t op1, op2, op3, ans;
-    U32 ieee_trap_conds =0;
-
-    RRF_R(inst, regs, r1, r2, r3);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
-    GET_FLOAT64_OP( op2, r2, regs );
-
-    /* if Operand 1 is not a NaN, the sign bit is inverted                                */
-    if ( !(op1.v & 0x000FFFFFFFFFFFFF) || ((op1.v & 0x7FF0000000000000) ^ 0x7FF0000000000000) )
-        op1.v ^= 0x8000000000000000ULL;         /* invert sign to enable use of f64_MulAdd      */
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f64_mulAdd(op2, op3, op1 );
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT64_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-}
-
-/*-------------------------------------------------------------------*/
-/* ED1F MSDB  - MULTIPLY AND SUBTRACT (long BFP)               [RXF] */
-/*-------------------------------------------------------------------*/
-DEF_INST(multiply_subtract_bfp_long)
-{
-    int r1, r3, b2;
-    VADR effective_addr2;
-    float64_t op1, op2, op3, ans;
-    U32 ieee_trap_conds =0;
-
-    RXF(inst, regs, r1, r3, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
-
-    /* if Operand 1 is not a NaN, the sign bit is inverted                                */
-    if (!(op1.v & 0x000FFFFFFFFFFFFF) || ((op1.v & 0x7FF0000000000000) ^ 0x7FF0000000000000))
-        op1.v ^= 0x8000000000000000ULL;         /* invert sign to enable use of f64_MulAdd      */
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f64_mulAdd(op2, op3, op1);
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT64_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-
-}
-
-/*-------------------------------------------------------------------*/
+/* B30E MAEBR - MULTIPLY AND ADD (short BFP)                   [RRF] */
+/* ED0F MSEB  - MULTIPLY AND SUBTRACT (short BFP)              [RXF] */
 /* B30F MSEBR - MULTIPLY AND SUBTRACT (short BFP)              [RRF] */
 /*-------------------------------------------------------------------*/
-DEF_INST(multiply_subtract_bfp_short_reg)
+DEF_INST(multiply_addsub_bfp_short)
 {
-    int r1, r2, r3;
-    float32_t op1, op2, op3, ans;
-    U32 ieee_trap_conds =0;
-
-    RRF_R(inst, regs, r1, r2, r3);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
-    GET_FLOAT32_OP( op2, r2, regs );
-
-    /* if Operand 1 is not a NaN, the sign bit is inverted                                */
-    if (!(op1.v & 0x007FFFFF) || ((op1.v & 0x7F800000) ^ 0x7F800000))
-        op1.v ^= 0x80000000;                    /* invert sign to enable use of f32_MulAdd      */
-
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f32_mulAdd(op2, op3, op1);
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    }
-
-    PUT_FLOAT32_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
-
-}
-
-/*-------------------------------------------------------------------*/
-/* ED0F MSEB  - MULTIPLY AND SUBTRACT (short BFP)              [RXF] */
-/*-------------------------------------------------------------------*/
-DEF_INST(multiply_subtract_bfp_short)
-{
-    int r1, r3, b2;
+    int r1, r2, r3, b2;
     VADR effective_addr2;
     float32_t op1, op2, op3, ans;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
 
-    RXF(inst, regs, r1, r3, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
+    BYTE mul_sub = 0;                                       /* True (1) if multiply and subtract                    */
 
-    /* if Operand 1 is not a NaN, the sign bit is inverted                                */
-    if (!(op1.v & 0x007FFFFF) || ((op1.v & 0x7F800000) ^ 0x7F800000))
-        op1.v ^= 0x80000000;                    /* invert sign to enable use of f32_MulAdd      */
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    ans = f32_mulAdd(op2, op3, op1);
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXF(inst, regs, r1, r3, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+        mul_sub = inst[5] == 0x0F;                          /* Test for multiply and subtract                       */
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRF_R(inst, regs, r1, r2, r3);
+        GET_FLOAT32_OP(op2, r2, regs);
+        mul_sub = inst[1] == 0x0F;                          /* Test for multiply and subtract                       */
     }
 
-    PUT_FLOAT32_NOCC(ans, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO | FPC_MASK_IMU | FPC_MASK_IMX);   /* take any trap detected  */
+    GET_FLOAT32_OP(op1, r1, regs);                          /* Operand 1 is always in r1                            */
+    GET_FLOAT32_OP(op3, r3, regs);
+
+                                                            /* if Operand 1 is not a NaN, the sign bit is inverted  */
+    if ( mul_sub && (!(op1.v & 0x007FFFFF) || ((op1.v & 0x7F800000) ^ 0x7F800000)) )
+        op1.v ^= 0x80000000;                                /* invert sign to enable use of f32_MulAdd              */
+
+    CLEAR_SF_EXCEPTIONS;
+    SET_SF_RM( GET_SF_RM_FROM_FPC );                        /* Set rounding mode from FPC                           */
+    ans = f32_mulAdd(op2, op3, op1);
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
+
+    PUT_FLOAT32_NOCC(ans, r1, regs);                        /* Store result from Add, set condition code            */
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+                                                            /* See if remaining exceptions are trappable            */
+    if (ieee_exceptions & FPC_MASK_IMO & regs->fpc)         /* Trappable overflow?                                  */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_OF_EXACT;
+        ans = f32_scaledResult(SCALE_FACTOR_ARITH_OFLOW_SHORT);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT32_NOCC(ans, r1, regs);                    /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+    {                                                       /* ..yes, set dxc code for trap and scale result        */
+        dxc_save = DXC_IEEE_UF_EXACT;
+        ans = f32_scaledResult(SCALE_FACTOR_ARITH_UFLOW_SHORT);
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        PUT_FLOAT32_NOCC(ans, r1, regs);                    /* Store scaled result from Add, cc unchanged           */
+    }
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)    /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+    return;
+
 }
 
 /*-------------------------------------------------------------------*/
@@ -4161,140 +4185,143 @@ DEF_INST(squareroot_bfp_ext_reg)
 {
     int r1, r2;
     float128_t op1, op2;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;
+    U32 ieee_incremented = 0;
+
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
     RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OP( op2, r2, regs );
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
+    CLEAR_SF_EXCEPTIONS;
+    SET_SF_RM( GET_SF_RM_FROM_FPC );                        /* Set rounding mode from FPC                           */
     op1 = f128_sqrt( op2 );
 
-    if (softfloat_exceptionFlags)
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if ( !ieee_exceptions )
     {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        IEEE_EXCEPTION_TEST_TRAPS(regs, ieee_trap_conds, FPC_MASK_IMX);
+        PUT_FLOAT128_NOCC(op1, r1, regs);
+        return;
     }
+
+    if ( ieee_exceptions & regs->fpc & FPC_MASK_IMI )
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);
 
     PUT_FLOAT128_NOCC(op1, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* take any trap detected  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
-}
 
-/*-------------------------------------------------------------------*/
-/* B315 SQDBR - SQUARE ROOT (long BFP)                         [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(squareroot_bfp_long_reg)
-{
-    int r1, r2;
-    float64_t op1, op2;
-    U32 ieee_trap_conds = 0;
+    if ( ieee_exceptions & regs->fpc & FPC_MASK_IMX )
+        ieee_trap( regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented );
 
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT64_OP( op2, r2, regs );
+    regs->fpc |= ieee_exceptions >> 8;                      /* Set FPC IEEE flags                                   */
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    op1 = f64_sqrt( op2 );
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        IEEE_EXCEPTION_TEST_TRAPS(regs, ieee_trap_conds, FPC_MASK_IMX);
-    }
-
-    PUT_FLOAT64_NOCC(op1, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* take any trap detected  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
+    return;
 }
 
 /*-------------------------------------------------------------------*/
 /* ED15 SQDB  - SQUARE ROOT (long BFP)                         [RXE] */
+/* B315 SQDBR - SQUARE ROOT (long BFP)                         [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(squareroot_bfp_long)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float64_t op1, op2;
-    U32 ieee_trap_conds = 0;
+    U32 ieee_exceptions = 0;
+    U32 ieee_incremented = 0;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT64_OP(op2, r2, regs);
+    }
+
+    GET_FLOAT64_OP(op1, r1, regs);
+
+    CLEAR_SF_EXCEPTIONS;
+    SET_SF_RM( GET_SF_RM_FROM_FPC );                        /* Set rounding mode from FPC                           */
     op1 = f64_sqrt( op2 );
 
-    if (softfloat_exceptionFlags)
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (!ieee_exceptions)
     {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        IEEE_EXCEPTION_TEST_TRAPS(regs, ieee_trap_conds, FPC_MASK_IMX);
+        PUT_FLOAT64_NOCC(op1, r1, regs);
+        return;
     }
+
+    if (ieee_exceptions & regs->fpc & FPC_MASK_IMI)
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);
 
     PUT_FLOAT64_NOCC(op1, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* take any trap detected  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
-}
 
-/*-------------------------------------------------------------------*/
-/* B314 SQEBR - SQUARE ROOT (short BFP)                        [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(squareroot_bfp_short_reg)
-{
-    int r1, r2;
-    float32_t op1, op2;
-    U32 ieee_trap_conds = 0;
+    if (ieee_exceptions & regs->fpc & FPC_MASK_IMX)
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);
 
-    RRE(inst, regs, r1, r2);
-    BFPINST_CHECK(regs);
-    GET_FLOAT32_OP( op2, r2, regs );
+    regs->fpc |= ieee_exceptions >> 8;   /* Set FPC IEEE flags */
 
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    op1 = f32_sqrt( op2 );
-
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        IEEE_EXCEPTION_TEST_TRAPS(regs, ieee_trap_conds, FPC_MASK_IMX);
-    }
-
-    PUT_FLOAT32_NOCC(op1, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* take any trap detected  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
+    return;
 }
 
 /*-------------------------------------------------------------------*/
 /* ED14 SQEB  - SQUARE ROOT (short BFP)                        [RXE] */
+/* B314 SQEBR - SQUARE ROOT (short BFP)                        [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(squareroot_bfp_short)
 {
-    int r1, b2;
+    int r1, r2, b2;
     VADR effective_addr2;
     float32_t op1, op2;
+    U32 ieee_exceptions = 0;
+    U32 ieee_incremented = 0;
     U32 ieee_trap_conds = 0;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
-    VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
-    
-    softfloat_exceptionFlags = 0;
-    SET_SF_RM_FROM_FPC;                     /* Set rounding mode from FPC                   */
-    op1 = f32_sqrt( op2 );
-    
-    if (softfloat_exceptionFlags)
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);       /* test for trappable Xi, no return if true     */
-        IEEE_EXCEPTION_TEST_TRAPS(regs, ieee_trap_conds, FPC_MASK_IMX);
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
+    if (inst[0] == OPCODE_BFP_RXE)                          /* RXE instruction form?                                */
+    {                                                       /* ..Yes, decode operand addresses for RXE              */
+        RXE(inst, regs, r1, b2, effective_addr2);
+        op2.v = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+    }
+    else
+    {                                                       /* ..not the RXE form...decode RRE operands             */
+        RRE(inst, regs, r1, r2);
+        GET_FLOAT32_OP(op2, r2, regs);
     }
 
+    GET_FLOAT32_OP(op1, r1, regs);
+
+    CLEAR_SF_EXCEPTIONS;
+    SET_SF_RM( GET_SF_RM_FROM_FPC );                                    /* Set rounding mode from FPC               */
+    op1 = f32_sqrt( op2 );
+
+    SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                           */
+
+    if (!ieee_exceptions)
+    {
+        PUT_FLOAT32_NOCC(op1, r1, regs);
+        return;
+    }
+
+    if (ieee_exceptions & regs->fpc & FPC_MASK_IMI)
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);
+
     PUT_FLOAT32_NOCC(op1, r1, regs);
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMX);   /* take any trap detected  */
-    SET_FPC_FLAGS_FROM_SF(regs);        /*   Transfer any returned flags from Softfloat to FPC   */
+
+    if (ieee_exceptions & regs->fpc & FPC_MASK_IMX)
+        ieee_trap(regs, DXC_IEEE_INEXACT_TRUNC | ieee_incremented);
+
+    regs->fpc |= ieee_exceptions >> 8;   /* Set FPC IEEE flags */
+
+    return;
 }
 
 
@@ -4304,172 +4331,31 @@ DEF_INST(squareroot_bfp_short)
 
 DEF_INST(subtract_bfp_ext_reg)
 {
-    int r1, r2;
-    float128_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
-
-    RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
-    BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
-    BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valide FP register pair for extended format   */
-    GET_FLOAT128_OPS( op1, r1, op2, r2, regs );             /* Get operand values                                   */
-
-    SET_SF_RM_FROM_FPC;                                     /* Set rounding mode for Subtract from FPC              */
-    softfloat_exceptionFlags = 0;                           /* Clear all Softfloat IEEE flags                       */
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-
-    ans = f128_sub(op1, op2);
-
-    if (softfloat_exceptionFlags)                           /* Any IEEE Exceptions?                                 */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* if Xi trappable, suppresses result, no return        */
-        ieee_trap_conds = ieee_exception_test_oux(regs);    /* test for overflow, underflow, inexact, set FPC flags */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f128_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_EXTD
-                : SCALE_FACTOR_ARITH_UFLOW_EXTD);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT128_CC(ans, r1, regs);                         /* Store result from Subtract                           */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO     /* Take trap for any trappable exception            */
-        | FPC_MASK_IMU
-        | FPC_MASK_IMX);
-
-}
-
-/*-------------------------------------------------------------------*/
-/* B31B SDBR  - SUBTRACT (long BFP)                            [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(subtract_bfp_long_reg)
-{
-    int r1, r2;
-    float64_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
-
-    RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
-    BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
-    GET_FLOAT64_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
-
-    softfloat_exceptionFlags = 0;                           /* Clear all Softfloat IEEE flags                       */
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-    ans = f64_sub(op1, op2);                                /* Add two float64_t values                             */
-
-    if (softfloat_exceptionFlags)                           /* Any IEEE Exceptions?                                 */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* if Xi trappable, suppresses result, no return        */
-        ieee_trap_conds = ieee_exception_test_oux(regs);    /* test for overflow, underflow, inexact, set FPC flags */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT64_CC(ans, r1, regs);                          /* Store result from Subtract                           */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO     /* Take trap for any trappable exception            */
-        | FPC_MASK_IMU
-        | FPC_MASK_IMX);
+    ARCH_DEP(arith128_common)(&f128_sub, inst, regs);
+    return;
 }
 
 /*-------------------------------------------------------------------*/
 /* ED1B SDB   - SUBTRACT (long BFP)                            [RXE] */
+/* B31B SDBR  - SUBTRACT (long BFP)                            [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_bfp_long)
 {
-    int r1, b2;
-    VADR effective_addr2;
-    float64_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
-
-    RXE(inst, regs, r1, b2, effective_addr2);               /* decode operand register and address                  */
-    BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
-    GET_FLOAT64_OP(op1, r1, regs);                          /* Get register operand value                           */
-    VFETCH_FLOAT64_OP(op2, effective_addr2, b2, regs);
-
-    softfloat_exceptionFlags = 0;                           /* Clear all Softfloat IEEE flags                       */
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-    ans = f64_sub(op1, op2);                                /* Add two float64_t values                             */
-
-    if (softfloat_exceptionFlags)                           /* Any IEEE Exceptions?                                 */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* if Xi trappable, suppresses result, no return        */
-        ieee_trap_conds = ieee_exception_test_oux(regs);    /* test for overflow, underflow, inexact, set FPC flags */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f64_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_LONG
-                : SCALE_FACTOR_ARITH_UFLOW_LONG);                   /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT64_CC(ans, r1, regs);                          /* Store result from Subtract                           */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO     /* Take trap for any trappable exception            */
-        | FPC_MASK_IMU
-        | FPC_MASK_IMX);
-
+    ARCH_DEP(arith64_common)(&f64_sub, inst, regs);
+    return;
 }
 
-/*-------------------------------------------------------------------*/
-/* B30B SEBR  - SUBTRACT (short BFP)                           [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(subtract_bfp_short_reg)
-{
-    int r1, r2;
-    float32_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
-
-    RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
-    BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
-    GET_FLOAT32_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
-
-    softfloat_exceptionFlags = 0;                           /* Clear all Softfloat IEEE flags                       */
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-    ans = f32_sub(op1, op2);                                /* Add two float64_t values                             */
-
-    if (softfloat_exceptionFlags)                           /* Any IEEE Exceptions?                                 */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* if Xi trappable, suppresses result, no return        */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT32_CC(ans, r1, regs);                          /* Store result from Subtract                           */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO     /* Take trap for any trappable exception            */
-        | FPC_MASK_IMU
-        | FPC_MASK_IMX);
-
-}
 
 /*-------------------------------------------------------------------*/
 /* ED0B SEB   - SUBTRACT (short BFP)                           [RXE] */
+/* B30B SEBR  - SUBTRACT (short BFP)                           [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_bfp_short)
 {
-    int r1, b2;
-    VADR effective_addr2;
-    float32_t op1, op2, ans;
-    U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
-
-    RXE(inst, regs, r1, b2, effective_addr2);               /* decode operand register and address                  */
-    BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
-    GET_FLOAT32_OP(op1, r1, regs);                          /* Get register operand value                           */
-    VFETCH_FLOAT32_OP(op2, effective_addr2, b2, regs);
-
-    softfloat_exceptionFlags = 0;                           /* Clear all Softfloat IEEE flags                       */
-    SET_SF_RM_FROM_FPC;            /* Set rounding mode from FPC                           */
-    ans = f32_sub(op1, op2);                                /* Add two float64_t values                             */
-
-    if (softfloat_exceptionFlags)                           /* Any IEEE Exceptions?                                 */
-    {
-        IEEE_EXCEPTION_TRAP_XI(regs);                       /* if Xi trappable, suppresses result, no return        */
-        ieee_trap_conds = ieee_exception_test_oux(regs);  /* test for overflow, underflow, inexact, save result             */
-        if (ieee_trap_conds & (FPC_MASK_IMO | FPC_MASK_IMU))       /* Trappable overflow or underflow?                     */
-            ans = f32_scaledResult(ieee_trap_conds & FPC_MASK_IMO ? SCALE_FACTOR_ARITH_OFLOW_SHORT
-                : SCALE_FACTOR_ARITH_UFLOW_SHORT);                  /* Note: exactly one of the two will be present         */
-    };
-
-    PUT_FLOAT32_CC(ans, r1, regs);                          /* Store result from Subtract                           */
-    IEEE_EXCEPTION_TRAP(regs, ieee_trap_conds, FPC_MASK_IMO     /* Take trap for any trappable exception            */
-        | FPC_MASK_IMU
-        | FPC_MASK_IMX);
-
-
+    ARCH_DEP(arith32_common)(&f32_sub, inst, regs);
+    return;
 }
+
 
 /*-------------------------------------------------------------------*/
 /* ED10 TCEB  - TEST DATA CLASS (short BFP)                    [RXE] */
@@ -4481,8 +4367,9 @@ DEF_INST(test_data_class_bfp_short)
     VADR effective_addr2;
     float32_t op1;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op1, r1, regs );
     regs->psw.cc = !!(((U32)effective_addr2) & float32_class( op1 ));
@@ -4498,8 +4385,9 @@ DEF_INST(test_data_class_bfp_long)
     VADR effective_addr2;
     float64_t op1;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BFP instructions allowed by CPU State         */
+
     RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op1, r1, regs );
     regs->psw.cc = !!(((U32)effective_addr2) & float64_class( op1 ));
@@ -4515,8 +4403,9 @@ DEF_INST(test_data_class_bfp_ext)
     VADR effective_addr2;
     float128_t op1;
 
+    BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
+
     RXE(inst, regs, r1, b2, effective_addr2);
-    BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
     GET_FLOAT128_OP( op1, r1, regs );
@@ -4547,27 +4436,36 @@ DEF_INST(divide_integer_bfp_long_reg)
     int r1, r2, r3;
     BYTE m4, newcc;
     float64_t op1, op2;
-    float64_t quo, rem;
+    float64_t quo, rem, quo_save;
     U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
     U32 op1_data_class, op2_data_class;                     /* Saved class of operands in same form as tested by    */
                                                             /* Test Data Class instruction                          */
 
-    RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_quo_overflow = 0;                              /* presume no quotient overflow with finite operands    */
+    U32 ieee_incremented = 0;
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+    BYTE sf_rounding_mode;                                  /* SoftFloat rounding mode code                         */
+
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */
-        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);  
+        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
     BFPRM_CHECK(m4,regs);                                   /* Ensure valid rounding mask value                     */
-    GET_FLOAT64_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
+
+    GET_FLOAT64_OP(op1, r1, regs);                          /* Get operand 1 value                                  */
+    GET_FLOAT64_OP(op2, r2, regs);                          /* Get operand 2 value                                  */
     op1_data_class = float64_class(op1);                    /* Determine and save op1 data class                    */
     op2_data_class = float64_class(op2);                    /* Determine and save op2 data class                    */
-    softfloat_exceptionFlags = 0;                           /* Clear all Softfloat exception flags                  */
+    CLEAR_SF_EXCEPTIONS;                                    /* Clear all Softfloat exception flags                  */
 
     /* ******************************************************************************** */
     /* Following if / else if / else implements a decision tree based on SA-22-7832-10  */
     /* Table 19-21 parts 1 and 2 on pages 19-29 and 19-30 respectively.                 */
     /*                                                                                  */
     /* ORDER OF TESTS IS IMPORTANT                                                      */
-    /* 1. Tests for cases that include two non-finite non-zeroes.                       */
+    /* 1. Tests for cases that include two finite non-zeroes.                           */
     /* 2. Tests for cases that include one or two NaNs as input values                  */
     /* 3. Tests for cases that always generate the default quiet NaN                    */
     /* 4. Tests for cases that generate non-NaN results.                                */
@@ -4583,79 +4481,84 @@ DEF_INST(divide_integer_bfp_long_reg)
     /* Group 1: Tests for cases with finite non-zeros for both operands.  This is seen  */
     /* as the most frequent case, and should therefore be tested first.                 */
     /* ******************************************************************************** */
-    if ((op1_data_class & (float_class_neg_normal | float_class_pos_normal          /* Both operands finite numbers?*/
+
+                                                                    /* Both operands finite numbers?                */
+    if ((op1_data_class & (float_class_neg_normal | float_class_pos_normal
         | float_class_neg_subnormal | float_class_pos_subnormal))
         && (op2_data_class & (float_class_neg_normal | float_class_pos_normal
             | float_class_neg_subnormal | float_class_pos_subnormal)))
-    {                                                                               /* ..yes, we can do division    */
-        newcc = 0;                                        /* Initial cc set to zero  */
+    {                                                               /* ..yes, we can do division                    */
+        newcc = 0;                                                  /* Initial cc set to zero                       */
 
-        SET_SF_RM_FROM_M3(m4);
-        quo = f64_div(op1, op2);                                    /* calculate precise quotient                       */
-        quo = f64_roundToInt(quo, softfloat_roundingMode, TRUE);    /* Round to integer per m4 rounding mode            */
-        softfloat_exceptionFlags &= softfloat_flag_overflow;        /* Quotient only cares about overflow               */
-        SET_SF_RM_FROM_FPC;                /* Set rounding mode from FPC for final remainder   */
-        quo.v ^= 0x8000000000000000ULL;                             /* Reverse sign of integer quotient                 */
-        rem = f64_mulAdd(quo, op2, op1);                            /* Calculate remainder                              */
-        quo.v ^= 0x8000000000000000ULL;                             /* Return sign of integer quotient to original value*/
-        if (!(rem.v & 0x7fffffffffffffffULL))                       /* Is remainder zero?                               */
-            rem.v = (op1.v & 0x8000000000000000ULL) | (rem.v & 0x7fffffffffffffffULL);               
-                                                                    /* ..yes, ensure remainder sign matches dividend    */
+        sf_rounding_mode = GET_SF_RM_FROM_MODIFIER(m4);             /* Convert modifier to SoftFloat Rounding mode  */
+        SET_SF_RM( sf_rounding_mode );                              /* Set SoftFloat rounding mode                  */
+        quo = f64_div(op1, op2);                                    /* calculate precise quotient                   */
+        quo = f64_roundToInt(quo, sf_rounding_mode, TRUE);          /* Round to integer per m4 rounding mode        */
+        SET_IEEE_EXCEPTIONS(ieee_quo_overflow, ieee_incremented, regs->fpc);  /* Get quotient creation exceptions   */
+        ieee_quo_overflow &= FPC_MASK_IMO;                          /* Save overflow from quotient 1st division     */
+        CLEAR_SF_EXCEPTIONS;                                        /* Clear other quotient calculation flags       */
+        SET_SF_RM( GET_SF_RM_FROM_FPC );                            /* Set final remainder rounding mode from FPC   */
+        quo_save.v = quo.v ^ 0x8000000000000000ULL;                 /* Reverse sign of integer quotient             */
+        rem = f64_mulAdd(quo_save, op2, op1);                       /* Calculate remainder                          */
+        if (!(rem.v & 0x7fffffffffffffffULL))                       /* Is remainder zero?                           */
+                                                                    /* ..yes, make remainder sign match dividend    */
+            rem.v = (op1.v & 0x8000000000000000ULL) | (rem.v & 0x7fffffffffffffffULL);
 
-        if (!softfloat_exceptionFlags)                              /* If no exceptions, check for partial results      */
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        ieee_exceptions |= ieee_quo_overflow;                       /* Include any quotient overflow in exceptions  */
+
+        if (!ieee_exceptions)                                       /* If no exceptions, check for partial results  */
         {
             if (((quo.v & 0x7fffffffffffffffULL) > 0x4340000000000000ULL) && (rem.v & 0x7fffffffffffffffULL))
-            {                                                       /* Quotient > 2^24th & rem <>0?                     */
-                newcc += 2;                                         /* ..yes, indicate partial results in cc            */
-                softfloat_roundingMode = softfloat_round_minMag;    /* Repeat calculation of quotient/remainder         */
-                                                                    /* ..with rounding toward zero                      */
-                softfloat_exceptionFlags = 0;                       /* Clear all prior flags                            */
-                quo = f64_div(op1, op2);                            /* calculate precise quotient                       */
-                quo = f64_roundToInt(quo, softfloat_roundingMode, TRUE);    /* Round to integer per m4 rounding mode    */
-                quo.v ^= 0x8000000000000000ULL;                     /* Reverse sign of integer quotient                 */
-                rem = f64_mulAdd(quo, op2, op1);                    /* Calculate remainder                              */
-                quo.v ^= 0x8000000000000000ULL;                     /* Return sign of integer quotient to original value*/
-                softfloat_exceptionFlags = 0;                       /* No exceptions or flags on partial results        */
+                                                                    /* Quotient > 2^24th & rem <>0?                 */
+            {                                                       /* ..yes, a partial result should be created    */
+                newcc += 2;                                         /* Indicate partial results in cc               */
+                SET_SF_RM( softfloat_round_minMag );                /* Repeat calculation of quotient/remainder     */
+                                                                    /* ..with rounding toward zero                  */
+                quo = f64_div(op1, op2);                            /* calculate precise quotient                   */
+                quo = f64_roundToInt(quo, softfloat_round_minMag, TRUE);    /* Partial result, round towards zero   */
+                quo_save.v = quo.v ^ 0x8000000000000000ULL;         /* Reverse sign of integer quotient             */
+                rem = f64_mulAdd(quo_save, op2, op1);               /* Calculate remainder                          */
+                CLEAR_SF_EXCEPTIONS;                                /* No exceptions or flags on partial results    */
             }
         }
-        else                                                            /* Exception flagged...we have work to do.      */
+        else                                                        /* Exception flagged...we have work to do.      */
         {
-            if (softfloat_exceptionFlags & softfloat_flag_overflow)     /* on oveflow, scale result and set cc=1 or 3   */
-                                                                        /* and recalculate the remainder using a scaled */
-                                                                        /* quotient in 64-bit precision                 */
+            if (ieee_exceptions & FPC_MASK_IMO)                     /* on oveflow, scale result and set cc=1 or 3   */
+                                                                    /* and recalculate the remainder using a scaled */
+                                                                    /* quotient in 128-bit precision                */
+                                                                    /* Note that there is no fractional part to the */
+                                                                    /* quotient when the quotient overflows         */
             {
                 float128_t quo128, intquo128, rem128;
                 float128_t op1128, op2128;
-                newcc += 1;                                         /* Set condition code odd for quotient overflow     */
-                softfloat_roundingMode = softfloat_round_minMag;    /* Repeat calculation of quotient/remainder         */
-                                                                    /* ..with rounding toward zero                      */
-                softfloat_exceptionFlags = 0;                       /* Clear all prior flags                            */
-                quo = f64_div(op1, op2);                            /* calculate precise quotient                       */
-                quo = f64_roundToInt(quo, softfloat_roundingMode, TRUE);    /* Round to integer per m4 rounding mode    */
+
+                newcc += 1;                                         /* Set condition code odd for quotient overflow */
+                                                                    /* Repeat calculation of quotient/remainder     */
+                                                                    /* ..with rounding toward zero                  */
+                SET_SF_RM( softfloat_round_minMag );                /* All calcs herein use round towards zero      */
+                quo = f64_div(op1, op2);                            /* calculate precise quotient                   */
+                quo = f64_roundToInt(quo, softfloat_round_minMag, TRUE);   /* Round to integer per m4 rounding mode */
                 quo = f64_scaledResult(SCALE_FACTOR_ARITH_OFLOW_LONG);
                 op1128 = f64_to_f128(op1);
                 op2128 = f64_to_f128(op2);
-                softfloat_roundingMode = softfloat_round_minMag;
                 quo128 = f128_div(op1128, op2128);
-                quo128.v[0] &= 0xf000000000000000ULL;                   /* truncate to long precision with extended exponent    */
+                quo128.v[0] &= 0xf000000000000000ULL;               /* Truncate significand to BFP Long bit count   */
                 intquo128 = f128_roundToInt(quo128, softfloat_round_minMag, FALSE);
-                intquo128.v[1] ^= 0x8000000000000000ULL;                    /* flip sign of dividend for fused multiply-add */
-                rem128 = f128_mulAdd(intquo128, op2128, op1128);             /* rem = (-intquo * divisor) + dividend        */
-                intquo128.v[1] ^= 0x8000000000000000ULL;                    /* Restore sign of dividend                     */
-                softfloat_exceptionFlags = 0;                           /* clear any prior Softfloat flags              */
-                softfloat_roundingMode = softfloat_round_minMag;        /* round remainder toward zero (but remainder   */
-                rem = f128_to_f64(rem128);                              /* should be exact!?)                           */
-                if (rem.v & 0x7fffffffffffffffULL)                      /* non-zero remainder?                          */
-                    newcc += 2;                                         /* yes, indicate partial results                */
+                intquo128.v[1] ^= 0x8000000000000000ULL;            /* flip sign of dividend for fused multiply-add */
+                rem128 = f128_mulAdd(intquo128, op2128, op1128);    /* rem = (-intquo * divisor) + dividend         */
+                ieee_exceptions = 0;                                /* clear any prior IEEE exceptions              */
+                                                                    /* round remainder toward zero (but remainder   */
+                rem = f128_to_f64(rem128);                          /* should be exact!?)                           */
+                if (rem.v & 0x7fffffffffffffffULL)                  /* non-zero remainder?                          */
+                    newcc += 2;                                     /* yes, indicate partial results                */
+            }
 
-            }
-            else if (softfloat_exceptionFlags & (softfloat_flag_tiny | softfloat_flag_underflow))
-            {
-                /* Inexact and underflow'ed remainder issues and traps are handled by code at the end of Divide To Integer  */
-                /* But because this is the only situation where the remainder might need scaling, we will do it here        */
-                if (regs->fpc & FPC_MASK_IMU)
-                    rem = f64_scaledResult(SCALE_FACTOR_ARITH_UFLOW_LONG);
-            }
+            /* Inexact and underflow'ed remainder issues and traps are handled by code at the end of Divide To      */
+            /* Integer.  But because this is the only situation where the remainder might need scaling, we          */
+            /* will do it here                                                                                      */
+            else if ( ieee_exceptions & FPC_MASK_IMU & regs->fpc )  /* Are scaled results needed?                   */
+                rem = f64_scaledResult(SCALE_FACTOR_ARITH_UFLOW_LONG);   /* ..yes, scale them.                      */
         }
     }
 
@@ -4665,31 +4568,39 @@ DEF_INST(divide_integer_bfp_long_reg)
     /* propagation rules shown in Table 19-21                                           */
     /* ******************************************************************************** */
     /* ******* NEXT FOUR TESTS, ALL GROUP 2 TESTS, MUST REMAIN IN SEQUENCE *******      */
-    else if (op1_data_class & (float_class_neg_signaling_nan | float_class_pos_signaling_nan))   /* first case: op1 an SNaN?  */
-    {
+
+                                                            /* first test: is operand 1 an SNaN?                    */
+    else if (op1_data_class & (float_class_neg_signaling_nan | float_class_pos_signaling_nan))
+    {                                                       /* ..yes, make it a QNaN and use it as both results     */
         quo = op1;
         FLOAT64_MAKE_QNAN(quo);
         rem = quo;
-        softfloat_exceptionFlags |= softfloat_flag_invalid;
-        newcc = 1;                                              /* Any NaN returns cc=1         */
+        ieee_exceptions = FPC_MASK_IMI;                    /* SNaN operand always triggers IEEE Invalid exception  */
+        newcc = 1;                                         /* Any NaN returns cc=1                                 */
     }
-    else if (op2_data_class & (float_class_neg_signaling_nan | float_class_pos_signaling_nan))   /* second case: op2 an SNaN?  */
+
+                                                            /* second test: is operand 2 an SNaN?                   */
+    else if (op2_data_class & (float_class_neg_signaling_nan | float_class_pos_signaling_nan))
     {
         quo = op2;
         FLOAT64_MAKE_QNAN(quo);
         rem = quo;
-        softfloat_exceptionFlags |= softfloat_flag_invalid;
-        newcc = 1;                                              /* Any NaN returns cc=1         */
+        ieee_exceptions = FPC_MASK_IMI;                     /* SNaN operand always triggers IEEE Invalid exception  */
+        newcc = 1;                                          /* Any NaN returns cc=1                                 */
     }
-    else if (op1_data_class & (float_class_neg_quiet_nan | float_class_pos_quiet_nan))          /* third case: op1 a QNaN?  */
+
+                                                            /* third test: is operand 1 a QNaN?                     */
+    else if (op1_data_class & (float_class_neg_quiet_nan | float_class_pos_quiet_nan))
     {
         rem = quo = op1;
-        newcc = 1;                                              /* Any NaN returns cc=1         */
+        newcc = 1;                                          /* Any NaN returns cc=1                                 */
     }
-    else if (op2_data_class & (float_class_neg_quiet_nan | float_class_pos_quiet_nan))          /* fourth case: op2 a QNaN?  */
+
+                                                            /* fourh test: is operand 2 a QNaN?                     */
+    else if (op2_data_class & (float_class_neg_quiet_nan | float_class_pos_quiet_nan))
     {
         rem = quo = op2;
-        newcc = 1;                                              /* Any NaN returns cc=1         */
+        newcc = 1;                                          /* Any NaN returns cc=1                                 */
     }
     /* END OF FOUR TESTS THAT MUST REMAIN IN SEQUENCE                                   */
 
@@ -4699,11 +4610,13 @@ DEF_INST(divide_integer_bfp_long_reg)
     /* If operand 1 is an infinity OR operand two is a zero, and none of the above      */
     /* conditions are met, i.e., neither operand is a NaN, return a default NaN         */
     /* ******************************************************************************** */
-    else if ((op1_data_class & (float_class_neg_infinity | float_class_pos_infinity))  /* Operand 1 an infinity?  */
-        || (op2_data_class & (float_class_neg_zero | float_class_pos_zero)))           /* ..or operand 2 a zero?  */
-    {                                                                                   /* ..yes, return DNaN, raise invalid  */
-        quo = rem = float64_default_qnan;
-        softfloat_exceptionFlags |= softfloat_flag_invalid;
+
+                                                            /* Operand 1 an infinity or operand 2 a zero?           */
+    else if ((op1_data_class & (float_class_neg_infinity | float_class_pos_infinity))
+        || (op2_data_class & (float_class_neg_zero | float_class_pos_zero)))
+    {                                                       /* ..yes, return DNaN, raise invalid                    */
+        quo.v = rem.v = FLOAT64_DEFAULT_QNAN;
+        ieee_exceptions = FPC_MASK_IMI;
         newcc = 1;
     }
     /* ABOVE TEST MUST IMMEDIATELY FOLLOW ALL FOUR NAN TESTS                            */
@@ -4721,19 +4634,42 @@ DEF_INST(divide_integer_bfp_long_reg)
     /* ******************************************************************************** */
     else
     {
-        rem = op1;                                          /* remainder is operand 1                       */
-        quo.v = (op1.v ^ op2.v) & 0x8000000000000000ULL;    /* quotient zero, sign is exclusive or of operand signs   */
+        rem = op1;                                          /* remainder is operand 1                               */
+        quo.v = (op1.v ^ op2.v) & 0x8000000000000000ULL;    /* quotient zero, sign is exclusive or of operand signs */
         newcc = 0;
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                           /* IEEE Invalid Exception raised and trappable?         */
-    ieee_trap_conds = ieee_exception_test_oux(regs);
-    /* *********** Underflow flag means remainder underflowed.  It has already been scaled if necessary             */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
 
-    regs->psw.cc = newcc;
     PUT_FLOAT64_NOCC(rem, r1, regs);
     PUT_FLOAT64_NOCC(quo, r3, regs);
-    ieee_cond_trap(regs, ieee_trap_conds);
+    regs->psw.cc = newcc;
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+                                                            /* Underflow flag means remainder underflowed.  It has  */
+                                                            /* ...already been scaled if necessary                  */
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+        dxc_save = DXC_IEEE_UF_EXACT;                       /* ..yes, set dxc code for trap                         */
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)    /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+
     return;
 
 }
@@ -4746,19 +4682,29 @@ DEF_INST(divide_integer_bfp_short_reg)
     int r1, r2, r3;
     BYTE m4, newcc;
     float32_t op1, op2;
-    float32_t rem, quo;
-    U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
+    float32_t rem, quo, quo_save;
+    U32 ieee_exceptions = 0;                                /* start out with no traps detected                     */
+    U32 ieee_quo_overflow = 0;                              /* presume no quotient overflow with finite operands    */
+    U32 ieee_incremented = 0;
     U32 op1_data_class, op2_data_class;                     /* Saved class of operands in same form as tested by    */
                                                             /* Test Data Class instruction                          */
-    RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
+    int dxc_save = 0;                                       /* saved data exception code for IEEE Data Interrupt    */
+    BYTE sf_rounding_mode;                                  /* SoftFloat rounding mode code                         */
+
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
+
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
-    BFPRM_CHECK(m4, regs);                                  /* Ensure valid rounding mask value                     */
-    GET_FLOAT32_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
+
+    BFPRM_CHECK(m4, regs);                                  /* Ensure valid rounding modifier value                 */
+
+    GET_FLOAT32_OP(op1, r1, regs);                          /* Get operand 1 value                                  */
+    GET_FLOAT32_OP(op2, r2, regs);                          /* Get operand 2 value                                  */
     op1_data_class = float32_class(op1);                    /* Determine and save op1 data class                    */
     op2_data_class = float32_class(op2);                    /* Determine and save op2 data class                    */
-    softfloat_exceptionFlags = 0;                           /* Clear all Softfloat exception flags                  */
+    CLEAR_SF_EXCEPTIONS;                                    /* Clear all Softfloat exception flags                  */
 
     /* ******************************************************************************** */
     /* Following if / else if / else implements a decision tree based on SA-22-7832-10  */
@@ -4781,79 +4727,81 @@ DEF_INST(divide_integer_bfp_short_reg)
     /* Group 1: Tests for cases with finite non-zeros for both operands.  This is seen  */
     /* as the most frequent case, and should therefore be tested first.                 */
     /* ******************************************************************************** */
-    if ((op1_data_class & (float_class_neg_normal | float_class_pos_normal          /* Both operands finite numbers?*/
+
+                                                                    /* Both operands finite numbers?                */
+     if ((op1_data_class & (float_class_neg_normal | float_class_pos_normal
         | float_class_neg_subnormal | float_class_pos_subnormal))
         && (op2_data_class & (float_class_neg_normal | float_class_pos_normal
             | float_class_neg_subnormal | float_class_pos_subnormal)))
-    {                                                                               /* ..yes, we can do division    */
+    {                                                               /* ..yes, we can do division                    */
 
-        newcc = 0;                                        /* Initial cc set to zero  */
+        newcc = 0;                                                  /* Initial cc set to zero                       */
 
-        SET_SF_RM_FROM_M3(m4);
-        quo = f32_div(op1, op2);                                    /* calculate precise quotient                       */
-        quo = f32_roundToInt(quo, softfloat_roundingMode, TRUE);    /* Round to integer per m4 rounding mode            */
-        softfloat_exceptionFlags &= softfloat_flag_overflow;        /* Quotient only cares about overflow               */
-        SET_SF_RM_FROM_FPC;                                         /* Set rounding mode from FPC for final remainder   */
-        quo.v ^= 0x80000000;                                        /* Reverse sign of integer quotient                 */
-        rem = f32_mulAdd(quo, op2, op1);                            /* Calculate remainder                              */
-        quo.v ^= 0x80000000;                                        /* Return sign of integer quotient to original value*/
-        if (!(rem.v & 0x7fffffff))                                  /* Is remainder zero?                               */
-            rem.v = (op1.v & 0x80000000) | (rem.v & 0x7fffffff);    /* ..yes, ensure remainder sign matches dividend    */
+        sf_rounding_mode = GET_SF_RM_FROM_MODIFIER(m4);             /* Convert modifier to SoftFloat Rounding mode  */
+        SET_SF_RM( sf_rounding_mode );                              /* Set SoftFloat rounding mode                  */
+        quo = f32_div(op1, op2);                                    /* calculate precise quotient                   */
+        quo = f32_roundToInt(quo, sf_rounding_mode, TRUE);          /* Round to integer per m4 rounding mode        */
+        SET_IEEE_EXCEPTIONS(ieee_quo_overflow, ieee_incremented, regs->fpc);  /* Get quotient creation exceptions   */
+        ieee_quo_overflow &= FPC_MASK_IMO;                          /* Save overflow from quotient 1st division     */
+        CLEAR_SF_EXCEPTIONS;                                        /* Clear other quotient calculation flags       */
+        SET_SF_RM( GET_SF_RM_FROM_FPC );                            /* Set final remainder rounding mode from FPC   */
+        quo_save.v = quo.v ^ 0x80000000;                            /* Reverse sign of integer quotient             */
+        rem = f32_mulAdd(quo_save, op2, op1);                       /* Calculate remainder                          */
+        if (!(rem.v & 0x7fffffff))                                  /* Is remainder zero?                           */
+            rem.v = (op1.v & 0x80000000) | (rem.v & 0x7fffffff);    /* ..yes, make remainder sign match dividend    */
 
-        if (!softfloat_exceptionFlags)                              /* If no exceptions, check for partial results      */
+        SET_IEEE_EXCEPTIONS(ieee_exceptions, ieee_incremented, regs->fpc);  /* Get exceptions                       */
+        ieee_exceptions |= ieee_quo_overflow;                       /* Include any quotient overflow in exceptions  */
+
+        if (!ieee_exceptions)                                       /* If no exceptions, check for partial results  */
         {
-            if (((quo.v & 0x7fffffff) > 0x4B800000) && (rem.v & 0x7fffffff))  /* Quotient > 2^24th & rem <>0?          */
-            {
-                newcc += 2;                                         /* ..yes, indicate partial results in cc            */
-                softfloat_roundingMode = softfloat_round_minMag;    /* Repeat calculation of quotient/remainder         */
-                                                                    /* ..with rounding toward zero                      */
-                softfloat_exceptionFlags = 0;                       /* Clear all prior flags                            */
-                quo = f32_div(op1, op2);                            /* calculate precise quotient                       */
-                quo = f32_roundToInt(quo, softfloat_roundingMode, TRUE);    /* Round to integer per m4 rounding mode    */
-                quo.v ^= 0x80000000;                                /* Reverse sign of integer quotient                 */
-                rem = f32_mulAdd(quo, op2, op1);                    /* Calculate remainder                              */
-                quo.v ^= 0x80000000;                                /* Return sign of integer quotient to original value*/
-                softfloat_exceptionFlags = 0;                       /* No exceptions or flags on partial results        */
+            if (((quo.v & 0x7fffffff) > 0x4B800000) && (rem.v & 0x7fffffff))  /* Quotient > 2^24th & rem <>0?       */
+            {                                                       /* ..yes, a partial result should be created    */
+                newcc += 2;                                         /* Indicate partial results in cc               */
+                SET_SF_RM( softfloat_round_minMag );                /* Repeat calculation of quotient/remainder     */
+                                                                    /* ..with rounding toward zero                  */
+                quo = f32_div(op1, op2);                            /* calculate precise quotient                   */
+                quo = f32_roundToInt(quo, softfloat_round_minMag, TRUE);    /* Partial result, round towards zero   */
+                quo_save.v = quo.v ^ 0x80000000;                    /* Reverse sign of integer quotient             */
+                rem = f32_mulAdd(quo_save, op2, op1);               /* Calculate remainder                          */
+                CLEAR_SF_EXCEPTIONS;                                /* No exceptions or flags on partial results    */
             }
         }
-        else                                                            /* Exception flagged...we have work to do.      */
+        else                                                        /* Exception flagged...we have work to do.      */
         {
-            if (softfloat_exceptionFlags & softfloat_flag_overflow)     /* on oveflow, scale result and set cc=1 or 3   */
-                                                                        /* and recalculate the remainder using a scaled */
-                                                                        /* quotient in 64-bit precision                 */
-                                                                        /* Note that there is no fractional part to the */
-                                                                        /* quotient when the quotient overflows         */
+            if (ieee_exceptions & FPC_MASK_IMO)                     /* on overflow, scale result and set cc=1 or 3  */
+                                                                    /* and recalculate the remainder using a scaled */
+                                                                    /* quotient in 64-bit precision                 */
+                                                                    /* Note that there is no fractional part to the */
+                                                                    /* quotient when the quotient overflows         */
             {
                 float64_t quo64, intquo64, rem64;
                 float64_t op164, op264;
 
-                newcc += 1;                                         /* Set condition code odd for quotient overflow     */
-                softfloat_roundingMode = softfloat_round_minMag;    /* Repeat calculation of quotient/remainder         */
-                                                                    /* ..with rounding toward zero                      */
-                softfloat_exceptionFlags = 0;                       /* Clear all prior flags                            */
-                quo = f32_div(op1, op2);                            /* calculate precise quotient                       */
-                quo = f32_roundToInt(quo, softfloat_roundingMode, TRUE); /* Partial result, round to zero               */
-                quo = f32_scaledResult(SCALE_FACTOR_ARITH_OFLOW_SHORT);  /* Scale quotient                              */
+                newcc += 1;                                         /* Set condition code odd for quotient overflow */
+                                                                    /* Repeat calculation of quotient/remainder     */
+                                                                    /* ..with rounding toward zero                  */
+                SET_SF_RM( softfloat_round_minMag );                /* All calcs herein use round towards zero      */
+                quo = f32_div(op1, op2);                            /* calculate precise quotient                   */
+                quo = f32_roundToInt(quo, softfloat_round_minMag, TRUE); /* Partial result, round towards zero      */
+                quo = f32_scaledResult(SCALE_FACTOR_ARITH_OFLOW_SHORT);  /* Scale quotient                          */
                 op164 = f32_to_f64(op1);
                 op264 = f32_to_f64(op2);
-                softfloat_roundingMode = softfloat_round_minMag;
                 quo64 = f64_div(op164, op264);
-                intquo64.v = quo64.v & 0xFFFFFFFFE0000000ULL;           /* Truncate significand to BFP Short bits       */
-                intquo64.v ^= 0x8000000000000000ULL;                    /* flip sign of dividend for fused multiply-add */
-                rem64 = f64_mulAdd(intquo64, op264, op164);             /* -rem = intquo * divisor + (-dividend)        */
-                intquo64.v ^= 0x8000000000000000ULL;                    /* Restore sign of dividend                     */
-                softfloat_exceptionFlags = 0;                           /* clear any prior Softfloat flags              */
-                rem = f64_to_f32(rem64);                                /* should be exact!?)                           */
-                if (rem.v & 0x7fffffff)                                 /* non-zero remainder?                          */
-                    newcc += 2;                                         /* yes, indicate partial results                */
+                intquo64.v = quo64.v & 0xFFFFFFFFE0000000ULL;       /* Truncate significand to BFP Short bit count  */
+                intquo64.v ^= 0x8000000000000000ULL;                /* flip sign of dividend for fused multiply-add */
+                rem64 = f64_mulAdd(intquo64, op264, op164);         /* -rem = intquo * divisor + (-dividend)        */
+                ieee_exceptions = 0;                                /* clear any prior IEEE exceptions              */
+                rem = f64_to_f32(rem64);                            /* should be exact!?)                           */
+                if (rem.v & 0x7fffffff)                             /* non-zero remainder?                          */
+                    newcc += 2;                                     /* yes, indicate partial results                */
             }
-            else if (softfloat_exceptionFlags & (softfloat_flag_tiny | softfloat_flag_underflow))
-            {
-                /* Inexact and underflow'ed remainder issues and traps are handled by code at the end of Divide To Integer  */
-                /* But because this is the only situation where the remainder might need scaling, we will do it here        */
-                if (regs->fpc & FPC_MASK_IMU)
-                    rem = f32_scaledResult(SCALE_FACTOR_ARITH_UFLOW_SHORT);
-            }
+
+            /* Inexact and underflow'ed remainder issues and traps are handled by code at the end of Divide To      */
+            /* Integer.  But because this is the only situation where the remainder might need scaling, we          */
+            /* will do it here                                                                                      */
+            else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Are scaled results needed?                   */
+                rem = f32_scaledResult(SCALE_FACTOR_ARITH_UFLOW_SHORT);   /* ..yes, scale them.                     */
         }
     }
 
@@ -4863,33 +4811,40 @@ DEF_INST(divide_integer_bfp_short_reg)
     /* propagation rules shown in Table 19-21                                           */
     /* ******************************************************************************** */
     /* ******* NEXT FOUR TESTS, ALL GROUP 2 TESTS, MUST REMAIN IN SEQUENCE *******      */
-    else if (op1_data_class & (float_class_neg_signaling_nan | float_class_pos_signaling_nan))   /* first case: op1 an SNaN?  */
-    {
-        quo = op1;
-        FLOAT32_MAKE_QNAN(quo);
-        rem = quo;
-        softfloat_exceptionFlags |= softfloat_flag_invalid;
-        newcc = 1;                                              /* Any NaN returns cc=1         */
-    }
-    else if (op2_data_class & (float_class_neg_signaling_nan | float_class_pos_signaling_nan))   /* second case: op2 an SNaN?  */
-    {
-        quo = op2;
-        FLOAT32_MAKE_QNAN(quo);
-        rem = quo;
-        softfloat_exceptionFlags |= softfloat_flag_invalid;
-        newcc = 1;                                              /* Any NaN returns cc=1         */
-    }
-    else if (op1_data_class & (float_class_neg_quiet_nan | float_class_pos_quiet_nan))          /* third case: op1 a QNaN?  */
-    {
-        rem = quo = op1;
-        newcc = 1;                                              /* Any NaN returns cc=1         */
-    }
-    else if (op2_data_class & (float_class_neg_quiet_nan | float_class_pos_quiet_nan))          /* fourth case: op2 a QNaN?  */
-    {
-        rem = quo = op2;
-        newcc = 1;                                              /* Any NaN returns cc=1         */
-    }
-    /* END OF FOUR TESTS THAT MUST REMAIN IN SEQUENCE                                   */
+                                                            /* first test: is operand 1 an SNaN?                    */
+     else if (op1_data_class & (float_class_neg_signaling_nan | float_class_pos_signaling_nan))
+     {                                                      /* ..yes, make it a QNaN and use it as both results     */
+         quo = op1;
+         FLOAT32_MAKE_QNAN(quo);
+         rem = quo;
+         ieee_exceptions = FPC_MASK_IMI;                    /* SNaN operand always triggers IEEE Invalid exception  */
+         newcc = 1;                                         /* Any NaN returns cc=1                                 */
+     }
+
+                                                            /* second test: is operand 2 an SNaN?                   */
+     else if (op2_data_class & (float_class_neg_signaling_nan | float_class_pos_signaling_nan))
+     {                                                      /* ..yes, make it a QNaN and use it as both results     */
+         quo = op2;
+         FLOAT32_MAKE_QNAN(quo);
+         rem = quo;
+         ieee_exceptions = FPC_MASK_IMI;                    /* SNaN operand always triggers IEEE Invalid exception  */
+         newcc = 1;                                         /* Any NaN returns cc=1                                 */
+     }
+
+                                                            /* third test: is operand 1 a QNaN?                     */
+     else if (op1_data_class & (float_class_neg_quiet_nan | float_class_pos_quiet_nan))
+     {
+         rem = quo = op1;
+         newcc = 1;                                         /* Any NaN returns cc=1                                 */
+     }
+
+                                                            /* fourth test: is operand 2 a QNaN?                    */
+     else if (op2_data_class & (float_class_neg_quiet_nan | float_class_pos_quiet_nan))
+     {
+         rem = quo = op2;
+         newcc = 1;                                         /* Any NaN returns cc=1                                 */
+     }
+     /* END OF FOUR TESTS THAT MUST REMAIN IN SEQUENCE                                   */
 
     /* ******************************************************************************** */
     /* NEXT TEST MUST FOLLOW ALL FOUR NAN TESTS                                         */
@@ -4897,11 +4852,13 @@ DEF_INST(divide_integer_bfp_short_reg)
     /* If operand 1 is an infinity OR operand two is a zero, and none of the above      */
     /* conditions are met, i.e., neither operand is a NaN, return a default NaN         */
     /* ******************************************************************************** */
-    else if ((op1_data_class & (float_class_neg_infinity | float_class_pos_infinity))  /* Operand 1 an infinity?  */
-        || (op2_data_class & (float_class_neg_zero | float_class_pos_zero)))           /* ..or operand 2 a zero?  */
-    {                                                                                   /* ..yes, return DNaN, raise invalid  */
-        quo = rem = float32_default_qnan;
-        softfloat_exceptionFlags |= softfloat_flag_invalid;
+
+                                                                /* Operand 1 an infinity or operand 2 a zero?           */
+    else if ((op1_data_class & (float_class_neg_infinity | float_class_pos_infinity))
+        || (op2_data_class & (float_class_neg_zero | float_class_pos_zero)))
+    {                                                           /* ..yes, return DNaN, raise invalid                    */
+        quo.v = rem.v = FLOAT32_DEFAULT_QNAN;
+        ieee_exceptions = FPC_MASK_IMI;
         newcc = 1;
     }
     /* ABOVE TEST MUST IMMEDIATELY FOLLOW ALL FOUR NAN TESTS                            */
@@ -4917,21 +4874,44 @@ DEF_INST(divide_integer_bfp_short_reg)
     /* and the quotient is zero with a signed determined by the signs of the operands.  */
     /* Exclusive Or sets the sign correctly.                                            */
     /* ******************************************************************************** */
-    else 
+    else
     {
-        rem = op1;                                          /* remainder is operand 1                       */
-        quo.v = (op1.v ^ op2.v) & 0x80000000;               /* quotient zero, sign is exclusive or of operand signs   */
+        rem = op1;                                          /* remainder is operand 1                               */
+        quo.v = (op1.v ^ op2.v) & 0x80000000;               /* quotient zero, sign is exclusive or of operand signs */
         newcc = 0;
     }
 
-    IEEE_EXCEPTION_TRAP_XI(regs);                           /* IEEE Invalid Exception raised and trappable?         */
-    ieee_trap_conds = ieee_exception_test_oux(regs);
-    /* *********** Underflow flag means remainder underflowed.  It has already been scaled if necessary             */
+    if (ieee_exceptions & FPC_MASK_IMI & regs->fpc)         /* Trappable invalid operation (Xi)?                    */
+        ieee_trap(regs, DXC_IEEE_INVALID_OP);               /* ..yes, suppress result, interrupt, no return         */
 
-    regs->psw.cc = newcc;
     PUT_FLOAT32_NOCC(rem, r1, regs);
     PUT_FLOAT32_NOCC(quo, r3, regs);
-    ieee_cond_trap(regs, ieee_trap_conds);
+    regs->psw.cc = newcc;
+
+    if (!ieee_exceptions)                                   /* Any IEEE Exceptions?                                 */
+        return;                                             /* ..no,  return to the caller                          */
+
+                                                            /* Underflow flag means remainder underflowed.  It has  */
+                                                            /* ...already been scaled if necessary                  */
+    else if (ieee_exceptions & FPC_MASK_IMU & regs->fpc)    /* Trappable underflow?                                 */
+        dxc_save = DXC_IEEE_UF_EXACT;                       /* ..yes, set dxc code for trap                         */
+
+    else if (ieee_exceptions & FPC_MASK_IMX & regs->fpc)    /* Trappable inexact  ?                                 */
+        dxc_save = DXC_IEEE_INEXACT_TRUNC;                  /* ..yes, set dxc code for trap                         */
+
+    if (dxc_save)                                           /* Any data exception code set?                         */
+    {                                                       /* ..yes, add inexact and incremented to dxc, update    */
+                                                            /* ...fpc flags with any non-trappable exceptions that  */
+                                                            /* ...were detected, and trap.  No return               */
+        dxc_save |= (ieee_exceptions >> 24) | ieee_incremented & DXC_IEEE_INEXACT_INCR;
+        regs->fpc |= (ieee_exceptions >> 8) & ((~dxc_save) << 16) & FPC_FLAG;
+        ieee_trap(regs, dxc_save);
+    }
+
+    regs->fpc |= (ieee_exceptions >> 8) & FPC_FLAG;         /* Update fpc flags with exceptions                     */
+                                                            /* ..Inexact and incremented are not reported           */
+                                                            /*...for a non-trap result                              */
+
     return;
 
 }

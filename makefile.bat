@@ -313,18 +313,6 @@
 ::-----------------------------------------------------------------------------
 
 :vs150
-
-  if /i "%targ_arch%" == "all" goto :multi_build
-
-  call :set_host_arch
-  
-  if %rc% NEQ 0 (set "rc=1"
-                 %exit%)			 
-				 
-  call "%VSTOOLSDIR%..\..\VC\Auxiliary\Build\vcvarsall.bat"  %host_arch%%targ_arch%	
-  
-  goto :nmake
-
 :vs140
 :vs120
 :vs110
@@ -410,7 +398,7 @@
   set "vs2005=80"
 
 :try_vs150
-
+echo Trying VS 2017 %VS150COMNTOOLS%
   if "%VS150COMNTOOLS%" == "" goto :try_vs140
   if exist "%VS150COMNTOOLS%..\..\VC\Auxiliary\Build\vcvarsall.bat"  (
      set "VSTOOLSDIR=%VS150COMNTOOLS%"
@@ -419,10 +407,10 @@
      goto :got_vstudio
   )
 
-  set "VS150COMNTOOLS="  
-  
-:try_vs140
+  set "VS150COMNTOOLS="
 
+:try_vs140
+echo Trying VS 2015
   if "%VS140COMNTOOLS%" == "" goto :try_vs120
   if exist "%VS140COMNTOOLS%..\..\VC\vcvarsall.bat"  (
      set "VSTOOLSDIR=%VS140COMNTOOLS%"
@@ -434,7 +422,7 @@
   set "VS140COMNTOOLS="
 
 :try_vs120
-
+echo Trying VS 2013
   if "%VS120COMNTOOLS%" == "" goto :try_vs110
   if exist "%VS120COMNTOOLS%..\..\VC\vcvarsall.bat"  (
      set "VSTOOLSDIR=%VS120COMNTOOLS%"
@@ -446,7 +434,7 @@
   set "VS120COMNTOOLS="
 
 :try_vs110
-
+echo Trying VS 2012
   if "%VS110COMNTOOLS%" == "" goto :try_vs100
   if exist "%VS110COMNTOOLS%..\..\VC\vcvarsall.bat" (
      set "VSTOOLSDIR=%VS110COMNTOOLS%"
@@ -458,6 +446,7 @@
   set "VS110COMNTOOLS="
 
 :try_vs100
+echo Trying VS 2010
 
   if "%VS100COMNTOOLS%" == "" goto :try_vs90
   if exist "%VS100COMNTOOLS%..\..\VC\vcvarsall.bat" (
@@ -470,6 +459,7 @@
   set "VS100COMNTOOLS="
 
 :try_vs90
+echo Trying VS 2008
 
   if "%VS90COMNTOOLS%" == "" goto :try_vs80
   if exist "%VS90COMNTOOLS%..\..\VC\vcvarsall.bat" (
@@ -482,6 +472,7 @@
   set "VS90COMNTOOLS="
 
 :try_vs80
+echo Trying VS 2005
 
   if "%VS80COMNTOOLS%" == "" goto :try_toolkit
   if exist "%VS80COMNTOOLS%..\..\VC\vcvarsall.bat" (
@@ -621,7 +612,6 @@
   :: VS2008/VS2010/VS2012/VS2013/VS2015 multi-config multi-platform parallel build?
 
   if    not "%CFG%"        == ""            %return%
-  if /i     "%build_env%"  == "vs150"       goto :multi_cfg
   if /i     "%build_env%"  == "vs140"       goto :multi_cfg
   if /i     "%build_env%"  == "vs120"       goto :multi_cfg
   if /i     "%build_env%"  == "vs110"       goto :multi_cfg
@@ -658,7 +648,6 @@
   :: VS2008/VS2010/VS2012/VS2013/VS2015 multi-config multi-platform parallel build?
 
   if    not "%targ_arch%"  == ""            goto :set_CPU_etc
-  if /i     "%build_env%"  == "vs150"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs140"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs120"       goto :multi_targ_arch
   if /i     "%build_env%"  == "vs110"       goto :multi_targ_arch
@@ -728,9 +717,6 @@
   if /i not "%host_arch%" == "%targ_arch%" goto :cross
 
   set "host_arch="
-  
-  if exist "%VSTOOLSDIR%..\..\VC\Auxiliary\Build\vcvars32.bat" %return%
-  
   if exist "%VSTOOLSDIR%..\..\VC\bin\vcvars32.bat" %return%
   goto :missing
 
