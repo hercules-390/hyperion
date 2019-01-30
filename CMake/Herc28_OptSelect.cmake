@@ -326,6 +326,24 @@ endif( )
 
 # ----------------------------------------------------------------------
 #
+# Option GIT_CLONE
+#
+# ----------------------------------------------------------------------
+
+# Git protocol to be used by default when cloning external packages and
+# the HTML documentation project.  The git: protocol is the fastest but
+# includes no validation of the source of a clone.  It uses a high port
+# number and is often blocked on company networks.  The https: protocol
+# represents a good compromise.
+
+if( "${GIT_CLONE}" STREQUAL "" )
+    string( TOLOWER "${buildWith_GIT_CLONE}" git_protocol )
+else( )
+    string( TOLOWER "${GIT_CLONE}" git_protocol )
+endif( )
+
+# ----------------------------------------------------------------------
+#
 # Option HET-BZIP2
 #
 # ----------------------------------------------------------------------

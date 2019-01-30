@@ -64,6 +64,7 @@ set( herc_OptionList
             EXTPKG_DIR
             FTHREADS
             GETOPTWRAPPER
+            GIT_CLONE
             HET-BZIP2
             HQA_DIR
             INTERLOCKED-ACCESS-FACILITY-2
@@ -115,14 +116,15 @@ set( help_Sumry_ZLIB                "=yes|no|system  Include/exclude Zlib suppor
 set( help_Sumry_ADD-CFLAGS          "=\"<c flags>\"  provide additional compiler command
                 line options" )
 set( help_Sumry_CUSTOM              "=\"<descr>\"  provide a custom description for this build" )
+set( help_Sumry_GIT_CLONE           "=HTTPS:|git:  specify protocol for git clone operations" )
 set( help_Sumry_MULTI-CPU           "=YES|NO|<number>  maximum CPUs supported, YES=8, NO=1, or a
                 <number> from 1 to 64 on 32-bit systems or 128 on 64-bit systems" )
 set( help_Sumry_OPTIMIZATION        "=YES|NO|\"flags\": enable automatic optimization, or specify
                 c compiler optimization flags in quotes" )
 set( help_Sumry_SETUID-HERCIFC      "=YES|no|<groupname>  Install hercifc as setuid root; allow
                 execution by users in group groupname" )
-set( help_Sumry_WINTARGET           "=WinXP364|WinVista|Win7|Win8|Win10|TARGET  Specify Windows
-                target version for which Hercules should be built" )
+set( help_Sumry_WINTARGET           "=WinXP364|WinVista|Win7|Win8|Win10|dist|TARGET  Specify
+                Windows target version for which Hercules should be built" )
 
 # Alternate directories
 set( help_Sumry_BZIP2_DIR           "=DIR  define alternate BZip2 install directory, absolute
@@ -222,6 +224,8 @@ else( )
     endif( )
 
     set( buildWith_CUSTOM             ""    CACHE INTERNAL "${help_Sumry_CUSTOM}" )
+
+    set( buildWith_GIT_CLONE          "HTTPS:" CACHE INTERNAL "${help_Sumry_GIT_CLONE}" )
 
 
 # if the MULTI-CPU default is set to other than YES, NO, or blank, it must be

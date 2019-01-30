@@ -197,6 +197,22 @@ else( )     # It is a directory.  Make sure we can create a subdirectory in it.
 endif( )
 
 
+# Git protocol to be used by default when cloning external packages and
+# the HTML documentation project.  The git: protocol is the fastest but
+# includes no validation of the source of a clone.  It uses a high port
+# number and is often blocked on company networks.  The https: protocol
+# represents a good compromise.
+
+string( TOLOWER "${GIT_CLONE}" _GIT_CLONE )
+if ( NOT (
+           ("${_GIT_CLONE}" STREQUAL "" )
+        OR ("${_GIT_CLONE}" STREQUAL "https:" )
+        OR ("${_GIT_CLONE}" STREQUAL "git:" ) ) )
+    herc_Save_Error( "Invalid -DGIT_CLONE= value \"${GIT_CLONE}\".  Must be \"https:\" or \"git:\"" )
+endif( )
+unset( _GIT_CLONE )
+
+
 # HET-BZIP2 cannot be YES if BZIP2=NO.
 
 if( "${HET-BZIP2}" STREQUAL "YES" )
