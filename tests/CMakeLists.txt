@@ -25,6 +25,7 @@ set(test_group_names
     051-binary-fp
     052-decimal-fp
     060-crypto
+    070-basic-math
     099-other
     )
 list( SORT test_group_names)
@@ -88,6 +89,8 @@ set(test_names_060-crypto
     zeos
     )
 
+set(test_names_070-basic-math  bim-* )    
+    
 set(test_names_099-other
     agf
     ilc
