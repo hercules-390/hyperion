@@ -202,6 +202,10 @@ static void do_shutdown_now()
     // "Calling termination routines"
     WRMSG( HHC01423, "I" );
 
+#if !defined( _MSVC_ )
+    logger_unredirect();
+#endif
+
     hdl_shut();
 
     // "All termination routines complete"
