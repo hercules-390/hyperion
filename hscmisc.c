@@ -203,7 +203,7 @@ static void do_shutdown_now()
     WRMSG( HHC01423, "I" );
 
 #if !defined( _MSVC_ )
-    logger_unredirect();
+/*  logger_unredirect(); */
 #endif
 
     hdl_shut();
