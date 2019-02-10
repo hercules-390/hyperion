@@ -210,9 +210,12 @@ static void logger_redirect()
 
 DLL_EXPORT void logger_unredirect()
 {
-    /* Restore stdout */
-    dup2(  saved_stdout, STDOUT_FILENO );
-    close( saved_stdout );
+    /* Restore stdout if needed */
+    if ( saved_stdout > 0 )
+    {  
+        dup2(  saved_stdout, STDOUT_FILENO );
+        close( saved_stdout );
+    }    
 }
 
 #endif // !defined( _MSVC_ )
