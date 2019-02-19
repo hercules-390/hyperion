@@ -497,6 +497,10 @@ ifstack = active hadelse ifstack
 ifnest = ifnest + 1
 If active                             /* In nested suppress?         */
    Then active = res = 1
+
+hadelse = 0                 /* status of "have else" has been stacked   */
+                            /* New '*If' means no else yet...           */
+
 return
 
 syntax:
@@ -512,7 +516,7 @@ Select
    When ifnest <= 0
       Then say 'No *If is active.'
    When hadelse
-      Then say '*Else already seen on level' ifnnest '.  Stack:' ifstack
+      Then say '*Else already seen on level' ifnest '.  Stack:' ifstack
    otherwise
       parse var ifstack prevact .   /* Nested if in suppressed code? */
       hadelse = 1
