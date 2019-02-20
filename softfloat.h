@@ -58,7 +58,9 @@ All such modifications placed in the public domain by Stephen R. Orso
 
 /****************************************************************************************/
 /*                                                                                      */
-#define IBM_IEEE            /* Compile Softfloat to be compliant with with IBM IEEE     */
+#ifndef IBM_IEEE            /* softfloat.h being compiled as public header?             */
+#  define IBM_IEEE          /* ..yes, compile Softfloat to be IBM IEEE-compliant        */
+#endif                      /*                                                          */
 /*                                                                                      */
 /****************************************************************************************/
 
@@ -214,6 +216,22 @@ float128_t f128_scaledResult(int_fast16_t);     /* return scaled float128 result
 
 #ifndef IBM_IEEE
 void softfloat_raiseFlags( uint_fast8_t );
+#endif
+
+
+/*----------------------------------------------------------------------------
+| Expose rounding routines for all three precisions in the public header.
+*----------------------------------------------------------------------------*/
+
+/* IBM_IEEE versions of SoftFloat expose the three rounding routines.  The
+   64-bit version is used in ieee.c, and the other two may well be profitably
+   used in emulation of Perform Floating Point Operation (PFPO).             */
+
+#ifdef IBM_IEEE
+float32_t  softfloat_normRoundPackToF32( bool, int_fast16_t, uint_fast32_t );
+float64_t  softfloat_normRoundPackToF64( bool, int_fast16_t, uint_fast64_t );
+float128_t softfloat_normRoundPackToF128(
+     bool, int_fast32_t, uint_fast64_t, uint_fast64_t );
 #endif
 
 /*----------------------------------------------------------------------------
