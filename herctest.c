@@ -3303,6 +3303,8 @@ int win_glob(               /* Windows version of UNIX-like glob()      */
                                 /* ..LocalFree required by FormatMessage    */
             rc++;               /* indicate errors occured                  */
         }
+        dwError = FindClose(hFind);
+
     }
 
     /* append a NULL to the array of string pointers.  Then trim the    */
@@ -3321,8 +3323,35 @@ int win_glob(               /* Windows version of UNIX-like glob()      */
                 sizeof( *paths->gl_pathv ) * paths_alloc );
 
     }
-    paths->gl_pathv[ paths_alloc ] = NULL;
-    FindClose(hFind);
+
+    paths->gl_pathv[ paths->gl_pathc ] = NULL;
+
+    if ( !dwError )
+    {
+        dwError = GetLastError();
+        if ( !(dwError == ERROR_NO_MORE_FILES 
+                || dwError == ERROR_FILE_NOT_FOUND) )
+        {                           /* ..retrieve system error message  */
+                                    /* ..text for the last error code   */
+            FormatMessage(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER
+                        | FORMAT_MESSAGE_FROM_SYSTEM
+                        | FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL,               /* message source; ignored based on flags   */
+                dwError,            /* error code to be formatted               */
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  /* NLS              */
+                (LPTSTR) &msg,      /* allocate buffer, store address here      */
+                0,                  /* buffer size, ignored, buffer allocated   */
+                NULL );             /* No inserts, so no arguments.             */
+
+            fprintf( stderr, "Close of find handle \"%s\" failed with rc=%dll\n",
+                    dir_test_scripts, dwError );
+            fprintf( stderr, "%s", msg );
+
+            LocalFree( (HLOCAL) msg );   /* free error message string       */
+                                /* ..LocalFree required by FormatMessage    */
+        }
+    }
 
     return rc;
 }
