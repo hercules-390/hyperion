@@ -56,10 +56,6 @@ set(test_names_004-storage
     sske390
     )
 
-set(test_names_005-mainsize
-    mainsize
-    )
-
 set(test_names_011-tapeio
     awsbsf
     )
@@ -89,8 +85,8 @@ set(test_names_060-crypto
     zeos
     )
 
-set(test_names_070-basic-math  bim-* )    
-    
+set(test_names_070-basic-math  bim-* )
+
 set(test_names_099-other
     agf
     ilc
