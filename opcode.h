@@ -4592,8 +4592,7 @@ DEF_INST(ecpsvm_prefmach_assist);
 
 /* Instructions in ieee.c */
 #if defined(FEATURE_FPS_EXTENSIONS)
-DEF_INST(convert_bfp_long_to_float_long_reg);
-DEF_INST(convert_bfp_short_to_float_long_reg);
+DEF_INST(convert_bfp_to_float_long_reg);
 DEF_INST(convert_float_long_to_bfp_long_reg);
 DEF_INST(convert_float_long_to_bfp_short_reg);
 #endif /*defined(FEATURE_FPS_EXTENSIONS)*/

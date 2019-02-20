@@ -136,7 +136,6 @@
 #define SOFTFLOAT_FAST_INT64
 #include "softfloat.h"
 
-
 /* Opcode byte 1 value for RXE BFP instructions.                            */
 
 #define OPCODE_BFP_RXE  0xED 
@@ -163,6 +162,24 @@ static const BYTE map_modifier_to_sf_rm[16] = {
                                         /* Modifiers 8 - 15 are invalid                             */
                 0, 0, 0, 0, 0, 0, 0, 0
 };
+
+
+/* Map of IBM instruction modifier rounding mode values to those used by Softfloat.  The Convert    */
+/* HFP to BFP instructions include a rounding mode in the M3 instruction fields and interprets      */
+/* that field slightly differently than other instructions that use a modifier field.               */
+static const BYTE map_modifier_to_sf_rm_h2b[16] = {
+        softfloat_round_minMag,         /* Modifier 0: RZ, round toward zero                        */
+        softfloat_round_near_maxMag,    /* Modifier 1: RNTA, round to nearest, ties away from zero  */
+        0,                              /* Modifier 2: invalid; detected in edits                   */
+        softfloat_round_stickybit,      /* Modifier 3: RFS, round for shorter precision             */
+        softfloat_round_near_even,      /* Modifier 4: RNTE, round to nearest, ties to even value   */
+        softfloat_round_minMag,         /* Modifier 5: RZ, round toward zero (appears twice)        */
+        softfloat_round_max,            /* Modifier 6: RP, round to positive infinity               */
+        softfloat_round_min,            /* Modifier 7: RM, round to negative infinity               */
+                                        /* Modifiers 8 - 15 are invalid                             */
+                0, 0, 0, 0, 0, 0, 0, 0
+};
+
 
 /* Map of IBM FPC Binary Floanting Point rounding mode (BRM) values to those used by Softfloat      */
 /* This table depends on FPS Support instructions to set the BFP rounding mode to only valid values */
@@ -202,7 +219,7 @@ const BYTE map_valid_modifier_values_nofpef[16] = {
         1,     /* Modifier 0: Use FPC BFP Rounding Mode     */
         1,     /* Modifier 1: RNTA                          */
         0,     /* Modifier 2: invalid                       */
-        1,     /* Modifier 3: invalid (is RFS with FPEF)    */
+        0,     /* Modifier 3: invalid (is RFS with FPEF)    */
         1,     /* Modifier 4: RNTE                          */
         1,     /* Modifier 5: RZ                            */
         1,     /* Modifier 6: RP                            */
@@ -212,10 +229,27 @@ const BYTE map_valid_modifier_values_nofpef[16] = {
                                                 };
 
 
+/* Symbolic definitions for the rounding modifier in the M3 field of the Convert HFP    */
+/* to BFP instructions.  Instruction emulation uses the rounding mode to determine the  */
+/* result on overflow; some modes return +/-infinity, while others return +/-Nmax.      */
+#define TBEDR_RM_RZ0                    0
+#define TBEDR_RM_RNTA                   1
+#define TBEDR_RM_RFS                    3
+#define TBEDR_RM_RNTE                   4
+#define TBEDR_RM_RZ                     5
+#define TBEDR_RM_RP                     6
+#define TBEDR_RM_RM                     7
+
+
 /* Macro that returns true (0x04) when the IEEE Inexact Exception Control bit in the    */
 /* M4 field of an instruction is one.  Other bits are ignored.                          */
 #define SUPPRESS_INEXACT(_m4)  (_m4 & 0x04)
 
+/* Exponent and characteristic bias factors.  Used in Convert BFP to HFP and in Convert */
+/* HFP to BFP.  Note that all HFP precisions use the same characteristic bias: 64.      */
+#define BFP_SHORT_EXPONENT_BIAS          127
+#define BFP_LONG_EXPONENT_BIAS           1023
+#define HFP_CHARACTERISTIC_BIAS          64
 
 /* Scaling factors when used when trappable overflow or underflow exceptions occur      */
 /* Factors taken from Figure 19-8 (part 2) on page 19-9 of SA22-7832-10.                */
@@ -444,21 +478,6 @@ static INLINE U32 float32_class( float32_t op )
 /* ****           End of Softfloat architecture-dependent code                               **** */
 
 
-
-struct lbfp {
-    int sign;
-    int exp;
-    U64 fract;
-    double v;
-};
-struct sbfp {
-    int sign;
-    int exp;
-    int fract;
-    float v;
-};
-
-
 #endif  /* !defined(_IEEE_NONARCHDEP_) */
 /* ************************************************************************* */
 
@@ -473,12 +492,12 @@ struct sbfp {
 #undef BFPRM_CHECK
 #if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)
 #define BFPRM_CHECK(_x,_regs)                                                           \
-        {if (!map_valid_modifier_values_fpef[(0x7)])                                    \
+        {if (!map_valid_modifier_values_fpef[(_x)])                                    \
             {regs->program_interrupt(_regs, PGM_SPECIFICATION_EXCEPTION);}}
 
 #else
 #define BFPRM_CHECK(_x,_regs)                                                           \
-        {if ( !map_valid_modifier_values_nofpef[(0x7)])                                 \
+        {if ( !map_valid_modifier_values_nofpef[(_x)])                                 \
             {regs->program_interrupt(_regs, PGM_SPECIFICATION_EXCEPTION);}}
 
 #endif  /* if defined(FEATURE_FLOATING_POINT_EXTENSION_FACILITY)  */
@@ -564,363 +583,94 @@ static INLINE void ARCH_DEP(put_float32)( float32_t *op, U32 *fpr )
 /*           'SoftFloat' IEEE Binary Floating Point package                  */
 /*****************************************************************************/
 
-#if !defined(_IEEE_NONARCHDEP_)
-
-enum
-{
-    FPV_NAN          =  0,
-    FPV_INFINITE     =  1,
-    FPV_ZERO         =  2,
-    FPV_SUBNORMAL    =  3,
-    FPV_NORMAL       =  4
-};
-
-/*
- * Classify emulated fp values
- */
-static int lbfpclassify(struct lbfp *op)
-{
-    if (op->exp == 0) {
-        if (op->fract == 0)
-            return FPV_ZERO;
-        else
-            return FPV_SUBNORMAL;
-    } else if (op->exp == 0x7FF) {
-        if (op->fract == 0)
-            return FPV_INFINITE;
-        else
-            return FPV_NAN;
-    } else {
-        return FPV_NORMAL;
-    }
-}
-static int sbfpclassify(struct sbfp *op)
-{
-    if (op->exp == 0) {
-        if (op->fract == 0)
-            return FPV_ZERO;
-        else
-            return FPV_SUBNORMAL;
-    } else if (op->exp == 0xFF) {
-        if (op->fract == 0)
-            return FPV_INFINITE;
-        else
-            return FPV_NAN;
-    } else {
-        return FPV_NORMAL;
-    }
-}
-/*
- * Get/fetch binary float from registers/memory
- */
-static void get_lbfp(struct lbfp *op, U32 *fpr)
-{
-    op->sign = (fpr[0] & 0x80000000) != 0;
-    op->exp = (fpr[0] & 0x7FF00000) >> 20;
-    op->fract = (((U64)fpr[0] & 0x000FFFFF) << 32) | fpr[1];
-    //logmsg("lget r=%8.8x%8.8x exp=%d fract=%"PRIx64"\n", fpr[0], fpr[1], op->exp, op->fract);
-}
-
-static void get_sbfp(struct sbfp *op, U32 *fpr)
-{
-    op->sign = (*fpr & 0x80000000) != 0;
-    op->exp = (*fpr & 0x7F800000) >> 23;
-    op->fract = *fpr & 0x007FFFFF;
-    //logmsg("sget r=%8.8x exp=%d fract=%x\n", *fpr, op->exp, op->fract);
-}
-
-/*
- * Put binary float in registers
- */
-static void put_lbfp(struct lbfp *op, U32 *fpr)
-{
-    fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<20) | (op->fract>>32);
-    fpr[1] = op->fract & 0xFFFFFFFF;
-    //logmsg("lput exp=%d fract=%"PRIx64" r=%8.8x%8.8x\n", op->exp, op->fract, fpr[0], fpr[1]);
-}
-
-static void put_sbfp(struct sbfp *op, U32 *fpr)
-{
-    fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<23) | op->fract;
-    //logmsg("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
-}
-
-#endif  /* !defined(_IEEE_NONARCHDEP_) */
-
 /*
  * Chapter 9. Floating-Point Overview and Support Instructions
  */
 
 #if defined(FEATURE_FPS_EXTENSIONS)
-#if !defined(_CBH_FUNC)
-/*
- * Convert binary floating point to hexadecimal long floating point
- * save result into long register and return condition code
- * Roger Bowler, 19 July 2003
- */
-static int cnvt_bfp_to_hfp (struct lbfp *op, int fpclass, U32 *fpr)
-{
-    int exp;
-    U64 fract;
-    U32 r0, r1;
-    int cc;
-
-    switch (fpclass) {
-    default:
-    case FPV_NAN:
-        r0 = 0x7FFFFFFF;
-        r1 = 0xFFFFFFFF;
-        cc = 3;
-        break;
-    case FPV_INFINITE:
-        r0 = op->sign ? 0xFFFFFFFF : 0x7FFFFFFF;
-        r1 = 0xFFFFFFFF;
-        cc = 3;
-        break;
-    case FPV_ZERO:
-        r0 = op->sign ? 0x80000000 : 0;
-        r1 = 0;
-        cc = 0;
-        break;
-    case FPV_SUBNORMAL:
-        r0 = op->sign ? 0x80000000 : 0;
-        r1 = 0;
-        cc = op->sign ? 1 : 2;
-        break;
-    case FPV_NORMAL:
-        //logmsg("ieee: exp=%d (X\'%3.3x\')\tfract=%16.16"PRIx64"\n",
-        //        op->exp, op->exp, op->fract);
-        /* Insert an implied 1. in front of the 52 bit binary
-           fraction and lengthen the result to 56 bits */
-        fract = (U64)(op->fract | 0x10000000000000ULL) << 3;
-
-        /* The binary exponent is equal to the biased exponent - 1023
-           adjusted by 1 to move the point before the 56 bit fraction */
-        exp = op->exp - 1023 + 1;
-
-        //logmsg("ieee: adjusted exp=%d\tfract=%16.16"PRIx64"\n", exp, fract);
-        /* Shift the fraction right one bit at a time until
-           the binary exponent becomes a multiple of 4 */
-        while (exp & 3)
-        {
-            exp++;
-            fract >>= 1;
-        }
-        //logmsg("ieee:  shifted exp=%d\tfract=%16.16"PRIx64"\n", exp, fract);
-
-        /* Convert the binary exponent into a hexadecimal exponent
-           by dropping the last two bits (which are now zero) */
-        exp >>= 2;
-
-        /* If the hexadecimal exponent is less than -64 then return
-           a signed zero result with a non-zero condition code */
-        if (exp < -64) {
-            r0 = op->sign ? 0x80000000 : 0;
-            r1 = 0;
-            cc = op->sign ? 1 : 2;
-            break;
-        }
-
-        /* If the hexadecimal exponent exceeds +63 then return
-           a signed maximum result with condition code 3 */
-        if (exp > 63) {
-            r0 = op->sign ? 0xFFFFFFFF : 0x7FFFFFFF;
-            r1 = 0xFFFFFFFF;
-            cc = 3;
-            break;
-        }
-
-        /* Convert the hexadecimal exponent to a characteristic
-           by adding 64 */
-        exp += 64;
-
-        /* Pack the exponent and the fraction into the result */
-        r0 = (op->sign ? 1<<31 : 0) | (exp << 24) | (fract >> 32);
-        r1 = fract & 0xFFFFFFFF;
-        cc = op->sign ? 1 : 2;
-        break;
-    }
-    /* Store high and low halves of result into fp register array
-       and return condition code */
-    fpr[0] = r0;
-    fpr[1] = r1;
-    return cc;
-} /* end function cnvt_bfp_to_hfp */
-
-/*
- * Convert hexadecimal long floating point register to
- * binary floating point and return condition code
- * Roger Bowler, 28 Nov 2004
- */
-
-/* Definitions of BFP rounding methods */
-#define RM_DEFAULT_ROUNDING             0
-#define RM_BIASED_ROUND_TO_NEAREST      1
-#define RM_ROUND_TO_NEAREST             4
-#define RM_ROUND_TOWARD_ZERO            5
-#define RM_ROUND_TOWARD_POS_INF         6
-#define RM_ROUND_TOWARD_NEG_INF         7
-
-static int cnvt_hfp_to_bfp (U32 *fpr, int rounding,
-        int bfp_fractbits, int bfp_emax, int bfp_ebias,
-        int *result_sign, int *result_exp, U64 *result_fract)
-{
-    BYTE sign;
-    short expo;
-    U64 fract;
-    int roundup = 0;
-    int cc;
-    U64 b;
-
-    /* Break the source operand into sign, characteristic, fraction */
-    sign = fpr[0] >> 31;
-    expo = (fpr[0] >> 24) & 0x007F;
-    fract = ((U64)(fpr[0] & 0x00FFFFFF) << 32) | fpr[1];
-
-    /* Determine whether to round up or down */
-    switch (rounding) {
-    case RM_BIASED_ROUND_TO_NEAREST:
-    case RM_ROUND_TO_NEAREST: roundup = 0; break;
-    case RM_DEFAULT_ROUNDING:
-    case RM_ROUND_TOWARD_ZERO: roundup = 0; break;
-    case RM_ROUND_TOWARD_POS_INF: roundup = (sign ? 0 : 1); break;
-    case RM_ROUND_TOWARD_NEG_INF: roundup = sign; break;
-    } /* end switch(rounding) */
-
-    /* Convert HFP zero to BFP zero and return cond code 0 */
-    if (fract == 0) /* a = -0 or +0 */
-    {
-        *result_sign = sign;
-        *result_exp = 0;
-        *result_fract = 0;
-        return 0;
-    }
-
-    /* Set the condition code */
-    cc = sign ? 1 : 2;
-
-    /* Convert the HFP characteristic to a true binary exponent */
-    expo = (expo - 64) * 4;
-
-    /* Convert true binary exponent to a biased exponent */
-    expo += bfp_ebias;
-
-    /* Shift the fraction left until leftmost 1 is in bit 8 */
-    while ((fract & 0x0080000000000000ULL) == 0)
-    {
-        fract <<= 1;
-        expo -= 1;
-    }
-
-    /* Convert 56-bit fraction to 55-bit with implied 1 */
-    expo--;
-    fract &= 0x007FFFFFFFFFFFFFULL;
-
-    if (expo < -(bfp_fractbits-1)) /* |a| < Dmin */
-    {
-        if (expo == -(bfp_fractbits-1) - 1)
-        {
-            if (rounding == RM_BIASED_ROUND_TO_NEAREST
-                || rounding == RM_ROUND_TO_NEAREST)
-                roundup = 1;
-        }
-        if (roundup) { expo = 0; fract = 1; } /* Dmin */
-        else { expo = 0; fract = 0; } /* Zero */
-    }
-    else if (expo < 1) /* Dmin <= |a| < Nmin */
-    {
-        /* Reinstate implied 1 in preparation for denormalization */
-        fract |= 0x0080000000000000ULL;
-
-        /* Denormalize to get exponent back in range */
-        fract >>= (expo + (bfp_fractbits-1));
-        expo = 0;
-    }
-    else if (expo > (bfp_emax+bfp_ebias)) /* |a| > Nmax */
-    {
-        cc = 3;
-        if (roundup) { /* Inf */
-            expo = (bfp_emax+bfp_ebias) + 1;
-            fract = 0;
-        } else { /* Nmax */
-            expo = (bfp_emax+bfp_ebias);
-            fract = 0x007FFFFFFFFFFFFFULL - (((U64)1<<(1+(55-bfp_fractbits)))-1);
-        } /* Nmax */
-    } /* end Nmax < |a| */
-
-    /* Set the result sign and exponent */
-    *result_sign = sign;
-    *result_exp = expo;
-
-    /* Apply rounding before truncating to final fraction length */
-    b = ( (U64)1 ) << ( 55 - bfp_fractbits);
-    if (roundup && (fract & b))
-    {
-        fract += b;
-    }
-
-    /* Convert 55-bit fraction to result fraction length */
-    *result_fract = fract >> (55-bfp_fractbits);
-
-    return cc;
-} /* end function cnvt_hfp_to_bfp */
-
-#define _CBH_FUNC
-#endif /*!defined(_CBH_FUNC)*/
-
-/*-------------------------------------------------------------------*/
-/* B359 THDR  - CONVERT BFP TO HFP (long)                      [RRE] */
-/* Roger Bowler, 19 July 2003                                        */
-/*-------------------------------------------------------------------*/
-DEF_INST(convert_bfp_long_to_float_long_reg)
-{
-    int r1, r2;
-    struct lbfp op2;
-
-    RRE(inst, regs, r1, r2);
-    //logmsg("THDR r1=%d r2=%d\n", r1, r2);
-    HFPREG2_CHECK(r1, r2, regs);
-
-    /* Load lbfp operand from R2 register */
-    get_lbfp(&op2, regs->fpr + FPR2I(r2));
-
-    /* Convert to hfp register and set condition code */
-    regs->psw.cc =
-        cnvt_bfp_to_hfp (&op2,
-                         lbfpclassify(&op2),
-                         regs->fpr + FPR2I(r1));
-
-} /* end DEF_INST(convert_bfp_long_to_float_long_reg) */
 
 /*-------------------------------------------------------------------*/
 /* B358 THDER - CONVERT BFP TO HFP (short to long)             [RRE] */
-/* Roger Bowler, 19 July 2003                                        */
+/* B359 THDR  - CONVERT BFP TO HFP (long)                      [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_bfp_short_to_float_long_reg)
+DEF_INST(convert_bfp_to_float_long_reg)
 {
     int r1, r2;
-    struct sbfp op2;
-    struct lbfp lbfp_op2;
+    float32_t op2_short;
+    float64_t ans, op2;
+    int exp, shift_count;
 
     RRE(inst, regs, r1, r2);
-    //logmsg("THDER r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
-    /* Load sbfp operand from R2 register */
-    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+    if (inst[1] == 0x59)                                    /* THDR? Source operand long BFP format?                */
+        GET_FLOAT64_OP(op2, r2, regs);                      /* ..yes, THDR, get long BFP source operand             */
+    else
+    {                                                       /* ..no, THDER, get short BFP and convert to long       */
+        GET_FLOAT32_OP(op2_short, r2, regs);                /* Retrieve source operand                              */
 
-    /* Lengthen sbfp operand to lbfp */
-    lbfp_op2.sign = op2.sign;
-    lbfp_op2.exp = op2.exp - 127 + 1023;
-    lbfp_op2.fract = (U64)op2.fract << (52 - 23);
+        if (!(op2_short.v & 0x7fffffff))                    /* Signed zero?                                         */
+            op2.v = (U64)op2_short.v << 32;                 /* ..yes, just shift it into 64-bit BFP format          */
 
-    /* Convert lbfp to hfp register and set condition code */
-    regs->psw.cc =
-        cnvt_bfp_to_hfp (&lbfp_op2,
-                         sbfpclassify(&op2),
-                         regs->fpr + FPR2I(r1));
+        else if (((op2_short.v & 0x7f800000) && (~op2_short.v & 0x7f800000)))    /*  Non-zero normal finite value?  */
+        {                                                   /* ..Yes, easy conversion to long                       */
+            op2.v = (U64)(op2_short.v & 0x80000000) << 32   /*  ...Sign bit to bit 0                                */
+                | (U64)(op2_short.v & 0x007fffff) << 29     /*  ...Position short significand in long BFP, 0-fill   */
+                | (U64)(((op2_short.v & 0x7f800000) >> 23) - BFP_SHORT_EXPONENT_BIAS + BFP_LONG_EXPONENT_BIAS) << 52;
+                                                            /*  ...Rebias exponent and add it to the 64-bit BFP     */
+        }
+        else                                                /* ..No, use SoftFloat-3 to convert to BFP Long         */
+            op2 = f32_to_f64(op2_short);                    /* ...Address NaNs, infinities, subnormals              */
+    }
 
-} /* end DEF_INST(convert_bfp_short_to_float_long_reg) */
+    regs->psw.cc = 2 - (op2.v >> 63);                       /* Default condition code based on sign of source       */
+
+                                                            /* Get some special cases out of the way                */
+    if (!(op2.v & 0x7fffffffffffffffull))                   /* Is source a zero?                                    */
+    {
+        ans = op2;                                          /* ..yes, an HFP zero is the same as a BFP zero         */
+        regs->psw.cc = 0;
+    }
+
+    else if (FLOAT64_IS_NAN(op2))                           /* Is source a NaN?  Does not matter which kind...      */
+    {
+        ans.v = 0x7FFFFFFFFFFFFFFFull;                      /* ..yes, result is always +Nmax                        */
+        regs->psw.cc = 3;                                   /* ..cc=3 on any NaN                                    */
+    }
+
+    else if ((op2.v & 0x7fffffffffffffffull) < 0x2FB0000000000000ull)   /* Is source less than Hmin?                */
+        ans.v = op2.v & 0x8000000000000000ull;              /* ..yes, returned signed zero                          */
+
+    else if ((op2.v & 0x7fffffffffffffffull) > 0x4FAFFFFFFFFFFFFFull)   /* Is source greater than Hmax?             */
+    {
+        ans.v = op2.v | 0x7fffffffffffffffull;              /* ..yes, returned signed Hmax                          */
+                                                            /* ...above case also picks up infinity, which should   */
+                                                            /* ...have +/-Hmax as the result.                       */
+        regs->psw.cc = 3;
+    }
+
+    else                                                    /* We are now left with a finite input that is between  */
+                                                            /* Hmin and Hmax.  We need not worry about subnormals.  */
+    {
+        ans.v = (op2.v & 0x000fffffffffffffull) | 0x0010000000000000ull;    /* Isolate the BFP significand, make    */
+                                                            /* implicit MSB explicit                                */
+        exp = ((op2.v >> 52) & 0x7ff) - BFP_LONG_EXPONENT_BIAS;     /* Isolate the BFP exponent and un-bias it      */
+        shift_count = exp & 0x0003;                         /* calculate shift needed to create HFP characteristic  */
+        exp = (exp >> 2) + HFP_CHARACTERISTIC_BIAS;         /* Convert exponent to characteristic                   */
+        ans.v <<= shift_count;                              /* Shift significand so it becomes a HFP fraction.      */
+                                                            /* Right now, characteristic assumes a radix point to   */
+                                                            /* the right of the first digit of the characteristic.  */
+        exp++;                                              /* Incrementing the exponent will move the implied      */
+                                                            /* radix point one digit to the left.                   */
+        ans.v |= (op2.v & 0x8000000000000000ull) | ((U64)exp << 56);    /*  Add sign and characteristic             */
+    }
+
+    PUT_FLOAT64_NOCC(ans, r1, regs);
+
+    return;
+
+
+} /* end DEF_INST(convert_bfp_to_float_long_reg) */
 
 /*-------------------------------------------------------------------*/
 /* B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF] */
@@ -928,19 +678,37 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
 DEF_INST(convert_float_long_to_bfp_long_reg)
 {
     int r1, r2, m3;
-    struct lbfp op1;
+    float64_t ans, op2;
+    int sign, exp;
+    U64 fract;
 
     RRF_M(inst, regs, r1, r2, m3);
-    //logmsg("TBDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
 
-    regs->psw.cc =
-        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r2), m3,
-            /*fractbits*/52, /*emax*/1023, /*ebias*/1023,
-            &(op1.sign), &(op1.exp), &(op1.fract));
+    GET_FLOAT64_OP(op2, r2, regs);
 
-    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+    if (!(op2.v & 0x00ffffffffffffffull))                   /* is this an HFP zero?                                 */
+    {                                                       /* Convert HFP zero to BFP zero and return cond code 0  */
+        regs->psw.cc = 0;
+        ans.v = op2.v & 0x8000000000000000ull;
+        PUT_FLOAT64_NOCC(ans, r1, regs);
+        return;
+    }
+
+    sign = op2.v >> 63;                                     /* Extract the sign bit                                 */
+    exp = ((((op2.v >> 56) & 0x007F) - HFP_CHARACTERISTIC_BIAS) << 2) + BFP_LONG_EXPONENT_BIAS; /* Extract and      */
+                                                            /* ...convert the HFP characteristic to a true binary   */
+                                                            /* ...exponent with the required bias                   */
+    fract = (op2.v & 0x00ffffffffffffffull) << 7;           /* Isolate the fraction and align it for SoftFloat-3    */
+
+    SET_SF_RM(map_modifier_to_sf_rm_h2b[m3]);               /* Set rounding mode for SoftFloat                      */
+    ans = softfloat_normRoundPackToF64(sign, exp - 2, fract );  /* Normalize and pack into float64_t format         */
+
+    regs->psw.cc = sign ? 1 : 2;                            /* Set condition code based on the sign of the source   */
+    PUT_FLOAT64_NOCC(ans, r1, regs);
+
+    return;
 
 } /* end DEF_INST(convert_float_long_to_bfp_long_reg) */
 
@@ -950,21 +718,64 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
 DEF_INST(convert_float_long_to_bfp_short_reg)
 {
     int r1, r2, m3;
-    struct sbfp op1;
+    float32_t ans;
+    float64_t long_ans, op2;
+    int sign, exp;
+    BYTE rounding;
     U64 fract;
 
+    int ieee_exception_flags = 0;                           /* Needed for overflow testing                          */
+    BYTE ieee_incremented = 0;
+
     RRF_M(inst, regs, r1, r2, m3);
-    //logmsg("TBEDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
 
-    regs->psw.cc =
-        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r2), m3,
-            /*fractbits*/23, /*emax*/127, /*ebias*/127,
-            &(op1.sign), &(op1.exp), &fract);
-    op1.fract = (U32)fract;
+    GET_FLOAT64_OP(op2, r2, regs);
 
-    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+    sign = op2.v >> 63;                                     /* Extract the sign bit here to enable zero fast path   */
+
+    if (!(op2.v & 0x00ffffffffffffffull))                   /* is this an HFP zero?                                 */
+    {                                                       /* Convert HFP zero to BFP zero and return cond code 0  */
+        regs->psw.cc = 0;
+        ans.v = ((U32)(sign)) << 31;
+        PUT_FLOAT32_NOCC(ans, r1, regs);
+        return;
+    }
+
+    sign = op2.v >> 63;                                     /* Extract the sign bit                                 */
+    exp = ((((op2.v >> 56) & 0x007F) - HFP_CHARACTERISTIC_BIAS) << 2) + BFP_LONG_EXPONENT_BIAS; /* Extract and      */
+                                                            /* ...convert the HFP characteristic to a true binary   */
+                                                            /* ...exponent with the required bias                   */
+    fract = (op2.v & 0x00ffffffffffffffull) << 7;           /* Isolate the fraction                                 */
+
+    SET_SF_RM(softfloat_round_stickybit);                   /* Set rounding mode to create a 64-bit result that     */
+                                                            /* ...will be rounded to 32-bit BFP                     */
+    long_ans = softfloat_normRoundPackToF64(sign, exp - 2, fract );     /* normalize and round intermediate result  */
+
+    rounding = map_modifier_to_sf_rm_h2b[m3];               /* Get and save rounding mode for final result          */
+    SET_SF_RM(rounding);                                    /* Set rounding mode for use by SoftFloat-3             */
+    CLEAR_SF_EXCEPTIONS;                                    /* Clear exception flags to detect any overflow         */
+    ans = f64_to_f32(long_ans);                             /* Round to final precision                             */
+    SET_IEEE_EXCEPTIONS(ieee_exception_flags, ieee_incremented, regs->fpc);     /* detect IEEE exceptions           */
+    if (ieee_exception_flags & FPC_MASK_IMO)                /* Did overflow occur?                                  */
+    {                                                       /* ..yes, decide whether infinity or Nmax is result.    */
+                                                            /* ..SoftFloat always returns +/-infinity on overflow.  */
+        regs->psw.cc = 3;                                   /* Always return CC=3 on overflow.                      */
+        if ((m3 == TBEDR_RM_RZ)                             /* Rounding modes R0, RFS always return +/-Nmax         */
+            || (m3 == TBEDR_RM_RZ0)
+            || (m3 == TBEDR_RM_RFS)
+            || (sign && (m3 == TBEDR_RM_RP))                /* Mode RP returns +/-Nmax on negative source           */
+            || (!sign && (m3 == TBEDR_RM_RM))               /* Mode RM returns +/-Nmax on positive source           */
+            )
+            ans.v = (ans.v & 0x80000000) | 0x7f7fffff;      /* Change +/-infinity into +/-Nmax                      */
+    }
+    else
+        regs->psw.cc = sign ? 1 : 2;                        /* Set condition code based on the sign of the source   */
+
+    PUT_FLOAT32_NOCC(ans, r1, regs);
+
+    return;
 
 } /* end DEF_INST(convert_float_long_to_bfp_short_reg) */
 #endif /*defined(FEATURE_FPS_EXTENSIONS)*/

@@ -1,0 +1,1103 @@
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase CONVERT HFP TO BFP
+                                                                             5 *  Test case capability includes verifying the condition code for
+                                                                             6 *  sundry result cases.  CONVERT HFP TO BFP does not generate IEEE
+                                                                             7 *  execptions or traps, and does not alter the Floating Point Control
+                                                                             8 *  Register (FPC).
+                                                                             9 *
+                                                                            10 ***********************************************************************
+
+
+                                                                            12 ***********************************************************************
+                                                                            13 *
+                                                                            14 *                        bfp-024-h2b.asm
+                                                                            15 *
+                                                                            16 *        This assembly-language source file is part of the
+                                                                            17 *        Hercules Binary Floating Point Validation Package
+                                                                            18 *                        by Stephen R. Orso
+                                                                            19 *
+                                                                            20 * Copyright 2019 by Stephen R Orso.
+                                                                            21 *
+                                                                            22 * Redistribution and use in source and binary forms, with or without
+                                                                            23 * modification, are permitted provided that the following conditions
+                                                                            24 * are met:
+                                                                            25 *
+                                                                            26 * 1. Redistributions of source code must retain the above copyright
+                                                                            27 *    notice, this list of conditions and the following disclaimer.
+                                                                            28 *
+                                                                            29 * 2. Redistributions in binary form must reproduce the above copyright
+                                                                            30 *    notice, this list of conditions and the following disclaimer in
+                                                                            31 *    the documentation and/or other materials provided  with the
+                                                                            32 *    distribution.
+                                                                            33 *
+                                                                            34 * 3. The name of the author may not be used to endorse or promote
+                                                                            35 *    products derived from this software without specific prior written
+                                                                            36 *    permission.
+                                                                            37 *
+                                                                            38 * DISCLAMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS"
+                                                                            39 * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+                                                                            40 * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+                                                                            41 * PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
+                                                                            42 * HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+                                                                            43 * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+                                                                            44 * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+                                                                            45 * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+                                                                            46 * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+                                                                            47 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+                                                                            48 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+                                                                            49 *
+                                                                            50 ***********************************************************************
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            52 ***********************************************************************
+                                                                            53 *
+                                                                            54 *
+                                                                            55 *Testcase CONVERT HFP TO BFP
+                                                                            56 *  Test case capability includes verifying the condition code for
+                                                                            57 *  sundry result cases.  CONVERT HFP TO BFP does not generate IEEE
+                                                                            58 *  execptions or traps and does not alter the Floating Point Control
+                                                                            59 *  Register (FPC).
+                                                                            60 *
+                                                                            61 * Tests the following two conversion instructions
+                                                                            62 *   CONVERT HFP TO BFP (long HFP to long BFP, RRF-e)
+                                                                            63 *   CONVERT HFP TO BFP (long HFP to short BFP, RRF-e)
+                                                                            64 *
+                                                                            65 * This routine exhaustively tests rounding to 32- and 64-bit binary
+                                                                            66 * floating point.  HFP may have up to 56 bits of significance, so HFP
+                                                                            67 * long may need to be rounded to fit into a 53-bit BFP significand.
+                                                                            68 *
+                                                                            69 * The rounding mode also affects the short BFP value on overflow.
+                                                                            70 * Conversion to long BFP cannot overflow.
+                                                                            71 *
+                                                                            72 * Test data is compiled into this program.  The test script that runs
+                                                                            73 * this program can provide alternative test data through Hercules R
+                                                                            74 * commands.
+                                                                            75 *
+                                                                            76 * Test Case Order
+                                                                            77 * 1) Long HFP to short BFP basic tests.  Note that HFP does not support
+                                                                            78 *    non-finite values.  Infinity and NaNs cannot be used as input.
+                                                                            79 * 2) Long HFP to short BFP overflow and underflow tests using all seven
+                                                                            80 *    rounding modes.  See Note.
+                                                                            81 * 3) Long HFP to short BFP rounding mode tests
+                                                                            82 * 4) Long HFP to long BFP basic tests.  Note that HFP does not support
+                                                                            83 *    non-finite values.  Infinity and NaNs cannot be used as input.
+                                                                            84 * 5) Long HFP to long BFP rounding mode tests
+                                                                            85 *
+                                                                            86 * Note: When HFP is rounded to short BFP, overflow and underflow are
+                                                                            87 * possible because an HFP characteristic when converted to a BFP
+                                                                            88 * exponent may not fit in the 7 bits allowed for a BFP exponent.  For
+                                                                            89 * overflow, the result is either infinity or Nmax depending on the
+                                                                            90 * input sign and rounding mode.  For underflow, the result is a rounded
+                                                                            91 * subnormal (tiny, exponent zero) BFP.
+                                                                            92 *
+                                                                            93 * Overflow and underflow are not possible when the target is long BFP.
+                                                                            94 *
+                                                                            95 * Basic test cases are needed as follows:
+                                                                            96 *   0, +1.5, -1.5
+                                                                            97 *   Unnormalized HFP inputs (leading digit(s) of fraction is/are zero).
+                                                                            98 *
+                                                                            99 * Overflow/underflow test cases are needed as follows (short BFP only):
+                                                                           100 *   All cases in this set must over/underflow.  In the ideal case,
+                                                                           101 *   over/underflow would be triggered on some but not all rounding
+                                                                           102 *   modes.
+                                                                           103 *   Pure overflows that test return of +/-infinity or +/-Nmax based
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           104 *   on the rounding mode used.
+                                                                           105 *   Ties are represented, both even (round down) and odd (round up)
+                                                                           106 *   Nearest value is toward zero
+                                                                           107 *   Nearest value is away from zero
+                                                                           108 *   HFP overflows when converted to short BFP and the effectivve
+                                                                           109 *   rounding direction is away from zero.
+                                                                           110 *   HFP underflows when converted to short BFP and the effectivve
+                                                                           111 *   rounding direction is towards zero.
+                                                                           112 *   Each of the above must be represented in positive and negative.
+                                                                           113 *
+                                                                           114 * Rounding test cases are needed as follows:
+                                                                           115 *   Exact conversions are represented (no rounding needed)
+                                                                           116 *   Ties are represented, both even (round down) and odd (round up)
+                                                                           117 *   Nearest value is toward zero
+                                                                           118 *   Nearest value is away from zero
+                                                                           119 *   Each of the above must be represented in positive and negative.
+                                                                           120 *
+                                                                           121 * Because rounding decisions are based on the binary significand,
+                                                                           122 *   there is limited value to considering test case inputs in
+                                                                           123 *   decimal form.  The binary representations are all that matters.
+                                                                           124 *
+                                                                           125 * Four input test data sets are provided.  The same HFP inputs are used
+                                                                           126 *   for both short and long BFP targets.  Two more sets are provided
+                                                                           127 *   for long HFP to short BFP (over/underflow, rounding) and one more
+                                                                           128 *   for long HFP to long BFP (rounding).  We cannot use the same HFP
+                                                                           129 *   inputs for long and short BFP rounding tests because the rounding
+                                                                           130 *   points differ for the two target precisions.
+                                                                           131 *
+                                                                           132 * Also tests the following floating point support instructions
+                                                                           133 *   LOAD  (Short)
+                                                                           134 *   LOAD  (Long)
+                                                                           135 *   LFPC  (Load Floating Point Control Register)
+                                                                           136 *   SRNMB (Set BFP Rounding Mode 3-bit)
+                                                                           137 *   STFPC (Store Floating Point Control Register)
+                                                                           138 *   STORE (Short)
+                                                                           139 *   STORE (Long)
+                                                                           140 *
+                                                                           141          MACRO
+                                                                           142          PADCSECT &ENDLABL
+                                                                           143          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+                                                                           144          AGO   .GOODPAD
+                                                                           145          AIF   (D'&ENDLABL).GOODPAD
+                                                                           146          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                           147          MNOTE *,'No CSECT padding performed'
+                                                                           148          MEXIT
+                                                                           149 .GOODPAD ANOP
+                                                                           150          ORG   &ENDLABL-1
+                                                                           151          MEXIT
+                                                                           152 .NOPAD   ANOP
+                                                                           153          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                           154          MEND
+                                                                           155 *
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000000000  00000000000007E7   156 BFPH2B   START 0
+                                      0000000000000000  0000000000000001   157 R0       EQU   0            Work register for condition code retrieval
+                                      0000000000000001  0000000000000001   158 R1       EQU   1
+                                      0000000000000002  0000000000000001   159 R2       EQU   2            Loop control for instruction test routines
+                                      0000000000000003  0000000000000001   160 R3       EQU   3            Address of next input test value
+                                      0000000000000004  0000000000000001   161 R4       EQU   4
+                                      0000000000000005  0000000000000001   162 R5       EQU   5
+                                      0000000000000006  0000000000000001   163 R6       EQU   6
+                                      0000000000000007  0000000000000001   164 R7       EQU   7            Address of next result storage
+                                      0000000000000008  0000000000000001   165 R8       EQU   8            Address of next FPCR storage
+                                      0000000000000009  0000000000000001   166 R9       EQU   9
+                                      000000000000000A  0000000000000001   167 R10      EQU   10           Address of 4-word test parameter array
+                                      000000000000000B  0000000000000001   168 R11      EQU   11
+                                      000000000000000C  0000000000000001   169 R12      EQU   12           Top of loop for instruction test routines
+                                      000000000000000D  0000000000000001   170 R13      EQU   13           Return address within main test driver
+                                      000000000000000E  0000000000000001   171 R14      EQU   14           CMS Test rig return address or zero
+                                      000000000000000F  0000000000000001   172 R15      EQU   15           Base address (CMS) or zero (bare iron)
+                                                                           173 *
+                                                                           174 * Floating Point Register equates to keep the cross reference clean
+                                                                           175 *
+                                      0000000000000000  0000000000000001   176 FPR0     EQU   0            Input value (operand 2) for TBEDBR/TBDR
+                                      0000000000000001  0000000000000001   177 FPR1     EQU   1            Output value (operand 1) for TBEDBR/TBDR
+                                      0000000000000002  0000000000000001   178 FPR2     EQU   2
+                                      0000000000000003  0000000000000001   179 FPR3     EQU   3
+                                      0000000000000004  0000000000000001   180 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   181 FPR5     EQU   5
+                                      0000000000000006  0000000000000001   182 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   183 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   184 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   185 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   186 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   187 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   188 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   189 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   190 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   191 FPR15    EQU   15
+                                                                           192 *
+                                                                           193 * Control Register equates (only one used for AFP bit 44)
+                                                                           194 *
+                                      0000000000000000  0000000000000001   195 CR0      EQU   0            Contains advanced floating point bit 44
+                                                                           196 *
+0000000000000000                      0000000000000000                     197          USING *,R15
+                                                                           198 *
+                                                                           199 * Above USING works on real iron (R15=0 after sysclear)
+                                                                           200 * and in z/CMS (R15 points to start of load module)
+                                                                           201 *
+0000000000000000                      0000000000000000  000000000000008E   202          ORG   BFPH2B+X'8E'   Program check interrution code
+000000000000008E  0000                                                     203 PCINTCD  DS    H
+                                                                           204 *
+                                      0000000000000150  0000000000000000   205 PCOLDPSW EQU   BFPH2B+X'150'  z/Arch Program check old PSW
+                                                                           206 *
+0000000000000090                      0000000000000090  00000000000001A0   207          ORG   BFPH2B+X'1A0'  z/Arch Restart PSW
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000001A0  00000001 80000000                                        208          DC    X'0000000180000000',AD(START)
+                                                                           209 *
+00000000000001B0                      00000000000001B0  00000000000001D0   210          ORG   BFPH2B+X'1D0'  z/Arch Program check old PSW
+00000000000001D0  00000000 00000000                                        211          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           212 *
+                                                                           213 * Program check routine.  If Data Exception, continue execution at
+                                                                           214 * the instruction following the program check.  Otherwise, hard wait.
+                                                                           215 * No need to collect data.  All interesting DXC stuff is captured
+                                                                           216 * in the FPCR.
+                                                                           217 *
+                                                                           218 * Note that CONVERT HFP TO BFP is not expected to program check in
+                                                                           219 * this test case.  One could consider including the AFP register test,
+                                                                           220 * which should generate a program check.
+                                                                           221 *
+00000000000001E0                      00000000000001E0  0000000000000200   222          ORG   BFPH2B+X'200'
+0000000000000200                                                           223 PROGCHK  DS    0H             Program check occured...
+0000000000000200  9507 F08F                             000000000000008F   224          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000204  A774 0004                             000000000000020C   225          JNE   PCNOTDTA       ..no, hardwait (not sure if R15 is ok)
+0000000000000208  B2B2 F150                             0000000000000150   226          LPSWE PCOLDPSW       ..yes, resume program execution
+000000000000020C                                                           227 PCNOTDTA DS    0H
+000000000000020C  12EE                                                     228          LTR   R14,R14        Return address provided?
+000000000000020E  077E                                                     229          BNZR  R14            Yes, return to z/CMS test rig.
+0000000000000210  B2B2 F260                             0000000000000260   230          LPSWE HARDWAIT       Not data exception, enter disabled wait
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           232 ***********************************************************************
+                                                                           233 *
+                                                                           234 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           235 *
+0000000000000214  B600 F270                             0000000000000270   236 START    STCTL CR0,CR0,CTLR0  Store CR0 to enable AFP
+0000000000000218  9604 F271                             0000000000000271   237          OI    CTLR0+1,X'04'  Turn on AFP bit
+                                                                           238 *                             ..(Not strictly required; we could write
+                                                                           239 *                             ..(the test case to use FPR0/2/4/6)
+000000000000021C  B700 F270                             0000000000000270   240          LCTL  CR0,CR0,CTLR0  Reload updated CR0
+                                                                           241 *
+                                                                           242 * Long HFP to short BFP basic, over/underflow, and rounding tests
+                                                                           243 *
+0000000000000220  41A0 F300                             0000000000000300   244          LA    R10,HTOSBAS    Long HFP basic test inputs
+0000000000000224  4DD0 F350                             0000000000000350   245          BAS   R13,TBEDR      Convert long HFP to short BFP
+0000000000000228  41A0 F310                             0000000000000310   246          LA    R10,HTOSOU     Long HFP overflow/underflow test inputs
+000000000000022C  4DD0 F396                             0000000000000396   247          BAS   R13,TBEDROU    Round long HFP to short BFP
+0000000000000230  41A0 F320                             0000000000000320   248          LA    R10,HTOSRM     Long HFP rounding mode test inputs
+0000000000000234  4DD0 F47C                             000000000000047C   249          BAS   R13,TBEDRA     Round long HFP to short BFP
+                                                                           250 *
+                                                                           251 * Long HFP to long BFP basic and rounding tests.  Overflow and
+                                                                           252 * underflow are not possible when converting long HFP to long BFP.
+                                                                           253 *
+0000000000000238  41A0 F330                             0000000000000330   254          LA    R10,HTOLBAS    Long HFP basic test inputs
+000000000000023C  4DD0 F562                             0000000000000562   255          BAS   R13,TBDR       Convert long HFP to long BFP
+0000000000000240  41A0 F340                             0000000000000340   256          LA    R10,HTOLRM     Long HFP rounding mode test inputs
+0000000000000244  4DD0 F5A4                             00000000000005A4   257          BAS   R13,TBDRA      Round long HFP to long BFP
+                                                                           258 *
+                                                                           259 * Five test sets run.  All done.
+                                                                           260 *
+0000000000000248  12EE                                                     261          LTR   R14,R14        Return address provided?
+000000000000024A  077E                                                     262          BNZR  R14            ..Yes, return to z/CMS test rig.
+000000000000024C  B2B2 F250                             0000000000000250   263          LPSWE WAITPSW        ..No, load disabled wait PSW
+                                                                           264 *
+0000000000000250                                                           265          DS    0D             Ensure correct alignment for psw
+0000000000000250  00020000 00000000                                        266 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000260  00020000 00000000                                        267 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           268 *
+0000000000000270  00000000                                                 269 CTLR0    DS    F
+0000000000000274  00000000                                                 270 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
+0000000000000278  F8000000                                                 271 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
+                                                                           272 *
+                                                                           273 * Input values parameter list, four fullwords:
+                                                                           274 *      1) Count,
+                                                                           275 *      2) Address of inputs,
+                                                                           276 *      3) Address to place results, and
+                                                                           277 *      4) Address to place DXC/Flags/cc values.
+                                                                           278 *
+000000000000027C                      000000000000027C  0000000000000300   279          ORG   BFPH2B+X'300'
+0000000000000300                                                           280 HTOSBAS  DS    0F           Inputs for HFP->short BFP basic tests
+0000000000000300  00000009                                                 281          DC    A(HTOBCT/8)
+0000000000000304  00000690                                                 282          DC    A(HTOBIN)
+0000000000000308  00001000                                                 283          DC    A(HTOSOUT)
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000030C  00001080                                                 284          DC    A(HTOSFLGS)
+                                                                           285 *
+0000000000000310                                                           286 HTOSOU   DS    0F       Inputs for HFP->short BFP o/uflow tests
+0000000000000310  00000010                                                 287          DC    A(HTOBOUCT/8)
+0000000000000314  000006D8                                                 288          DC    A(HTOBINOU)
+0000000000000318  00001100                                                 289          DC    A(HTOSOUO)
+000000000000031C  00001500                                                 290          DC    A(HTOSOUOF)
+                                                                           291 *
+0000000000000320                                                           292 HTOSRM   DS    0F       Inputs for HFP->short BFP rounding tests
+0000000000000320  0000000A                                                 293          DC    A(HTOSRMCT/8)
+0000000000000324  00000758                                                 294          DC    A(HTOSINRM)
+0000000000000328  00001900                                                 295          DC    A(HTOSRMO)
+000000000000032C  00001B00                                                 296          DC    A(HTOSRMOF)
+                                                                           297 *
+0000000000000330                                                           298 HTOLBAS  DS    0F           Inputs for HFP->long BFP basic tests
+0000000000000330  00000009                                                 299          DC    A(HTOBCT/8)
+0000000000000334  00000690                                                 300          DC    A(HTOBIN)
+0000000000000338  00001D00                                                 301          DC    A(HTOLOUT)
+000000000000033C  00001D80                                                 302          DC    A(HTOLFLGS)
+                                                                           303 *
+0000000000000340                                                           304 HTOLRM   DS    0F       Inputs for HFP->long BFP rounding tests
+0000000000000340  00000008                                                 305          DC    A(HTOLRMCT/8)
+0000000000000344  000007A8                                                 306          DC    A(HTOLINRM)
+0000000000000348  00002000                                                 307          DC    A(HTOLRMO)
+000000000000034C  00002400                                                 308          DC    A(HTOLRMOF)
+                                                                           309 *
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           311 ***********************************************************************
+                                                                           312 *
+                                                                           313 * Convert long HFP to short BFP.  One result is generated for each
+                                                                           314 * input with all exceptions trappable.  Note: this instruction should
+                                                                           315 * not trap.  The FPCR contents and condition code are stored for each
+                                                                           316 * input value.  Overflow testing is done here.
+                                                                           317 *
+                                                                           318 ***********************************************************************
+
+
+0000000000000350  9823 A000                             0000000000000000   320 TBEDR    LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000354  9878 A008                             0000000000000008   321          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000358  1222                                                     322          LTR   R2,R2         Any test cases?
+000000000000035A  078D                                                     323          BZR   R13           ..No, return to caller
+000000000000035C  0DC0                                                     324          BASR  R12,0         Set top of loop
+                                                                           325 *
+000000000000035E  B375 0010                                                326          LZDR  FPR1          Zero FRP1 to clear any residual
+0000000000000362  6800 3000                             0000000000000000   327          LD    FPR0,0(,R3)   Get long HFP test value
+0000000000000366  B29D F278                             0000000000000278   328          LFPC  FPCREGTR      Set exceptions trappable
+000000000000036A  B350 0010                                                329          TBEDR FPR1,0,FPR0   Cvt long HFP in FPR0 to short BFP in FPR1
+000000000000036E  7010 7000                             0000000000000000   330          STE   FPR1,0(,R7)   Store short BFP result
+0000000000000372  B29C 8000                             0000000000000000   331          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000376  92FF 8003                             0000000000000003   332          MVI   3(R8),X'FF'   Ensure visibility of returned CC
+000000000000037A  B222 0000                                                333          IPM   R0            Get condition code and program mask
+000000000000037E  8800 001C                             000000000000001C   334          SRL   R0,28         Isolate CC in low order byte
+0000000000000382  4200 8003                             0000000000000003   335          STC   R0,3(,R8)     Save condition code in results table
+                                                                           336 *
+0000000000000386  4130 3008                             0000000000000008   337          LA    R3,8(,R3)     Point to next input value
+000000000000038A  4170 7004                             0000000000000004   338          LA    R7,4(,R7)     Point to next result
+000000000000038E  4180 8004                             0000000000000004   339          LA    R8,4(,R8)     Point to next FPCR result area
+0000000000000392  062C                                                     340          BCTR  R2,R12        Convert next input value.
+0000000000000394  07FD                                                     341          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           343 ***********************************************************************
+                                                                           344 *
+                                                                           345 * Short BFP overflow and underflow testing.
+                                                                           346 *
+                                                                           347 * The BFP result returned on overflow is either +/- infinity or +/-
+                                                                           348 * Nmax depending on the input sign and the rounding mode.
+                                                                           349 *
+                                                                           350 * The BFP result on underflow is a rounded denormalized (tiny) short
+                                                                           351 * BFP value.
+                                                                           352 *
+                                                                           353 * Each input will overflow or underflow and is tested using all seven
+                                                                           354 * rounding modes that can be specified in the instruction.
+                                                                           355 *
+                                                                           356 * The rounding mode stored in the FPC has no impact on
+                                                                           357 * CONVERT HFP TO BFP.
+                                                                           358 *
+                                                                           359 ***********************************************************************
+
+
+0000000000000396  9823 A000                             0000000000000000   361 TBEDROU  LM    R2,R3,0(R10)  Get count and address of test input values
+000000000000039A  9878 A008                             0000000000000008   362          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000039E  1222                                                     363          LTR   R2,R2         Any test cases?
+00000000000003A0  078D                                                     364          BZR   R13           ..No, return to caller
+00000000000003A2  0DC0                                                     365          BASR  R12,0         Set top of loop
+                                                                           366 *
+00000000000003A4  6800 3000                             0000000000000000   367          LD    FPR0,0(,R3)    Get long HFP test value
+                                                                           368 *
+                                                                           369 * Test cases using rounding mode specified in the instruction M3 field
+                                                                           370 *
+00000000000003A8  B29D F274                             0000000000000274   371          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003AC  B350 0010                                                372          TBEDR FPR1,0,FPR0   RZ, toward zero
+00000000000003B0  7010 7000                             0000000000000000   373          STE   FPR1,0*4(,R7) Store shortened rounded BFP result
+00000000000003B4  B29C 8000                             0000000000000000   374          STFPC 0*4(R8)       Store resulting FPCR flags and DXC
+00000000000003B8  B222 0000                                                375          IPM   R0            Get condition code and program mask
+00000000000003BC  8800 001C                             000000000000001C   376          SRL   R0,28         Isolate CC in low order byte
+00000000000003C0  4200 8003                             0000000000000003   377          STC   R0,3+0*4(,R8) Save cc with FPC in results table
+                                                                           378 *
+00000000000003C4  B29D F274                             0000000000000274   379          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003C8  B350 1010                                                380          TBEDR FPR1,1,FPR0   RNTA, to nearest, ties away
+00000000000003CC  7010 7004                             0000000000000004   381          STE   FPR1,1*4(,R7) Store shortened rounded BFP result
+00000000000003D0  B29C 8004                             0000000000000004   382          STFPC 1*4(R8)       Store resulting FPCR flags and DXC
+00000000000003D4  B222 0000                                                383          IPM   R0            Get condition code and program mask
+00000000000003D8  8800 001C                             000000000000001C   384          SRL   R0,28         Isolate CC in low order byte
+00000000000003DC  4200 8007                             0000000000000007   385          STC   R0,3+1*4(,R8) Save cc with FPC in results table
+                                                                           386 *
+00000000000003E0  B29D F274                             0000000000000274   387          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000003E4  B350 3010                                                388          TBEDR FPR1,3,FPR0   RFS, prepare for shorter precision
+00000000000003E8  7010 7008                             0000000000000008   389          STE   FPR1,2*4(,R7) Store shortened rounded BFP result
+00000000000003EC  B29C 8008                             0000000000000008   390          STFPC 2*4(R8)       Store resulting FPCR flags and DXC
+00000000000003F0  B222 0000                                                391          IPM   R0            Get condition code and program mask
+00000000000003F4  8800 001C                             000000000000001C   392          SRL   R0,28         Isolate CC in low order byte
+00000000000003F8  4200 800B                             000000000000000B   393          STC   R0,3+2*4(,R8) Save cc with FPC in results table
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           394 *
+00000000000003FC  B29D F274                             0000000000000274   395          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000400  B350 4010                                                396          TBEDR FPR1,4,FPR0   RNTE, to nearest, ties to even
+0000000000000404  7010 700C                             000000000000000C   397          STE   FPR1,3*4(,R7) Store shortened rounded BFP result
+0000000000000408  B29C 800C                             000000000000000C   398          STFPC 3*4(R8)       Store resulting FPCR flags and DXC
+000000000000040C  B222 0000                                                399          IPM   R0            Get condition code and program mask
+0000000000000410  8800 001C                             000000000000001C   400          SRL   R0,28         Isolate CC in low order byte
+0000000000000414  4200 800F                             000000000000000F   401          STC   R0,3+3*4(,R8) Save cc with FPC in results table
+                                                                           402 *
+0000000000000418  B29D F274                             0000000000000274   403          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000041C  B350 5010                                                404          TBEDR FPR1,5,FPR0   RZ, toward zero
+0000000000000420  7010 7010                             0000000000000010   405          STE   FPR1,4*4(,R7) Store shortened rounded BFP result
+0000000000000424  B29C 8010                             0000000000000010   406          STFPC 4*4(R8)       Store resulting FPCR flags and DXC
+0000000000000428  B222 0000                                                407          IPM   R0            Get condition code and program mask
+000000000000042C  8800 001C                             000000000000001C   408          SRL   R0,28         Isolate CC in low order byte
+0000000000000430  4200 8013                             0000000000000013   409          STC   R0,3+4*4(,R8) Save cc with FPC in results table
+                                                                           410 *
+0000000000000434  B29D F274                             0000000000000274   411          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000438  B350 6010                                                412          TBEDR FPR1,6,FPR0   RP, to +inf
+000000000000043C  7010 7014                             0000000000000014   413          STE   FPR1,5*4(,R7) Store shortened rounded BFP result
+0000000000000440  B29C 8014                             0000000000000014   414          STFPC 5*4(R8)       Store resulting FPCR flags and DXC
+0000000000000444  B222 0000                                                415          IPM   R0            Get condition code and program mask
+0000000000000448  8800 001C                             000000000000001C   416          SRL   R0,28         Isolate CC in low order byte
+000000000000044C  4200 8017                             0000000000000017   417          STC   R0,3+5*4(,R8) Save cc with FPC in results table
+                                                                           418 *
+0000000000000450  B29D F274                             0000000000000274   419          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000454  B350 7010                                                420          TBEDR FPR1,7,FPR0   RM, to -inf
+0000000000000458  7010 7018                             0000000000000018   421          STE   FPR1,6*4(,R7) Store shortened rounded BFP result
+000000000000045C  B29C 8018                             0000000000000018   422          STFPC 6*4(R8)       Store resulting FPCR flags and DXC
+0000000000000460  B222 0000                                                423          IPM   R0            Get condition code and program mask
+0000000000000464  8800 001C                             000000000000001C   424          SRL   R0,28         Isolate CC in low order byte
+0000000000000468  4200 801B                             000000000000001B   425          STC   R0,3+6*4(,R8) Save cc with FPC in results table
+                                                                           426 *
+000000000000046C  4130 3008                             0000000000000008   427          LA    R3,8(,R3)     Point to next input value
+0000000000000470  4170 7020                             0000000000000020   428          LA    R7,8*4(,R7)   Point to next short BFP result pair
+0000000000000474  4180 8020                             0000000000000020   429          LA    R8,8*4(,R8)   Point to next FPCR result area
+0000000000000478  062C                                                     430          BCTR  R2,R12        Convert next input value.
+000000000000047A  07FD                                                     431          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           433 ***********************************************************************
+                                                                           434 *
+                                                                           435 * Convert long HFP to rounded short BFP using each possible rounding
+                                                                           436 * mode.  Seven test results are generated for each input.  A 32-byte
+                                                                           437 * test result section is used to keep results sets aligned on a
+                                                                           438 * quad-double word.
+                                                                           439 *
+                                                                           440 * All seven results use instruction-specified rounding modes; the FPC
+                                                                           441 * rounding mode has no impact on CONVERT HFP TO BFP.
+                                                                           442 *
+                                                                           443 ***********************************************************************
+
+
+000000000000047C  9823 A000                             0000000000000000   445 TBEDRA   LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000480  9878 A008                             0000000000000008   446          LM    R7,R8,8(R10)  Get address of result area and flag area.
+0000000000000484  1222                                                     447          LTR   R2,R2         Any test cases?
+0000000000000486  078D                                                     448          BZR   R13           ..No, return to caller
+0000000000000488  0DC0                                                     449          BASR  R12,0         Set top of loop
+                                                                           450 *
+000000000000048A  6800 3000                             0000000000000000   451          LD    FPR0,0(,R3)    Get long HFP test value
+                                                                           452 *
+                                                                           453 * Test cases using rounding mode specified in the instruction M3 field
+                                                                           454 *
+000000000000048E  B29D F274                             0000000000000274   455          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000492  B350 0010                                                456          TBEDR FPR1,0,FPR0   RZ, toward zero
+0000000000000496  7010 7000                             0000000000000000   457          STE   FPR1,0*4(,R7) Store shortened rounded BFP result
+000000000000049A  B29C 8000                             0000000000000000   458          STFPC 0*4(R8)       Store resulting FPCR flags and DXC
+000000000000049E  B222 0000                                                459          IPM   R0            Get condition code and program mask
+00000000000004A2  8800 001C                             000000000000001C   460          SRL   R0,28         Isolate CC in low order byte
+00000000000004A6  4200 8003                             0000000000000003   461          STC   R0,3+0*4(,R8) Save cc with FPC in results table
+                                                                           462 *
+00000000000004AA  B29D F274                             0000000000000274   463          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004AE  B350 1010                                                464          TBEDR FPR1,1,FPR0   RNTA, to nearest, ties away
+00000000000004B2  7010 7004                             0000000000000004   465          STE   FPR1,1*4(,R7) Store shortened rounded BFP result
+00000000000004B6  B29C 8004                             0000000000000004   466          STFPC 1*4(R8)       Store resulting FPCR flags and DXC
+00000000000004BA  B222 0000                                                467          IPM   R0            Get condition code and program mask
+00000000000004BE  8800 001C                             000000000000001C   468          SRL   R0,28         Isolate CC in low order byte
+00000000000004C2  4200 8007                             0000000000000007   469          STC   R0,3+1*4(,R8) Save cc with FPC in results table
+                                                                           470 *
+00000000000004C6  B29D F274                             0000000000000274   471          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004CA  B350 3010                                                472          TBEDR FPR1,3,FPR0   RFS, prepare for shorter precision
+00000000000004CE  7010 7008                             0000000000000008   473          STE   FPR1,2*4(,R7) Store shortened rounded BFP result
+00000000000004D2  B29C 8008                             0000000000000008   474          STFPC 2*4(R8)       Store resulting FPCR flags and DXC
+00000000000004D6  B222 0000                                                475          IPM   R0            Get condition code and program mask
+00000000000004DA  8800 001C                             000000000000001C   476          SRL   R0,28         Isolate CC in low order byte
+00000000000004DE  4200 800B                             000000000000000B   477          STC   R0,3+2*4(,R8) Save cc with FPC in results table
+                                                                           478 *
+00000000000004E2  B29D F274                             0000000000000274   479          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000004E6  B350 4010                                                480          TBEDR FPR1,4,FPR0   RNTE, to nearest, ties to even
+00000000000004EA  7010 700C                             000000000000000C   481          STE   FPR1,3*4(,R7) Store shortened rounded BFP result
+00000000000004EE  B29C 800C                             000000000000000C   482          STFPC 3*4(R8)       Store resulting FPCR flags and DXC
+00000000000004F2  B222 0000                                                483          IPM   R0            Get condition code and program mask
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000004F6  8800 001C                             000000000000001C   484          SRL   R0,28         Isolate CC in low order byte
+00000000000004FA  4200 800F                             000000000000000F   485          STC   R0,3+3*4(,R8) Save cc with FPC in results table
+                                                                           486 *
+00000000000004FE  B29D F274                             0000000000000274   487          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000502  B350 5010                                                488          TBEDR FPR1,5,FPR0   RZ, toward zero
+0000000000000506  7010 7010                             0000000000000010   489          STE   FPR1,4*4(,R7) Store shortened rounded BFP result
+000000000000050A  B29C 8010                             0000000000000010   490          STFPC 4*4(R8)       Store resulting FPCR flags and DXC
+000000000000050E  B222 0000                                                491          IPM   R0            Get condition code and program mask
+0000000000000512  8800 001C                             000000000000001C   492          SRL   R0,28         Isolate CC in low order byte
+0000000000000516  4200 8013                             0000000000000013   493          STC   R0,3+4*4(,R8) Save cc with FPC in results table
+                                                                           494 *
+000000000000051A  B29D F274                             0000000000000274   495          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000051E  B350 6010                                                496          TBEDR FPR1,6,FPR0   RP, to +inf
+0000000000000522  7010 7014                             0000000000000014   497          STE   FPR1,5*4(,R7) Store shortened rounded BFP result
+0000000000000526  B29C 8014                             0000000000000014   498          STFPC 5*4(R8)       Store resulting FPCR flags and DXC
+000000000000052A  B222 0000                                                499          IPM   R0            Get condition code and program mask
+000000000000052E  8800 001C                             000000000000001C   500          SRL   R0,28         Isolate CC in low order byte
+0000000000000532  4200 8017                             0000000000000017   501          STC   R0,3+5*4(,R8) Save cc with FPC in results table
+                                                                           502 *
+0000000000000536  B29D F274                             0000000000000274   503          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000053A  B350 7010                                                504          TBEDR FPR1,7,FPR0   RM, to -inf
+000000000000053E  7010 7018                             0000000000000018   505          STE   FPR1,6*4(,R7) Store shortened rounded BFP result
+0000000000000542  B29C 8018                             0000000000000018   506          STFPC 6*4(R8)       Store resulting FPCR flags and DXC
+0000000000000546  B222 0000                                                507          IPM   R0            Get condition code and program mask
+000000000000054A  8800 001C                             000000000000001C   508          SRL   R0,28         Isolate CC in low order byte
+000000000000054E  4200 801B                             000000000000001B   509          STC   R0,3+6*4(,R8) Save cc with FPC in results table
+                                                                           510 *
+0000000000000552  4130 3008                             0000000000000008   511          LA    R3,8(,R3)     Point to next input value
+0000000000000556  4170 7020                             0000000000000020   512          LA    R7,8*4(,R7)   Point to next short BFP result set
+000000000000055A  4180 8020                             0000000000000020   513          LA    R8,8*4(,R8)   Point to next FPCR result set
+000000000000055E  062C                                                     514          BCTR  R2,R12        Convert next input value.
+0000000000000560  07FD                                                     515          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           517 ***********************************************************************
+                                                                           518 *
+                                                                           519 * Convert long HFP to short BFP.  One result is generated for each
+                                                                           520 * input with all exceptions trappable.  Note: this instruction should
+                                                                           521 * not trap.  The FPCR contents and condition code are stored for each
+                                                                           522 * input value.  Overflow testing is done here.
+                                                                           523 *
+                                                                           524 ***********************************************************************
+
+
+0000000000000562  9823 A000                             0000000000000000   526 TBDR     LM    R2,R3,0(R10)  Get count and address of test input values
+0000000000000566  9878 A008                             0000000000000008   527          LM    R7,R8,8(R10)  Get address of result area and flag area.
+000000000000056A  1222                                                     528          LTR   R2,R2         Any test cases?
+000000000000056C  078D                                                     529          BZR   R13           ..No, return to caller
+000000000000056E  0DC0                                                     530          BASR  R12,0         Set top of loop
+                                                                           531 *
+0000000000000570  B375 0010                                                532          LZDR  FPR1          Zero FRP1 to clear any residual
+0000000000000574  6800 3000                             0000000000000000   533          LD    FPR0,0(,R3)   Get long HFP test value
+0000000000000578  B29D F278                             0000000000000278   534          LFPC  FPCREGTR      Set exceptions trappable
+000000000000057C  B351 0010                                                535          TBDR  FPR1,0,FPR0   Cvt long HFP in FPR0 to long BFP in FPR1
+0000000000000580  6010 7000                             0000000000000000   536          STD   FPR1,0(,R7)   Store short BFP result
+0000000000000584  B29C 8000                             0000000000000000   537          STFPC 0(R8)         Store resulting FPCR flags and DXC
+0000000000000588  B222 0000                                                538          IPM   R0            Get condition code and program mask
+000000000000058C  8800 001C                             000000000000001C   539          SRL   R0,28         Isolate CC in low order byte
+0000000000000590  4200 8003                             0000000000000003   540          STC   R0,3(,R8)     Save condition code in results table
+                                                                           541 *
+0000000000000594  4130 3008                             0000000000000008   542          LA    R3,8(,R3)     Point to next input value
+0000000000000598  4170 7008                             0000000000000008   543          LA    R7,8(,R7)     Point to next result
+000000000000059C  4180 8004                             0000000000000004   544          LA    R8,4(,R8)     Point to next FPCR result area
+00000000000005A0  062C                                                     545          BCTR  R2,R12        Convert next input value.
+00000000000005A2  07FD                                                     546          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           548 ***********************************************************************
+                                                                           549 *
+                                                                           550 * Convert long HFP to rounded short BFP using each possible rounding
+                                                                           551 * mode.  Seven test results are generated for each input.  A 32-byte
+                                                                           552 * test result section is used to keep results sets aligned on a
+                                                                           553 * quad-double word.
+                                                                           554 *
+                                                                           555 * All seven results use instruction-specified rounding modes; the FPC
+                                                                           556 * rounding mode has no impact on CONVERT HFP TO BFP.
+                                                                           557 *
+                                                                           558 ***********************************************************************
+
+
+00000000000005A4  9823 A000                             0000000000000000   560 TBDRA    LM    R2,R3,0(R10)  Get count and address of test input values
+00000000000005A8  9878 A008                             0000000000000008   561          LM    R7,R8,8(R10)  Get address of result area and flag area.
+00000000000005AC  1222                                                     562          LTR   R2,R2         Any test cases?
+00000000000005AE  078D                                                     563          BZR   R13           ..No, return to caller
+00000000000005B0  0DC0                                                     564          BASR  R12,0         Set top of loop
+                                                                           565 *
+00000000000005B2  6800 3000                             0000000000000000   566          LD    FPR0,0(,R3)    Get long HFP test value
+                                                                           567 *
+                                                                           568 * Test cases using rounding mode specified in the instruction M3 field
+                                                                           569 *
+00000000000005B6  B29D F274                             0000000000000274   570          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000005BA  B351 0010                                                571          TBDR  FPR1,0,FPR0   RZ, toward zero
+00000000000005BE  6010 7000                             0000000000000000   572          STD   FPR1,0*8(,R7) Store long BFP result
+00000000000005C2  B29C 8000                             0000000000000000   573          STFPC 0*4(R8)       Store resulting FPCR flags and DXC
+00000000000005C6  B222 0000                                                574          IPM   R0            Get condition code and program mask
+00000000000005CA  8800 001C                             000000000000001C   575          SRL   R0,28         Isolate CC in low order byte
+00000000000005CE  4200 8003                             0000000000000003   576          STC   R0,3+0*4(,R8) Save cc with FPC in results table
+                                                                           577 *
+00000000000005D2  B29D F274                             0000000000000274   578          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000005D6  B351 1010                                                579          TBDR  FPR1,1,FPR0   RNTA, to nearest, ties away
+00000000000005DA  6010 7008                             0000000000000008   580          STD   FPR1,1*8(,R7) Store long BFP result
+00000000000005DE  B29C 8004                             0000000000000004   581          STFPC 1*4(R8)       Store resulting FPCR flags and DXC
+00000000000005E2  B222 0000                                                582          IPM   R0            Get condition code and program mask
+00000000000005E6  8800 001C                             000000000000001C   583          SRL   R0,28         Isolate CC in low order byte
+00000000000005EA  4200 8007                             0000000000000007   584          STC   R0,3+1*4(,R8) Save cc with FPC in results table
+                                                                           585 *
+00000000000005EE  B29D F274                             0000000000000274   586          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+00000000000005F2  B351 3010                                                587          TBDR  FPR1,3,FPR0   RFS, prepare for shorter precision
+00000000000005F6  6010 7010                             0000000000000010   588          STD   FPR1,2*8(,R7) Store long BFP result
+00000000000005FA  B29C 8008                             0000000000000008   589          STFPC 2*4(R8)       Store resulting FPCR flags and DXC
+00000000000005FE  B222 0000                                                590          IPM   R0            Get condition code and program mask
+0000000000000602  8800 001C                             000000000000001C   591          SRL   R0,28         Isolate CC in low order byte
+0000000000000606  4200 800B                             000000000000000B   592          STC   R0,3+2*4(,R8) Save cc with FPC in results table
+                                                                           593 *
+000000000000060A  B29D F274                             0000000000000274   594          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000060E  B351 4010                                                595          TBDR  FPR1,4,FPR0   RNTE, to nearest, ties to even
+0000000000000612  6010 7018                             0000000000000018   596          STD   FPR1,3*8(,R7) Store long BFP result
+0000000000000616  B29C 800C                             000000000000000C   597          STFPC 3*4(R8)       Store resulting FPCR flags and DXC
+000000000000061A  B222 0000                                                598          IPM   R0            Get condition code and program mask
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000061E  8800 001C                             000000000000001C   599          SRL   R0,28         Isolate CC in low order byte
+0000000000000622  4200 800F                             000000000000000F   600          STC   R0,3+3*4(,R8) Save cc with FPC in results table
+                                                                           601 *
+0000000000000626  B29D F274                             0000000000000274   602          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+000000000000062A  B351 5010                                                603          TBDR  FPR1,5,FPR0   RZ, toward zero
+000000000000062E  6010 7020                             0000000000000020   604          STD   FPR1,4*8(,R7) Store long BFP result
+0000000000000632  B29C 8010                             0000000000000010   605          STFPC 4*4(R8)       Store resulting FPCR flags and DXC
+0000000000000636  B222 0000                                                606          IPM   R0            Get condition code and program mask
+000000000000063A  8800 001C                             000000000000001C   607          SRL   R0,28         Isolate CC in low order byte
+000000000000063E  4200 8013                             0000000000000013   608          STC   R0,3+4*4(,R8) Save cc with FPC in results table
+                                                                           609 *
+0000000000000642  B29D F274                             0000000000000274   610          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000646  B351 6010                                                611          TBDR  FPR1,6,FPR0   RP, to +inf
+000000000000064A  6010 7028                             0000000000000028   612          STD   FPR1,5*8(,R7) Store long BFP result
+000000000000064E  B29C 8014                             0000000000000014   613          STFPC 5*4(R8)       Store resulting FPCR flags and DXC
+0000000000000652  B222 0000                                                614          IPM   R0            Get condition code and program mask
+0000000000000656  8800 001C                             000000000000001C   615          SRL   R0,28         Isolate CC in low order byte
+000000000000065A  4200 8017                             0000000000000017   616          STC   R0,3+5*4(,R8) Save cc with FPC in results table
+                                                                           617 *
+000000000000065E  B29D F274                             0000000000000274   618          LFPC  FPCREGNT      Set exceptions non-trappable, clear flags
+0000000000000662  B351 7010                                                619          TBDR  FPR1,7,FPR0   RM, to -inf
+0000000000000666  6010 7030                             0000000000000030   620          STD   FPR1,6*8(,R7) Store long BFP result
+000000000000066A  B29C 8018                             0000000000000018   621          STFPC 6*4(R8)       Store resulting FPCR flags and DXC
+000000000000066E  B222 0000                                                622          IPM   R0            Get condition code and program mask
+0000000000000672  8800 001C                             000000000000001C   623          SRL   R0,28         Isolate CC in low order byte
+0000000000000676  4200 801B                             000000000000001B   624          STC   R0,3+6*4(,R8) Save cc with FPC in results table
+                                                                           625 *
+000000000000067A  4130 3008                             0000000000000008   626          LA    R3,8(,R3)     Point to next long HFP input value
+000000000000067E  4170 7040                             0000000000000040   627          LA    R7,8*8(,R7)   Point to next long BFP result set
+0000000000000682  4180 8020                             0000000000000020   628          LA    R8,8*4(,R8)   Point to next FPCR result set
+0000000000000686  062C                                                     629          BCTR  R2,R12        Convert next input value.
+0000000000000688  07FD                                                     630          BR    R13           All converted; return.
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    16
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           632 ***********************************************************************
+                                                                           633 *
+                                                                           634 * HFP inputs.  The same input set is used for short BFP and long BFP
+                                                                           635 * basic tests.  Separate sets are used for overflow/underflow testsing
+                                                                           636 * (short BFP only) and for rounding testing.
+                                                                           637 *
+                                                                           638 ***********************************************************************
+
+
+                                                                           640 *
+                                                                           641 * Long Hex Floating Point doubleword breakdown
+                                                                           642 *
+                                                                           643 *              x'8000000000000000'    sign bit
+                                                                           644 *              x'7F00000000000000'    Biased Characteristic
+                                                                           645 *              x'00FFFFFFFFFFFFFF'    Fraction digits for long HFP
+                                                                           646 *              x'00FFFFFF00000000'    Fraction digits for short HFP
+                                                                           647 *
+                                                                           648 * Long to BFP basic tests.  The same input values are used when
+                                                                           649 * converting to long or short BFP.  These basic tests just make sure
+                                                                           650 * simple conversions can be handled; there is no attempt to create
+                                                                           651 * boundary tests.
+                                                                           652 *
+                                                                           653 * Note that the same bias is used for all three HFP formats: +64.
+                                                                           654 *
+0000000000000690                                                           655 HTOBIN   DS    0D        Inputs for long HFP to BFP basic tests
+0000000000000690  00000000 00000000                                        656          DC    X'0000000000000000'         +0
+0000000000000698  41180000 00000000                                        657          DC    X'4118000000000000'         +1.5
+00000000000006A0  C1180000 00000000                                        658          DC    X'C118000000000000'         -1.5
+00000000000006A8  412DB6DB 6DB6DB6D                                        659          DC    X'412DB6DB6DB6DB6D'         +2.857142857142857 (20/7)
+00000000000006B0  C12DB6DB 6DB6DB6D                                        660          DC    X'C12DB6DB6DB6DB6D'         -2.857142857142857 (20/7)
+                                                                           661 *
+                                                                           662 * Non-normalized HFP.  When converted to BFP, the result is always
+                                                                           663 * exact.  Additional non-normalized inputs are used for BFP rounding
+                                                                           664 * testing.  The result should be an exact 8.0000 (decimal)
+                                                                           665 *
+00000000000006B8  49000000 00800000                                        666          DC    X'4900000000800000'    Positive, non-normalized
+00000000000006C0  C9000000 00800000                                        667          DC    X'C900000000800000'    Negative, non-normalized
+                                                                           668 *
+00000000000006C8  7FFFFFFF FFFFFFFF                                        669          DC    X'7FFFFFFFFFFFFFFF'    Positive Hmax
+00000000000006D0  00100000 00000000                                        670          DC    X'0010000000000000'    Positive Hmin
+                                                                           671 *
+                                      0000000000000048  0000000000000001   672 HTOBCT   EQU   *-HTOBIN     Count of long HFP in list * 8
+
+
+
+                                                                           674 *
+                                                                           675 * The following tests over/underflow on short BFP results only.  Long
+                                                                           676 * BFP exponent sizes prevent over/underflow when converting from long
+                                                                           677 * HFP.  Rounding mode affects results; some cases below attempt to
+                                                                           678 * cause over/underflow only on certain rounding modes.  Each test value
+                                                                           679 * is converted to short BFP using each rounding mode.
+                                                                           680 *
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    17
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000006D8                                                           681 HTOBINOU DS    0D   Inputs for long HFP to short BFP over/underflow
+                                                                           682 *
+                                                                           683 *                                   Basic overflow values.  Overflows
+                                                                           684 *                                   to infinity or Nmax depending on
+                                                                           685 *                                   rounding mode.
+00000000000006D8  7EFFFFFF 00000000                                        686          DC    X'7EFFFFFF00000000'         +4,523,128E+68 (overflows)
+00000000000006E0  FEFFFFFF 00000000                                        687          DC    X'FEFFFFFF00000000'         -4,523,128E+68 (overflows)
+                                                                           688 *
+                                                                           689 *                                   Basic underflow values.  Underflow
+                                                                           690 *                                   may be to zero or to Dmin depending
+                                                                           691 *                                   on rounding mode.
+00000000000006E8  00100000 00000000                                        692          DC    X'0010000000000000'         +5,397,605E-85 (underflows)
+00000000000006F0  80100000 00000000                                        693          DC    X'8010000000000000'         -5,397,605E-85 (underflows)
+                                                                           694 *
+                                                                           695 * The following tests underflow during normalization of the short
+                                                                           696 * BFP result.  On input, the HFP characteristic can be converted to
+                                                                           697 * a BFP exponent that is within range.  But the left-shift of the
+                                                                           698 * characteristic into a significand that has an implicit one bit to
+                                                                           699 * the left of the implicit radix point decrements the BFP exponent such
+                                                                           700 * that it will not fit in a short BFP.
+                                                                           701 *
+                                                                           702 *                                   Underflows only when rounded
+                                                                           703 *                                   towards zero.
+00000000000006F8  213FFFFF FFFFFFFF                                        704          DC    X'213FFFFFFFFFFFFF'    Positive "maybe" underflow
+0000000000000700  A13FFFFF FFFFFFFF                                        705          DC    X'A13FFFFFFFFFFFFF'    Negative "maybe" underflow
+                                                                           706 *
+                                                                           707 *                                   overflows only when rounded away
+                                                                           708 *                                   from zero.
+0000000000000708  6B3FFFFF FFFFFFFF                                        709          DC    X'6B3FFFFFFFFFFFFF'    Positive "maybe" overflow
+0000000000000710  EB3FFFFF FFFFFFFF                                        710          DC    X'EB3FFFFFFFFFFFFF'    Negative "maybe" overflow
+                                                                           711 *
+                                                                           712 *                                   A tie.  Underflows on RTNE only
+                                                                           713 *                                   when rounded towards smaller
+                                                                           714 *                                   magnitude (toward zero).
+0000000000000718  213FFFFF E0000000                                        715          DC    X'213FFFFFE0000000'    Positive, does not underflow
+0000000000000720  A13FFFFF E0000000                                        716          DC    X'A13FFFFFE0000000'    Negative, does not underflow
+0000000000000728  213FFFFF A0000000                                        717          DC    X'213FFFFFA0000000'    Positive, underflows
+0000000000000730  A13FFFFF A0000000                                        718          DC    X'A13FFFFFA0000000'    Negative, underflows
+                                                                           719 *
+                                                                           720 *                                   A tie.  Overflows on RTNE only
+                                                                           721 *                                   when rounded towards larger
+                                                                           722 *                                   magnitude (away from zero).
+0000000000000738  6B3FFFFF E0000000                                        723          DC    X'6B3FFFFFE0000000'    Positive, does not underflow
+0000000000000740  EB3FFFFF E0000000                                        724          DC    X'EB3FFFFFE0000000'    Negative, does not underflow
+0000000000000748  6B3FFFFF A0000000                                        725          DC    X'6B3FFFFFA0000000'    Positive, underflows
+0000000000000750  EB3FFFFF A0000000                                        726          DC    X'EB3FFFFFA0000000'    Negative, underflows
+                                                                           727 *
+                                      0000000000000080  0000000000000001   728 HTOBOUCT EQU   *-HTOBINOU   Count of long HFP in list * 8
+
+
+
+                                                                           730 *
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    18
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           731 * Test cases for exhaustive rounding mode tests of HFP to short BFP.
+                                                                           732 * Different test cases are used for long BFP targets because it is not
+                                                                           733 * possible to create an input value that is a tie for both long and
+                                                                           734 * short BFP results.
+                                                                           735 *
+0000000000000758                                                           736 HTOSINRM DS    0D        Inputs for HFP to short BFP rounding tests
+                                                                           737 *
+                                                                           738 * Note: in the comments below, 'up' and 'down' mean 'toward higher
+                                                                           739 * magnitude' and 'toward lower magnitude' respectively and without
+                                                                           740 * regard to the sign.  When converting long HFP to long BFP, up to
+                                                                           741 * three of the trailing bits control rounding, depending on the value
+                                                                           742 * of the leading hex digit 'd':
+                                                                           743 *
+                                                                           744 * d >= 8        - Three trailing bits rounded
+                                                                           745 * 4 <= d <= 7   - Two trailing bits rounded
+                                                                           746 * 2 <= d <= 3   - One trailing bit rounded
+                                                                           747 * d <= 1        - No rounding (includes non-normalized)
+                                                                           748 *
+                                                                           749 * The following two values have 54 bits of significance in the
+                                                                           750 * fraction.  These will need to be rounded for both short and long
+                                                                           751 * BFP results.
+                                                                           752 *
+0000000000000758  412DB6DB 6DB6DB6B                                        753          DC    X'412DB6DB6DB6DB6B'         +2.857142857142857 (20/7)
+0000000000000760  C12DB6DB 6DB6DB6B                                        754          DC    X'C12DB6DB6DB6DB6B'         -2.857142857142857 (20/7)
+                                                                           755 *
+                                                                           756 * The following values require rounding on both short and long bfp.
+                                                                           757 * Short for obvious reasons, long because the fraction has 56 bits
+                                                                           758 * of significance.  When rounded towards zero, the result should be
+                                                                           759 * 8.0... (0x41000000 or 0x4020000000000000).  When rounded away from
+                                                                           760 * zero on short BFP target, 8.00000095367431640625 (0x41000001), and
+                                                                           761 * on long BFP, 8.0000000000000017763568394002504646778106689453125
+                                                                           762 * (0x4020000000000001).
+                                                                           763 *
+                                                                           764 * I/P value       8.000000000000000222044604925031[...]
+                                                                           765 * When rounded to larger magnitude:
+                                                                           766 * Short BFP O/P   8.00000095367431640625
+0000000000000768  41800000 00000001                                        767          DC    X'4180000000000001'    Positive, inexact long and short
+0000000000000770  C1800000 00000001                                        768          DC    X'C180000000000001'    Negative, inexact long and short
+                                                                           769 *
+                                                                           770 * A rounding tie when converted to short BFP.  RTNE rounds down.
+                                                                           771 *
+                                                                           772 * I/P value       9.000000000000000222044604925031[...]
+                                                                           773 * When rounded to larger magnitude:
+                                                                           774 * Short BFP O/P   9.00000095367431640625
+0000000000000778  41900000 20000000                                        775          DC    X'4190000020000000'    Positive, inexact short
+0000000000000780  C1900000 20000000                                        776          DC    X'C190000020000000'    Negative, inexact short
+                                                                           777 *
+                                                                           778 * A rounding tie when converted to long BFP.  RTNE rounds up.
+                                                                           779 *
+                                                                           780 * I/P value       10.000000000000000222044604925031[...]
+                                                                           781 * When rounded to larger magnitude:
+                                                                           782 * Short BFP O/P   10.00000095367431640625
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    19
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000788  41A00000 60000000                                        783          DC    X'41A0000060000000'    Positive, inexact short
+0000000000000790  C1A00000 60000000                                        784          DC    X'C1A0000060000000'    Negative, inexact short
+                                                                           785 *
+                                                                           786 * Non-normalized HFP.  When converted to short BFP, the result must be
+                                                                           787 * rounded.
+                                                                           788 *
+0000000000000798  48000000 0B000002                                        789          DC    X'480000000B000002'    Positive, non-normal inexact
+00000000000007A0  C8000000 0B000002                                        790          DC    X'C80000000B000002'    Negative, non-normal inexact
+                                                                           791 *
+                                      0000000000000050  0000000000000001   792 HTOSRMCT EQU   *-HTOSINRM   Count of short BFP rounding tests * 8
+                                                                           793 *
+
+
+
+                                                                           795 *
+                                                                           796 * Test cases for exhaustive rounding mode tests of HFP to long BFP.
+                                                                           797 * Different test cases are used for long BFP targets because it is not
+                                                                           798 * possible to create an input value that is a tie for both long and
+                                                                           799 * short BFP results.
+                                                                           800 *
+00000000000007A8                                                           801 HTOLINRM DS    0D        Inputs for HFP to short BFP rounding tests
+                                                                           802 *
+                                                                           803 *   Note: in the comments below, 'up' and 'down' mean 'toward
+                                                                           804 *   higher magnitude' and 'toward lower magnitude' respectively and
+                                                                           805 *   without regard to the sign, and rounding is to short BFP.
+                                                                           806 *
+                                                                           807 * The following two values have 54 bits of significance in the
+                                                                           808 * fraction.  These will need to be rounded for both short and long
+                                                                           809 * BFP results.
+                                                                           810 *
+00000000000007A8  412DB6DB 6DB6DB6D                                        811          DC    X'412DB6DB6DB6DB6D'         +2.857142857142857 (20/7)
+00000000000007B0  C12DB6DB 6DB6DB6D                                        812          DC    X'C12DB6DB6DB6DB6D'         -2.857142857142857 (20/7)
+                                                                           813 *
+                                                                           814 * The following values require rounding on both short and long bfp.
+                                                                           815 * Short for obvious reasons, long because the fraction has 56 bits
+                                                                           816 * of significance.  When rounded towards zero, the result should be
+                                                                           817 * 8.0... (0x41000000 or 0x4020000000000000).  When rounded away from
+                                                                           818 * zero on short BFP target, 8.00000095367431640625 (0x41000001), and
+                                                                           819 * on long BFP, 8.0000000000000017763568394002504646778106689453125
+                                                                           820 * (0x4020000000000001).
+                                                                           821 *
+                                                                           822 * I/P value       8.000000000000000222044604925031[...]
+                                                                           823 * When rounded to larger magnitude:
+                                                                           824 * Long BFP O/P    8.0000000000000017763568394002504646778106689453125
+                                                                           825 * Short BFP O/P   8.00000095367431640625
+00000000000007B8  41800000 00000001                                        826          DC    X'4180000000000001'    Positive, inexact long and short
+00000000000007C0  C1800000 00000001                                        827          DC    X'C180000000000001'    Negative, inexact long and short
+                                                                           828 *
+                                                                           829 * A rounding tie when converted to long BFP.  RTNE rounds down.
+                                                                           830 *
+                                                                           831 * I/P value       9.000000000000000222044604925031[...]
+                                                                           832 * When rounded to larger magnitude:
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    20
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           833 * Short BFP O/P   9.00000095367431640625
+00000000000007C8  41900000 00000004                                        834          DC    X'4190000000000004'    Positive, inexact long
+00000000000007D0  C1900000 00000004                                        835          DC    X'C190000000000004'    Negative, inexact long
+                                                                           836 *
+                                                                           837 * A rounding tie when converted to long BFP.  RTNE rounds up.
+                                                                           838 *
+                                                                           839 * I/P value       10.000000000000000222044604925031[...]
+                                                                           840 * When rounded to larger magnitude:
+                                                                           841 * Short BFP O/P   10.00000095367431640625
+00000000000007D8  41A00000 0000000C                                        842          DC    X'41A000000000000C'    Positive, inexact long
+00000000000007E0  C1A00000 0000000C                                        843          DC    X'C1A000000000000C'    Negative, inexact long
+                                                                           844 *
+                                      0000000000000040  0000000000000001   845 HTOLRMCT EQU   *-HTOLINRM   Count of short BFP rounding tests * 8
+                                                                           846 *
+
+
+
+                                                                           848 *
+                                                                           849 *  Locations for long BFP results
+                                                                           850 *
+                                                                           851 *                                Seven inputs, 1 results/input
+                                      0000000000001000  0000000000000000   852 HTOSOUT  EQU   BFPH2B+X'1000'    Short BFP rounded from long HFP
+                                                                           853 *                                  ..7 results used, room for 32
+                                      0000000000001080  0000000000000000   854 HTOSFLGS EQU   BFPH2B+X'1080'    FPCR flags and CC from above
+                                                                           855 *                                  ..7 results used, room for 32
+                                                                           856 *
+                                                                           857 *                                Sixteen inputs, 7 results/input;
+                                                                           858 *                                ...align result set on a quadword
+                                      0000000000001100  0000000000000000   859 HTOSOUO  EQU   BFPH2B+X'1100'    Short BFP result o/uflow tests
+                                                                           860 *                                  ..16 sets used, room for 32
+                                      0000000000001500  0000000000000000   861 HTOSOUOF EQU   BFPH2B+X'1500'    FPCR flags and DXC from above
+                                                                           862 *                                  ..16 sets used, room for 32
+                                                                           863
+                                                                           864 *                                Ten inputs, 7 results/input;
+                                                                           865 *                                ...align result set on a quadword
+                                      0000000000001900  0000000000000000   866 HTOSRMO  EQU   BFPH2B+X'1900'    Short BFP result rounding tests
+                                                                           867 *                                  ..10 sets used, room for 16
+                                      0000000000001B00  0000000000000000   868 HTOSRMOF EQU   BFPH2B+X'1B00'    FPCR flags and DXC from above
+                                                                           869 *                                  ..10 sets used, room for 16
+                                                                           870 *
+                                                                           871 *  Locations for long BFP results
+                                                                           872 *
+                                                                           873 *                                Seven inputs, 1 result/input
+                                      0000000000001D00  0000000000000000   874 HTOLOUT  EQU   BFPH2B+X'1D00'    Long BFP rounded from long HFP
+                                                                           875 *                                  ..7 results used, room for 16
+                                      0000000000001D80  0000000000000000   876 HTOLFLGS EQU   BFPH2B+X'1D80'    FPCR flags and DXC from above
+                                                                           877 *                                  ..7 results used, room for 32
+                                                                           878 *
+                                                                           879 *                                Eight inputs, 7 results/input;
+                                                                           880 *                                ...align result set on a quadword
+                                      0000000000002000  0000000000000000   881 HTOLRMO  EQU   BFPH2B+X'2000'    Long BFP rounding tests
+                                                                           882 *                                  ..8 sets used, room for 16
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    21
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                      0000000000002400  0000000000000000   883 HTOLRMOF EQU   BFPH2B+X'2400'    FPCR flags and DXC from above
+                                                                           884 *                                  ..8 sets used, room for 16
+                                                                           885 *
+                                                                           886 *
+                                                                           887 *
+                                      0000000000002600  0000000000000000   888 ENDRES   EQU   BFPH2B+X'2600'    next location for results
+                                                                           889 *
+                                                                           890          PADCSECT ENDRES            Pad csect unless asma
+                                                                           891+         MNOTE *,'asma detected; no CSECT padding performed'
+                  ** [891] MNOTE *,asma detected; no CSECT padding performed
+                                                                           892 *
+                                                                           893          END
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    22
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BFPH2B              J    000000    2024   156  202  205  207  210  222  279  852  854  859  861  866  868  874  876  881  883  888
+CR0                 U    000000       1   195  236  240
+CTLR0               F    000270       4   269  236  237  240
+ENDRES              U    002600       0   888
+FPCREGNT            X    000274       4   270  371  379  387  395  403  411  419  455  463  471  479  487  495  503  570  578  586
+                                               594  602  610  618
+FPCREGTR            X    000278       4   271  328  534
+FPR0                U    000000       1   176  327  329  367  372  380  388  396  404  412  420  451  456  464  472  480  488  496
+                                               504  533  535  566  571  579  587  595  603  611  619
+FPR1                U    000001       1   177  326  329  330  372  373  380  381  388  389  396  397  404  405  412  413  420  421
+                                               456  457  464  465  472  473  480  481  488  489  496  497  504  505  532  535  536
+                                               571  572  579  580  587  588  595  596  603  604  611  612  619  620
+FPR10               U    00000A       1   186
+FPR11               U    00000B       1   187
+FPR12               U    00000C       1   188
+FPR13               U    00000D       1   189
+FPR14               U    00000E       1   190
+FPR15               U    00000F       1   191
+FPR2                U    000002       1   178
+FPR3                U    000003       1   179
+FPR4                U    000004       1   180
+FPR5                U    000005       1   181
+FPR6                U    000006       1   182
+FPR7                U    000007       1   183
+FPR8                U    000008       1   184
+FPR9                U    000009       1   185
+HARDWAIT            X    000260       8   267  230
+HTOBCT              U    000048       1   672  281  299
+HTOBIN              D    000690       8   655  672  282  300
+HTOBINOU            D    0006D8       8   681  728  288
+HTOBOUCT            U    000080       1   728  287
+HTOLBAS             F    000330       4   298  254
+HTOLFLGS            U    001D80       0   876  302
+HTOLINRM            D    0007A8       8   801  845  306
+HTOLOUT             U    001D00       0   874  301
+HTOLRM              F    000340       4   304  256
+HTOLRMCT            U    000040       1   845  305
+HTOLRMO             U    002000       0   881  307
+HTOLRMOF            U    002400       0   883  308
+HTOSBAS             F    000300       4   280  244
+HTOSFLGS            U    001080       0   854  284
+HTOSINRM            D    000758       8   736  792  294
+HTOSOU              F    000310       4   286  246
+HTOSOUO             U    001100       0   859  289
+HTOSOUOF            U    001500       0   861  290
+HTOSOUT             U    001000       0   852  283
+HTOSRM              F    000320       4   292  248
+HTOSRMCT            U    000050       1   792  293
+HTOSRMO             U    001900       0   866  295
+HTOSRMOF            U    001B00       0   868  296
+IMAGE               1    000000    2024     0
+PCINTCD             H    00008E       2   203  224
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    23
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+PCNOTDTA            H    00020C       2   227  225
+PCOLDPSW            U    000150       0   205  226
+PROGCHK             H    000200       2   223  211
+R0                  U    000000       1   157  333  334  335  375  376  377  383  384  385  391  392  393  399  400  401  407  408
+                                               409  415  416  417  423  424  425  459  460  461  467  468  469  475  476  477  483
+                                               484  485  491  492  493  499  500  501  507  508  509  538  539  540  574  575  576
+                                               582  583  584  590  591  592  598  599  600  606  607  608  614  615  616  622  623
+                                               624
+R1                  U    000001       1   158
+R10                 U    00000A       1   167  244  246  248  254  256  320  321  361  362  445  446  526  527  560  561
+R11                 U    00000B       1   168
+R12                 U    00000C       1   169  324  340  365  430  449  514  530  545  564  629
+R13                 U    00000D       1   170  245  247  249  255  257  323  341  364  431  448  515  529  546  563  630
+R14                 U    00000E       1   171  228  229  261  262
+R15                 U    00000F       1   172  197
+R2                  U    000002       1   159  320  322  340  361  363  430  445  447  514  526  528  545  560  562  629
+R3                  U    000003       1   160  320  327  337  361  367  427  445  451  511  526  533  542  560  566  626
+R4                  U    000004       1   161
+R5                  U    000005       1   162
+R6                  U    000006       1   163
+R7                  U    000007       1   164  321  330  338  362  373  381  389  397  405  413  421  428  446  457  465  473  481
+                                               489  497  505  512  527  536  543  561  572  580  588  596  604  612  620  627
+R8                  U    000008       1   165  321  331  332  335  339  362  374  377  382  385  390  393  398  401  406  409  414
+                                               417  422  425  429  446  458  461  466  469  474  477  482  485  490  493  498  501
+                                               506  509  513  527  537  540  544  561  573  576  581  584  589  592  597  600  605
+                                               608  613  616  621  624  628
+R9                  U    000009       1   166
+START               I    000214       4   236  208
+TBDR                I    000562       4   526  255
+TBDRA               I    0005A4       4   560  257
+TBEDR               I    000350       4   320  245
+TBEDRA              I    00047C       4   445  249
+TBEDROU             I    000396       4   361  247
+WAITPSW             X    000250       8   266  263
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    24
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT    142   890
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    25
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   2024  000-7E7  000-7E7
+  Region           2024  000-7E7  000-7E7
+    CSECT  BFPH2B  2024  000-7E7  000-7E7
+ASMA Ver. 0.2.0  bfp-024-h2b.asm: Test Convert HFP to BFP                                           08 Feb 2019 22:18:53  Page    26
+
+   STMT                     FILE NAME
+
+1     C:\common\github\hyperion\tests\bfp-024-h2b.asm
+
+
+** ERRORS FOUND: 1 **
+
+[891] MNOTE *,asma detected; no CSECT padding performed
+
