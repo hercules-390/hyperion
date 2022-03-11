@@ -22,4 +22,4 @@ Hercules, including dynamic reconfiguration, integrated console,
 interpretive execution and z/Architecture support. A dedicated crew of
 programmers is constantly at work implementing new features and fixing bugs.
 
-### To find out more about Hercules 4.0 Hyperion, follow this link: [Hercules 4.0 (Hyperion)] (http://hercules-390.github.io/html/)
+### To find out more about Hercules 4.0 Hyperion, follow this link: [Hercules 4.0 (Hyperion)](http://hercules-390.github.io/html/)
