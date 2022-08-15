@@ -409,7 +409,7 @@ endif( )
 
 externalproject_add( html
         SOURCE_DIR        ${PROJECT_BINARY_DIR}/html
-        GIT_REPOSITORY    "git://github.com/hercules-390/html"
+        GIT_REPOSITORY    "${git_protocol}//github.com/hercules-390/html"
         GIT_TAG           "gh-pages"
         CONFIGURE_COMMAND ""        # No Configure
         BUILD_COMMAND ""            # No build
